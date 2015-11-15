@@ -1,0 +1,28 @@
+Instructions for working with data
+
+Made two scripts to quickly set up XMM-Newton SAS environment:
+
+    atran@treble:/data/mpofls/atran/research/xmm$ source sasinit
+
+    sasversion:- Executing (routine): sasversion  -w 1 -V 4
+    sasversion:- sasversion (sasversion-1.2)  [xmmsas_20141104_1833-14.0.0]
+    started:  2015-09-24T15:37:56.000
+    sasversion:- XMM-Newton SAS release and build information:
+
+    SAS release: xmmsas_20141104_1833-14.0.0
+    Compiled on: Tue Nov  4 19:11:59 GMT 2014
+    Compiled by: sasbuild@sasbld02.net4.lan
+    Platform   : RHEL5.8 64
+
+    SAS-related environment variables that are set:
+
+    SAS_DIR = /soft/XMM/xmmsas_20141104_1833
+    SAS_PATH = /soft/XMM/xmmsas_20141104_1833
+
+    sasversion:- sasversion (sasversion-1.2)  [xmmsas_20141104_1833-14.0.0] ended:
+    2015-09-24T15:37:56.000
+
+    Do not forget to define SAS_CCFPATH, SAS_CCF and SAS_ODF
+
+    atran@treble:/data/mpofls/atran/research/xmm$ source sas_setpaths 0087940201
+

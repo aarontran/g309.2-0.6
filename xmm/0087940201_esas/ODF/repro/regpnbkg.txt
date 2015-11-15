@@ -1,0 +1,1 @@
+&&(((DETX,DETY) IN circle(-2282.3, -8363.5, 2508.2)) || ((DETX,DETY) IN circle(7190.8, -4720.2, 2271.44)) || ((DETX,DETY) IN circle(-10552.1, 3220.5, 2508.2)))

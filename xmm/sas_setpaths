@@ -1,0 +1,16 @@
+#!/bin/tcsh
+#
+# Wrapper script to set-up XMM-Newton SAS software
+# for a specific obsid's ODF
+# Must be run from xmm/ directory
+# where file structure is
+#    xmm/
+#	$obsid/
+#		ODF/
+#		    repro
+# A. Tran, 2015 Sep 21
+set obsid = $argv[1]
+
+setenv SAS_ODF `pwd`/`ls -1 $obsid/odf/repro/*SUM.SAS`
+setenv SAS_CCF `pwd`/$obsid/odf/repro/ccf.cif
+echo "SAS_ODF and SAS_CCF paths set for $obsid"

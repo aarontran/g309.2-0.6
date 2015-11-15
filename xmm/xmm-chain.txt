@@ -1,0 +1,82 @@
+CLEAN RUN
+
+From the directory /data/mpofls/atran/research/xmm/
+with subdirectory structure 0087940201_esas/{ODF,PPS}/
+
+You need to run everything on statler, honestly.
+
+    cifbuild
+    setenv SAS_CCF `pwd`/ccf.cif
+    odfingest
+    setenv SAS_ODF `pwd`/`ls -1 *SUM.SAS`
+
+    ssh statler
+
+    # Main processing to prou
+    epchain withoutoftime=true >& epchain_oot.log
+    epchain >& epchain.log
+    emchain >& emchain.log
+
+    # Convenience symlinks -- will break after running mos/pn-filter
+    ln -s P*M1*MIEVLI*.FIT m1_evt1.fits
+    ln -s P*M2*MIEVLI*.FIT m2_evt1.fits
+    ln -s P*PN*PIEVLI*.FIT pn_evt1.fits
+    ln -s P*PN*OOEVLI*.FIT pn_oot.fits
+
+    # Flare filtering
+    mos-filter >& mos-filter.log
+    pn-filter >& pn-filter.log
+
+    # Final SAS env variables
+    setenv SAS_ODF `pwd`/$obsid/ODF
+    setenv SAS_ODF `pwd`/`ls -1 $obsid/ODF/repro/*SUM.SAS`
+    setenv SAS_CCF `pwd`/$obsid/ODF/repro/ccf.cif
+
+    # MAIN RERUN
+    mos-spectra prefix=1S001 caldb=/data/mpofls/atran/research/xmm/caldb region=regm1.txt mask=0 elow=400 ehigh=1250 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 >& mos-spectra_1S001.log
+    mos-spectra prefix=2S002 caldb=/data/mpofls/atran/research/xmm/caldb region=regm2.txt mask=0 elow=400 ehigh=1250 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 >& mos-spectra_2S002.log
+    pn-spectra prefix=S003 caldb=/data/mpofls/atran/research/xmm/caldb region=regpn.txt mask=0 elow=400 ehigh=1250 quad1=1 quad2=1 quad3=1 quad4=1 >& pn-spectra_S003.log
+
+    mos_back prefix=1S001 caldb=/data/mpofls/atran/research/xmm/caldb diag=2 elow=400 ehigh=1250 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 >& mos_back_1S001.log
+    mos_back prefix=2S002 caldb=/data/mpofls/atran/research/xmm/caldb diag=2 elow=400 ehigh=1250 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 >& mos_back_2S002.log
+    pn_back prefix=S003 caldb=/data/mpofls/atran/research/xmm/caldb diag=2 elow=400 ehigh=1250 quad1=1 quad2=1 quad3=1 quad4=1 >& pn_back_S003.log
+
+	# ======================================================================================
+	# Branch one -- basic indiv. event (XMMEA_EM/EP) filter + images, exposure maps, spectra
+	# ======================================================================================
+
+	# Basic filtering on patterns (D. T. Reese's analysis guide)
+    evselect table=m1_evt1.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&#XMMEA_EM&&(PI in [200:12000])' filteredset=mos1-filt.fits filtertype=expression keepfilteroutput=yes
+    evselect table=m2_evt1.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&#XMMEA_EM&&(PI in [200:12000])' filteredset=mos2-filt.fits filtertype=expression keepfilteroutput=yes
+    evselect table=pn_evt1.fits:EVENTS withfilteredset=yes expression='(PATTERN<=4)&&#XMMEA_EP&&(PI in [200:15000])' filteredset=pn-filt.fits filtertype=expression keepfilteroutput=yes
+
+	# Basic binned image creation
+    evselect table=mos1-filt.fits:EVENTS withimageset=yes imageset=mos1-filt-img.fits xcolumn=X ycolumn=Y imagebinning=binSize ximagebinsize=40 yimagebinsize=40
+    evselect table=mos2-filt.fits:EVENTS withimageset=yes imageset=mos2-filt-img.fits xcolumn=X ycolumn=Y imagebinning=binSize ximagebinsize=40 yimagebinsize=40
+    evselect table=pn-filt.fits:EVENTS withimageset=yes imageset=pn-filt-img.fits xcolumn=X ycolumn=Y imagebinning=binSize ximagebinsize=40 yimagebinsize=40
+
+	# Exposure maps (Why?...)
+    atthkgen atthkset=atthk.fits  # Creates attitude information to get good time intervals (GTI)
+		# BUT this is already done in emchain: output file is "P{obsid}OBX000ATTTSR0000.FIT"
+		# Similarly in EPCHAIN: output file is "P{obsid,somesubstring}OBX000ATTTSR0000.FIT"
+    eexpmap imageset=mos1-filt-img.fits pimin=2000 pimax=8000 attitudeset=atthk.fits eventset=mos1-filt.fits expimageset=mos1_expmap.fits
+    eexpmap imageset=mos2-filt-img.fits pimin=2000 pimax=8000 attitudeset=atthk.fits eventset=mos2-filt.fits expimageset=mos2_expmap.fits
+    eexpmap imageset=pn-filt-img.fits pimin=2000 pimax=8000 attitudeset=atthk.fits eventset=pn-filt.fits expimageset=pn_expmap.fits
+
+	# (simple) spectrum extraction
+    especget filestem=mos1src table=mos1-filt.fits srcexp='((X,Y) IN ellipse(26260.5, 25100.5, 6360, 42000, 0))' backexp='((X,Y) IN ellipse(28604.5, 37740.5, 6920, 3864, 0))' extendedsource=yes ;
+    especget filestem=mos2src table=mos2-filt.fits srcexp='((X,Y) IN ellipse(26260.5, 25100.5, 6360, 42000, 0))' backexp='((X,Y) IN ellipse(28604.5, 37740.5, 6920, 3864, 0))' extendedsource=yes ;
+    especget filestem=pnsrc table=pn-filt.fits srcexp='((X,Y) IN ellipse(26260.5, 25100.5, 6360, 42000, 0))' backexp='((X,Y) IN ellipse(28604.5, 37740.5, 6920, 3864, 0))' extendedsource=yes ;
+
+	# ========================================================================
+	# Branch two -- more thorough filtering / processing with ESAS and similar
+	# ========================================================================
+
+	espfilt eventset=mos1-evt1.fits method=histogram clobber=no -V 6
+	espfilt eventset=mos2-evt1.fits method=histogram clobber=no -V 6
+	espfilt eventset=pn-evt1.fits method=histogram clobber=no -V 6
+	# ESAS way: mos-filter, pn-filter
+
+	# Pat asks: is it necessary to run this twice? I don't think so but could try.
+
+

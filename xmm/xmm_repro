@@ -1,0 +1,29 @@
+#!/bin/tcsh
+#
+# Wrapper script to prepare XMM-Newton ODF files for processing
+# (cifbuild, odfingest)
+#
+# Required directory structure
+#     ./$obsid
+#     ./$obsid/ODF
+#     ./$obsid/PPS  # Not sure if this is actually needed
+#   and the script will create output products in
+#     ./$obsid/ODF/repro
+#
+# A. Tran, 2015 Sep 21
+
+set obsid = $argv[1]
+
+source sasinit
+
+# Set up directory structure
+setenv SAS_ODF `pwd`/$obsid/ODF
+mkdir -p $obsid/ODF/repro
+cd $obsid/ODF/repro
+
+# In $obsid/ODF/repro
+cifbuild
+setenv SAS_CCF `pwd`/ccf.cif
+odfingest
+setenv SAS_ODF `pwd`/`ls -1 *SUM.SAS`
+

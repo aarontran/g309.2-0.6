@@ -1,0 +1,12 @@
+
+README (written 2015 Nov 13)
+
+A bunch of files and scripts from October 2015, when I was trying to
+troubleshoot ESAS-generated spectra; I was perplexed by the presence of an
+unusually hard tail at high energy.
+
+The answer is that, the hard tail can be modeled by a power law component NOT
+folded through the detector response, which describes soft protron
+contamination (not removed by GTI filtering).
+
+This is all described in the ESAS cookbook.

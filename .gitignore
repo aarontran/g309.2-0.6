@@ -1,0 +1,72 @@
+# .gitignore for G309.2-0.6 project
+
+img-notes/*.png
+most/G309.2-0.6.fits
+most/G309.2-0.6.jpg
+most/G309.2-0.6.ps
+papers/*.pdf
+resources/*.pdf
+
+# XMM calibration; raw, intermediate, final data
+xmm/caldb/**
+xmm/*/pps
+xmm/*/PPS
+MANIFEST.*
+*.ASC
+*SUM.SAS
+ccf.cif
+
+# FITS files
+*.fit
+*.fits
+*.FIT
+*.FITS
+# Quick and dandy plotter files (from XMM ESAS)
+*.qdp
+# Spectrum files
+*.pi
+*.ds
+*.arf
+*.rmf
+*.warf
+*.wrmf
+
+# Generally, ignore log files (add exceptions if need be)
+*.log
+*.LOG
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.eps
+*.gif
+*.tiff
+# Images (caps)
+*.PNG
+*.JPG
+*.JPEG
+*.EPS
+*.GIF
+*.TIFF
+
+# Tars and zips
+*.gz
+*.tar
+*.GZ
+*.TAR
+
+# Python stuff
+*.pyc
+
+# -------------------------------------------
+# Exclusions from github.com/github/gitignore
+# -------------------------------------------
+
+# Vim swap files etc.
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~

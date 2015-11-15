@@ -1,0 +1,71 @@
+#!/bin/tcsh
+#
+# Wrapper script to set XMM-Newton SAS software environment,
+# whether for interactive or script work
+#
+# Expected result: most recent versions of HEASOFT and XMM SAS initialized.
+# XMM SAS scripts, FTOOLS, etc accessible via $PATH.
+# Environment variables SAS_CCFPATH and XMM_PATH set.
+#
+# If obsid provided, environment variables SAS_ODF and SAS_CCF set
+# (requires cifbuild, odfingest already run)
+#
+# This script is NOT portable.  If moving to replicate on other computers,
+# you must change paths for setsas.csh, CCFPATH, heainit, XMM_PATH,
+# etc.
+#
+# A. Tran, 2015 Sep 21
+
+# Set heainit for CfA/HEAD linux computers, from default ~/.cshrc.user
+set path = (/soft/saord/bin $path)
+# Although tcsh is case sensitive, it looks like
+# path is a special variable for some weird reason
+# $PATH and $path show the same list, but delimit with colon/space respectively
+# moreover, set path = (... $path) updates the environment variable
+# (equivalent to SETENV path "... $path")
+# whereas this is not the case for other variables!
+# e.g.
+# setenv asdf asdfenv
+# set asdf = asdfloc
+# echo $asdf # prints asdfoc
+switch ($MACHINE)
+  case i686
+        alias heainit ' \
+              setenv HEADAS /soft/lheasoft/headas/i686-pc-linux; \
+              source $HEADAS/headas-init.csh'
+  breaksw
+  case x86_64
+        alias heainit ' \
+              setenv HEADAS /soft/lheasoft/headas/x86_64-pc-linux; \
+              source $HEADAS/headas-init.csh'
+  breaksw
+endsw
+
+heainit
+source /soft/XMM/xmmsas/setsas.csh
+
+# Cfa/HEAD specific path
+setenv SAS_CCFPATH /proj/xmm/ccf
+echo "setenv SAS_CCFPATH $SAS_CCFPATH"
+
+# Project path with obsid folders, e.g. $XMM_PATH/0087940201/odf/repro/
+
+setenv XMM_PATH /data/mpofls/atran/research/g309/xmm
+echo "setenv XMM_PATH $XMM_PATH"
+
+set obsid = $1
+if ( $obsid != "") then
+    setenv SAS_ODF `ls -1 $XMM_PATH/$obsid/odf/repro/*SUM.SAS`
+    setenv SAS_CCF $XMM_PATH/$obsid/odf/repro/ccf.cif
+    echo "setenv SAS_CCF $SAS_CCF"
+    echo "setenv SAS_ODF $SAS_ODF"
+    echo ""
+    if ($SAS_ODF != "") then
+	echo "XMM SAS ready for $obsid"
+    else
+    	echo "ERROR: $obsid/odf/repro/*SUM.SAS not found!"
+    	echo "       Did you run sasrepro?"
+    endif
+endif
+
+set prompt="%{\e[32;1m%}%n(sas)%{\e[37m%}@%{\e[33m%}%m%{\e[37m%}:%{\e[36m%}%~%{\e[37m%}"\$"%{\e[0m%} "
