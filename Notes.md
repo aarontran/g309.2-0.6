@@ -1506,6 +1506,9 @@ Also adding to Git and github for two reasons.
 3. ease of accessing / perusing revisions, distributing data / iPython
    notebooks, etc.
 
+Comment: git push origin master, using https authentication, requires ssh -X on
+my end.  Maybe change to using ssh instead of https for this?
+
 ## Reorganizing data
 
 I am going to discard a lot of previous log files (from nohup runs, mid-October

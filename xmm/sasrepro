@@ -15,6 +15,14 @@
 #
 # AND, you must have run $XMM_PATH/sasinit first, to set environment variables.
 #
+# atran@treble$ source sasinit
+# atran@treble$ source sasrepro
+#
+# In principle, "source" should not be needed for sasrepro invocation.
+# But, required because $path env variable is not propagated to tcsh subshells
+# this appears to be an issue only on CfA/HEAD machines.
+# Could be fixed by using "#! /bin/tcsh -f" here?
+#
 # A. Tran, 2015 Nov 13
 
 set obsid = $argv[1]
