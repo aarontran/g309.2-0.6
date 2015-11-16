@@ -1,0 +1,22 @@
+
+Radio contours (g309_linear.con,lev), extracted 2015 Nov 16, for images and manual
+region extraction.
+
+## Remarks
+
+Min: -0.011 Jy/beam
+Max:  0.204 Jy/beam
+
+Note that the 98% limits are -0.009 to 0.087 Jy/beam; that is, the top half of the
+brightness range (0.1-0.2 Jy/beam) is concentrated in ~1-2% of the image
+pixels -- the bipolar hot spots of the remnant.
+
+## Contours
+
+I chose 20 contour levels: 0.01, 0.02, ... 0.2 in DS9.  Generation parameters:
+    smoothness = 1
+    levels = 21 (manually remove level 0 Jy/beam, contour is too noisy)
+    method = block (default)
+
+and added command to regenerate in makefile.
+NOTE: to reduce contour filesize, up the smoothness parameter.

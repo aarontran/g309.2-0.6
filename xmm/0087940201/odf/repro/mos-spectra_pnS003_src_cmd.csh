@@ -52,19 +52,19 @@ evselect table=pnS003-corn-oot.fits:EVENTS withfilteredset=yes expression='(PI i
    
 evselect table=pnS003-corn-oot.fits:EVENTS withfilteredset=yes expression='(PI in [1650:7200])&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-1ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-1ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-1ff.pi badpixlocation=pnS003-clean.fits withbadpixcorr=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-1ff-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-1ff-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-1ff-oot.pi badpixlocation=pnS003-clean-oot.fits withbadpixcorr=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-1fc.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-1fc.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-1fc.pi withbadpixcorr=yes  badpixlocation=pnS003-clean.fits ignoreoutoffov=no 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-1fc-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(-10241.5,7115.0,8041.5,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-1fc-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-1fc-oot.pi withbadpixcorr=yes  badpixlocation=pnS003-clean.fits ignoreoutoffov=no 
    
@@ -96,19 +96,19 @@ evselect table=pnS003-corn-oot.fits:EVENTS withfilteredset=yes expression='(PI i
    
 evselect table=pnS003-corn-oot.fits:EVENTS withfilteredset=yes expression='(PI in [1650:7200])&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-2ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-2ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-2ff.pi badpixlocation=pnS003-clean.fits withbadpixcorr=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-2ff-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-2ff-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-2ff-oot.pi badpixlocation=pnS003-clean-oot.fits withbadpixcorr=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-2fc.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-2fc.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-2fc.pi withbadpixcorr=yes  badpixlocation=pnS003-clean.fits ignoreoutoffov=no 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-2fc-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(5840.0,7115.0,8040.0,8210.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-2fc-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-2fc-oot.pi withbadpixcorr=yes  badpixlocation=pnS003-clean.fits ignoreoutoffov=no 
    
@@ -140,19 +140,19 @@ evselect table=pnS003-corn-oot.fits:EVENTS withfilteredset=yes expression='(PI i
    
 evselect table=pnS003-corn-oot.fits:EVENTS withfilteredset=yes expression='(PI in [1650:7200])&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-3ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-3ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-3ff.pi badpixlocation=pnS003-clean.fits withbadpixcorr=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-3ff-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-3ff-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-3ff-oot.pi badpixlocation=pnS003-clean-oot.fits withbadpixcorr=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-3fc.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-3fc.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-3fc.pi withbadpixcorr=yes  badpixlocation=pnS003-clean.fits ignoreoutoffov=no 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-3fc-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(5840.0,-9311.0,8040.0,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-3fc-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-3fc-oot.pi withbadpixcorr=yes  badpixlocation=pnS003-clean.fits ignoreoutoffov=no 
    
@@ -184,19 +184,19 @@ evselect table=pnS003-corn-oot.fits:EVENTS withfilteredset=yes expression='(PI i
    
 evselect table=pnS003-corn-oot.fits:EVENTS withfilteredset=yes expression='(PI in [1650:7200])&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-4ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-4ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-4ff.pi badpixlocation=pnS003-clean.fits withbadpixcorr=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-4ff-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes withspectrumset=yes expression='(PATTERN <= 4)&&(FLAG == 0)&&((DETX,DETY) IN circle(-2200,-1110,17980))&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0)) ' spectrumset=pnS003-4ff-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-4ff-oot.pi badpixlocation=pnS003-clean-oot.fits withbadpixcorr=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-4fc.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-4fc.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-4fc.pi withbadpixcorr=yes  badpixlocation=pnS003-clean.fits ignoreoutoffov=no 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-4fc-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/pn-fwc-oot-filt.fits.gz withfilteredset=yes expression='(PATTERN <= 4)&&((FLAG & 0x762a097c)==0)&&!((DETX,DETY) IN circle(-2200,-1110,18200))&&((DETX,DETY) in BOX(-10241.5,-9311.0,8041.5,8216.0,0))&&((DETX,DETY) in BOX(-2196,-1110,16060,15510,0))' filtertype=expression keepfilteroutput=no withspectrumset=yes spectrumset=pnS003-4fc-oot.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479 
    
 backscale spectrumset=pnS003-4fc-oot.pi withbadpixcorr=yes  badpixlocation=pnS003-clean.fits ignoreoutoffov=no 
    

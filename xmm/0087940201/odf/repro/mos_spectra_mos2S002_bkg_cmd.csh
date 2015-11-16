@@ -12,7 +12,7 @@ evselect table=mos2S002-clean.fits:EVENTS withfilteredset=yes filtertype=express
    
 arfgen arfset=mos2S002.arf spectrumset=mos2S002-obj.pi withrmfset=yes rmfset=mos2S002.rmf extendedsource=yes modelee=no withbadpixcorr=no detmaptype=dataset detmaparray=detmap.ds  badpixlocation=mos2S002-clean.fits modelootcorr=no
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&(FLAG == 0)&&((DETX,DETY) IN BOX(20,-60,6610,6590,0)) &&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))' withspectrumset=yes spectrumset=mos2S002-1ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&(FLAG == 0)&&((DETX,DETY) IN BOX(20,-60,6610,6590,0)) &&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))' withspectrumset=yes spectrumset=mos2S002-1ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999
    
 backscale spectrumset=mos2S002-1ff.pi badpixlocation=mos2S002-clean.fits withbadpixcorr=yes
    
@@ -30,7 +30,7 @@ evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTER
    
 evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)&&((DETX,DETY) IN BOX(6580,-13530,6620,6640,0))&&(PI in [2500:5000])' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(6580,-13530,6620,6640,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-2ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(6580,-13530,6620,6640,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-2ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
    
 backscale spectrumset=mos2S002-2ff.pi badpixlocation=mos2S002-clean.fits withbadpixcorr=yes 
    
@@ -44,7 +44,7 @@ evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTER
    
 evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)&&((DETX,DETY) IN BOX(13320,-295,6620,6590,0))&&(PI in [2500:5000])' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(13320,-295,6620,6590,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-3ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(13320,-295,6620,6590,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-3ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
    
 backscale spectrumset=mos2S002-3ff.pi badpixlocation=mos2S002-clean.fits withbadpixcorr=yes 
    
@@ -58,7 +58,7 @@ evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTER
    
 evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)&&((DETX,DETY) IN BOX(6610,13110,6590,6550,0))&&(PI in [2500:5000])' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(6610,13110,6590,6550,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-4ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(6610,13110,6590,6550,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-4ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
    
 backscale spectrumset=mos2S002-4ff.pi badpixlocation=mos2S002-clean.fits withbadpixcorr=yes 
    
@@ -72,7 +72,7 @@ evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTER
    
 evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)&&((DETX,DETY) IN BOX(-6560,13180,6590,6600,0))&&(PI in [2500:5000])' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(-6560,13180,6590,6600,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-5ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(-6560,13180,6590,6600,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-5ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
    
 backscale spectrumset=mos2S002-5ff.pi badpixlocation=mos2S002-clean.fits withbadpixcorr=yes 
    
@@ -86,7 +86,7 @@ evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTER
    
 evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)&&((DETX,DETY) IN BOX(-13190,-90,6600,6630,0))&&(PI in [2500:5000])' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(-13190,-90,6600,6630,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-6ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(-13190,-90,6600,6630,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-6ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
    
 backscale spectrumset=mos2S002-6ff.pi badpixlocation=mos2S002-clean.fits withbadpixcorr=yes 
    
@@ -100,7 +100,7 @@ evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTER
    
 evselect table=mos2S002-corn.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)&&((DETX,DETY) IN BOX(-6620,-13438,6620,6599,0))&&(PI in [2500:5000])' filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes updateexposure=yes filterexposure=yes 
    
-evselect table=/data/mpofls/atran/research/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(-6620,-13438,6620,6599,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-7ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
+evselect table=/data/mpofls/atran/research/g309/xmm/caldb/mos2-fwc.fits.gz:EVENTS withfilteredset=yes expression='(FLAG == 0)&&(((DETX,DETY) IN circle(2501.6, 8197.0, 2508.2)) || ((DETX,DETY) IN circle(-7003.4, 4637.8, 2271.44)) || ((DETX,DETY) IN circle(10668.3, -3459.8, 2508.2)))&&(((DETX,DETY) IN circle(-61,-228,17085))||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))&&((DETX,DETY) IN BOX(-6620,-13438,6620,6599,0)) ' withspectrumset=yes keepfilteroutput=no updateexposure=yes filterexposure=yes spectrumset=mos2S002-7ff.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 
    
 backscale spectrumset=mos2S002-7ff.pi badpixlocation=mos2S002-clean.fits withbadpixcorr=yes 
    

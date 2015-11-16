@@ -18,16 +18,11 @@
 
 # Set heainit for CfA/HEAD linux computers, from default ~/.cshrc.user
 set path = (/soft/saord/bin $path)
-# Although tcsh is case sensitive, it looks like
-# path is a special variable for some weird reason
+# $path is a special variable in tcsh for some weird reason
 # $PATH and $path show the same list, but delimit with colon/space respectively
 # moreover, set path = (... $path) updates the environment variable
-# (equivalent to SETENV path "... $path")
-# whereas this is not the case for other variables!
-# e.g.
-# setenv asdf asdfenv
-# set asdf = asdfloc
-# echo $asdf # prints asdfoc
+# whereas this is not the case for $PATH...
+# something weird specific to HEAD machines
 switch ($MACHINE)
   case i686
         alias heainit ' \
@@ -52,6 +47,7 @@ echo "setenv SAS_CCFPATH $SAS_CCFPATH"
 
 setenv XMM_PATH /data/mpofls/atran/research/g309/xmm
 echo "setenv XMM_PATH $XMM_PATH"
+set path = ($XMM_PATH $path)
 
 set obsid = $1
 if ( $obsid != "") then

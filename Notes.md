@@ -1482,8 +1482,8 @@ I'm going to pause and set up a proper research directory
 constraint.
 
 
-Friday 2015 November 13 -- Saturday 2015 November 14
-====================================================
+Friday 2015 November 13 -- Sunday 2015 November 15
+==================================================
 
 Brief list of available data:
 * XMM pointings 2x
@@ -1492,15 +1492,18 @@ Brief list of available data:
 * ATCA 1.34GHz (gaensler paper) + simultaneous HI 1.420GHz. ~24" resolution 
 
 Way behind, been tied up with ACA constraint stuff.
+
+## Repo organization 
+
 Finished a short Makefile tutorial (software carpentry) yesterday.
 
-Attempted to set up Makefile for XMM data reduction.  Spent most of day on
-this.   Although I vacillate between doing this and wanting to throw my hands
-up and admit defeat, I'm ultimately going for a Makefile approach.
-These problems (tracking files in a pipeline, ensuring reproducibility in
-projects) are not gonna get better, if I don't tackle them head on.
+Attempted to set up Makefile for XMM data reduction.  Spent most of Friday on
+this.  Although I vacillate between doing this and wanting to throw my hands
+up and admit defeat, I'll stick to implementing a Makefile approach.
+These problems (keeping files consistent in a pipeline, ensuring scientific
+reproducibility) won't improve, if I don't tackle them head on.
 
-Also adding to Git and github for two reasons.
+Initialized git repo and pushed to Github to:
 1. version control and branching
 2. keep myself accountable and organized (ish).
 3. ease of accessing / perusing revisions, distributing data / iPython
@@ -1511,29 +1514,93 @@ my end.  Maybe change to using ssh instead of https for this?
 
 ## Reorganizing data
 
-I am going to discard a lot of previous log files (from nohup runs, mid-October
-etc.).
+I discard some previous log files and data (mid-October nohup runs etc.).
 None of the previous data I generated were directly related to research, but
 mostly were due to my fumbling around with XMM SAS and ESAS, and re-running
-various chains.  None of the iterations were caused by scientific reasons,
+various chains.  None of the iterations were for scientific exploration,
 so no information is concealed by deleting the records for these script
 re-runs.
 
-Files not deleted yet.
+Basically start with a clean slate.
 
-Have deleted first download of 087940201 (from late Sep/early Oct, when I was
-messing around with Dan T. Reese's analysis manual).
+    specbackgrp src  started 14:24 monday nov 16
+
 
 Plan: start taking advantage of Git branches to organize ideas/code.
 I think this is exactly what you need, to make things traceable.
 
 Everything should be documented in a MASTER copy of notes, though.
 
-NOTE: new "standard" prcedure for region selection.
-1. use PPS processed and merged image P0087940201EPX000OIMAGE8000.fit
+The tentative plan is to:
+* create a new git branch for each "variant" pipeline (e.g., adding a knob or
+  trying a different feature)
+* if the new variant is better than the old, merge back into master and explain
+  the additions in the final result.
+* if the new variant is NOT better, leave the branch hanging.
+  tag the end of the branch, explaining what happened and why it was
+  "abandoned".
+  The branch tip should have enough data / scripts to justify why it was deemed
+  unimportant.
+  
+E.g. from one of my previous projects, if I wanted to demonstrate that a
+super-exponential synchrotron cutoff did not change qualitative behavior as
+compared to the plain (even if not quite correct) exponential,
+I could simply branch 
+
+
+
+## Scripting
+
+Re-running specbackgrp script (spectrum extraction script). Script successfully
+runs `mos_back` and `pn_back`, and renames some files.  But, then this appears
+on my terminal:
+
+    atran(sas)@statler:~/rsch/g309/xmm/0087940201/odf/repro$ specbackgrp src
+    You should not see this! 
+
+And, pressing enter creates more "You should not see this!" messages.
+Cause: line breaks in commands being passed to grppha.
+In addition, I need to escape exclamation points in tcsh for some reason...
+
+Easiest solution: just use bash.  bash correctly inherits environment variables
+($PATH) from calling tcsh, so that's OK.
+
+
+## Region selection
+
+NOTE: new "standard" procedure for region selection.
+1. use PPS processed and merged image P0087940201EPX000OIMAGE8000.FTZ
 2. use MOST radio contours for overlay to help see SNR location.
 
+Created image of remnant with radio contours.
+(missing: coordinates, scalebar, radio beam and x-ray PSF.  For now OK though.)
 
+Loaded regions (see notes from Oct 18/19).  They were:
+
+    # Source:
+    circle(13:46:47.553, -62:51:02.52, 239.76")
+
+    # Background:
+    circle(13:47:42.885, -62:44:57.88, 125.41")
+    circle(13:46:33.606, -62:42:02.47, 113.572")
+    circle(13:47:32.693, -62:56:46.10, 125.41")
+
+I made a few changes:
+* moved one background circle that overlapped the SNR's radio contour
+* change circle sizes to 120" (radius = 2 arcminutes), nice clean number
+* move one background circle off a faint radio contour, that might trace some
+  sort of gas / other emission not related to the remnant.
+and the new background comprises six small circles around the remnant.
+
+Saved image of:
+* XMM 0087940201 merged PPS image, log scale, heat map
+  (fits file is P0087940201EPX000OIMAGE8000.FTZ, and I symlink to this file)
+* linear most contours (0.01, 0.02, 0.03, ..., 0.2 Jy/beam)
+* src.reg, bkg.reg selections created today
+to `20151116_xmm0087940201pps_mostlinear_src_bkg.png`.
+
+And, added procedure for creating and regenerating MOST contours.  Pretty
+straightforward.
 
 
 Running notes
@@ -1546,6 +1613,9 @@ Tentative plan:
 * point source excision.
 * readout streaks!
 
+TODO: haven't addressed all possible epchain flags.
+would like to generate some files to show the difference.
+ see my notes, scribbled...
 
 
 Before final-ish analysis, run evselect with `XMMEA_EM, XMMEA_SM, XMMEA_EP`, or simply flag==0 to reject all possibly bad events (maybe too restrictive)
@@ -1826,7 +1896,21 @@ background yourself.
 XMM event flags
 ===============
 
-Handy dandy reference.
+Each of the 32 bits encodes one attribute, which is described in GV/XMM/1999-01
+or in XMM SAS package evatt.
+
+We also have keyword-encoded flag selectors:
+
+    Finally, the #XMMEA_EM (#XMMEA_EP for the PN) filter provides a
+    canned screening set of FLAG values for the event.
+    (The FLAG value provides a bit encoding of various event
+    conditions, e.g., near hot pixels or outside of the field of
+    view.) Setting FLAG == 0 in the selection expression provides
+    the most conservative screening criteria and should always be
+    used when serious spectral analysis is to be done on the PN. It
+    typically is not necessary for the MOS.	
+
+Here is a reference:
 
 	XMMEA_EM= '(FLAG & 0x766ba000) == 0' / Select good MOS events
 	XMMEA_SM= '(FLAG & 0xfffffeff) == 0' / Select good MOS events for spectra
@@ -1872,6 +1956,22 @@ Handy dandy reference.
 	XMMEA_22= '(FLAG & 0x400000) != 0' / SECONDARY
 	XMMEA_23= '(FLAG & 0x800000) != 0' / TRAILING
 	XMMEA_25= '(FLAG & 0x2000000) != 0' / OUT_OF_CCD_WINDOW
+
+For a description of the FLAG column, see the documentation of the SAS package
+[evatt](http://xmm.esac.esa.int/sas/current/doc/evatt/node3.html).
+Nearly the same as the Vacanti reference, GV/XMM/1999-01 (this took longer than
+it should have to dig up, and was less informative than I had hoped):
+[interface spec](http://xmm.esac.esa.int/sas/5.4.1/doc/saslib/gvxmm199901.txt)
+
+https://heasarc.gsfc.nasa.gov/docs/xmm/sas/USG/MOSmetatask.html
+
+    Then evselect is called on the resulting event list(s) applying (by
+    default) the destructive filter selection (#XMMEA_EM) && (FLAG &
+    0x762a0000) == 0. Note that in case of emchain, (#XMMEA_EM) is not applied:
+    here events flagged as OUT_OF_FOV and REJECTED_BY_GATTI are kept in the
+    list (as they are useful for background assessments and flare screening,
+    respectively). For a description of the event attribute based selection,
+    refer to the documentation of the SAS package evatt.
 
 
 FAQ (things I was somewhat stumped on at some point)

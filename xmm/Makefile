@@ -20,8 +20,8 @@ CCF = %/odf/repro/ccf.cif
 
 # need tcsh to source sasinit/sasrepro; fails in bash/sh
 SHELL = /bin/tcsh
-SASINIT = source /data/mpofls/atran/research/g309/xmm/sasinit
-SASREPRO = source /data/mpofls/atran/research/g309/xmm/sasrepro
+SASINIT = /data/mpofls/atran/research/g309/xmm/sasinit
+SASREPRO = /data/mpofls/atran/research/g309/xmm/sasrepro
 
 
 .PHONY : all
@@ -32,11 +32,11 @@ all : $(patsubst %, $(CCF), $(OBSIDS)) caldb
 # If ccf.cif is up-to-date, *SUM.SAS will also be up-to-date.
 # Makefiles within %/odf/repro will check for both ccf.cif and *SUM.SAS
 # and both can be regenerated with this top-level Makefile.
-$(CCF) : files_%.tar
+$(CCF) : files_%.tar $(SASINIT) $(SASREPRO)
 	tar -xf $<
 	tar -xzf $*/odf/$*.tar.gz --directory=$*/odf
 	tar -xf $*/odf/*_$*.TAR --directory=$*/odf
-	$(SASINIT) ; $(SASREPRO) $*
+	source $(SASINIT) ; source $(SASREPRO) $*
 
 files_%.tar :
 	curl -o $@ \

@@ -27,12 +27,6 @@
 
 set obsid = $argv[1]
 
-setenv
-echo PATH in sasrepro is
-echo $PATH
-echo path in sasrepro is
-echo $path
-
 # Set up directory structure
 setenv SAS_ODF $XMM_PATH/$obsid/odf  # For cifbuild run before odfingest
 set repro = $XMM_PATH/$obsid/odf/repro

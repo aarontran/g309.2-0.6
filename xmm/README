@@ -1,28 +1,29 @@
-Instructions for working with data
 
-Made two scripts to quickly set up XMM-Newton SAS environment:
+To download data (including ESAS filterwheel closed data + diagonal RMFs for
+MOS1, MOS2, PN), run from this top-level directory (xmm/):
 
-    atran@treble:/data/mpofls/atran/research/xmm$ source sasinit
+    make all
 
-    sasversion:- Executing (routine): sasversion  -w 1 -V 4
-    sasversion:- sasversion (sasversion-1.2)  [xmmsas_20141104_1833-14.0.0]
-    started:  2015-09-24T15:37:56.000
-    sasversion:- XMM-Newton SAS release and build information:
+This will download and unpackage data for obsids 0087940201 and 0551000201, and
+run XMM-SAS odfingest and cifbuild (via script sasrepro).
 
-    SAS release: xmmsas_20141104_1833-14.0.0
-    Compiled on: Tue Nov  4 19:11:59 GMT 2014
-    Compiled by: sasbuild@sasbld02.net4.lan
-    Platform   : RHEL5.8 64
+To set-up an interactive environment for SAS/ESAS, run:
 
-    SAS-related environment variables that are set:
+    source sasinit ${obsid}
 
-    SAS_DIR = /soft/XMM/xmmsas_20141104_1833
-    SAS_PATH = /soft/XMM/xmmsas_20141104_1833
+which sets the environment variable ${XMM_PATH} to provide access to scripts
+from deep within data directories.
 
-    sasversion:- sasversion (sasversion-1.2)  [xmmsas_20141104_1833-14.0.0] ended:
-    2015-09-24T15:37:56.000
+To pass data through the processing pipeline, run:
 
-    Do not forget to define SAS_CCFPATH, SAS_CCF and SAS_ODF
+    source sasinit ${obsid}
+    cd ${obsid}/odf/repro
+    chainfilter_${obsid}
+    specbackgrp_${obsid}
 
-    atran@treble:/data/mpofls/atran/research/xmm$ source sas_setpaths 0087940201
+The chainfilter/specbackgrp scripts should be nearly the same, but may have
+some variations for each dataset.
+
+This pipeline will almost certainly become more messy / convoluted as I try
+fiddling with different parts of the process.  More TBD!...
 

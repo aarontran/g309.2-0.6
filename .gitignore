@@ -4,6 +4,8 @@ img-notes/*.png
 most/G309.2-0.6.fits
 most/G309.2-0.6.jpg
 most/G309.2-0.6.ps
+# Manually exclude MOST contour(s)
+most/*.con
 papers/*.pdf
 resources/*.pdf
 

@@ -4,13 +4,24 @@
 # Aaron Tran, 2015 Nov 13
 
 SNR = G309.2-0.6
+DLOBJS = $(SNR).fits $(SNR).jpg $(SNR).ps
+
+OBJS = $(SNR)_linear.con
 
 .PHONY : all
-all : $(SNR).fits $(SNR).jpg $(SNR).ps
+all : $(DLOBJS) $(OBJS)
 
 .PHONY : clean
 clean :
-	rm -f $(SNR).fits $(SNR).jpg $(SNR).ps
+	rm -f $(DLOBJS) $(OBJS)
+
+# Using makefile as dependency in this case is not great, but it'll do...
+$(SNR)_linear.con : $(SNR).fits linear.lev Makefile
+	ds9 $< \
+	    -contour yes \
+	    -contour smooth 1 \
+	    -contour loadlevels linear.lev \
+	    -contour save $@ wcs fk5 -exit
 
 %.ps :
 	curl -o $@.gz http://www.physics.usyd.edu.au/astrop/wg96cat/ps/$@.gz
