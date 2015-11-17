@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Must run after sourcing sasinit for correct obsid
+
+obsid=$1
+
+if [ "$#" -ne 1 ]
+then
+    echo "Error: one argument (obsid) required, exiting"
+    exit 1
+fi
+
+if [[ ! $SAS_ODF =~ $obsid ]]
+then
+    echo "Error: SAS_ODF and SAS_CCF not set for $obsid"
+    echo "Please re-run sasinit"
+    exit 1
+fi
+
+evlists=$(ls -1 ${XMM_PATH}/${obsid}/odf/repro/*-ori.fits)
+regions=$(ls -1 ${XMM_PATH}/regs/*.reg)
+
+for objreg in $regions;
+do
+    for evli in $evlists;
+    do
+        obj_stem=$(basename $objreg | cut -d "." -f 1)
+        instr_stem=$(basename $evli | cut -d "-" -f 1)
+        detreg="${XMM_PATH}/regs/${obsid}/reg_${instr_stem}_${obj_stem}.txt"
+
+        echo "Running: reg2xmmdets.pl $objreg $evli > $detreg"
+        reg2xmmdets.pl $objreg $evli > $detreg
+    done
+done

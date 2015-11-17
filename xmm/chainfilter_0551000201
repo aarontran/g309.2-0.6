@@ -1,0 +1,58 @@
+#!/bin/tcsh -f
+
+# Wrapper script for a ton of XMM ESAS commands
+# Must run on statler, espfilt (mos-filter, pn-filter) will fail on treble due
+# to insufficient RAM.  (I think mos/pn-spectra are subject to this problem
+# too, can't remember)
+# Presupposes correct file prefixes for obsids 0087940201 and 0551000201
+# Aaron Tran
+# Oct. 5 2015, modified Oct. 25 2015
+
+# ------------------------
+# Configuration parameters
+# ------------------------
+
+set OBSID = "0551000201"
+set MOSEXP = "1S001 2S002"
+set PNEXP = "S003"
+
+# ------------------------
+# Start of script commands
+# ------------------------
+
+# CHANGE OF PLANS (Oct. 19 2015)
+# RUN FROM DIRECTORY research/xmm/
+
+cd "${XMM_PATH}/${OBSID}/odf/repro"
+
+# Generate event lists
+epchain withoutoftime=true >& epchain_oot.log
+epchain >& epchain.log
+emchain >& emchain.log
+
+# Good time filtering (remove flares)
+# Make symlinks to work around {mos,pn}-filter file renaming
+mos-filter >& mos-filter.log
+mv command.csh mos-filter_cmd.csh
+foreach exp ($MOSEXP)
+    ln -s mos${exp}-ori.fits P${OBSID}M${exp}MIEVLI0000.FIT
+end
+
+pn-filter >& pn-filter.log
+foreach exp ($PNEXP)
+    ln -s pn${exp}-oot.fits P${OBSID}PN${exp}OOEVLI0000.FIT
+    ln -s pn${exp}-ori.fits P${OBSID}PN${exp}PIEVLI0000.FIT
+end
+
+# Pat asks: is it necessary to run filtering 2x?  You should try this, maybe
+# for 0551000201 at least.
+# espfilt eventset=mos1-evt1.fits method=histogram clobber=no -V 6
+# espfilt eventset=mos2-evt1.fits method=histogram clobber=no -V 6
+# espfilt eventset=pn-evt1.fits method=histogram clobber=no -V 6
+
+### Additional filtering steps if needed.
+# Point source removal, special treatment for PN readout streaks
+# any additional PATTERN / FLAG filtering (on top of what's already done in
+# mos-filter and pn-filter) goes here.
+
+

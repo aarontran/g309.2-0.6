@@ -1488,6 +1488,8 @@ Friday 2015 November 13 -- Sunday 2015 November 15
 Brief list of available data:
 * XMM pointings 2x
 * Chandra ptgs of src (not much of remnant) (4554, 8929)
+  Obsid 4554 does overlap the remnant, no grating.  Not likely to contribute much
+  (short 15ks exposure, XMM-Newton effective area >> Chandra)
 * MOST radio, 0.83GHz, resolution 43"
 * ATCA 1.34GHz (gaensler paper) + simultaneous HI 1.420GHz. ~24" resolution 
 
@@ -1525,29 +1527,16 @@ Basically start with a clean slate.
 
     specbackgrp src  started 14:24 monday nov 16
 
-
-Plan: start taking advantage of Git branches to organize ideas/code.
-I think this is exactly what you need, to make things traceable.
-
-Everything should be documented in a MASTER copy of notes, though.
-
-The tentative plan is to:
-* create a new git branch for each "variant" pipeline (e.g., adding a knob or
-  trying a different feature)
-* if the new variant is better than the old, merge back into master and explain
-  the additions in the final result.
-* if the new variant is NOT better, leave the branch hanging.
-  tag the end of the branch, explaining what happened and why it was
-  "abandoned".
-  The branch tip should have enough data / scripts to justify why it was deemed
-  unimportant.
-  
-E.g. from one of my previous projects, if I wanted to demonstrate that a
-super-exponential synchrotron cutoff did not change qualitative behavior as
-compared to the plain (even if not quite correct) exponential,
-I could simply branch 
+May start using Git branches to organize ideas, and trace exploratory analyses.
+Depends on the needs at hand.  Use git tag to annotate branch tips or
+something, maybe.
 
 
+Monday 2015 November 16
+=======================
+
+Continued organizing up workflow.  Started adding and running new scripts,
+selected new regions.
 
 ## Scripting
 
@@ -1564,7 +1553,6 @@ In addition, I need to escape exclamation points in tcsh for some reason...
 
 Easiest solution: just use bash.  bash correctly inherits environment variables
 ($PATH) from calling tcsh, so that's OK.
-
 
 ## Region selection
 
@@ -1601,6 +1589,116 @@ to `20151116_xmm0087940201pps_mostlinear_src_bkg.png`.
 
 And, added procedure for creating and regenerating MOST contours.  Pretty
 straightforward.
+
+## Minor coordinate mismatch
+
+Adding new script to convert DS9 regions to XMM detector region expressions.
+Using same source region as before with newly reprocessed data,
+I'm getting VERY slightly different DETX/Y coordinates.
+Here's an example for MOS1 detector.
+
+    DS9 fk5: 
+    0087940201: &&((DETX,DETY) IN circle(-2056.3, -1681.7, 4795.2))
+    0551000201: &&((DETX,DETY) IN circle(-4649.7, -2786.9, 4795.2))()
+
+
+    0087940201 (old): &&((DETX,DETY) IN circle(-2055.2, -1690.2, 4795.2))
+    0551000201 (old): &&((DETX,DETY) IN circle(-4650.2, -2784.3, 4795.2))
+
+The difference is ~1-2 detector units, i.e. ~0.1 arcsec, except for DETY
+in 0087940201 MOS1 (~9 detector units is ~0.45 arcsec).
+These differences are minute given the large region size (~8 arcmin diam),
+XMM-Newton PSF, etc.
+
+Working hypothesis: data from XMM SOC archive differs slightly from data
+available via NASA HEASARC w3browse.  I test this by getting w3browse data for
+these obsids to compare event lists again (rerun cifbuild, odfingest, emchain).
+
+Result (working in `/data/mpofls/atran/research/g309/xmm`):
+
+    > setenv SAS_ODF $XMM_PATH/0087940201/odf/repro/0315_0087940201_SCX00000SUM.SAS
+    > setenv SAS_CCF $XMM_PATH/0087940201/odf/repro/ccf.cif
+    > reg2xmmdets.pl regs/src.reg 0087940201/odf/repro/mos1S001-ori.fits
+    &&((DETX,DETY) IN circle(-2056.3, -1681.7, 4795.2))
+
+    > setenv SAS_ODF $XMM_PATH/w3browse/0087940201/ODF/repro/0315_0087940201_SCX00000SUM.SAS
+    > setenv SAS_CCF $XMM_PATH/w3browse/0087940201/ODF/repro/ccf.cif
+    > reg2xmmdets.pl regs/src.reg w3browse/0087940201/ODF/repro/P0087940201M1S001MIEVLI0000.FIT
+    &&((DETX,DETY) IN circle(-2054.8, -1689.5, 4795.2))
+
+    > setenv SAS_ODF $XMM_PATH/0551000201/odf/repro/1692_0551000201_SCX00000SUM.SAS 
+    > setenv SAS_CCF $XMM_PATH/0551000201/odf/repro/ccf.cif 
+    > reg2xmmdets.pl regs/src.reg 0551000201/odf/repro/mos1S001-ori.fits
+    &&((DETX,DETY) IN circle(-4649.7, -2786.9, 4795.2))
+
+    > setenv SAS_ODF $XMM_PATH/w3browse/0551000201/ODF/repro/1692_0551000201_SCX00000SUM.SAS 
+    > setenv SAS_CCF $XMM_PATH/w3browse/0551000201/ODF/repro/ccf.cif 
+    > reg2xmmdets.pl regs/src.reg w3browse/0551000201/ODF/repro/P0551000201M1S001MIEVLI0000.FIT
+    &&((DETX,DETY) IN circle(-4649.7, -2786.9, 4795.2))
+
+OK.  So, my script returns the same result as claimed.
+* For 0551000201, w3browse data match XMM-SAS data; no difference.
+* For 0087940201, w3browse data still disagree.  But, strangely, it disagrees
+  slightly with the data from the first time I computed these regions (by 0.4
+  in detx and 0.7 in dety).  Both sets of w3browse data disagree more
+  substantially w/ the XMM-SAS downloaded data (~1 in detx and ~8 in dety).
+
+This is curious, and my bet is that it's related to updated calibration files
+being passed between XMM SOC and NASA HEASARC.  But, for our analysis, the
+discrepancy is extremely unimportant, so don't pursue this further.
+
+## New regions for XMM detectors produced
+
+Quick comparison of source regions being produced (because the source circle is
+unchanged from mid-October):
+
+    Old, 0087940201:
+	&&((DETX,DETY) IN circle(-2055.2, -1690.2, 4795.2))
+	&&((DETX,DETY) IN circle(1509.3, -2280.0, 4795.2))
+	&&((DETX,DETY) IN circle(-1383.0, 2121.9, 4795.2))
+    New, 0087940201:
+	&&((DETX,DETY) IN circle(-2056.3, -1681.7, 4795.2))
+	&&((DETX,DETY) IN circle(1500.8, -2281.1, 4795.2))
+	&&((DETX,DETY) IN circle(-1374.4, 2123.1, 4795.2))
+    Old, 0551000201:
+	&&((DETX,DETY) IN circle(-4650.2, -2784.3, 4795.2))
+	&&((DETX,DETY) IN circle(2590.2, -4880.6, 4795.2))
+	&&((DETX,DETY) IN circle(-2486.9, 4712.8, 4795.2))
+    New, 0551000201:
+	&&((DETX,DETY) IN circle(-4649.7, -2786.9, 4795.2))
+	&&((DETX,DETY) IN circle(2592.7, -4880.1, 4795.2))
+	&&((DETX,DETY) IN circle(-2489.4, 4712.3, 4795.2))
+
+All show some very slight changes, order of <10 detector units (which is <0.5
+arcsec, so OK).  Changes look smaller for old vs. new 0551000201, maybe because
+it is a more recent obsid?  I'm not sure.
+
+Anyways, I'm ok with this, so I will overwrite the old region files.
+If needed, they can be salvaged from my old notes anyways.
+
+Remark: to make Makefile work, perhaps the right approach is to build modular
+scripts that help hide hard-to-manipulate filename patterns.
+Low priority, but can revisit this later...
+
+## Walkthrough of data:
+
+TODO: walk-through data carefully, documenting all possible changes/etc.
+
+0551000201: inspect soft X-ray images
+* MOS1 CCD4 appears to have an oddly bright edge, in the file
+    0551000201/odf/repro$ ds9 mos1S001-obj-image-det-soft.fits
+  I'm not sure if this is removed in the cleaned event list.
+  Other CCDs look ok.
+* MOS2 CCD5 is very obviously in anomolous state, matching the mos-filter
+  flagging.  Other CCDs look ok.
+* PN image, presumably without OOT events, looks good.
+
+0087940201:
+* MOS1 looks ok (obj-image-det-soft.fits)
+* MOS2 looks ok (obj-image-det-soft.fits)
+* PN (obj-image-det.fits), presumably without OOT events, looks good.
+
+I re-run spectrum extraction for all the data now, with new background regions.
 
 
 Running notes

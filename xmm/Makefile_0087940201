@@ -85,17 +85,15 @@ MOS_SPEC_OBJ = mos%-obj-src.pi mos%-src.rmf mos%-src.arf mos%-back-src.pi
 # 2. 1S001_src (or 1S001_bkg)
 # the dependency on mos%-clean.fits is a little tricky to handle.
 
-# Maybe it's time to surrender and admit I should just be using a shell script.
-# What if I change my target names to make this shit work?...
-
-mos1S001_src-obj.pi
-mos1S001_src.rmf
-mos1S001_src.arf
-mos1S001_src-qpb.pi
-
-$(XMM_PATH)/regs/$(OBSID)/reg_%.txt : $(XMM_PATH)/regs/{stem}.txt
-	# something something recipe to convert
-	# DS9 coordinates to XMM DET coordinates using FITS file.
+# patsubst only operates on first % in pattern/replacement
+XMMREGS = $(patsubst %, "$(XMM_PATH)/regs/$(OBSID)/reg_mos%_%.txt", $(MOSPRF)) \
+	$(patsubst %, "$(XMM_PATH)/regs/$(OBSID)/reg_pn%_%.txt", $(PNPRF))
+#XMMREGS = $(XMM_PATH)/regs/$(OBSID)/reg_mos1S001_%.txt \
+#	  $(XMM_PATH)/regs/$(OBSID)/reg_mos2S002_%.txt \
+#	  $(XMM_PATH)/regs/$(OBSID)/reg_pnS003_%.txt
+$(XMMREGS) : $(XMM_PATH)/regs/%.txt
+	make_xmmregions $(OBSID)
+# Inelegant, but it would do the job.
 
 mos%-obj.pi mos%.rmf mos%.arf mos%-qpb.pi : $(XMM_PATH)/regs/$(OBSID)/reg_%.txt \
     	mos%-clean.fits

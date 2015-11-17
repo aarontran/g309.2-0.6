@@ -13,6 +13,7 @@ resources/*.pdf
 xmm/caldb/**
 xmm/*/pps
 xmm/*/PPS
+xmm/*/catalogue
 MANIFEST.*
 *.ASC
 *SUM.SAS

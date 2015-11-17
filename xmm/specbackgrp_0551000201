@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Wrapper script for XMM ESAS spectral extraction, specific to obsid 0087940201
+# Wrapper script for XMM ESAS spectral extraction, specific to obsid 0551000201
 # Must run on statler (8GB RAM), pn-spectra will segfault with only 4GB RAM
 #
 # Presupposes that mos-filter and pn-filter have already been run successfully
@@ -21,7 +21,7 @@ then
 fi
 
 RSTEM=$1 # just the region label (src, bkg, etc)
-OBSID="0087940201"  # TODO this is not great
+OBSID="0551000201"  # TODO this is not great
 
 RDIR="${XMM_PATH}/regs/${OBSID}"
 CALDB="${XMM_PATH}/caldb"
@@ -33,21 +33,22 @@ CALDB="${XMM_PATH}/caldb"
 # Start of script commands
 # ------------------------
 
-# CHANGE OF PLANS (Oct. 19 2015)
-# RUN FROM DIRECTORY research/xmm/
+# NOTE: MOS1 CCD6 = 0 (destroyed), MOS2 CCD5 = 0 (anomalous state)
 
 cd "${XMM_PATH}/${OBSID}/odf/repro"
 
 # Spectrum extraction
 mos-spectra prefix=1S001 caldb=$CALDB \
     region="${RDIR}/reg_mos1S001_${RSTEM}.txt" \
-    mask=0 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+    mask=0 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd7=1 \
+    ccd6=0 \
   >& mos-spectra_mos1S001_${RSTEM}.log
 mv command.csh mos_spectra_mos1S001_${RSTEM}_cmd.csh
 
 mos-spectra prefix=2S002 caldb=$CALDB \
     region="${RDIR}/reg_mos2S002_${RSTEM}.txt" \
-    mask=0 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+    mask=0 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd6=1 ccd7=1 \
+    ccd5=0 \
   >& mos-spectra_mos2S002_${RSTEM}.log
 mv command.csh mos_spectra_mos2S002_${RSTEM}_cmd.csh
 
@@ -60,11 +61,13 @@ mv command.csh pn-spectra_pnS003_${RSTEM}_cmd.csh
 # Compute QPB
 # diag=2 creates more diagnostic output files (.qdp plots)
 mos_back prefix=1S001 caldb=$CALDB \
-    diag=2 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+    diag=2 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd7=1 \
+    ccd6=0 \
   >& mos_back_mos1S001_${RSTEM}.log
 
 mos_back prefix=2S002 caldb=$CALDB \
-    diag=2 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+    diag=2 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd6=1 ccd7=1 \
+    ccd5=0 \
   >& mos_back_mos2S002_${RSTEM}.log
 
 pn_back prefix=S003 caldb=$CALDB \
