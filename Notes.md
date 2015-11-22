@@ -1699,6 +1699,318 @@ TODO: walk-through data carefully, documenting all possible changes/etc.
 * PN (obj-image-det.fits), presumably without OOT events, looks good.
 
 I re-run spectrum extraction for all the data now, with new background regions.
+After some wrestling with the precise nohup command...
+
+    atran(sas)@statler:/data/mpofls/atran/research/g309/xmm/0087940201/odf/repro$ nohup /bin/tcsh -c 'source /data/mpofls/atran/research/g309/xmm/sasinit 0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' > &
+    nohup_specbackgrp_20151116.log &
+    [1] 31479
+
+    atran(sas)@cooper:/data/mpofls/atran/research/g309/xmm/0551000201/odf/repro$ nohup /bin/tcsh -c 'source /data/mpofls/atran/research/g309/xmm/sasinit 0551000201; specbackgrp_0551000201 src; specbackgrp_0551000201 bkg' > &
+    nohup_specbackgrp_20151116.log &
+    [1] 19068
+
+
+Friday 2015 November 20
+=======================
+
+## Looking at pn-spectra results
+
+pn-spectra failed on 0551000201 because pnS003-clean.fits has unexpected
+SUBMODE keyword 'PrimeLargeWindow', but pn-spectra only accepts
+* 'PrimeFullWindowExtended' (the PN mode for 0087940201)
+  (it also checks for frame time FRMTIME, and treats files w/ FRMTIME <210
+   or >210 differently)
+* 'PrimeFullWindow'
+and it can't handle anything else.  I don't really understand why.
+
+Weird issue: grppha log shows errors reading "infile" for `mos1S001_bkg`,
+for BOTH 0551000201 and 0087940201.  Why?
+Issue does not occur for either `mos1S001_src` or `mos2S002_bkg`, so this is
+quite unusual.
+
+Another issue: I should have grouped the "-os.pi" spectra.  Added a thing into
+my scripts to do so, and ran the grppha command by hand for 0087940201 (no
+point in doing this for 0551000201).
+
+I do not think it's worth my time to try to reproduce what pn-spectra is doing
+from scratch.  If I can't use the ESAS QPB, maybe I can sacrifice some low
+energy counts (where soft proton spectrum seems to curve) and just model the
+soft proton contamination outright in the PN background.
+
+## More XSPEC fitting discussion
+
+Chatted more with Josh about XSPEC today -- see notebook for some remarks.
+Tools Josh noted: Sherpa has a nice Python interface; J. Buchner has created a
+package BXA for Bayesian sampling to drive model fits of X-ray spectra, through
+XSPEC or Sherpa.
+
+I think I now get what's up with these identifiers.
+It's easiest for me to think about folding models through RMF/ARF files.
+
+The functions for response/arf are the most critical, even though in the
+default (simplest case) they're normally hidden from the user.
+RMF and ARF files, with identifier "x:y", map model/source x --> spectrum y.
+In XSPEC, this makes the __spectrum__ "show up" for the given __model__.
+
+    Model params
+        params for spectrum x
+        params for spectrum y
+        ...
+
+Main point of confusion: if two models fold through different RMFs to produce
+an output signal, counts(channel), how does XSPEC fit two models, folded
+through distinct RMFs, to data that was ALREADY passed through an RMF to
+convert channels --> energy ? (when using setplot en).  We must have assumed an
+RMF to get to energy, but different counts are parameterized by different RMFs
+in our mode.
+
+Changing rmf/arf has no apparent effect on data, in either energy or channel
+space (but obviously affects model).
+But, removing rmf entirely kills our ability to move to energy space.
+Hypothesis: XSPEC makes some assumption on the RMF to show it in energy space,
+say, making it diagonal.
+I'm not sure how they send the model to energy -- I would assume that 
+it's folded through rmf/arf, then passed through the assumed RMF (undoing the
+RMF step), something like
+
+    M(I) = integral[ M(E) * rmf(I,E) * arf(E) dE ]
+    M'(E) = rmf^{-1}(I,E) * M(I)
+
+Apparent answer: XSPEC is fitting in channel space.  See
+    http://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XspecSpectralFitting.html
+for the chi^2 formula being minimized -- specified strictly in channel space.
+This seems completely logical.
+
+Another thing: remember, BACKSCAL does account for ARF in calculation.
+I would think the spatial variation of the RMF matters too, but I guess that's
+probably much smaller.
+
+For PRACTICE: walk through ALL XSPEC commands used to get spectra.
+rmfgen, arfgen, detmap, etc.
+
+    # source 1 (model 1) folds through resp/arf 1:1 to fit data (:1)
+    # source 2 (model 2) folds through resp/arf 2:1 to fit data (:1)
+    # (ignoring datagroup "1" for now)
+
+    data 1:1 mos1S001-bkg.pi
+    data 1:1 mos1S001-bkg-grp50.pi 
+    response 1:1 mos1S001-bkg.rmf
+    arf 1:1 mos1S001-bkg.arf
+    resp 2:1 ../../../caldb/mos1-diag.rsp 
+    arf 2:1 none
+
+    # source 1 (model 1) folds through resp/arf 1:2 to fit data (:2)
+    #   this is the default setting; model 1 always goes through
+    #   the rmf/arf attached to the spectrum
+    # source 2 (model 2) folds through resp/arf 2:2 to fit data (:2)
+    # (ignoring datagroup "1" for now)
+    # source 3 (model 3) folds through resp/arf 3:2 to fit data (:2)
+
+    data 2:2 mos1S001-src.pi
+    data 2:2 mos1S001-src-grp50.pi 
+    resp 2:2 ../../../caldb/mos1-diag.rsp 
+    arf 2:2 none
+    resp 3:2 mos1S001-src.rmf
+    arf 3:2 mos1S001-src.arf
+
+    # Only now do you specify the models
+
+    model 1:xrb apec + phabs*(po+apec)
+    model 2:sp po
+    model 3:snr phabs*vnei
+
+
+Saturday 2015 November 21
+=========================
+
+Current list of procedure changes (not yet executed):
+1. remove enhanced signal in MOS #1, CCD #4.
+   script mos-spectra takes cflim parameter to specify where to cut, manually
+2. fix PN spectrum extraction for 0551000201
+3. explore effects of changing a few epchain parameters
+4. explore effect of removing point sources w/ automated algorithm
+
+
+First attempt to fit backgrounds from 3 instruments simultaneously.
+Looks pretty good, I'd say.
+* Background regions from 0087940201 only
+* 1.49, 1.75 keV line intensities same for both MOS1/MOS2
+  (woops, forgot to freeze)
+* 1.49, 7.49, 7.11, 8.05, 8.62, 8.90 keV for PN
+* Soft proton power law ~ 0.5 for MOS1/MOS2, ~0.76 for PN
+* X-ray background - allow a constant term for MOS1/MOS2/PN
+  but otherwise use same model
+  unabsorbed 1 keV apec, phabs x (power + apec) with 1.4 power law, 0.3 keV
+  apec; nH = 1 x 10^22.
+
+
+    ========================================================================
+    Model instr:gaussian<1> + gaussian<2> + gaussian<3> + gaussian<4> + gaussian<5> + gaussian<6> + gaussian<7> + gaussian<8> Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   gaussian   LineE      keV      1.49016      +/-  1.85407E-03  
+       2    1   gaussian   Sigma      keV      0.0          frozen
+       3    1   gaussian   norm                5.81723E-05  +/-  2.45807E-06  
+       4    2   gaussian   LineE      keV      1.85002      +/-  1.07660E-02  
+       5    2   gaussian   Sigma      keV      0.0          frozen
+       6    2   gaussian   norm                1.07773E-05  +/-  2.73666E-06  
+       7    3   gaussian   LineE      keV      1.48910      +/-  1.04283E-02  
+       8    3   gaussian   Sigma      keV      0.0          frozen
+       9    3   gaussian   norm                0.0          frozen
+      10    4   gaussian   LineE      keV      7.45584      +/-  2.40032E-02  
+      11    4   gaussian   Sigma      keV      0.0          frozen
+      12    4   gaussian   norm                0.0          frozen
+      13    5   gaussian   LineE      keV      5.34317      +/-  4.50433E-02  
+      14    5   gaussian   Sigma      keV      0.0          frozen
+      15    5   gaussian   norm                0.0          frozen
+      16    6   gaussian   LineE      keV      8.04000      +/-  4.60735E-03  
+      17    6   gaussian   Sigma      keV      0.0          frozen
+      18    6   gaussian   norm                0.0          frozen
+      19    7   gaussian   LineE      keV      8.58980      +/-  3.91053E-02  
+      20    7   gaussian   Sigma      keV      0.0          frozen
+      21    7   gaussian   norm                0.0          frozen
+      22    8   gaussian   LineE      keV      8.85013      +/-  2.37674E-02  
+      23    8   gaussian   Sigma      keV      0.0          frozen
+      24    8   gaussian   norm                0.0          frozen
+                               Data group: 2
+      25    1   gaussian   LineE      keV      1.49016      = instr:p1
+      26    1   gaussian   Sigma      keV      0.0          = instr:p2
+      27    1   gaussian   norm                5.81723E-05  = instr:p3
+      28    2   gaussian   LineE      keV      1.85002      = instr:p4
+      29    2   gaussian   Sigma      keV      0.0          = instr:p5
+      30    2   gaussian   norm                1.07773E-05  = instr:p6
+      31    3   gaussian   LineE      keV      1.48910      = instr:p7
+      32    3   gaussian   Sigma      keV      0.0          = instr:p8
+      33    3   gaussian   norm                0.0          = instr:p9
+      34    4   gaussian   LineE      keV      7.45584      = instr:p10
+      35    4   gaussian   Sigma      keV      0.0          = instr:p11
+      36    4   gaussian   norm                0.0          = instr:p12
+      37    5   gaussian   LineE      keV      5.34317      = instr:p13
+      38    5   gaussian   Sigma      keV      0.0          = instr:p14
+      39    5   gaussian   norm                0.0          = instr:p15
+      40    6   gaussian   LineE      keV      8.04000      = instr:p16
+      41    6   gaussian   Sigma      keV      0.0          = instr:p17
+      42    6   gaussian   norm                0.0          = instr:p18
+      43    7   gaussian   LineE      keV      8.58980      = instr:p19
+      44    7   gaussian   Sigma      keV      0.0          = instr:p20
+      45    7   gaussian   norm                0.0          = instr:p21
+      46    8   gaussian   LineE      keV      8.85013      = instr:p22
+      47    8   gaussian   Sigma      keV      0.0          = instr:p23
+      48    8   gaussian   norm                0.0          = instr:p24
+                               Data group: 3
+      49    1   gaussian   LineE      keV      1.49016      = instr:p1
+      50    1   gaussian   Sigma      keV      0.0          = instr:p2
+      51    1   gaussian   norm                0.0          frozen
+      52    2   gaussian   LineE      keV      1.85002      = instr:p4
+      53    2   gaussian   Sigma      keV      0.0          = instr:p5
+      54    2   gaussian   norm                0.0          frozen
+      55    3   gaussian   LineE      keV      1.48910      = instr:p7
+      56    3   gaussian   Sigma      keV      0.0          = instr:p8
+      57    3   gaussian   norm                8.83618E-06  +/-  1.30864E-06  
+      58    4   gaussian   LineE      keV      7.45584      = instr:p10
+      59    4   gaussian   Sigma      keV      0.0          = instr:p11
+      60    4   gaussian   norm                1.05592E-05  +/-  2.01838E-06  
+      61    5   gaussian   LineE      keV      5.34317      = instr:p13
+      62    5   gaussian   Sigma      keV      0.0          = instr:p14
+      63    5   gaussian   norm                3.52263E-06  +/-  1.36904E-06  
+      64    6   gaussian   LineE      keV      8.04000      = instr:p16
+      65    6   gaussian   Sigma      keV      0.0          = instr:p17
+      66    6   gaussian   norm                9.86675E-05  +/-  4.10001E-06  
+      67    7   gaussian   LineE      keV      8.58980      = instr:p19
+      68    7   gaussian   Sigma      keV      0.0          = instr:p20
+      69    7   gaussian   norm                1.22391E-05  +/-  3.08128E-06  
+      70    8   gaussian   LineE      keV      8.85013      = instr:p22
+      71    8   gaussian   Sigma      keV      0.0          = instr:p23
+      72    8   gaussian   norm                2.50312E-05  +/-  3.63480E-06  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model spm1:powerlaw<1> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   powerlaw   PhoIndex            0.519159     +/-  1.80841E-02  
+       2    1   powerlaw   norm                4.25692E-02  +/-  1.30967E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model spm2:powerlaw<1> Source No.: 4   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 2
+       1    1   powerlaw   PhoIndex            0.507269     +/-  1.78046E-02  
+       2    1   powerlaw   norm                4.05707E-02  +/-  1.25785E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model sppn:powerlaw<1> Source No.: 5   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 3
+       1    1   powerlaw   PhoIndex            0.762193     +/-  2.69742E-02  
+       2    1   powerlaw   norm                7.68172E-02  +/-  2.86196E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model xrb:constant<1>*constant<2>(apec<3> + phabs<4>(powerlaw<5> + apec<6>)) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   constant   factor              1.00000      frozen
+       2    2   constant   factor              1.00000      frozen
+       3    3   apec       kT         keV      1.00000      frozen
+       4    3   apec       Abundanc            1.00000      frozen
+       5    3   apec       Redshift            0.0          frozen
+       6    3   apec       norm                1.57651E-05  +/-  6.96728E-06  
+       7    4   phabs      nH         10^22    1.00000      frozen
+       8    5   powerlaw   PhoIndex            1.40000      frozen
+       9    5   powerlaw   norm                7.99979E-15  +/-  1.56934E-05  
+      10    6   apec       kT         keV      0.300000     frozen
+      11    6   apec       Abundanc            1.00000      frozen
+      12    6   apec       Redshift            0.0          frozen
+      13    6   apec       norm                1.58997E-03  +/-  4.04653E-04  
+                               Data group: 2
+      14    1   constant   factor              1.11725      +/-  0.228343     
+      15    2   constant   factor              1.00000      frozen
+      16    3   apec       kT         keV      1.00000      = xrb:p3
+      17    3   apec       Abundanc            1.00000      = xrb:p4
+      18    3   apec       Redshift            0.0          = xrb:p5
+      19    3   apec       norm                1.57651E-05  = xrb:p6
+      20    4   phabs      nH         10^22    1.00000      = xrb:p7
+      21    5   powerlaw   PhoIndex            1.40000      = xrb:p8
+      22    5   powerlaw   norm                7.99979E-15  = xrb:p9
+      23    6   apec       kT         keV      0.300000     = xrb:p10
+      24    6   apec       Abundanc            1.00000      = xrb:p11
+      25    6   apec       Redshift            0.0          = xrb:p12
+      26    6   apec       norm                1.58997E-03  = xrb:p13
+                               Data group: 3
+      27    1   constant   factor              0.411642     +/-  9.18809E-02  
+      28    2   constant   factor              1.00000      frozen
+      29    3   apec       kT         keV      1.00000      = xrb:p3
+      30    3   apec       Abundanc            1.00000      = xrb:p4
+      31    3   apec       Redshift            0.0          = xrb:p5
+      32    3   apec       norm                1.57651E-05  = xrb:p6
+      33    4   phabs      nH         10^22    1.00000      = xrb:p7
+      34    5   powerlaw   PhoIndex            1.40000      = xrb:p8
+      35    5   powerlaw   norm                7.99979E-15  = xrb:p9
+      36    6   apec       kT         keV      0.300000     = xrb:p10
+      37    6   apec       Abundanc            1.00000      = xrb:p11
+      38    6   apec       Redshift            0.0          = xrb:p12
+      39    6   apec       norm                1.58997E-03  = xrb:p13
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =         664.01 using 593 PHA bins.
+
+    Test statistic : Chi-Squared =         664.01 using 593 PHA bins.
+     Reduced chi-squared =         1.1732 for    566 degrees of freedom 
+     Null hypothesis probability =   2.720152e-03
+    XSPEC12>pl ld
 
 
 Running notes

@@ -1,33 +1,183 @@
-statistic chi
-data 1:1 mos1S001-obj-bkg-grp.pi
-response  2:1 ../../../mos1-diag.rsp
-ignore 1:1-4,42-111
+#cpd /xw
+#abund wilms
+query yes
 
-method leven 10 0.01
-abund angr
-xsect bcmc
-cosmo 70 0 0.73
-xset delta 0.01
-systematic 0
-model  apec  +  phabs*apec  +  phabs*powerlaw  + gaussian + gaussian
-        1.27147       0.01      0.008      0.008         64         64
-              1     -0.001          0          0          5          5
-              0      -0.01     -0.999     -0.999         10         10
-     2.0943e-05       0.01          0          0      1e+20      1e+24
-              1     -0.001          0          0     100000      1e+06
-       0.205723       0.01      0.008      0.008         64         64
-              1     -0.001          0          0          5          5
-              0      -0.01     -0.999     -0.999         10         10
-    0.000690224       0.01          0          0      1e+20      1e+24
-              1     -0.001          0          0     100000      1e+06
-           1.46      -0.01         -3         -2          9         10
-    4.61412e-05       0.01          0          0      1e+20      1e+24
-           1.49      -0.05          0          0      1e+06      1e+06
-              0      -0.05          0          0         10         20
-    2.90302e-05       0.01          0          0      1e+20      1e+24
-           1.75      -0.05          0          0      1e+06      1e+06
-              0      -0.05          0          0         10         20
-    7.77965e-06       0.01          0          0      1e+20      1e+24
-model  2:sp powerlaw
-       0.860667       0.01         -3         -2          9         10
-     0.00369503       0.01          0          0      1e+20      1e+24
+data 1:1 0087940201/odf/repro/mos1S001-bkg-grp50.pi 
+data 2:2 0087940201/odf/repro/mos2S002-bkg-grp50.pi 
+data 3:3 0087940201/odf/repro/pnS003-bkg-os-grp50.pi
+
+resp 1 0087940201/odf/repro/mos1S001-bkg.rmf
+resp 2 0087940201/odf/repro/mos2S002-bkg.rmf
+resp 3 0087940201/odf/repro/pnS003-src.rmf
+
+arf  1 0087940201/odf/repro/mos1S001-bkg.arf
+arf  2 0087940201/odf/repro/mos2S002-bkg.arf
+arf  3 0087940201/odf/repro/pnS003-src.arf
+
+back 1 0087940201/odf/repro/mos1S001-bkg-qpb.pi
+back 2 0087940201/odf/repro/mos2S002-bkg-qpb.pi
+back 3 0087940201/odf/repro/pnS003-bkg-qpb.pi
+
+# the 1:1/1:2/1:3 resp/arf commands are optional
+# but helpful for clarity
+
+#resp 1:1 0087940201/odf/repro/mos1S001-bkg.rmf
+#arf  1:1 0087940201/odf/repro/mos1S001-bkg.arf
+resp 2:1 0087940201/odf/repro/mos1S001-bkg.rmf
+arf  2:1 0087940201/odf/repro/mos1S001-bkg.arf
+resp 3:1 caldb/mos1-diag.rsp 
+arf  3:1 none
+resp 6:1 0087940201/odf/repro/mos1S001-bkg.rmf
+arf  6:1 0087940201/odf/repro/mos1S001-bkg.arf
+
+#resp 1:2 0087940201/odf/repro/mos2S002-bkg.rmf
+#arf  1:2 0087940201/odf/repro/mos2S002-bkg.arf
+resp 2:2 0087940201/odf/repro/mos2S002-bkg.rmf
+arf  2:2 0087940201/odf/repro/mos2S002-bkg.arf
+resp 4:2 caldb/mos2-diag.rsp 
+arf  4:2 none
+resp 6:2 0087940201/odf/repro/mos2S002-bkg.rmf
+arf  6:2 0087940201/odf/repro/mos2S002-bkg.arf
+
+#resp 1:3 0087940201/odf/repro/pnS003-src.rmf
+#arf  1:3 0087940201/odf/repro/pnS003-src.arf
+resp 2:3 0087940201/odf/repro/pnS003-src.rmf
+arf  2:3 0087940201/odf/repro/pnS003-src.arf
+resp 5:3 caldb/pn-diag.rsp 
+arf  5:3 none
+resp 6:3 0087940201/odf/repro/pnS003-src.rmf
+arf  6:3 0087940201/odf/repro/pnS003-src.arf
+
+# To-do: script the starting parameters
+# con * con should be different for each instrument
+# Relative normalization of apec/po should be same for given obsid
+# Normalizations of gaussian lines should be same-ish...
+
+model 1:xrb con*con*(apec + phabs*(po+apec))
+    1
+    1
+    1
+    1
+    0
+    2e-5
+    1
+    1.4
+    1e-5
+    0.3
+    1
+    0
+    1e-4
+model 2:instr gauss + gauss + gauss + gauss + gauss + gauss + gauss + gauss
+    1.49
+    0
+    0
+    1.75
+    0
+    0
+    1.49
+    0
+    0
+    7.49
+    0
+    0
+    7.11
+    0
+    0
+    8.05
+    0
+    0
+    8.62
+    0
+    0
+    8.90
+    0
+    0
+model 3:spm1 po
+    0.7
+    1e-2
+model 4:spm2 po
+    0.7
+    1e-2
+model 5:sppn po
+    0.7
+    1e-2
+
+### Instrumental line parameters ###
+
+# Freeze all parameters (fix energies + linewidths)
+freeze instr:1-24
+
+# Set MOS line normalizations, but hold to zero for PN fit
+newpar instr:3 1e-5
+newpar instr:6 1e-5
+thaw instr:3,6
+newpar instr:27 1e-5
+newpar instr:30 1e-5
+# thaw instr:27,30
+# implicit thaw
+# But, hold at zero for PN fit
+newpar instr:51 0
+newpar instr:54 0
+freeze instr:51,54
+
+# May be prudent to unfreeze line normalizations for MOS1 vs. MOS2 and see what
+# happens.  Or, free line energies
+
+# Set PN line normalizations; MOS fits not affected
+newpar instr:57 1e-5
+newpar instr:60 1e-5
+newpar instr:63 1e-5
+newpar instr:66 1e-5
+newpar instr:69 1e-5
+newpar instr:72 1e-5
+
+### X-ray background parameters ###
+
+# local bubble kT, halo kT, absorption nH, powerlaw alpha
+freeze xrb:3,7,8,10
+
+# Constant terms.  Normalize to MOS1 fit
+freeze xrb:1
+freeze xrb:2,15,28
+# Let one const term float for MOS2, PN fits
+newpar xrb:14 1
+newpar xrb:27 1
+
+# Only thawed xrb parameters are 6,9,13 (apec,powerlaw,apec norm)
+# 14,27 (constant shift terms for MOS2/PN fits)
+
+### Soft proton parameters ###
+freeze spm1:1
+freeze spm2:1
+freeze sppn:1
+
+### SWCX??? ###
+model 6:swcx gauss+gauss
+    0.56
+    0
+    1e-5
+    0.65
+    0
+    1e-5
+freeze swcx:1,2,4,5
+# If you want to let PN normalizations float relative to MOS
+# but I don't think it should matter
+# nor should there be a physical reason to let this happen
+# (as differences in MOS/PN sensitivity to SWCX emission should be accounted
+# for by RMF/ARF)
+# newpar swcx:15 1e-5
+# newpar swcx:18 1e-5
+
+setplot en
+notice all
+ignore 1:**-0.3,11.0-**
+ignore 2:**-0.3,11.0-**
+ignore 3:**-0.4,11.0-**
+# XMM ESAS cookbook ignores PN to 0.4keV... I wonder why?
+# Can this be justified from physical grounds?  Ensure we're not losing signal.
+
+fit
+
+thaw spm1:1
+thaw spm2:1
+thaw sppn:1

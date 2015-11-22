@@ -6,8 +6,6 @@ most/G309.2-0.6.jpg
 most/G309.2-0.6.ps
 # Manually exclude MOST contour(s)
 most/*.con
-papers/*.pdf
-resources/*.pdf
 
 # XMM calibration; raw, intermediate, final data
 xmm/caldb/**
@@ -18,6 +16,9 @@ MANIFEST.*
 *.ASC
 *SUM.SAS
 ccf.cif
+
+# Chandra files
+chandra/*/00README
 
 # FITS files
 *.fit
@@ -33,6 +34,10 @@ ccf.cif
 *.rmf
 *.warf
 *.wrmf
+
+# PDF files
+*.pdf
+*.PDF
 
 # Generally, ignore log files (add exceptions if need be)
 *.log

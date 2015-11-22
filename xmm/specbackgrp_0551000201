@@ -120,3 +120,11 @@ grppha infile="pnS003-${RSTEM}.pi" outfile="!pnS003-${RSTEM}-grp50.pi" \
           group min 50 & exit" \
     chatter=10 \
   >& grppha_pnS003_${RSTEM}.log
+
+grppha infile="pnS003-${RSTEM}-os.pi" outfile="!pnS003-${RSTEM}-os-grp50.pi" \
+    comm="chkey BACKFILE pnS003-${RSTEM}-qpb.pi & \
+          chkey RESPFILE pnS003-${RSTEM}.rmf & \
+          chkey ANCRFILE pnS003-${RSTEM}.arf & \
+          group min 50 & exit" \
+    chatter=10 \
+  >& grppha_pnS003_${RSTEM}.log
