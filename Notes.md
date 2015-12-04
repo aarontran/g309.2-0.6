@@ -1820,8 +1820,8 @@ rmfgen, arfgen, detmap, etc.
     model 3:snr phabs*vnei
 
 
-Saturday 2015 November 21
-=========================
+Saturday -- Sunday 2015 November 21-22
+======================================
 
 Current list of procedure changes (not yet executed):
 1. remove enhanced signal in MOS #1, CCD #4.
@@ -2013,40 +2013,452 @@ Looks pretty good, I'd say.
     XSPEC12>pl ld
 
 
-Running notes
-=============
+Monday 2015 November 23
+=======================
 
-Tentative plan:
-- print regions overlaid on SNR (in detector coordinates)
-- print plot of histogram filtering. maybe a second round would help.
+Current list of procedure changes (not yet executed, copied from Sat/Sun 2015
+Nov 21-22):
+1. remove enhanced signal in MOS #1, CCD #4.
+   script mos-spectra takes cflim parameter to specify where to cut, manually
+2. fix PN spectrum extraction for 0551000201
+3. explore effects of changing a few epchain parameters
+4. explore effect of removing point sources w/ automated algorithm
 
-* point source excision.
-* readout streaks!
+Early morning of Monday (~1:30am) I was trying to apply the "good" background
+fit to the SNR fit.
 
-TODO: haven't addressed all possible epchain flags.
-would like to generate some files to show the difference.
- see my notes, scribbled...
+__Observation:__ the instrumental line fit from background regions is
+over-eager -- we actually have negative residual.  Modeled PN lines shoot way
+above the actual signal when I import the background parameters unchanged from
+my fit to bkg region (back.xcm).
+
+__Simple mistake:__ I did not account for ratio of src/bkg areas (normally
+automatically done by XSPEC, by taking BACKSCAL ratio and applying to the
+BACKGRND spectrum).
+
+QUESTION: Is taking ratio of areas OK (well, integral arf(x,y) dxdy)?
+Tentatively, yes.  Difference in RMF/ARF is accounted for by folding through
+SOURCE RMF/ARF instead of BKG RMF/ARF.
+
+QUESTION: ARF/RMF account for extended sources by weighting over the source
+region.  Are they always "normalized" to 1, so that I should be multiplying my
+background model normalizations by the ratio BACKSCAL(src)/BACKSCAL(bkg)??
+As ESAS is intended to work with XSPEC, I'm going to assume this is OK.
+
+QUESTION: what about energy dependence of ARF/RMF?
+This should be fine.  Again as long as source/bkg arf/rmf are weighted
+correctly to handle this, that's OK.  All we have to do is pass model
+parameters through the arf/rmf.
+Now, of course, XMM-SAS's backend implementation is WAY easier if we can assume
+that arf (or, rmf) is separable as arf(x,y,E) = phi(x,y) * psi(E).  That is,
+the spectral response/gain of the detector is spatially invariant.
+But that's a question for another day...
+
+__Adapting background fit parameters to source fit__:
+
+I created a one-off script (`xmm/bkg2src_norm`) that gives me the ratio of
+src/bkg areas for each instrument in obsid 0087940201, by simply inspecting
+BACKSCAL keywords inserted by `mos-spectra`.
+
+    atran(sas)@treble:~/rsch/g309/xmm$ ./bkg2src_norm
+
+    MOS1 BACKSCAL calculation
+    src: 7.098143E+07
+    bkg: 8.421573E+07
+    (7.098143E+07) / (8.421573E+07)
+    src/bkg: 0.842852398239616
+
+    MOS2 BACKSCAL calculation
+    src: 6.927987E+07
+    bkg: 1.012479E+08
+    (6.927987E+07) / (1.012479E+08)
+    src/bkg: 0.684259821685191
+
+    PN BACKSCAL calculation
+    src: 6.433184E+07
+    bkg: 9.177010E+07
+    (6.433184E+07) / (9.177010E+07)
+    src/bkg: 0.701010895705682
+
+Now, I need to apply the normalization to my background fits.  Unfortunately
+this is non-trivial because neither bash nor xspec can do math (every day I am
+inching closer to PyXSPEC or Sherpa or something better than this).
+Simple fix conceptually, even if a hassle to implement (TBD).
+
+NOW, are there any background regions we need to twiddle?
+Comparing line emission from source and background... yes, more adjustments
+needed.  Intensities, and ratios of lines, are definitely not the same.
+
+* XRB -- I will assume constant over detector region
+
+* Instrumental lines vary.
+
+  Across MOS1/MOS2 the spatial distribution of line strengths is similar.
+  BUT, rotation of detectors + different regions means there is no reason to
+  expect the normalizations, in either absolute intensity or ratio of
+  intensities, to be linked.  All we can say is that absolute intensities
+  should be comparable and should follow the map of line emission from Kuntz
+  and Snowden (2008).
+
+  TODO: can we use the database of FWC observations to estimate the line
+  strength and/or ratio of line strengths?
+
+  TODO: what is the physical mechanism that causes the fluorescent emission, in both
+  FWC and non-FWC observations?
+
+  TODO: why does ESAS doc consistently assert that Si line is at 1.75 keV?
+  They're probably right, but I want to know what line this is that is
+  different than the normal 1.85 heavily ionized Si line.
+  Probably, similar line but energy adjusted due to presence of remaining
+  electrons or something...
+
+  IF the photons/particles that induce fluorescent emission are predominantly 
+  NOT focused down the telescope boresight, then it should be easy to
+  characterize lines regardless of sky position (barring obscenely bright
+  things like Cyg X-1 or whatever).
+
+* Misc. point sources -- need to test out cheese
+
+* Soft proton, I have no fucking idea. ESAS creates soft proton images based on
+  the spectral fit -- I don't know if this lets us consider spatial variation,
+  or if it's just based on a semi-random event list cut based on our model soft
+  proton spectrum (if so we'd HAVE to either get a global fit, or specify the
+  extraction region -- only a global fit makes sense, and that might not be
+  possible for all observations).
+
+  TODO: physical mechanism for soft proton contamination.  Any spatial
+  dependence?!
+
+* SWCX (solar wind charge exchange) -- ok, this ought to be invariant.
+  But inspect the data.  Be suspicious of oxygen abundance from vnei fitting.
 
 
-Before final-ish analysis, run evselect with `XMMEA_EM, XMMEA_SM, XMMEA_EP`, or simply flag==0 to reject all possibly bad events (maybe too restrictive)
-where you set M1S001, M2S002, PNS003 etc. accordingly
+## Adjusting toy SNR fit (0087940201)
 
-	evselect table=P{obsid}M1S001PIEVLI0000.FIT expression='(PATTERN<=12) && (PI in [200:12000]) && #XMMEA_EM'
-	evselect table=P{obsid}M2S002PIEVLI0000.FIT expression='(PATTERN<=12) && (PI in [200:12000]) && #XMMEA_EM'
-	#evselect table=P{obsid}PNS003PIEVLI0000.FIT expression='(PATTERN<=4) && (PI in [200:15000]) && #XMMEA_EP'	# PN spectral analysis
-	#evselect table=P{obsid}PNS003PIEVLI0000.FIT expression='(PATTERN<=12) && (PI in [200:15000]) && #XMMEA_EP'  # PN imaging analysis
+allowing various components in vnei model to float, I can get down to
+chi-squared = 1022.  Keeps going to 0 neon, and 0 iron.  Numbers are wonky
+(some places asking for 20,40x solar for Ar/Ca/O/Ne or w/e).
+
+Freeing oxygen helps handle low-energy excess (would be hard to distinguish
+from SWCX usually, but if we assume SWCX + XRB from background regions is
+representative, then this is OK).
+
+I'm tempted to let SWCX float for PN, but that's no good because our estimate
+of SWCX is inferred from a fit to real data
+
+Add two more lines to SWCX.  I think the residual in soft PN/MOS emission is
+part of what's getting us, and it's not well modeled by either O or Fe emission
+in the SNR vnei.
+
+## NASA XMM-GOF tool to estimate SWCX
+
+Looking at trend plot for revolution 0315, obsid 0087940201:
+
+    https://heasarc.gsfc.nasa.gov/docs/xmm/scripts/xmm_trend.html
+
+Start,stop for 0087940201 are 1.15354e8 and 1.15394e8 seconds
+Note: these are seconds measured from January 01, 1998, 00:00:00 UTC
+The calculation
+
+    January 01 1998 00:00:00utc + 1.15354430246723e8 seconds
+
+yields 2001 August 28, 02:53:50am UTC, which is just one minute off from the
+stated observation start time (02:52:50, I don't know what happened).
+
+It looks like our observation is fine with basic flare filtering (matches my
+experience so far), but shows evidence for SWCX contamination.  I don't know
+how much, from the plot, but certainly above baseline.
+
+Taking the epoch (01/01/98) and adding 1.15354
+It aligns to the observation start time...
+
+## OK I need to stop, step backward, and retrace a few details of my work so far.
+
+
+Tuesday 2015 November 24
+========================
+
+Current list of pending procedure changes (copied from Mon 2015 Nov 23):
+1. remove enhanced signal in MOS #1, CCD #4.
+   script mos-spectra takes cflim parameter to specify where to cut, manually
+2. fix PN spectrum extraction for 0551000201
+3. explore effects of changing a few epchain parameters
+4. explore effect of removing point sources w/ automated algorithm
+
+Spoke with Pat.  OK to go ahead with procedures I'm considering:
+1. estimating line strengths and ratios based on FWC spectra
+2. applying data cut to estimate SWCX contamination between start and end of observation!
+3. didn't ask explicitly, but maybe use ESAS proton task to back out a model
+   spectrum in central region... assuming the soft proton vignetting function
+   IS included in ESAS, as claimed by snowden's presentation
+
+   http://web.mit.edu/iachec/meetings/2014/Presentations/Kuntz.pdf
+
+Stuff from Pat:
+1. just do a simple background subtraction, compare your results
+2. good to have numbers.  preliminary, but use for comparisons and to guide
+   direction of work
+3. temperature kT ~ 2 keV is really high! check your methods
+4. proton vignetting, interesting..
+5. ay253 sounds worthwhile.
+6. yeah, no reason not to expect spectral variation with position on detector
+   (proton reflectivity on mirrors varies with energy too, right?)
+   so it does make sense that soft proton power law should vary.
+   tricky problem to deal with, but oh well.
+
+
+Wednesday 2015 November 25
+==========================
+
+Playing with fakeit and vnei, to help intuit effect of changing elemental
+abundances, kT, and tau.  No notable results produced.
+
+Paused to work more on ACA stuff, after MP meeting.
+
+
+Wednesday-Thursday 2015 December 2,3
+====================================
+
+Resumed after Thanksgiving + a few more MP script things over Mon/Tues/Weds.
+
+Current list of pending procedure changes (copied from Mon 2015 Nov 23):
+2. fix PN spectrum extraction for 0551000201
+3. explore effects of changing a few epchain parameters
+4. explore effect of removing point sources w/ automated algorithm
+5. check what/where filter flags are applied, and add comments to scripts.
+   (flag and pattern rejections)
+   see if we need to evselect anywhere to remove these bad events.
+6. double check plots of histogram filtering, see if 2nd round is needed.
+7. add mosaicking step.
+
+
+MOS1 CCD4 noise band removal
+----------------------------
+Per 2015 November 16 notes, where I inspected soft X-ray images produced by a
+"standard chain", remove MOS1 CCD4 edge noise in 0551000201 as follows:
+
+Generate DETX histogram using xmmselect on mos1S001-ori.fits (emchain
+output) with selection `(CCDNR == 4)&&(PI in [100:1300])`,
+histogram binning 10, and histogram min/max of 0,13200.
+
+    Histogram: img-notes/20151202_histogram.png
+
+The noise doesn't appear too enhanced, peaks around 26 counts and is
+fairly narrow, compared to the ESAS example.  But it is clearly a strong
+feature.  From visual inspection, we can cut events with DETX >= 12000.
+
+I double check with 0551000201/odf/repro/mos1S001-obj-image-det-soft.fits
+and confirm, by eye, that a cut at DETX = 12000 looks good.
+Note that to help visually pull out the feature, you need to smooth or bin
+the data in ds9.
+
+Modified script `specbackgrp_0551000201` to use cflim=12000 for MOS1 spectrum
+processing.  I did not generate new spectra immediately.
+Quick visual inspection of current regions in MOS1S001 sky coords suggests that
+none are near the chip edges, so we should be ok.
+
+Get PN spectrum extraction working for 0551000201
+-------------------------------------------------
+See 2015 Nov. 20 notes. I need to inspect how pn-spectra works.
+
+    Depending on SUBMODE and FRMTIME, set values for
+        $scale
+            $scale is used in two places:
+            1. compute $rate based on NAXIS2 keyword in corner OOT events?!
+               PI in 600:1300, 1650:7200 (both hard and soft)
+               * $rate in turn is used printed with "Corner rate/corner hardness"
+                 as part of pn-spectra terminal output.
+            2. compute $hard based on NAXIS2 keyword in corner OOT events
+               PI in 1650:7200 (hard only)
+            PrimeFullWindowExtended (frametime < 210)
+            uses scale 0.0232 (2.32%?)
+            PrimeFullWindowExtended (frametime > 210)
+            uses scale 0.0163 (1.63% sensible, larger frametime -> less OOT)
+            PrimeFullWindow
+            uses scale 0.063 (6.3%?).  Again about right, almost 3x faster
+            readout means 3x more OOT events.
+
+            Neither $rate nor $hard have any effect on final output.
+        $submode (split on PrimeFullWindowExtended, depending on frame time)
+            Doesn't seem to be used anywhere, except in printing output.
+        $mode
+            Again isn't used anywhere except in diagnostic output
+
+    Look into how OOT event %s are computed.
+    Based on SPIE paper on PN operations (1997?).
+    PN operations:
+        NL (regular shift+read) = 23.04 microsec
+        FS (fast shift) = 0.72 microsec
+
+    Full frame:
+        readout time ~ 23.04*200 microsec = 4.608 ms
+        integration time ~ 73.4 ms
+        % OOT = 6.28%
+
+    Ext full frame:
+        readout time ~ 4.608 ms (same as full frame)
+        integration time ~ 199.1 ms (accomplished by adding 52.4ms delay
+        between quadrant readout -- not sure how, diff between 199.1ms and
+        73.4ms is 31.425*4 ms)
+        % OOT = 2.31%
+
+    Large window: only use 1/2 CCD.
+        rapidly read and discard lines 0-99 ~ 0.72 * 100 microsec
+        read remaining lines (100-199) normally ~ 23.04 * 100 microsec
+        read/dump 100 lines, fast ~ 0.72 * 100 microsec
+            (this discards OOTs from preceding readout; fast shift still has OOTs but much fewer)
+        integration time ~ 47.7ms
+        % OOT = 0.072/(47.7ms * 0.949) = 0.159%
+
+        total time: 2.448ms * 11 + twait,twarm,etc
+        not sure how they got 47.7ms integration time, but I guess it works
+        out.  The OOT% I'm getting is consistent with XMM user's guide.
+
+Note, OOT events are NOT incorporated anywhere until the final spectra are
+extracted (and this is done in `pn_back`).  In `pn-filter` the regular and OOT
+files are processed separately.  The log from `pn_back` notes the observation
+mode and OOT scaling to use.
+
+After further reading, I realized that large window observations can't be
+processed by ESAS because there are no corner observation data
+available.  Thus we can't get a QPB.  This was all stated in the ESAS cookbook
+up front.  OK, that makes sense.
+
+So how do we deal with this dataset specially?
+
+What if we just fit the background without QPB?
+
+Fit 0087940201 MOS1S001 background spectrum, using `back.xcm` and then invoking
+`data 2 none` in XSPEC to discard the MOS2S002 and PNS003 spectra.
+
+    -> chisqr changes marginally (1.0846 to 1.1164)
+
+Inspect residuals from model fit, then background remove (so compare to data
+w/o QPB to model w/QPB).  By eye, maybe MOS could get away with it.  But, PN
+has a huge excess in soft band (<0.5 keV).
+
+Fit 0087940201, all 3 instruments, background spectrum, using `back.xcm` then
+invoking back 1 none, back 2 none, back 3 none to discard QPBs.
+
+    Test statistic : Chi-Squared =         696.33 using 612 PHA bins.
+     Reduced chi-squared =         1.1883 for    586 degrees of freedom 
+     Null hypothesis probability =   1.109445e-03
+
+    Test statistic : Chi-Squared =         647.76 using 612 PHA bins.
+     Reduced chi-squared =         1.1054 for    586 degrees of freedom 
+     Null hypothesis probability =   3.890180e-02
+
+
+1. Fit with background (QPB) present
+
+    Test statistic : Chi-Squared =         170.29 using 169 PHA bins.
+     Reduced chi-squared =         1.0846 for    157 degrees of freedom 
+     Null hypothesis probability =   2.215537e-01
+
+    ========================================================================
+    Model instr:gaussian<1> + gaussian<2> + gaussian<3> + gaussian<4> + gaussian<5> + gaussian<6> + gaussian<7> + gaussian<8> Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   gaussian   LineE      keV      1.49000      frozen
+       2    1   gaussian   Sigma      keV      0.0          frozen
+       3    1   gaussian   norm                5.45958E-05  +/-  3.57696E-06  
+       4    2   gaussian   LineE      keV      1.75000      frozen
+       5    2   gaussian   Sigma      keV      0.0          frozen
+       6    2   gaussian   norm                2.71880E-06  +/-  2.37192E-06  
+
+    ========================================================================
+    Model spm1:powerlaw<1> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   powerlaw   PhoIndex            0.472479     +/-  2.52238E-02  
+       2    1   powerlaw   norm                3.93902E-02  +/-  2.12869E-03  
+
+    ========================================================================
+    Model swcx:gaussian<1> + gaussian<2> Source No.: 6   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   gaussian   LineE      keV      0.560000     frozen
+       2    1   gaussian   Sigma      keV      0.0          frozen
+       3    1   gaussian   norm                4.23113E-05  +/-  1.88449E-05  
+       4    2   gaussian   LineE      keV      0.650000     frozen
+       5    2   gaussian   Sigma      keV      0.0          frozen
+       6    2   gaussian   norm                7.37661E-06  +/-  9.13970E-06  
+
+    ========================================================================
+    Model xrb:constant<1>*constant<2>(apec<3> + phabs<4>(powerlaw<5> + apec<6>)) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   constant   factor              1.00000      frozen
+       2    2   constant   factor              1.00000      frozen
+       3    3   apec       kT         keV      0.800876     +/-  9.67488E-02  
+       4    3   apec       Abundanc            1.00000      frozen
+       5    3   apec       Redshift            0.0          frozen
+       6    3   apec       norm                2.71665E-05  +/-  8.04079E-06  
+       7    4   phabs      nH         10^22    1.85473      +/-  0.601081     
+       8    5   powerlaw   PhoIndex            1.40000      frozen
+       9    5   powerlaw   norm                1.49479E-08  +/-  3.56009E-05  
+      10    6   apec       kT         keV      0.344765     +/-  0.106170     
+      11    6   apec       Abundanc            1.00000      frozen
+      12    6   apec       Redshift            0.0          frozen
+      13    6   apec       norm                5.40461E-03  +/-  7.67162E-03  
+
+
+2. Fit after calling `back none` to remove QPB.
+
+    Test statistic : Chi-Squared =         175.28 using 169 PHA bins.
+     Reduced chi-squared =         1.1164 for    157 degrees of freedom 
+     Null hypothesis probability =   1.512035e-01
+
+    ========================================================================
+    Model instr:gaussian<1> + gaussian<2> + gaussian<3> + gaussian<4> + gaussian<5> + gaussian<6> + gaussian<7> + gaussian<8> Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   gaussian   LineE      keV      1.49000      frozen
+       2    1   gaussian   Sigma      keV      0.0          frozen
+       3    1   gaussian   norm                5.41860E-05  +/-  3.63455E-06  
+       4    2   gaussian   LineE      keV      1.75000      frozen
+       5    2   gaussian   Sigma      keV      0.0          frozen
+       6    2   gaussian   norm                2.58837E-06  +/-  2.37059E-06  
+    ...
+
+    Model spm1:powerlaw<1> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   powerlaw   PhoIndex            0.439894     +/-  2.13021E-02  
+       2    1   powerlaw   norm                4.75057E-02  +/-  2.18412E-03  
+
+    Model swcx:gaussian<1> + gaussian<2> Source No.: 6   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   gaussian   LineE      keV      0.560000     frozen
+       2    1   gaussian   Sigma      keV      0.0          frozen
+       3    1   gaussian   norm                4.18679E-05  +/-  1.88575E-05  
+       4    2   gaussian   LineE      keV      0.650000     frozen
+       5    2   gaussian   Sigma      keV      0.0          frozen
+       6    2   gaussian   norm                6.96550E-06  +/-  9.14624E-06  
+
+    Model xrb:constant<1>*constant<2>(apec<3> + phabs<4>(powerlaw<5> + apec<6>)) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   constant   factor              1.00000      frozen
+       2    2   constant   factor              1.00000      frozen
+       3    3   apec       kT         keV      0.805529     +/-  0.103846     
+       4    3   apec       Abundanc            1.00000      frozen
+       5    3   apec       Redshift            0.0          frozen
+       6    3   apec       norm                2.53347E-05  +/-  8.01923E-06  
+       7    4   phabs      nH         10^22    1.85336      +/-  0.638269     
+       8    5   powerlaw   PhoIndex            1.40000      frozen
+       9    5   powerlaw   norm                1.04421E-17  +/-  3.59608E-05  
+      10    6   apec       kT         keV      0.341441     +/-  0.182041     
+      11    6   apec       Abundanc            1.00000      frozen
+      12    6   apec       Redshift            0.0          frozen
+      13    6   apec       norm                5.18351E-03  +/-  1.03722E-02  
+
+
+Maybe we can find an alternate way to work around this...
 
 
 
-Next step:
-* merge data from two observations together -- total ~97ks before filtering.
-Merge MOS data together, then attempt PN+MOS event merger.  This would not be
-for quantitative analysis, but just to let human eyes get a gander at a richer
-(if possibly more misleading) spectrum.
-Note that Hughes and Motch observations were taken with different
-filters (thick, medium respectively) -- so your model of the cosmic x-ray background will be slightly different in each case.
-
-Sect. 9 of ESAS cookbook covers mosaics.
 
 
 APPENDIX -- notes on pipeline tools and their functions

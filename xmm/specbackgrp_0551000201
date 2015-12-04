@@ -34,6 +34,8 @@ CALDB="${XMM_PATH}/caldb"
 # ------------------------
 
 # NOTE: MOS1 CCD6 = 0 (destroyed), MOS2 CCD5 = 0 (anomalous state)
+# MOS1 CCD4 cut off at DETX >=12000, anomalous edge noise identified from a
+# histogram of PI=[100:1300] (0.1-1.3 keV) counts binned over DETX
 
 cd "${XMM_PATH}/${OBSID}/odf/repro"
 
@@ -42,6 +44,7 @@ mos-spectra prefix=1S001 caldb=$CALDB \
     region="${RDIR}/reg_mos1S001_${RSTEM}.txt" \
     mask=0 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd7=1 \
     ccd6=0 \
+    cflim=12000 \
   >& mos-spectra_mos1S001_${RSTEM}.log
 mv command.csh mos_spectra_mos1S001_${RSTEM}_cmd.csh
 
@@ -52,7 +55,7 @@ mos-spectra prefix=2S002 caldb=$CALDB \
   >& mos-spectra_mos2S002_${RSTEM}.log
 mv command.csh mos_spectra_mos2S002_${RSTEM}_cmd.csh
 
-pn-spectra prefix=S003 caldb=$CALDB \
+pn-spectra-mod prefix=S003 caldb=$CALDB \
     region="${RDIR}/reg_pnS003_${RSTEM}.txt" \
     mask=0 elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
   >& pn-spectra_pnS003_${RSTEM}.log

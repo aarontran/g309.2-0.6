@@ -7,6 +7,9 @@ most/G309.2-0.6.ps
 # Manually exclude MOST contour(s)
 most/*.con
 
+# Exclude temporary SAS source download
+xmm/xmmsas_20141104_1833
+
 # XMM calibration; raw, intermediate, final data
 xmm/caldb/**
 xmm/*/pps
