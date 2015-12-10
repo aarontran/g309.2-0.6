@@ -1,4 +1,7 @@
 
+Uses SAS build version: xmmsas_20141104_1833
+
+
 To download data (including ESAS filterwheel closed data + diagonal RMFs for
 MOS1, MOS2, PN), run from this top-level directory (xmm/):
 

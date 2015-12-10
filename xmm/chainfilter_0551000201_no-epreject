@@ -1,42 +1,37 @@
 #!/bin/tcsh -f
 
-# Standard event list pipeline for 0551000201 MOS1,MOS2,PN imaging exposures
-# Must run on computer w/ >8 GB RAM, else {mos,pn}-filter (espfilt) will fail.
+# Standard event list pipeline for 0551000201 PN exposure only, without
+# epreject correction.  For demonstration / comparison purposes.
+# Must run on computer w/ >8 GB RAM, else pn-filter (espfilt) will fail.
 # Aaron Tran
+# Dec. 8 2015
 
 # ------------------------
 # Configuration parameters
 # ------------------------
 
 set OBSID = "0551000201"
-set MOSEXP = "1S001 2S002"
 set PNEXP = "S003"
 
 # ------------------------
 # Start of script commands
 # ------------------------
 
-cd "${XMM_PATH}/${OBSID}/odf/repro"
+mkdir -p "${XMM_PATH}/${OBSID}/odf/repro_no-epreject"
+cd "${XMM_PATH}/${OBSID}/odf/repro_no-epreject"
 
 # Generate event lists
-epchain withoutoftime=true runepreject=Y sigma=5 >& epchain_oot.log
-epchain runepreject=Y sigma=5 >& epchain.log
-emchain >& emchain.log
+epchain withoutoftime=true runepreject=N >& epchain_oot.log
+epchain runepreject=N >& epchain.log
 
 # Good time filtering (remove flares)
 # Make symlinks to work around {mos,pn}-filter file renaming
-mos-filter >& mos-filter.log
-mv command.csh mos-filter_cmd.csh
-foreach exp ($MOSEXP)
-    ln -s mos${exp}-ori.fits P${OBSID}M${exp}MIEVLI0000.FIT
-end
-
 pn-filter >& pn-filter.log
 foreach exp ($PNEXP)
     ln -s pn${exp}-oot.fits P${OBSID}PN${exp}OOEVLI0000.FIT
     ln -s pn${exp}-ori.fits P${OBSID}PN${exp}PIEVLI0000.FIT
 
-    # Generate soft X-ray list/image to compare against run without epreject
+    # Generate soft X-ray list/image to compare against run WITH epreject
     evselect table="pn${exp}-ori.fits" filteredset="pn${exp}-ori_vsoft.fits" \
         expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
     evselect table="pn${exp}-oot.fits" filteredset="pn${exp}-oot_vsoft.fits" \
@@ -45,17 +40,12 @@ foreach exp ($PNEXP)
     evselect table="pn${exp}-ori_vsoft.fits" withimageset=true \
     	imageset="pn${exp}-ori_vsoft-img.fits" xcolumn=DETX ycolumn=DETY \
 	imagebinning=binSize ximagebinsize=100 yimagebinsize=100 \
-        expression='(PHA>=20)&&(PI>=120)&&(PI<200)'  # This expression is unnecessary
+        expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
     evselect table="pn${exp}-oot_vsoft.fits" withimageset=true \
     	imageset="pn${exp}-oot_vsoft-img.fits" xcolumn=DETX ycolumn=DETY \
 	imagebinning=binSize ximagebinsize=100 yimagebinsize=100 \
-        expression='(PHA>=20)&&(PI>=120)&&(PI<200)'  # This expression is unnecessary
+        expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
 end
-
-# mos1S001-clean.fits and mos2S002-clean.fits have been filtered by:
-#  '(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)'
-# pnS003-clean.fits has been filtered by:
-#  '(PI in [300:12000])&&(PATTERN <= 4)&&((FLAG & 0xcfa097c) == 0)'
 
 
 # Pat asks: is it necessary to run filtering 2x?  You should try this, maybe

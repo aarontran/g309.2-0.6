@@ -37,6 +37,10 @@ I think we got them all...
   Compare CIAO acisreadcoor, which finds readout streak and removes all photons
   "above" user-input background spectrum.
 
+    "Moreover, in the Large Window and Small Window modes out-of-time events
+    can be introduced by sources that are outside the readout-window. These
+    cannot be accounted for."
+
 * pile-up -- I think ok, but any readout streaks?  (pileup: use epatplot)
   Check instrument manuals for both PN and MOS.  Strongly suspect pileup is not
   an issue for us.

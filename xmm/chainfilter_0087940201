@@ -1,12 +1,8 @@
 #!/bin/tcsh -f
 
-# Wrapper script for a ton of XMM ESAS commands
-# Must run on statler, espfilt (mos-filter, pn-filter) will fail on treble due
-# to insufficient RAM.  (I think mos/pn-spectra are subject to this problem
-# too, can't remember)
-# Presupposes correct file prefixes for obsids 0087940201 and 0551000201
+# Standard event list pipeline for 0087940201 MOS1,MOS2,PN imaging exposures
+# Must run on computer w/ >8 GB RAM, else {mos,pn}-filter (espfilt) will fail.
 # Aaron Tran
-# Oct. 5 2015, modified Oct. 25 2015
 
 # ------------------------
 # Configuration parameters
@@ -20,15 +16,19 @@ set PNEXP = "S003"
 # Start of script commands
 # ------------------------
 
-# CHANGE OF PLANS (Oct. 19 2015)
-# RUN FROM DIRECTORY research/xmm/
-
 cd "${XMM_PATH}/${OBSID}/odf/repro"
 
 # Generate event lists
+# Must run epchain for OOT events first, according to
+# http://xmm.esac.esa.int/sas/current/doc/epchain/node9.html
 epchain withoutoftime=true >& epchain_oot.log
 epchain >& epchain.log
 emchain >& emchain.log
+
+# epreject NOT used because offset data aren't available for 0087940201.
+#   No PN offset maps available in ODF, and
+#   no offset calibration available for PrimeFullWindowExtended submode??
+# epnoise NOT used because it serves same role as espfilt / pn-filter
 
 # Good time filtering (remove flares)
 # Make symlinks to work around {mos,pn}-filter file renaming
@@ -43,6 +43,12 @@ foreach exp ($PNEXP)
     ln -s pn${exp}-oot.fits P${OBSID}PN${exp}OOEVLI0000.FIT
     ln -s pn${exp}-ori.fits P${OBSID}PN${exp}PIEVLI0000.FIT
 end
+
+# mos1S001-clean.fits and mos2S002-clean.fits have been filtered by:
+#  '(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)'
+# pnS003-clean.fits has been filtered by:
+#  '(PI in [300:12000])&&(PATTERN <= 4)&&((FLAG & 0xcfa097c) == 0)'
+
 
 # Pat asks: is it necessary to run filtering 2x?  You should try this, maybe
 # for 0551000201 at least.

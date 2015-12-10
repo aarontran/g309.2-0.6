@@ -2231,7 +2231,6 @@ Current list of pending procedure changes (copied from Mon 2015 Nov 23):
 6. double check plots of histogram filtering, see if 2nd round is needed.
 7. add mosaicking step.
 
-
 MOS1 CCD4 noise band removal
 ----------------------------
 Per 2015 November 16 notes, where I inspected soft X-ray images produced by a
@@ -2323,6 +2322,11 @@ After further reading, I realized that large window observations can't be
 processed by ESAS because there are no corner observation data
 available.  Thus we can't get a QPB.  This was all stated in the ESAS cookbook
 up front.  OK, that makes sense.
+
+At some point (Dec. 3), I attempted to run a modified version of pn-spectra.
+This obviously failed; even after setting the scale parameter for large window,
+it couldn't extract corner count rates and hit a divide-by-zero error when
+calculating a hardness ratio.
 
 So how do we deal with this dataset specially?
 
@@ -2458,6 +2462,430 @@ invoking back 1 none, back 2 none, back 3 none to discard QPBs.
 Maybe we can find an alternate way to work around this...
 
 
+Friday 2015 December 4
+======================
+
+0087940201 pnS003 exposure QPB from ESAS -- looks good, compared in XSPEC and
+the QDP plot from `pn_back`.
+
+But, 0551000201 QPBs for both MOS1 and MOS2 look like utter crap.
+They look ok in the QDP plot file, but in XSPEC they look really bad.  What
+happened??
+
+I looked through logs for MOS1S001 src with mos_back and didn't see any obvious
+issues.
+
+
+Monday 2015 December 7 -- epreject exploration
+==============================================
+
+Current list of pending procedure changes (copied from Weds 2015 Dec 2):
+2. fix PN spectrum extraction for 0551000201
+    -- in works, deciding how to work without QPB, we'd need different
+    procedure.  Defer temporarily, I will work out a few more things on
+    0087940201 first.
+
+    Remark: epchain doc claims that its runbackground=Y mode is able to create
+    background spectrum for LW imaging mode.  But, looking at XMM-Newton sky
+    FOV in DS9, this seems impossible...
+
+3. explore effects of changing a few epchain parameters
+    epreject, epnoise
+4. explore effect of removing point sources w/ automated algorithm
+5. check what/where filter flags are applied, and add comments to scripts.
+   (flag and pattern rejections)
+   see if we need to evselect anywhere to remove these bad events.
+6. double check plots of histogram filtering, see if 2nd round is needed.
+7. add mosaicking step.
+8. is it necessary to run filtering step 2x?
+   re-run espfilt, see what happens.
+
+Investigating effect of epchain run: epreject, epnoise
+------------------------------------------------------
+
+* epreject -- only a small number of pixels should be affected by the high
+  energy strikes.  (why is it disabled by default?)
+* epnoise -- seems unnecessary, procedure is just to remove frames with too
+  many soft x-ray counts.  This should be covered by pn-filter task.
+  I will skip this.
+
+Parameter settings via epchain to epreject.  epchain's call to epreject does
+NOT screen soft flares by default in xmmsas_20141104.  This is OK to me.
+
+    withsoftflarescreening=N hardcoded in epchain
+    withoffsetmap=Y by default in epchain, but not in SAS doc...
+    withnoisehandling='N' by default, user cannot set through epchain
+        (I don't even know what it does)
+    sigma=4 for offset correction (default)
+    noiseparameters=... (default)
+    withxrlcorrection=N (default, imaging mode so no need)
+
+I set sigma=5 for finding bright spots, per recommendation of epreject doc:
+
+    Tests indicate that setting this parameter to $\sim4\,\sigma$ is a good choice
+    for short ( $\sim5\mbox{ ks}$) exposures; for longer exposures this parameter
+    can be increased (to $\sim5$-$6\,\sigma$ for more than 20 ks).
+
+And I use adu=20 and adu<20 (PHA column in FITS files) to look at actual data.
+
+    It is recommended to control the results by accumulating an image below
+    20 adu after this task: this image shows the pixels where an offset shift
+    was applied (Fig.5). 
+
+Running epchain with runepreject=Y for 0087940201 PNS003, but epreject failed
+for both OOT and regular runs.
+
+    ** epreject: warning (NoOffsetMap), No offset map found; using 20 ADU image
+    instead
+    [...]
+    ** epreject: warning (notCalibrated),  no offset calibration for submode
+    PrimeFullWindowExtended, skipping rest of the task
+
+No offset map is available, OK, where should that be found?  epreject calls the
+function:
+
+    OAL_hasAssociatedSet(OFFSET_DATA)  looking in ODF (ODF access layer)
+
+Which, I assume (but did not verify), seeks the following files according to
+online ODF guide:
+
+    files of form {RRRR}_{obsidentif}_PN{U}{EEE}{CC}ODI.FIT
+        {U} = observation scheduled (S) or unscheduled (U), I don't know what that means
+        {EEE} = exposure number within observation
+        {CC} = PN CCD
+    correspond to EPIC PN offset data.
+
+0087940201 has no such offset files, so I guess offset maps were not computed
+early in the mission.
+But, 0551000201 has these offset files!
+
+Now, what about the offset calibration map?
+From SAS source (packages/cal/f90/cal.f90) it looks like pnMedianMap
+access interface was only added in November 2003.
+
+    epreject attempts to read pnMedianMap from CCF.
+
+        call CAL_pnMedianMap(r4med)
+
+    In the source for CAL library ( packages/cal/f90/CalF90cxxGlue.cc ),
+    inspect function CAL_pnMedianMap.  CalServer is used to instantiate a
+    LowEnergyNoiseServer, which has method medianMap to read in the medianMap
+    for a given mode and CCD.
+
+    LowEnergyNoiseServer appears to read this in by creating
+
+        CcfConstituentTable ccftab(dataSet, "MEDIAN_MAP_INDEX");
+        const Table * medianMapTab = ccftab.block();
+
+    And I can't easily figure out where the code for CcfConstituentTable comes
+    from
+
+        epreject:- reading from CCF: pnMedianMap
+        epreject:- Opening CCF CIF /data/mpofls/atran/research/g309/xmm/0087940201/odf/repro/ccf.cif
+
+        [....
+        many calls of form:]
+
+        epreject:- Attempting to access block with name 'MEDIAN_MAP_DUMMY' in dataset with name '/proj/xmm/ccf/EPN_REJECT_0006.CCF'.
+
+        [so I'm not sure what the role of the CCF file is, in all this.
+         Actually, why should anything be in the CIF file if this is a standard
+         reference offset image for all observations?]
+
+OK, I'm not going further than this.  Don't want to spend another hour or two
+wading through source + logging output to figure it out.
+
+(edit: I guess I changed my mind...)
+
+0087940201 won't have epreject run; the offset map is not available in the ODF,
+and the reference offset map (count images from many observations) was not
+found in the CIF.  I don't know what file is missing, and I don't know why it's
+missing.
+
+BUT, 0551000201 does have offset map available; I run this accordingly.
+
+    Histogram binning on PHA is indeed slightly different, fewer events at
+    lower energy.  Consistent with epchain log which claims that many events
+    were offset corrected, but I don't see any events below 20 ADU in evselect
+
+I'm really confused.  Keywords in `EXPOS{ccd#}` tables of pnS003-ori.fits
+indicate offset maps changed, but there are no ADU<20 events in EVENTS table.
+
+events01.dat ->cleanevents01.dat filters on PI > 150, AFTER epreject step.
+We normally expect ADU=20 to correspond to 100 eV, so I'm surprised that any
+events with ADU=20 exist at all.  I guess these are events with different
+offsets, such that ADU=20 corresponds to PI > 150.
+
+This seems like a plausible explanation.  So, how can I look at the energy
+shift?  I'm worried that so many events were affected by this procedure
+(depends on the chip), so we DO need to inspect the result of the filtering.
+
+Try running epchain with parameter screenlowthresh=0.  Tested, still observe no
+ADU < 20 events.  Try again keeping intermediate products..
+
+    epchain runepreject=Y sigma=5 screenlowthresh=0 keepintermediate=all >& epchain_rerun_nocut_interm.log
+    evselect table=P0551000201PNS003PIEVLI0000.FIT expression='(PHA<20)' filteredset=pnS003-ori-rerun_nocut_lt20adu.fits
+
+Inspect rawevents01.dat.  From the epchain logging output:
+
+        epreject:-    576802 of  1008425 events selected for offset correction
+        epreject:-    101285 events shifted below threshold of    20 [adu]
+
+    evselect table=rawevents01.dat expression='(PHA<20)' filteredset=rawevents01_lt20adu.fits
+
+        evselect:- selected 101285 rows from the input table.
+
+    evselect table=events01.dat expression='(PHA<20)' filteredset=events01_lt20adu.fits
+
+        evselect:- selected 101285 rows from the input table.
+
+    evselect table=cleanevents01.dat expression='(PHA<20)' filteredset=cleanevents01_lt20adu.fits
+
+        evselect:- selected 0 rows from the input table.
+
+BINGO.  
+Aside: after epevents call (converts rawevents01.dat to events01.dat),
+epchain calls attcalc on events01.dat; this just adds X/Y columns to FITS event
+list and has no effect on ADU<20 events.
+
+Let's deconstruct the culprit evselect call in epchain, which is:
+
+    evselect table=events01.dat:EVENTS withfilteredset=Y \
+        filteredset=cleanevents01.dat
+        destruct=Y
+        expression='(PI>0 && RAWY>0 )' \
+        writedss=Y
+        updateexposure=Y
+        keepfilteroutput=Y
+        -w 10
+
+Why is this destroying the ADU<20 events?
+
+    Many of these have FLAG field 134217728 = 0x07FF FDAE
+        0000 0111 1111 1111 ... 1111 1101 1010 1110
+    I see one example of 134217732 = 0x08000004
+        0x4 -> close to CCD window
+        0x0800,0000 -> no idea... not listed in pn flag attributes...
+    But evselect call is not filtering on FLAG.
+
+    Flag: -w 10 forces only first 10 of each warning type to be shown.
+    Flags: filteredset, keepfilteroutput --> set output as usual
+    Flag: writedss=Y is normally on by default
+    Flag: updateexposure=Y writes new keywords (LIVETIME, ONTIME, etc)
+    Flag: withfilteredset=Y this is NO LONGER in the SAS documentation...
+
+AH, PI value = NULL for these events.
+    (creating a histogram on PI value in 'fv' causes fv to segfault and die)
+
+
+The raw events list (after epreject, before epevents) has PHA w/offset applied,
+FLAG, OFF_COR; no PI value is assigned.
+
+Inspecting the ADU<20 events in DS9, I note
+* spread due to epframes randomizing position of events within pixel
+  (if you count blocks, comes out about right, nearly 64 pixels)
+* a lot more events than I would expect.  Could be associated with 
+  flaring in this observation?!...
+  (do we need to run soft flare filtering first?)
+
+After epevents is run, events list has added:
+    DETX, DETY, PHA_CTI, PI, PATTERN, 
+
+OK, try running process without epreject, as:
+
+    epchain screenlowthresh=0 keepintermediate=all >& epchain_rerun.log
+
+    evselect table=rawevents01.dat expression='(PHA==20)' filteredset=rawevents01_eq20adu.fits
+        evselect:- selected 228915 rows from the input table.
+    evselect table=events01.dat expression='(PHA==20)' filteredset=events01_eq20adu.fits
+        evselect:- selected 228915 rows from the input table.
+    evselect table=cleanevents01.dat expression='(PHA==20)' filteredset=cleanevents01_eq20adu.fits
+        evselect:- selected 220002 rows from the input table.
+
+    evselect table=P0551000201PNS003PIEVLI0000.FIT expression='(PHA==20)' filteredset=P0551000201PNS003PIEVLI0000.FIT_eq20adu.fits
+        evselect:- selected 3577095 rows from the input table.
+
+That is a LOT of events at ADU=20.  Inspecting the uncleaned events file:
+    ds9 events01_eq20adu.fits
+I see basically what looks like signal, no obvious cosmic ray strikes (or, hard
+to differentiate from point sources in FOV).
+
+I'm strongly leaning towards ignoring this shift.
+The correction is order of a few ADU ~ 10-15 eV = 0.010-0.015 keV
+This should be pretty negligible, I think -- especially since it's just
+isolated to a few pixels, and is thus a ~1% effect.
+
+We have much bigger fish to fry.
+    
+
+    
+Tuesday 2015 December 8 -- more on epreject
+===========================================
+
+Current list of pending procedure changes (copied from Mon 2015 Dec 7):
+2. fix PN spectrum extraction for 0551000201
+    -- in works, deciding how to work without QPB, we'd need different
+    procedure.  Defer temporarily, I will work out a few more things on
+    0087940201 first.
+
+    Remark: epchain doc claims that its runbackground=Y mode is able to create
+    background spectrum for LW imaging mode.  But, looking at XMM-Newton sky
+    FOV in DS9, this seems impossible...
+
+3. explore effects of changing a few epchain parameters
+    epreject, epnoise
+    (epreject -- changing sigma?)
+    (epnoise -- ??)
+4. explore effect of removing point sources w/ automated algorithm
+5. check what/where filter flags are applied, and add comments to scripts.
+   (flag and pattern rejections)
+   see if we need to evselect anywhere to remove these bad events.
+6. double check plots of histogram filtering, see if 2nd round is needed.
+7. add mosaicking step.
+8. is it necessary to run filtering step 2x?
+   re-run espfilt, see what happens.
+
+
+0087940201: no offset maps to use with epreject
+0551000201: epreject run, I can't tell whether good or not.  The number of
+events down-shifted at 5 sigma is surprisingly large.  And the map of adu=20
+events seems to cover the entire CCD.
+
+I compare the histograms from running epchain with and without epreject (in
+both cases, without filtering events < 0.150 keV).
+
+Use fv to generate two histograms of PHA, bin size 4 (channel range 0-4095),
+and export to plaintext as CSV.  Manually edit file to remove quotation marks;
+in Vim, `:%s/"//g` will do.
+
+    cd ${XMM_PATH}/xmm/0551000201/odf/repro_epreject/
+    epchain runepreject=Y sigma=5 screenlowthresh=0 keepintermediate=all
+    fv P0551000201PNS003PIEVLI0000.FIT
+    cd ../../repro
+    epchain screenlowthresh=0 keepintermediate=all
+    fv P0551000201PNS003PIEVLI0000.FIT
+
+Inspected further by generating histograms from FITS files in Python.
+
+Diverted for part of afternoon to clean up some public doc on flags + epreject,
+XMM data reduction.  Maybe this will clarify things.
+
+    ocf.io/atran/useful_xmm.html
+
+Try looking in a specific energy (PI) band vs. just PHA-selected image, per
+SAS User Guide 4.3.2.1.1 example.  Note that PHA>=20 should not have any
+effect.
+
+    # in odf/repro_epreject/
+    evselect table=P0551000201PNS003PIEVLI0000.FIT expression='(PHA>=20)&&(PI>=120)&&(PI<200)' filteredset=P0551000201PNS003PIEVLI0000_PI_120_200.fits
+        evselect:- selected 968705 rows from the input table.
+    # in odf/repro/
+    evselect table=P0551000201PNS003PIEVLI0000.FIT expression='(PHA>=20)&&(PI>=120)&&(PI<200)' filteredset=P0551000201PNS003PIEVLI0000_PI_120_200.fits
+        evselect:- selected 1013560 rows from the input table.
+
+This is actually great -- the noise reduction pops out to the eyes,
+I've saved the image to `img-notes/20151208_epreject_0551000201_soft.png`.
+
+One mistake, my Python histograms were generated with OOT file vs. regular event
+files, no wonder... massive difference mostly accounted for by discrepancy at
+lowest energies, interestingly.
+
+After epchain, run with epreject ends up throwing away ~2 million rows
+I don't know how many of those rows are really good, though. I'll re-run things
+and find out.
+
+I throw out ALL the processed data for 0551000201, and start over again.
+Accidentally threw out CIF file and ODF summary.
+Re-building now, then going to set up chainfilter runs at home.
+
+    atran(sas)@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c \
+        'source sasinit 0551000201; chainfilter_0551000201;' \
+        >& 20151208_nohup_chainfilter_0551000201.log &
+    [1] 30394
+
+Next call is:
+
+    atran(sas)@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c \
+        'source sasinit 0551000201; chainfilter_0551000201_no-epreject;' \
+        >& 20151209_nohup_chainfilter_0551000201_no-epreject.log &
+    [1] 25946
+
+
+Wednesday 2015 December 9 -- epreject results
+=============================================
+
+Compared and subtracted very soft X-ray images to see results of epreject.
+
+    farith '0551000201/odf/repro_no-epreject/pnS003-ori_vsoft-img.fits' \
+        '0551000201/odf/repro/pnS003-ori_vsoft-img.fits' 'asdf.fits' SUB
+
+Printed and annotated image (hints: use diverging color map `h5_dkbluered`and
+set symmetric limits about the Gaussian-ish distribution centered on 0).
+
+I observe a fair amount of noise subtraction (positive delta, red spots),
+especially on "left" CCDs (2, 3, 11, 12).  There is one REALLY bright spot on
+CCD 10, where epreject results in net addition of +200 counts.
+On some modified columns, a lot of shifting (alternating add/substract) 
+(look like they could be readout streaks, but are not)
+
+Yes, epreject removes some noise in very soft images (0.12 to 0.20 keV), when
+comparing the two images side-by-side.  So that looks promising.
+
+Now, I also compare 0.5-2 keV images and do a subtraction.
+
+    # Run 1x in each directory, repro/ and repro_no-epreject/
+    evselect table=pnS003-ori.fits filteredset=pnS003-ori_0.5_to_2_kev.fits expression='(PI>=500)&&(PI<2000)' -V 0
+    evselect table='pnS003-ori_0.5_to_2_kev.fits' withimageset=true \
+        imageset='pnS003-ori_0.5_to_2_kev_img.fits' xcolumn=DETX ycolumn=DETY \
+        imagebinning=binSize ximagebinsize=50 yimagebinsize=50
+
+    farith \
+        '0551000201/odf/repro_no-epreject/pnS003-ori_0.5_to_2_kev_img.fits' \
+        '0551000201/odf/repro/pnS003-ori_0.5_to_2_kev_img.fits' \
+        'epreject_diff_0.5_to_2_kev_img.fits' SUB
+
+The characteristics are completely different.  Here, image is almost all faint
+noise (within +/- 15).
+* At bright star HD119682, there is a smattering of signal in subtracted image;
+  when smoothed, there is bipolar structure to the delta counts (+/- 12 ish).
+  I don't know why.  Likely not physical because it is confined to the center
+  of the star, and doesn't extend through the PSF.
+* One very bright streak along right (+DETX) edge of CCD11, increasing in
+  intensity down towards readout.  Strongly negative delta means that
+  epreject correction ADDED a lot of counts to this CCD edge, peaking around
+  +100 or so (doubling strength of this signal).  This is really weird.
+
+In both image subtractions, noise disappears as I increase smoothing in ds9,
+indicating that some signal is likely random (e.g., due to uneven binning, true
+signal scatter, etc.).  This is especially dramatic in the 0.5-2 keV image,
+indicating that epreject had no effect for almost all of the image.
+
+
+Verdict:
+--> epreject: OK.  Keep an eye on instrumental noise / bright
+column streaks etc as usual.
+--> epnoise: "The purpose of this subtask is to suppress the detector noise at
+    energies below ~250 eV and should be used for qualitative imaging purposes
+    only."
+    Yeah, we can skip this.
+
+Current list of pending procedure changes (copied from Mon 2015 Dec 7):
+2. fix PN spectrum extraction for 0551000201
+    -- in works, deciding how to work without QPB, we'd need different
+    procedure.  Defer temporarily, I will work out a few more things on
+    0087940201 first.
+
+    Remark: epchain doc claims that its runbackground=Y mode is able to create
+    background spectrum for LW imaging mode.  But, looking at XMM-Newton sky
+    FOV in DS9, this seems impossible...
+4. explore effect of removing point sources w/ automated algorithm
+5. check what/where filter flags are applied, and add comments to scripts.
+   (flag and pattern rejections)
+   see if we need to evselect anywhere to remove these bad events.
+6. double check plots of histogram filtering, see if 2nd round is needed.
+7. add mosaicking step.
+8. is it necessary to run filtering step 2x?
+   re-run espfilt, see what happens.
 
 
 

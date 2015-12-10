@@ -33,9 +33,9 @@ set repro = $XMM_PATH/$obsid/odf/repro
 mkdir -p $repro
 cd $repro
 
-cifbuild  # outputs ccf.cif in current directory
+cifbuild >& cifbuild.log # outputs ccf.cif in current directory
 setenv SAS_CCF $XMM_PATH/$obsid/odf/repro/ccf.cif
 
-odfingest  # outputs $(REV)_$(OBSID)_SCX00000SUM.SAS in current directory
+odfingest >& odfingest.log # outputs $(REV)_$(OBSID)_SCX00000SUM.SAS in current directory
 setenv SAS_ODF $XMM_PATH/`ls -1 *SUM.SAS`
 
