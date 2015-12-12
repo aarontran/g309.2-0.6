@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# Make variant cheesy images to determine best point source removal parameters
+# Aaron Tran
+
+if [ "$#" -ne 1 ]
+then
+    echo "Error: one argument (obsid) required, exiting"
+    exit 1
+fi
+
+OBSID=$1
+
+# source sasinit ${OBSID}  # PROBLEM -- sourcing tcsh doesn't work in bash...
+cd "${XMM_PATH}/${OBSID}/odf/repro"
+
+# ESAS Cookbook defaults
+# scale=0.25 rate=1 dist=40
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.25 rate=1.0 dist=40.0 clobber=1 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.25_rate_1_dist_40.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.25_rate_1_dist_40.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.25_rate_1_dist_40.fits
+
+# Increase dist alone from default
+# scale=0.25 rate=1 dist=60
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.25 rate=1.0 dist=60.0 clobber=0 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.25_rate_1_dist_60.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.25_rate_1_dist_60.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.25_rate_1_dist_60.fits
+
+# Increase rate alone from default
+# scale=0.25 rate=2 dist=40
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.25 rate=2.0 dist=40.0 clobber=0 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.25_rate_2_dist_40.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.25_rate_2_dist_40.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.25_rate_2_dist_40.fits
+
+# Increase rate even more from default
+# scale=0.25 rate=4 dist=40
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.25 rate=4.0 dist=40.0 clobber=0 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.25_rate_4_dist_40.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.25_rate_4_dist_40.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.25_rate_4_dist_40.fits
+
+# Decrease scale from default
+# scale=0.1 rate=1.0 dist=40.0
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.1 rate=1.0 dist=40.0 clobber=0 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.1_rate_1_dist_40.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.1_rate_1_dist_40.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.1_rate_1_dist_40.fits
+
+# Increase scale from default
+# scale=0.5 rate=1.0 dist=40.0
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.5 rate=1.0 dist=40.0 clobber=0 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.5_rate_1_dist_40.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.5_rate_1_dist_40.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.5_rate_1_dist_40.fits
+
+# Increase rate and dist from default
+# scale=0.25 rate=2 dist=60
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.25 rate=2.0 dist=60.0 clobber=0 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.25_rate_2_dist_60.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.25_rate_2_dist_60.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.25_rate_2_dist_60.fits
+
+###############################################################################
+
+
+# Favored set of parameters for obsids 0087940201 and 0551000201, based on
+# analysis of resulting images from above cheese calls.
+# scale=0.50 rate=2 dist=40
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.5 rate=2.0 dist=40.0 clobber=0 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.5_rate_2_dist_40.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.5_rate_2_dist_40.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.5_rate_2_dist_40.fits

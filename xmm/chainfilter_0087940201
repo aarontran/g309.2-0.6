@@ -49,6 +49,10 @@ end
 # pnS003-clean.fits has been filtered by:
 #  '(PI in [300:12000])&&(PATTERN <= 4)&&((FLAG & 0xcfa097c) == 0)'
 
+cheese prefixm="${MOSEXP}" prefixp="${PNEXP}" \
+    scale=0.5 rate=2.0 dist=40.0 clobber=1 elow=400 ehigh=7200
+mv command.csh cheese_cmd.csh
+mv emllist.fits cheese_emllist.fits
 
 # Pat asks: is it necessary to run filtering 2x?  You should try this, maybe
 # for 0551000201 at least.
@@ -57,7 +61,7 @@ end
 # espfilt eventset=pn-evt1.fits method=histogram clobber=no -V 6
 
 ### Additional filtering steps if needed.
-# Point source removal, special treatment for PN readout streaks
+# special treatment for PN readout streaks
 # any additional PATTERN / FLAG filtering (on top of what's already done in
 # mos-filter and pn-filter) goes here.
 

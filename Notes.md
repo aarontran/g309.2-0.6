@@ -2777,10 +2777,14 @@ SAS User Guide 4.3.2.1.1 example.  Note that PHA>=20 should not have any
 effect.
 
     # in odf/repro_epreject/
-    evselect table=P0551000201PNS003PIEVLI0000.FIT expression='(PHA>=20)&&(PI>=120)&&(PI<200)' filteredset=P0551000201PNS003PIEVLI0000_PI_120_200.fits
+    evselect table=P0551000201PNS003PIEVLI0000.FIT \
+            filteredset=P0551000201PNS003PIEVLI0000_PI_120_200.fits \
+            expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
         evselect:- selected 968705 rows from the input table.
     # in odf/repro/
-    evselect table=P0551000201PNS003PIEVLI0000.FIT expression='(PHA>=20)&&(PI>=120)&&(PI<200)' filteredset=P0551000201PNS003PIEVLI0000_PI_120_200.fits
+    evselect table=P0551000201PNS003PIEVLI0000.FIT \
+            filteredset=P0551000201PNS003PIEVLI0000_PI_120_200.fits \
+            expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
         evselect:- selected 1013560 rows from the input table.
 
 This is actually great -- the noise reduction pops out to the eyes,
@@ -2813,6 +2817,8 @@ Next call is:
 
 Wednesday 2015 December 9 -- epreject results
 =============================================
+
+## epreject results and diffing
 
 Compared and subtracted very soft X-ray images to see results of epreject.
 
@@ -2869,7 +2875,233 @@ column streaks etc as usual.
     only."
     Yeah, we can skip this.
 
+## Point source detection and removal
+
+Note there are at least two tools in SAS: `edetect_chain` and `cheese`.  I
+don't know the difference between them, so will stick to cheese just to be
+consistent in ESAS framework...
+
+First testing with ESAS cheese call on `0551000201/odf/repro` (this has had
+epreject run already).
+
+    cheese prefixm="1S001 2S002" prefixp="S003" scale=0.25 rate=1.0 dist=40.0 clobber=0 elow=400 ehigh=7200
+
+It seems like the algorithm works well outside the SNR, but inside it snags on
+spurious features.  Let's try two further calls with stricter thresholds:
+rate=2, dist=40.
+
+    nohup /bin/tcsh -c 'source sasinit 0551000201; cd 0551000201/odf/repro; cheese prefixm="1S001 2S002" prefixp="S003" scale=0.25 rate=2.0 dist=60.0 clobber=1 elow=400 ehigh=7200'
+        >& 20151209_nohup_cheese_0551000201_rate_2_dist_60.log &
+
+        # Ran at 19:50p ish? on statler
+        # Forgot to run in background with & at end.
+
+    nohup /bin/tcsh -c 'source sasinit 0087940201; cd 0087940201/odf/repro; cheese prefixm="1S001 2S002" prefixp="S003" scale=0.25 rate=2.0 dist=60.0 clobber=1 elow=400 ehigh=7200'
+        >& 20151209_nohup_cheese_0087940201_rate_2_dist_60.log &
+
+        # Ran at 19:54p
+        atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c '...' >& ... &
+        [1] 28827
+
+After the fact, I moved `command.csh` files to `cheese_command.csh`
+
+
+Thursday 2015 December 10 -- iterate on point source removal (cheese)
+=====================================================================
+
+## Look at cheese from yesterday
+
+How do the cheese masks look? (scale=0.25, rate=2, dist=60)
+Easy way to check -- set up 6 tiled images in DS9 and link frames.
+
+* 0087940201 -- looks good, I think that all sources are real.  PNS003 in
+  particular brings out some sources that are more questionable in MOS images.
+  But, the bright star HD 119682 is NOT masked.
+
+* 0551000201 -- also looks good.  Two stars that are masked successfully here
+  are NOT not masked in 0087940201 (near CCD edges, and off PN entirely in one
+  case). Again, the bright star HD 119682 is NOT masked.
+
+It would be nice to use both obsids for source detection.  I could homebrew it
+by correcting for exposure and merging, then running wavdetect or similar.  I
+don't know what cheese is doing.
+
+Saved DS9 session screenshot to `img-notes/20151210_cheese_assess.png`.
+
+## Make more cheese!
+
+Create and run the script `cheese_grater` to figure out best parameters.
+Variant cheese files are named by source detection parameters.
+All use the default 0.4-7.2 keV energy band (elow=400, ehigh=7200).
+
+NOTE: some time is consumed by computing exposure maps with:
+
+    eexpmap attitudeset=atthk.fits eventset=mos2S002-clean.fits:EVENTS
+        expimageset=mos2S002-exp-im.fits imageset=mos2S002-obj-im.fits
+        pimax=7200 pimin=400 withdetcoords=no verbosity=1
+
+To save time, set clobber=0.  Clobber allows us to skip evselect, eexpmask, and
+emask creation for all exposures (-obj-im.fits, -exp-im.fits, -mask-im.fits).
+The source detection/removal parameters (rate, dist, scale) are first used
+around line 520 of cheese to call SAS (ESAS?) task "region".
+
+Detection still takes a while, calls to eboxdetect and esplinemap necessary.
+
+## Histogram (flare filtering checks)
+
+I forgot
+
+When I try to investigate SWPC emission, filtering may mess up the distribution
+of time / spectra somewhat.  Just be aware of this later.
+
+### 0087940201 soft flare filtering
+
+Inspect `*-hist.qdp` files from {mos,pn}-filter.  I'm satisfied with the
+filtering, but would make one more edit to cut out events near the start of the
+observation (also simplifies the GTIs).
+No need to adjust the Gaussian cut.
+
+* MOS1S001: looks OK. I might tighten upper count rate bound to 2.2 cts/sec (fitted
+  Gaussian width), but would make little difference based on lightcurve.
+  In lightcurve, I would just cut all data from first 10ks of observation;
+  a smattering of points are selected, but surrounded by noise.
+
+* MOS2S002: looks OK. Same comments as MOS1S001, basically.
+
+* PNS003: looks OK. I might tighten upper count rate bound to 5.8 cts/sec
+  (fitted Gaussian width) vs. ~6.2 cts/s, noise tail more pronounced than in
+  MOS plots.  Again, adjustment would make little difference.
+
+  Cut from 0 to 6000 seconds looks good.
+  Time from start of observation disagrees with MOS lightcurve, I suspect that
+  PN started taking data after MOS, maybe due to a radzone or something.
+
+I'm unsure of the point of the OOT histogram, it looks the same as the
+regular PNS003 data (as expected, since they should be the same data...).
+
+In fact, it may be better to have more residual counts, because background
+fitting for soft proton power law might be more robust.  I'm not really sure if
+we want to go that route though...
+
+### 0551000201 soft flare filtering
+
+Brief noise at very start of observation (0-2ks), decent-ish data in first 20ks
+of observation.  Increased noise 20-30ks, some ok data 30-35 ks.  After ~38ks,
+flaring increases dramatically and is obviously unusable.
+There will definitely be residual contamination.
+
+* MOS1S001: looks ok.  I would tighten upper count rate bound to 1.4 cts/sec
+  (vs. 1.7 cts/sec), about 20% correction.
+  Cut small bits of data between 19-32ks (from start of MOS time).
+
+* MOS2S002: same deal as MOS1.  Interestingly, lightcurve and count rate
+  histogram look subtly better than MOS1, I dunno why.
+  Here I'd tighten upper count rate bound to 1.5 cts/sec (from ~1.7 cts/sec)
+
+* PNS003: wow PN looks bad.  Early observation is ok, but after ~20ks the
+  flaring is just way too strong.
+  Here, I might cut upper count rate bound to 3.3 cts/sec, well below current
+  cut at 3.9 cts/sec.
+  Similar ratio as my suggested MOS cuts though.
+  But that will reduce our already sparse counts further.
+
+
+Friday 2015 December 11 -- inspect point source removal tests
+=============================================================
+
+## Cheese results inspection
+
+NOTE: I have been looking exclusively at 0087940201 masks, to save time.
+
+ESAS Cookbook defaults (already done)
+scale=0.25 rate=1 dist=40
+
+    Successfully removes bright star HD119682, but it looks like there's a
+    number of false positives.  Holes are pretty big.
+    Lots of speckle holes (a few pixels apiece) on MOS2.
+    REJECT.
+
+Increase dist alone from default
+scale=0.25 rate=1 dist=60
+
+    Mostly the same.  Does NOT remove bright star HD119682.
+    More speckle, for some reason.
+    Maybe two putative stars, other than the really bright one, are not masked
+    as compared to default.
+    REJECT.
+
+Increase rate alone from default
+scale=0.25 rate=2 dist=40
+
+    Better, much more conservative.
+    Holes are same size as default.
+    DOES get bright star HD119682.
+    This one looks almost optimal, but compare to scale=0.25/rate=2/dist=60 too
+
+Decrease scale from default
+scale=0.1 rate=1.0 dist=40.0 clobber=0 elow=400 ehigh=7200
+
+    Exactly as you'd expect, bigger holes...
+    REJECT.
+
+Increase scale from default
+scale=0.5 rate=1.0 dist=40.0 clobber=0 elow=400 ehigh=7200
+
+    Holes shrink.  Actually, the holes still look pretty good to me,
+    but the difference is pretty marginal.
+    Looking at DS9 projection of bright star, the cheese mask still looks
+    reasonably conservative.
+    I would be ok with adopting these smaller holes.
+
+Increase rate and dist from default (already done)
+scale=0.25 rate=2 dist=60
+
+    See notes above (Thurs Dec 10)
+
+Increase rate alone, further, from default
+scale=0.25 rate=4 dist=40
+
+    As expected. Only some 4-5 stars are masked (includes bright star).
+    About two objects that look like stars are not masked.
+    A little too conservative, but OK.
+
+Verdict: scale=0.5, rate=2.0, dist=40 seems like a good set of parameters.
+scale=0.5 rate=2 dist=40
+
+    I inspect images for both 0087940201 and 0551000201
+    0087940201 -- broadly, looks good.  basically same as
+      scale=0.25,rate=2,dist=60 assessment from yesterday.
+    0551000201 -- the holes are bigger.
+      Again, looks like assessment from yesterday, which was positive.
+      There's one object being masked in top right
+      (RA 13:44:51.036, dec -62:48:46.53) that I'm not sure actually is a point
+      source, at least it's not obvious in image.
+      But it's completely irrelevant to our work, so I'll leave it in.
+
+I think this is done, I've settled on a set of parameters with which I'm
+satisfied.  Very unscientific, but I hope it's OK.
+
+
+## Next steps
+
+RA/dec for point sources are available in emllist.fits, output by cheese.  Use
+this to create simple region masks for any figures necessary.
+
+cheese also outputs emllistout.fits -- this is the original output from
+emldetect.  cheese runs task fill_list to fill in null values for something?
+so emllist.fits is the correct output file to inspect...
+It could be worth inspecting outputs from SAS eboxdetect boxlist.fits and
+boxlist-f.fits, but... eh...
+
+
+
+PLAN: figure out commands for cutting / manipulating GTIs at home.
+
+
+
+
 Current list of pending procedure changes (copied from Mon 2015 Dec 7):
+1. Modify GTIs, per my review of soft flare filtering from Thurs Dec 10.
 2. fix PN spectrum extraction for 0551000201
     -- in works, deciding how to work without QPB, we'd need different
     procedure.  Defer temporarily, I will work out a few more things on
@@ -2878,14 +3110,12 @@ Current list of pending procedure changes (copied from Mon 2015 Dec 7):
     Remark: epchain doc claims that its runbackground=Y mode is able to create
     background spectrum for LW imaging mode.  But, looking at XMM-Newton sky
     FOV in DS9, this seems impossible...
-4. explore effect of removing point sources w/ automated algorithm
 5. check what/where filter flags are applied, and add comments to scripts.
    (flag and pattern rejections)
    see if we need to evselect anywhere to remove these bad events.
-6. double check plots of histogram filtering, see if 2nd round is needed.
 7. add mosaicking step.
-8. is it necessary to run filtering step 2x?
-   re-run espfilt, see what happens.
+8. check on SWPC emission (be sure to updateexposure when making time cuts, and
+   check flare GTIs)
 
 
 

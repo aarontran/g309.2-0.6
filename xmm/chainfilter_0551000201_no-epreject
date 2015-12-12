@@ -46,17 +46,3 @@ foreach exp ($PNEXP)
 	imagebinning=binSize ximagebinsize=100 yimagebinsize=100 \
         expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
 end
-
-
-# Pat asks: is it necessary to run filtering 2x?  You should try this, maybe
-# for 0551000201 at least.
-# espfilt eventset=mos1-evt1.fits method=histogram clobber=no -V 6
-# espfilt eventset=mos2-evt1.fits method=histogram clobber=no -V 6
-# espfilt eventset=pn-evt1.fits method=histogram clobber=no -V 6
-
-### Additional filtering steps if needed.
-# Point source removal, special treatment for PN readout streaks
-# any additional PATTERN / FLAG filtering (on top of what's already done in
-# mos-filter and pn-filter) goes here.
-
-
