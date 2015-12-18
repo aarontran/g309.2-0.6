@@ -1,6 +1,7 @@
 # .gitignore for G309.2-0.6 project
 
 img-notes/*.png
+
 most/G309.2-0.6.fits
 most/G309.2-0.6.jpg
 most/G309.2-0.6.ps
@@ -19,6 +20,11 @@ MANIFEST.*
 *.ASC
 *SUM.SAS
 ccf.cif
+
+# Logging output, etc
+xmm/*/odf/repro/*gti*.txt
+xmm/*/odf/repro/command.csh
+xmm/*/odf/repro/*cmd.csh
 
 # Chandra files
 chandra/*/00README

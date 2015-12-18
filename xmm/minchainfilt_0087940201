@@ -46,12 +46,12 @@ foreach exp ($EXPS)
 
     # Cut events in first ~10ks of observation (0087940201 MOS and PN)
     if ($exp != $PNEXP) then
-        set gtifilt = '(TIME >= 115364540)'
+        set gtifilt = "(TIME >= 115364540)"
     else
-        set gtifilt = '(TIME >= 115364540)'
+        set gtifilt = "(TIME >= 115364540)"
     endif
     evselect table=${exp}-clean-ori.fits filteredset=${exp}-clean2.fits \
-        expression=${gtifilt} \
+        expression="${gtifilt}" \
         updateexposure=yes filterexposure=yes \
         keepfilteroutput=yes withfilteredset=yes filtertype=expression 
 
@@ -69,12 +69,12 @@ foreach exp ($EXPS)
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
     evselect table=${exp}-clean-ori.fits \
-        expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
+        expression="(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)" \
         withrateset=yes rateset=${exp}-clean-ori-lc.fits \
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
     evselect table=${exp}-clean2.fits \
-        expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
+        expression="(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)" \
         withrateset=yes rateset=${exp}-clean-final-lc.fits \
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
@@ -95,7 +95,7 @@ foreach exp ($EXPS)
         set finalfilt = '(PATTERN<=4)&&(FLAG==0)'
     endif
     evselect table=${exp}-clean2.fits filteredset=${exp}-clean.fits \
-        expression=${finalfilt} \
+        expression="${finalfilt}" \
         updateexposure=no filterexposure=no \
         keepfilteroutput=yes withfilteredset=yes filtertype=expression
 end

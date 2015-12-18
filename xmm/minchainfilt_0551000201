@@ -36,9 +36,9 @@ foreach exp ($EXPS)
     # Generate soft X-ray list/image to compare against run without epreject
     if ($exp == $PNEXP) then
         evselect table="${exp}-ori.fits" filteredset="${exp}-ori_vsoft.fits" \
-            expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
+            expression="(PHA>=20)&&(PI>=120)&&(PI<200)"
         evselect table="${exp}-oot.fits" filteredset="${exp}-oot_vsoft.fits" \
-            expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
+            expression="(PHA>=20)&&(PI>=120)&&(PI<200)"
         evselect table="${exp}-ori_vsoft.fits" withimageset=true \
             imageset="${exp}-ori_vsoft-img.fits" xcolumn=DETX ycolumn=DETY \
             imagebinning=binSize ximagebinsize=100 yimagebinsize=100
@@ -60,37 +60,37 @@ foreach exp ($EXPS)
 
     if ($exp != $PNEXP) then
         # Cut events between 19.5-32ks (0551000201 MOS)
-        set gtifilt = '!(TIME IN [352743736:352756237 ])'
+        set gtifilt = "!(TIME IN [352743736:352756237 ])"
     else
         # Cut events after ~30ks of observation (0551000201 PN)
-        set gtifilt ='(TIME < 352755947)'
+        set gtifilt = "(TIME < 352755947)"
     endif
-    evselect table=${exp}-clean-ori.fits filteredset=${exp}-clean2.fits \
-        expression=${gtifilt} \
+    evselect table="${exp}-clean-ori.fits" filteredset="${exp}-clean2.fits" \
+        expression="${gtifilt}" \
         updateexposure=yes filterexposure=yes \
         keepfilteroutput=yes withfilteredset=yes filtertype=expression 
 
     # Light curves to check that manual time cuts were applied successfully
     # Match filtering params for ${exp}-rate.fits from espfilt
     if ($exp != $PNEXP) then
-        set pattfilt = '(PATTERN<=12)'
+        set pattfilt = "(PATTERN<=12)"
     else
-        set pattfilt = '(PATTERN<=4)'
+        set pattfilt = "(PATTERN<=4)"
     endif
     # ${exp}-ori-lc.fits is the same as ${exp}-rate.fits, but with coarser binning
-    evselect table=${exp}-ori.fits \
+    evselect table="${exp}-ori.fits" \
         expression="${pattfilt}&&(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)&&((FLAG & 0x766a0f63)==0)" \
-        withrateset=yes rateset=${exp}-ori-lc.fits \
+        withrateset=yes rateset="${exp}-ori-lc.fits" \
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
-    evselect table=${exp}-clean-ori.fits \
-        expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
-        withrateset=yes rateset=${exp}-clean-ori-lc.fits \
+    evselect table="${exp}-clean-ori.fits" \
+        expression="(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)" \
+        withrateset=yes rateset="${exp}-clean-ori-lc.fits" \
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
-    evselect table=${exp}-clean2.fits \
-        expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
-        withrateset=yes rateset=${exp}-clean-final-lc.fits \
+    evselect table="${exp}-clean2.fits" \
+        expression="(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)" \
+        withrateset=yes rateset="${exp}-clean-final-lc.fits" \
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
     # 0x766a0f63 is used for obsids before XMM revolution 2383 in espfilt and {mos,pn}-filter
@@ -105,12 +105,12 @@ foreach exp ($EXPS)
     # Nevertheless re-specify PATTERN to be quite explicit.
     # Note that FLAG filtering may be overly restrictive for images
     if ($exp != $PNEXP) then
-        set finalfilt = '(PATTERN<=12)&&#XMMEA_EM'
+        set finalfilt = "(PATTERN<=12)&&#XMMEA_EM"
     else
-        set finalfilt = '(PATTERN<=4)&&(FLAG==0)'
+        set finalfilt = "(PATTERN<=4)&&(FLAG==0)"
     endif
     evselect table=${exp}-clean2.fits filteredset=${exp}-clean.fits \
-        expression=${finalfilt} \
+        expression="${finalfilt}" \
         updateexposure=no filterexposure=no \
         keepfilteroutput=yes withfilteredset=yes filtertype=expression
 end

@@ -3194,6 +3194,15 @@ Rerunning pipeline:
     atran(sas)@cooper:/data/mpofls/atran/research/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; minchainfilt_0551000201;' >& 20151218_nohup_minchainfilt_0551000201 &
     [1] 17150
 
+Errored out because I made some mistakes in string quotation.
+Fixed and started re-running again around 10:20am.
+
+    atran@statler$ nohup /bin/tcsh -c 'source sasinit 0087940201; minchainfilt_0087940201;' >& 20151218_nohup_minchainfilt_0087940201 &
+    [1] 15222
+    atran@cooper$ nohup /bin/tcsh -c 'source sasinit 0551000201; minchainfilt_0551000201;' >& 20151218_nohup_minchainfilt_0551000201 &
+    [1] 15316
+
+
 
 
 
