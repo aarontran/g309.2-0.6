@@ -34,6 +34,8 @@ emchain >& emchain.log
 # Make symlinks to work around {mos,pn}-filter file renaming
 mos-filter >& mos-filter.log
 mv command.csh mos-filter_cmd.csh
+pn-filter >& pn-filter.log
+
 foreach exp ($MOSEXP)
     ln -s mos${exp}-ori.fits P${OBSID}M${exp}MIEVLI0000.FIT
 
@@ -45,7 +47,7 @@ foreach exp ($MOSEXP)
     mv mos${exp}-gti.txt mos${exp}-gti-ori.txt
 
     # Cut events in first ~10ks of observation (0087940201 MOS and PN)
-    evselect table=mos${exp}-clean-ori.fits filteredset=mos${exp}-clean.fits \
+    evselect table=mos${exp}-clean-ori.fits filteredset=mos${exp}-clean2.fits \
 	expression='(TIME >= 115364540)' \
 	updateexposure=yes filterexposure=yes \
 	keepfilteroutput=yes withfilteredset=yes filtertype=expression 
@@ -63,7 +65,7 @@ foreach exp ($MOSEXP)
     	withrateset=yes rateset=mos${exp}-clean-ori-lc.fits \
     	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
 	keepfilteroutput=no
-    evselect table=mos${exp}-clean.fits \
+    evselect table=mos${exp}-clean2.fits \
     	expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
     	withrateset=yes rateset=mos${exp}-clean-final-lc.fits \
     	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
@@ -71,9 +73,17 @@ foreach exp ($MOSEXP)
     # 0x766a0f63 is used for obsids before XMM revolution 2383 in espfilt and {mos,pn}-filter
     # 0xfb0000 is used in espfilt to create FOV lightcurves; this removes out
     # of FOV events and obviously bad events (cosmic rays, bad pixels, etc)
+
+    # Final manual filtering
+    # mos1S001-clean-ori.fits and mos2S002-clean-ori.fits have been filtered by:
+    #  '(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)'
+    # Note that FLAG filtering may be overly restrictive for images
+    evselect table=mos${exp}-clean2.fits filteredset=mos${exp}-clean.fits \
+	expression='(PATTERN<=12)&&#XMMEA_EM' \
+	updateexposure=yes filterexposure=yes \
+	keepfilteroutput=yes withfilteredset=yes filtertype=expression
 end
 
-pn-filter >& pn-filter.log
 foreach exp ($PNEXP)
     ln -s pn${exp}-oot.fits P${OBSID}PN${exp}OOEVLI0000.FIT
     ln -s pn${exp}-ori.fits P${OBSID}PN${exp}PIEVLI0000.FIT
@@ -87,7 +97,7 @@ foreach exp ($PNEXP)
     mv pn${exp}-gti-oot.fits pn${exp}-gti-oot-ori.fits
 
     # Cut events in first ~10ks of observation (0087940201 MOS and PN)
-    evselect table=pn${exp}-clean-ori.fits filteredset=pn${exp}-clean.fits \
+    evselect table=pn${exp}-clean-ori.fits filteredset=pn${exp}-clean2.fits \
         expression='(TIME >= 115364540)' \
 	updateexposure=yes filterexposure=yes \
 	keepfilteroutput=yes withfilteredset=yes filtertype=expression
@@ -105,27 +115,28 @@ foreach exp ($PNEXP)
     	withrateset=yes rateset=pn${exp}-clean-ori-lc.fits \
     	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
 	keepfilteroutput=no
-    evselect table=pn${exp}-clean.fits \
+    evselect table=pn${exp}-clean2.fits \
     	expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
     	withrateset=yes rateset=pn${exp}-clean-final-lc.fits \
     	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
 	keepfilteroutput=no
+
+    # Final manual filtering
+    # pnS003-clean-ori.fits has already been filtered by:
+    #  '(PATTERN<= 4)&&((FLAG & 0x766a0f63) == 0)'
+    # Note that FLAG filtering may be overly restrictive for images
+    evselect table=pn${exp}-clean2.fits filteredset=pn${exp}-clean.fits \
+	expression='(PATTERN<=4)&&(FLAG == 0)' \
+	updateexposure=yes filterexposure=yes \
+	keepfilteroutput=yes withfilteredset=yes filtertype=expression
 end
 
-# mos1S001-clean.fits and mos2S002-clean.fits have been filtered by:
-#  '(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)'
-# pnS003-clean.fits has been filtered by:
-#  '(PATTERN<= 4)&&((FLAG & 0x766a0f63) == 0)'
 
+
+# cheese must be run after manual GTI edits; probably benefits from running
+# after additional FLAG filter step
 cheese prefixm="${MOSEXP}" prefixp="${PNEXP}" \
     scale=0.5 rate=2.0 dist=40.0 clobber=1 elow=400 ehigh=7200
 mv command.csh cheese_cmd.csh
 mv emllist.fits cheese_emllist.fits
-
-
-### Additional filtering steps if needed.
-# special treatment for PN readout streaks
-# any additional PATTERN / FLAG filtering (on top of what's already done in
-# mos-filter and pn-filter) goes here.
-
 

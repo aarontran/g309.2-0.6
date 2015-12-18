@@ -3180,6 +3180,21 @@ time, but reject all the PN time).
 
 But for now it seems OK.
 
+Quick check on exposure times:
+0087940201 mos2S002-clean.fits ONTIME = 25.891 ks, LIVETIME = 25.621 ks (central CCD)
+0087940201 mos2S002-clean-ori.fits ONTIME = 28.440 ks, LIVETIME = 28.119 ks (central CCD)
+    OK, as expected, a fair bit of time was trimmed; lost ~3ks (10%).
+
+
+Rerunning pipeline:
+
+    atran(sas)@statler:/data/mpofls/atran/research/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; minchainfilt_0087940201;' >& 20151218_nohup_minchainfilt_0087940201 &
+    [1] 18552
+
+    atran(sas)@cooper:/data/mpofls/atran/research/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; minchainfilt_0551000201;' >& 20151218_nohup_minchainfilt_0551000201 &
+    [1] 17150
+
+
 
 
 
@@ -3192,9 +3207,6 @@ Current list of pending procedure changes (copied from Mon 2015 Dec 7):
     Remark: epchain doc claims that its runbackground=Y mode is able to create
     background spectrum for LW imaging mode.  But, looking at XMM-Newton sky
     FOV in DS9, this seems impossible...
-5. check what/where filter flags are applied, and add comments to scripts.
-   (flag and pattern rejections)
-   see if we need to evselect anywhere to remove these bad events.
 7. add mosaicking step.
 8. check on SWPC emission (be sure to updateexposure when making time cuts, and
    check flare GTIs)
