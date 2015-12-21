@@ -25,24 +25,18 @@ epchain withoutoftime=true runepreject=N >& epchain_oot.log
 epchain runepreject=N >& epchain.log
 
 # Good time filtering (remove flares)
-# Make symlinks to work around {mos,pn}-filter file renaming
 pn-filter >& pn-filter.log
-foreach exp ($PNEXP)
-    ln -s pn${exp}-oot.fits P${OBSID}PN${exp}OOEVLI0000.FIT
-    ln -s pn${exp}-ori.fits P${OBSID}PN${exp}PIEVLI0000.FIT
 
+foreach exp ($PNEXP)
     # Generate soft X-ray list/image to compare against run WITH epreject
     evselect table="pn${exp}-ori.fits" filteredset="pn${exp}-ori_vsoft.fits" \
         expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
     evselect table="pn${exp}-oot.fits" filteredset="pn${exp}-oot_vsoft.fits" \
         expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
-
     evselect table="pn${exp}-ori_vsoft.fits" withimageset=true \
     	imageset="pn${exp}-ori_vsoft-img.fits" xcolumn=DETX ycolumn=DETY \
-	imagebinning=binSize ximagebinsize=100 yimagebinsize=100 \
-        expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
+	imagebinning=binSize ximagebinsize=100 yimagebinsize=100
     evselect table="pn${exp}-oot_vsoft.fits" withimageset=true \
     	imageset="pn${exp}-oot_vsoft-img.fits" xcolumn=DETX ycolumn=DETY \
-	imagebinning=binSize ximagebinsize=100 yimagebinsize=100 \
-        expression='(PHA>=20)&&(PI>=120)&&(PI<200)'
+	imagebinning=binSize ximagebinsize=100 yimagebinsize=100
 end

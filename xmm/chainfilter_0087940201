@@ -9,8 +9,11 @@
 # ------------------------
 
 set OBSID = "0087940201"
-set MOSEXP = "1S001 2S002"
-set PNEXP = "S003"
+set EXPS = "mos1S001 mos2S002 pnS003"
+set PNEXP = "pnS003"
+
+set MOSEXP_N = "1S001 2S002"
+set PNEXP_N = "S003"
 
 # ------------------------
 # Start of script commands
@@ -19,123 +22,100 @@ set PNEXP = "S003"
 cd "${XMM_PATH}/${OBSID}/odf/repro"
 
 # Generate event lists
-# Must run epchain for OOT events first, according to
-# http://xmm.esac.esa.int/sas/current/doc/epchain/node9.html
 epchain withoutoftime=true >& epchain_oot.log
-epchain >& epchain.log
+epchain >& epchain.log  # cannot use epreject for 0087940201
 emchain >& emchain.log
 
-# epreject NOT used because offset data aren't available for 0087940201.
-#   No PN offset maps available in ODF, and
-#   no offset calibration available for PrimeFullWindowExtended submode??
-# epnoise NOT used because it serves same role as espfilt / pn-filter
-
 # Good time filtering (remove flares)
-# Make symlinks to work around {mos,pn}-filter file renaming
 mos-filter >& mos-filter.log
 mv command.csh mos-filter_cmd.csh
 pn-filter >& pn-filter.log
 
-foreach exp ($MOSEXP)
-    ln -s mos${exp}-ori.fits P${OBSID}M${exp}MIEVLI0000.FIT
+foreach exp ($EXPS)
 
-    # Move clean*.fits after {mos,pn}-filter in order to apply manual GTI cuts
-    # Also move GTI txt and fits files, in case any ESAS tasks surreptitiously
-    # use these files even though they're no longer correct.
-    mv mos${exp}-clean.fits mos${exp}-clean-ori.fits
-    mv mos${exp}-gti.fits mos${exp}-gti-ori.fits
-    mv mos${exp}-gti.txt mos${exp}-gti-ori.txt
+    # Move -gti.{fits,txt} in case any ESAS tasks surreptitiously use these
+    # files, as they're not valid after our manual GTI editing
+    mv ${exp}-clean.fits ${exp}-clean-ori.fits
+    mv ${exp}-gti.fits   ${exp}-gti-ori.fits
+    mv ${exp}-gti.txt    ${exp}-gti-ori.txt
+    if ($exp == $PNEXP) then
+        mv ${exp}-clean-oot.fits ${exp}-clean-oot-ori.fits
+        mv ${exp}-gti-oot.fits   ${exp}-gti-oot-ori.fits
+        mv ${exp}-gti-oot.txt    ${exp}-gti-oot-ori.txt
+    endif
 
     # Cut events in first ~10ks of observation (0087940201 MOS and PN)
-    evselect table=mos${exp}-clean-ori.fits filteredset=mos${exp}-clean2.fits \
-	expression='(TIME >= 115364540)' \
-	updateexposure=yes filterexposure=yes \
-	keepfilteroutput=yes withfilteredset=yes filtertype=expression 
+    if ($exp != $PNEXP) then
+        set gtifilt = "(TIME >= 115364540)"
+    else
+        set gtifilt = "(TIME >= 115364540)"
+    endif
+    evselect table=${exp}-clean-ori.fits filteredset=${exp}-clean2.fits \
+        expression="${gtifilt}" \
+        updateexposure=yes filterexposure=yes \
+        keepfilteroutput=yes withfilteredset=yes filtertype=expression 
 
     # Light curves to check that manual time cuts were applied successfully
-    # Match params for mos${exp}-rate.fits and pn${exp}-rate.fits from espfilt
-    evselect table=mos${exp}-ori.fits \
-    	expression='(PATTERN<=12)&&(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)&&((FLAG & 0x766a0f63)==0)' \
-    	withrateset=yes rateset=mos${exp}-ori-lc.fits \
-    	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
-	keepfilteroutput=no
-    # mos${exp}-ori-lc.fits is the same as mos${exp}-rate.fits, but with coarser binning
-    evselect table=mos${exp}-clean-ori.fits \
-    	expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
-    	withrateset=yes rateset=mos${exp}-clean-ori-lc.fits \
-    	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
-	keepfilteroutput=no
-    evselect table=mos${exp}-clean2.fits \
-    	expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
-    	withrateset=yes rateset=mos${exp}-clean-final-lc.fits \
-    	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
-	keepfilteroutput=no
+    # Match filtering params for ${exp}-rate.fits from espfilt
+    if ($exp != $PNEXP) then
+        set pattfilt = '(PATTERN<=12)'
+    else
+        set pattfilt = '(PATTERN<=4)'
+    endif
+    # ${exp}-ori-lc.fits is the same as ${exp}-rate.fits, but with coarser binning
+    evselect table=${exp}-ori.fits \
+        expression="${pattfilt}&&(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)&&((FLAG & 0x766a0f63)==0)" \
+        withrateset=yes rateset=${exp}-ori-lc.fits \
+        maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
+        keepfilteroutput=no
+    evselect table=${exp}-clean-ori.fits \
+        expression="(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)" \
+        withrateset=yes rateset=${exp}-clean-ori-lc.fits \
+        maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
+        keepfilteroutput=no
+    evselect table=${exp}-clean2.fits \
+        expression="(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)" \
+        withrateset=yes rateset=${exp}-clean-final-lc.fits \
+        maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
+        keepfilteroutput=no
     # 0x766a0f63 is used for obsids before XMM revolution 2383 in espfilt and {mos,pn}-filter
     # 0xfb0000 is used in espfilt to create FOV lightcurves; this removes out
     # of FOV events and obviously bad events (cosmic rays, bad pixels, etc)
 
     # Final manual filtering
-    # mos1S001-clean-ori.fits and mos2S002-clean-ori.fits have been filtered by:
+    # mos{1S001,2S002}-clean-ori.fits were already filtered by:
     #  '(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)'
+    # pnS003-clean-ori.fits was already filtered by:
+    #  '(PATTERN<= 4)&&((FLAG & 0x766a0f63)==0)'
+    # Nevertheless re-specify PATTERN to be quite explicit.
     # Note that FLAG filtering may be overly restrictive for images
-    evselect table=mos${exp}-clean2.fits filteredset=mos${exp}-clean.fits \
-	expression='(PATTERN<=12)&&#XMMEA_EM' \
-	updateexposure=yes filterexposure=yes \
-	keepfilteroutput=yes withfilteredset=yes filtertype=expression
+    # Allow FLAG==0x10000 (corners) for mos/pn-spectra
+    if ($exp != $PNEXP) then
+        set finalfilt = "(PATTERN<=12)&&(#XMMEA_EM||(FLAG==0x10000))"
+    else
+        set finalfilt = "(PATTERN<=4)&&((FLAG==0)||(FLAG==0x10000))"
+    endif
+    evselect table=${exp}-clean2.fits filteredset=${exp}-clean.fits \
+        expression="${finalfilt}" \
+        updateexposure=no filterexposure=no \
+        keepfilteroutput=yes withfilteredset=yes filtertype=expression
+
+    # Final manual filtering, but remove out-of-FOV events
+    if ($exp != $PNEXP) then
+        set finalfilt = "(PATTERN<=12)&&(#XMMEA_EM)"
+    else
+        set finalfilt = "(PATTERN<=4)&&((FLAG==0))"
+    endif
+    evselect table=${exp}-clean2.fits filteredset=${exp}-clean-fov.fits \
+        expression="${finalfilt}" \
+        updateexposure=no filterexposure=no \
+        keepfilteroutput=yes withfilteredset=yes filtertype=expression
 end
-
-foreach exp ($PNEXP)
-    ln -s pn${exp}-oot.fits P${OBSID}PN${exp}OOEVLI0000.FIT
-    ln -s pn${exp}-ori.fits P${OBSID}PN${exp}PIEVLI0000.FIT
-
-    # Move clean*.fits after {mos,pn}-filter in order to apply manual GTI cuts
-    # Also move GTI txt and fits files, in case any ESAS tasks surreptitiously
-    # use these files even though they're no longer correct.
-    mv pn${exp}-clean.fits pn${exp}-clean-ori.fits
-    mv pn${exp}-clean-oot.fits pn${exp}-clean-oot-ori.fits
-    mv pn${exp}-gti.fits pn${exp}-gti-ori.fits
-    mv pn${exp}-gti-oot.fits pn${exp}-gti-oot-ori.fits
-
-    # Cut events in first ~10ks of observation (0087940201 MOS and PN)
-    evselect table=pn${exp}-clean-ori.fits filteredset=pn${exp}-clean2.fits \
-        expression='(TIME >= 115364540)' \
-	updateexposure=yes filterexposure=yes \
-	keepfilteroutput=yes withfilteredset=yes filtertype=expression
-
-    # Make lightcurve to sanity check that hand-applied time cuts worked.
-    # Match params for mos${exp}-rate.fits and pn${exp}-rate.fits from espfilt
-    evselect table=pn${exp}-ori.fits \
-    	expression='(PATTERN<=4)&&(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)&&((FLAG & 0x766a0f63) == 0)' \
-    	withrateset=yes rateset=pn${exp}-ori-lc.fits \
-    	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
-	keepfilteroutput=no
-    # pn${exp}-ori-lc.fits is the same as pn${exp}-rate.fits, but with coarser binning
-    evselect table=pn${exp}-clean-ori.fits \
-    	expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
-    	withrateset=yes rateset=pn${exp}-clean-ori-lc.fits \
-    	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
-	keepfilteroutput=no
-    evselect table=pn${exp}-clean2.fits \
-    	expression='(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)' \
-    	withrateset=yes rateset=pn${exp}-clean-final-lc.fits \
-    	maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
-	keepfilteroutput=no
-
-    # Final manual filtering
-    # pnS003-clean-ori.fits has already been filtered by:
-    #  '(PATTERN<= 4)&&((FLAG & 0x766a0f63) == 0)'
-    # Note that FLAG filtering may be overly restrictive for images
-    evselect table=pn${exp}-clean2.fits filteredset=pn${exp}-clean.fits \
-	expression='(PATTERN<=4)&&(FLAG == 0)' \
-	updateexposure=yes filterexposure=yes \
-	keepfilteroutput=yes withfilteredset=yes filtertype=expression
-end
-
 
 
 # cheese must be run after manual GTI edits; probably benefits from running
 # after additional FLAG filter step
-cheese prefixm="${MOSEXP}" prefixp="${PNEXP}" \
+cheese prefixm="${MOSEXP_N}" prefixp="${PNEXP_N}" \
     scale=0.5 rate=2.0 dist=40.0 clobber=1 elow=400 ehigh=7200
 mv command.csh cheese_cmd.csh
 mv emllist.fits cheese_emllist.fits

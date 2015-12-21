@@ -1,0 +1,35 @@
+#!/bin/sh
+
+ds9 -view layout vertical \
+    -frame  1 -fits "0087940201/odf/repro/mos1S001-obj-image-sky.fits" \
+    -frame  2 -fits "0087940201/odf/repro/mos1S001-cheese.fits" \
+    -frame  3 -fits "0551000201/odf/repro/mos1S001-cheese.fits" \
+    -frame  4 -fits "0551000201/odf/repro/mos1S001-obj-image-sky.fits" \
+    -frame  5 -fits "0087940201/odf/repro/mos2S002-obj-image-sky.fits" \
+    -frame  6 -fits "0087940201/odf/repro/mos2S002-cheese.fits" \
+    -frame  7 -fits "0551000201/odf/repro/mos2S002-cheese.fits" \
+    -frame  8 -fits "0551000201/odf/repro/mos2S002-obj-image-sky.fits" \
+    -frame  9 -fits "0087940201/odf/repro/pnS003-obj-image-sky.fits" \
+    -frame 10 -fits "0087940201/odf/repro/pnS003-cheese.fits" \
+    -frame 11 -fits "0551000201/odf/repro/pnS003-cheese.fits" \
+    -frame 12 -fits "0551000201/odf/repro/pnS003-obj-image-sky.fits" \
+    -frame lock wcs -crosshair lock wcs -tile yes -zoom to fit \
+    -frame 1 \
+        -scale log -cmap heat \
+        -smooth yes -smooth function gaussian -smooth radius 3 \
+    -frame 4 \
+        -scale log -cmap heat \
+        -smooth yes -smooth function gaussian -smooth radius 3 \
+    -frame 5 \
+        -scale log -cmap heat \
+        -smooth yes -smooth function gaussian -smooth radius 3 \
+    -frame 8 \
+        -scale log -cmap heat \
+        -smooth yes -smooth function gaussian -smooth radius 3 \
+    -frame 9 \
+        -scale log -cmap heat \
+        -smooth yes -smooth function gaussian -smooth radius 3 \
+    -frame 12 \
+        -scale log -cmap heat \
+        -smooth yes -smooth function gaussian -smooth radius 3
+

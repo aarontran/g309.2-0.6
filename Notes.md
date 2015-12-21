@@ -3194,18 +3194,28 @@ Rerunning pipeline:
     atran(sas)@cooper:/data/mpofls/atran/research/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; minchainfilt_0551000201;' >& 20151218_nohup_minchainfilt_0551000201 &
     [1] 17150
 
+Friday 2015 December 18 -- continued pipeline fixes
+===================================================
+
 Errored out because I made some mistakes in string quotation.
 Fixed and started re-running again around 10:20am.
 
     atran@statler$ nohup /bin/tcsh -c 'source sasinit 0087940201; minchainfilt_0087940201;' >& 20151218_nohup_minchainfilt_0087940201 &
     [1] 15222
+
     atran@cooper$ nohup /bin/tcsh -c 'source sasinit 0551000201; minchainfilt_0551000201;' >& 20151218_nohup_minchainfilt_0551000201 &
     [1] 15316
 
+OK, I think it worked successfully.
 
+Realized that my final filtering was removing corner pixels; added corners back
+in to event lists for spectrum extraction.
 
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; minchainfilt_0087940201;' >& 20151218_nohup_minchainfilt_0087940201 &
+    [1] 15485
 
-
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; minchainfilt_0551000201;' >& 20151218_nohup_minchainfilt_0551000201 &
+    [1] 12128
 
 Current list of pending procedure changes (copied from Mon 2015 Dec 7):
 2. fix PN spectrum extraction for 0551000201
@@ -3216,6 +3226,38 @@ Current list of pending procedure changes (copied from Mon 2015 Dec 7):
     Remark: epchain doc claims that its runbackground=Y mode is able to create
     background spectrum for LW imaging mode.  But, looking at XMM-Newton sky
     FOV in DS9, this seems impossible...
+
+
+Monday 2015 December 21 -- spectrum extraction pipeline
+=======================================================
+
+We have a few different steps.
+Let's start with the easiest, which is to just pull out spectra from
+source/background regions and do a simplistic subtraction.
+
+I prepare some event lists without corner events for manual extraction.
+
+    atran(sas)@treble$ evselect table=mos1S001-clean2.fits filteredset=mos1S001-clean-fov.fits expression="(PATTERN<=12)&&(#XMMEA_EM)" updateexposure=no filterexposure=no keepfilteroutput=yes withfilteredset=yes filtertype=expression
+        evselect:- selected 90778 rows from the input table.
+    atran(sas)@treble$ evselect table=mos2S002-clean2.fits filteredset=mos2S002-clean-fov.fits expression="(PATTERN<=12)&&(#XMMEA_EM)" updateexposure=no filterexposure=no keepfilteroutput=yes withfilteredset=yes filtertype=expression
+        evselect:- selected 95265 rows from the input table.
+    atran(sas)@treble$ evselect table=pnS003-clean2.fits filteredset=pnS003-clean-fov.fits expression="(PATTERN<=4)&&(FLAG==0)" updateexposure=no filterexposure=no keepfilteroutput=yes withfilteredset=yes filtertype=expression
+        evselect:- selected 264393 rows from the input table.
+    atran(sas)@treble$ cd ../../../0551000201/odf/repro
+    atran(sas)@treble$ source ../../../sasinit 0551000201
+        XMM SAS ready for 0551000201
+    atran(sas)@treble$ evselect table=mos1S001-clean2.fits filteredset=mos1S001-clean-fov.fits expression="(PATTERN<=12)&&(#XMMEA_EM)" updateexposure=no filterexposure=no keepfilteroutput=yes withfilteredset=yes filtertype=expression
+        evselect:- selected 63365 rows from the input table.
+    atran(sas)@treble$ evselect table=mos2S002-clean2.fits filteredset=mos2S002-clean-fov.fits expression="(PATTERN<=12)&&(#XMMEA_EM)" updateexposure=no filterexposure=no keepfilteroutput=yes withfilteredset=yes filtertype=expression
+        evselect:- selected 74420 rows from the input table.
+    atran(sas)@treble$ evselect table=pnS003-clean2.fits filteredset=pnS003-clean-fov.fits expression="(PATTERN<=4)&&(FLAG==0)" updateexposure=no filterexposure=no keepfilteroutput=yes withfilteredset=yes filtertype=expression
+        evselect:- selected 71843 rows from the input table.
+    atran(sas)@treble$
+
+
+
+
+
 7. add mosaicking step.
 8. check on SWPC emission (be sure to updateexposure when making time cuts, and
    check flare GTIs)
@@ -3480,86 +3522,6 @@ supposed to fit instrumental lines + cosmic (galactic + extragalactic) X-ray
 background yourself.
 
 
-
-XMM event flags
-===============
-
-Each of the 32 bits encodes one attribute, which is described in GV/XMM/1999-01
-or in XMM SAS package evatt.
-
-We also have keyword-encoded flag selectors:
-
-    Finally, the #XMMEA_EM (#XMMEA_EP for the PN) filter provides a
-    canned screening set of FLAG values for the event.
-    (The FLAG value provides a bit encoding of various event
-    conditions, e.g., near hot pixels or outside of the field of
-    view.) Setting FLAG == 0 in the selection expression provides
-    the most conservative screening criteria and should always be
-    used when serious spectral analysis is to be done on the PN. It
-    typically is not necessary for the MOS.	
-
-Here is a reference:
-
-	XMMEA_EM= '(FLAG & 0x766ba000) == 0' / Select good MOS events
-	XMMEA_SM= '(FLAG & 0xfffffeff) == 0' / Select good MOS events for spectra
-		compared to 'FLAG == 0', XMMEA_SM allows 0x00000100 (CLOSE_TO_DEADPIX) to pass through.
-	XMMEA_EP= '(FLAG & 0xcfa0000) == 0' / Select good PN events
-
-	#MOS
-	XMMEA_0 = '(FLAG & 0x1) != 0'  / DIAGONAL
-	XMMEA_1 = '(FLAG & 0x2) != 0'  / CLOSE_TO_CCD_BORDER
-	XMMEA_5 = '(FLAG & 0x20) != 0' / CLOSE_TO_ONBOARD_BADPIX
-	XMMEA_6 = '(FLAG & 0x40) != 0' / CLOSE_TO_BRIGHTPIX
-	XMMEA_8 = '(FLAG & 0x100) != 0' / CLOSE_TO_DEADPIX
-	XMMEA_9 = '(FLAG & 0x200) != 0' / CLOSE_TO_BADCOL
-	XMMEA_10= '(FLAG & 0x400) != 0' / CLOSE_TO_BADROW
-	XMMEA_11= '(FLAG & 0x800) != 0' / IN_SPOILED_FRAME
-	XMMEA_13= '(FLAG & 0x2000) != 0' / ON_BADOFFSET
-	XMMEA_15= '(FLAG & 0x8000) != 0' / FLICKERING
-	XMMEA_16= '(FLAG & 0x10000) != 0' / OUT_OF_FOV
-	XMMEA_17= '(FLAG & 0x20000) != 0' / IN_BAD_FRAME
-	XMMEA_19= '(FLAG & 0x80000) != 0' / COSMIC_RAY
-	XMMEA_21= '(FLAG & 0x200000) != 0' / ON_BADPIX
-	XMMEA_22= '(FLAG & 0x400000) != 0' / REJECTED_BY_GATTI
-	XMMEA_25= '(FLAG & 0x2000000) != 0' / OUT_OF_CCD_WINDOW
-	XMMEA_26= '(FLAG & 0x4000000) != 0' / OUTSIDE_THRESHOLDS
-	XMMEA_28= '(FLAG & 0x10000000) != 0' / ON_BADROW
-	XMMEA_29= '(FLAG & 0x20000000) != 0' / BAD_E3E4
-	XMMEA_30= '(FLAG & 0x40000000) != 0' / UNDERSHOOT
-
-	# PN
-	XMMEA_0 = '(FLAG & 0x1) != 0'  / INVALID_PATTERN
-	XMMEA_2 = '(FLAG & 0x4) != 0'  / CLOSE_TO_CCD_WINDOW
-	XMMEA_3 = '(FLAG & 0x8) != 0'  / ON_OFFSET_COLUMN
-	XMMEA_4 = '(FLAG & 0x10) != 0' / NEXT_TO_OFFSET_COLUMN
-	XMMEA_5 = '(FLAG & 0x20) != 0' / CLOSE_TO_ONBOARD_BADPIX
-	XMMEA_6 = '(FLAG & 0x40) != 0' / CLOSE_TO_BRIGHTPIX
-	XMMEA_8 = '(FLAG & 0x100) != 0' / CLOSE_TO_DEADPIX
-	XMMEA_11= '(FLAG & 0x800) != 0' / IN_SPOILED_FRAME
-	XMMEA_16= '(FLAG & 0x10000) != 0' / OUT_OF_FOV
-	XMMEA_17= '(FLAG & 0x20000) != 0' / IN_BAD_FRAME
-	XMMEA_19= '(FLAG & 0x80000) != 0' / COSMIC_RAY
-	XMMEA_20= '(FLAG & 0x100000) != 0' / MIP_ASSOCIATED
-	XMMEA_21= '(FLAG & 0x200000) != 0' / ON_BADPIX
-	XMMEA_22= '(FLAG & 0x400000) != 0' / SECONDARY
-	XMMEA_23= '(FLAG & 0x800000) != 0' / TRAILING
-	XMMEA_25= '(FLAG & 0x2000000) != 0' / OUT_OF_CCD_WINDOW
-
-For a description of the FLAG column, see the documentation of the SAS package
-[evatt](http://xmm.esac.esa.int/sas/current/doc/evatt/node3.html).
-Nearly the same as the Vacanti reference, GV/XMM/1999-01 (this took longer than
-it should have to dig up, and was less informative than I had hoped):
-[interface spec](http://xmm.esac.esa.int/sas/5.4.1/doc/saslib/gvxmm199901.txt)
-
-https://heasarc.gsfc.nasa.gov/docs/xmm/sas/USG/MOSmetatask.html
-
-    Then evselect is called on the resulting event list(s) applying (by
-    default) the destructive filter selection (#XMMEA_EM) && (FLAG &
-    0x762a0000) == 0. Note that in case of emchain, (#XMMEA_EM) is not applied:
-    here events flagged as OUT_OF_FOV and REJECTED_BY_GATTI are kept in the
-    list (as they are useful for background assessments and flare screening,
-    respectively). For a description of the event attribute based selection,
-    refer to the documentation of the SAS package evatt.
 
 
 FAQ (things I was somewhat stumped on at some point)
