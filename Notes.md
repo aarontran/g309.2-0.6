@@ -3254,6 +3254,27 @@ I prepare some event lists without corner events for manual extraction.
         evselect:- selected 71843 rows from the input table.
     atran(sas)@treble$
 
+Return PN spectra to usage, just for sheer convenience in extracting the object
+and background spectra; restores file added in commit
+e7c4cfb1b5aef5c0749ab1c64b1919b49b32c937.
+
+I use OOT event ratio 0.0016 for PrimeLargeWindow mode, and add elsif
+statements to that block to make life easier (see my notes from earlier in Dec
+2015 regarding spectrum extraction for Large Window mode observations; see this link too:
+http://xmm.esac.esa.int/external/xmm_user_support/documentation/uhb/epicoot.html
+Otherwise, identical to SAS 2014 version of pn-spectra.
+
+    atran@treble:/data/mpofls/atran/research/g309/xmm/0087940201/odf/repro$ cp *grp50.pi spec_backup/.
+    atran@treble:/data/mpofls/atran/research/g309/xmm/0087940201/odf/repro$ cp *src* spec_backup/.
+    atran@treble:/data/mpofls/atran/research/g309/xmm/0087940201/odf/repro$ cp *bkg* spec_backup/.
+
+    atran(sas)@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; specbackgrp_0551000201 src; specbackgrp_0551000201 bkg' > & 20151221_nohup_specbackgrp_0551000201.log &
+    [1] 10674
+
+    atran(sas)@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' >& 20151221_nohup_specbackgrp_0087940201.log &
+    [1] 28792
+
+
 
 
 

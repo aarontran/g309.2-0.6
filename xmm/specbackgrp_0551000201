@@ -55,6 +55,8 @@ mos-spectra prefix=2S002 caldb=$CALDB \
   >& mos-spectra_mos2S002_${RSTEM}.log
 mv command.csh mos_spectra_mos2S002_${RSTEM}_cmd.csh
 
+# modified script: uses 0.0016 OOT event fraction from
+# http://xmm.esac.esa.int/external/xmm_user_support/documentation/uhb/epicoot.html
 pn-spectra-mod prefix=S003 caldb=$CALDB \
     region="${RDIR}/reg_pnS003_${RSTEM}.txt" \
     mask=0 elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
@@ -73,9 +75,10 @@ mos_back prefix=2S002 caldb=$CALDB \
     ccd5=0 \
   >& mos_back_mos2S002_${RSTEM}.log
 
-pn_back prefix=S003 caldb=$CALDB \
-    diag=2 elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
-  >& pn_back_pnS003_${RSTEM}.log
+# Doesn't work for large window observations, no corners to speak of
+#pn_back prefix=S003 caldb=$CALDB \
+#    diag=2 elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
+#  >& pn_back_pnS003_${RSTEM}.log
 
 ### Move files to avoid clobbering.
 ### Currently, just the spectra + soft proton image for proton-scale
@@ -92,8 +95,8 @@ mv mos2S002.arf     mos2S002-${RSTEM}.arf
 mv mos2S002-obj-im-sp-det.fits mos2S002-${RSTEM}-sp.fits 
 # PN
 mv pnS003-obj.pi    pnS003-${RSTEM}.pi 
-mv pnS003-obj-os.pi pnS003-${RSTEM}-os.pi
-mv pnS003-back.pi   pnS003-${RSTEM}-qpb.pi 
+mv pnS003-obj-os.pi pnS003-${RSTEM}-os.pi  # Will fail
+mv pnS003-back.pi   pnS003-${RSTEM}-qpb.pi   # Will fail
 mv pnS003.rmf       pnS003-${RSTEM}.rmf 
 mv pnS003.arf       pnS003-${RSTEM}.arf 
 mv pnS003-obj-im-sp-det.fits pnS003-${RSTEM}-sp.fits 
@@ -116,18 +119,18 @@ grppha infile="mos2S002-${RSTEM}.pi" outfile="!mos2S002-${RSTEM}-grp50.pi" \
     chatter=10 \
   >& grppha_mos2S002_${RSTEM}.log
 
-grppha infile="pnS003-${RSTEM}.pi" outfile="!pnS003-${RSTEM}-grp50.pi" \
-    comm="chkey BACKFILE pnS003-${RSTEM}-qpb.pi & \
-          chkey RESPFILE pnS003-${RSTEM}.rmf & \
-          chkey ANCRFILE pnS003-${RSTEM}.arf & \
-          group min 50 & exit" \
-    chatter=10 \
-  >& grppha_pnS003_${RSTEM}.log
-
-grppha infile="pnS003-${RSTEM}-os.pi" outfile="!pnS003-${RSTEM}-os-grp50.pi" \
-    comm="chkey BACKFILE pnS003-${RSTEM}-qpb.pi & \
-          chkey RESPFILE pnS003-${RSTEM}.rmf & \
-          chkey ANCRFILE pnS003-${RSTEM}.arf & \
-          group min 50 & exit" \
-    chatter=10 \
-  >& grppha_pnS003_${RSTEM}.log
+#grppha infile="pnS003-${RSTEM}.pi" outfile="!pnS003-${RSTEM}-grp50.pi" \
+#    comm="chkey BACKFILE pnS003-${RSTEM}-qpb.pi & \
+#          chkey RESPFILE pnS003-${RSTEM}.rmf & \
+#          chkey ANCRFILE pnS003-${RSTEM}.arf & \
+#          group min 50 & exit" \
+#    chatter=10 \
+#  >& grppha_pnS003_${RSTEM}.log
+#
+#grppha infile="pnS003-${RSTEM}-os.pi" outfile="!pnS003-${RSTEM}-os-grp50.pi" \
+#    comm="chkey BACKFILE pnS003-${RSTEM}-qpb.pi & \
+#          chkey RESPFILE pnS003-${RSTEM}.rmf & \
+#          chkey ANCRFILE pnS003-${RSTEM}.arf & \
+#          group min 50 & exit" \
+#    chatter=10 \
+#  >& grppha_pnS003_${RSTEM}.log

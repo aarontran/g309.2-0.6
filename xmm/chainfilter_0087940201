@@ -110,6 +110,12 @@ foreach exp ($EXPS)
         expression="${finalfilt}" \
         updateexposure=no filterexposure=no \
         keepfilteroutput=yes withfilteredset=yes filtertype=expression
+
+    # NOTE: {mos,pn}-spectra already apply (PATTERN<=12)&&(FLAG==0) or 
+    # (PATTERN<=4)&&(FLAG==0) when extracting object spectra (-obj.pi,
+    # -obj-oot.pi), so we are OK...
+    # still useful for us to have conveniently filtered event lists, but not
+    # critical.
 end
 
 
