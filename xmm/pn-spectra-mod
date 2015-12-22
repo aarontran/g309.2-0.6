@@ -334,7 +334,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
 
   $affile="atthk.fits";
   if(-r $affile) {
-    print "Attitude file already exists\n";
+    print "Attitude file already exists: $affile\n";
     print "   \n";
   } else {
     $comm="atthkgen atthkset=atthk.fits timestep=1 ";
@@ -788,7 +788,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
 
       $specfile="pn".$prefix."-".$quadrant."oc.pi";
       if(-r $specfile) {
-        print "spectrum file already exists\n";
+        print "spectrum file already exists: $specfile\n";
         print "   ";
       } else {
         $comm="evselect table=pn".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
@@ -815,7 +815,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
 
       $specfileoot="pn".$prefix."-".$quadrant."oc-oot.pi";
       if(-r $specfileoot) {
-        print "spectrum file already exists\n";
+        print "spectrum file already exists: $specfileoot\n";
         print "   ";
       } else {
         $comm="evselect table=pn".$prefix."-corn-oot.fits:EVENTS ".
@@ -992,7 +992,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
 
       $specfile="pn".$prefix."-".$quadrant."fc.pi";
       if(-r $specfile) {
-        print "spectrum file already exists\n";
+        print "spectrum file already exists: $specfile\n";
         print "   \n";
       } else {
         $comm="evselect table=".$fwcfile." withfilteredset=yes ".
@@ -1017,7 +1017,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
 
       $specfileoot="pn".$prefix."-".$quadrant."fc-oot.pi";
       if(-r $specfileoot) {
-        print "spectrum file already exists\n";
+        print "spectrum file already exists: $specfileoot\n";
         print "   \n";
       } else {
         $comm="evselect table=".$fwcootfile." withfilteredset=yes ".

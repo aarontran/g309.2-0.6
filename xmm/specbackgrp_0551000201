@@ -44,21 +44,21 @@ make_xmmregions ${OBSID}
 
 # Spectrum extraction
 echo "Running mos-spectra prefix=1S001 ..."
-mos-spectra prefix=1S001 caldb=$CALDB \
+mos-spectra-mod prefix=1S001 caldb=$CALDB \
     region="${RDIR}/reg_mos1S001_${RSTEM}.txt" \
     mask=1 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd7=1 \
     ccd6=0 \
     cflim=12000 \
   >& mos-spectra_mos1S001_${RSTEM}.log
-mv command.csh mos_spectra_mos1S001_${RSTEM}_cmd.csh
+mv command.csh mos-spectra_mos1S001_${RSTEM}_cmd.csh
 
 echo "Running mos-spectra prefix=2S002 ..."
-mos-spectra prefix=2S002 caldb=$CALDB \
+mos-spectra-mod prefix=2S002 caldb=$CALDB \
     region="${RDIR}/reg_mos2S002_${RSTEM}.txt" \
     mask=1 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd6=1 ccd7=1 \
     ccd5=0 \
   >& mos-spectra_mos2S002_${RSTEM}.log
-mv command.csh mos_spectra_mos2S002_${RSTEM}_cmd.csh
+mv command.csh mos-spectra_mos2S002_${RSTEM}_cmd.csh
 
 # modified script: uses 0.0016 OOT event fraction from
 # http://xmm.esac.esa.int/external/xmm_user_support/documentation/uhb/epicoot.html

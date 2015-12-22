@@ -1,0 +1,1520 @@
+#!/usr/bin/perl -w
+
+use SAS;
+require "esas_parameters_init.pl";
+require "esas_GVariables.pm";
+
+
+#.. Create object to store parameters
+#.. Define Global Variables
+    use vars qw($gv);
+    
+    $gv = esas_GVariables->new();   
+    
+	#.. Init Program Parameters
+	&mosspectra_parameters_init(@ARGV);
+
+$task="mos-spectra";
+$version="4.0";
+$date="2011-06-29";
+$author="S. L. Snowden, based on code from K. D. Kuntz";
+  print "\n";
+  print "Task: $task \n";
+  print "Version: $version \n";
+  print "Date: $date \n";
+  print "Author: $author \n\n";
+
+#
+#  usage: prefix mos-spectra verb caldb region elow ehigh c(7)
+#
+#  prefix: the detector/exposure ID (e.g., 1S001)
+#  caldb: the location of the FWC event files
+#  region: a file with additional region information
+#  elow: band low energy limit
+#  ehigh: band high energy limit
+#  c(7): CCD control, 1 to include, 0 to ignore
+#
+#  The event file should be cleaned of bad time intervals,
+#  bad pixels, and the like, but MUST include the corner pixels.
+#  (So PATTERN<=12 is good, but FLAG==0 is not!)
+#
+#  SAS must be set up and running in the window
+#  obj - observation data from the selected region
+#  oc - observation data from the corners
+#  ff - filter wheel closed from the selected region
+#  fc - filter wheel closed from the corners
+
+  $clobber=0;
+  $prefix=$gv->MOSSpectra_prefix;
+  $caldb = $gv->MOSSpectra_caldb();
+  $region=$gv->MOSSpectra_region;
+  $mask=$gv->MOSSpectra_mask;
+  $elow=$gv->MOSSpectra_elow;
+  $ehigh=$gv->MOSSpectra_ehigh;
+  $c[1]=$gv->MOSSpectra_CCD1;
+  $c[2]=$gv->MOSSpectra_CCD2;
+  $c[3]=$gv->MOSSpectra_CCD3;
+  $c[4]=$gv->MOSSpectra_CCD4;
+  $c[5]=$gv->MOSSpectra_CCD5;
+  $c[6]=$gv->MOSSpectra_CCD6;
+  $c[7]=$gv->MOSSpectra_CCD7;
+  $cflim=$gv->MOSSpectra_cflim;
+
+  $det='mos'.substr($prefix,0,1);
+  
+  print "prefix: $prefix\n";
+  print "caldb: $caldb\n";
+  print "region: $region\n";
+  print "mask: $mask\n";
+  print "elow: $elow\n";
+  print "ehigh: $ehigh\n";
+  print "det: $det\n";
+  print "ccds: $c[1] $c[2] $c[3] $c[4] $c[5] $c[6] $c[7] \n";
+  print "cflim: $cflim \n";
+  print "   \n";
+  $mosccd[1]=$c[1];
+  $mosccd[2]=$c[2];
+  $mosccd[3]=$c[3];
+  $mosccd[4]=$c[4];
+  $mosccd[5]=$c[5];
+  $mosccd[6]=$c[6];
+  $mosccd[7]=$c[7];
+
+# If revolution < 42 then quit as we do not have the right files
+# for reducing those data
+
+  $detpref='mos'.$prefix.'-clean.fits';
+  print "detpref: $detpref\n";
+  system "fkeypar $detpref  OBS_ID";
+  $obsid=`pget fkeypar value`;
+  chomp($obsid);
+  print "ObsID: $obsid\n";
+  print "   \n";
+
+  system "fkeypar $detpref  REVOLUT";
+  $revo=`pget fkeypar value`;
+  chomp($revo);
+  print "Revolution Number: $revo\n";
+  print "   \n";
+
+  if($revo<42){
+    print "Data are from before revolution 42. \n";
+    print "Either comment these lines out because you have \n";
+    print "special calibration files or give up on these data \n";
+    print "as the CCDs were behaving differently. \n";
+    die;
+  }
+
+  if($det eq 'mos1'){
+    if($revo>961){
+      print "Observation took place after MOS1 CCD6 was lost \n";
+      if($c[6] == 1){
+        print "Set c[6] equal to 0";
+        $c[6]=0;
+        print "Revised CCD selection ";
+        print "ccds: $c[1] $c[2] $c[3] $c[4] $c[5] $c[6] $c[7] \n";
+      }
+    } else {if($revo == 961){
+        print "Observation took place during the orbit (only obs) where \n";
+        print "MOS1 CCD6 was lost.  Exposure U002 has CCD6 data, U003 not \n";
+      }
+    }
+    if($revo>2382){
+      print "Observation took place after MOS1 CCD3 was lost \n";
+      if($c[3] == 1){
+        print "Set c[3] equal to 0";
+        $c[3]=0;
+        print "Revised CCD selection ";
+        print "ccds: $c[1] $c[2] $c[3] $c[4] $c[5] $c[6] $c[7] \n";
+      }
+    }
+  }
+
+# Set the CCD region selection.  This gets a bit convoluted as
+# eexpmap doesn't exclude regions but does exclude CCDs while 
+# arfgen calculates BACKSCAL with regions but not with CCD selection.
+
+  $cc=0;
+  $ccddef = "";
+  if($det eq 'mos1'){
+    if($c[1] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(20,-40,6610,6590,0))";
+       $cc=1;
+    } else {if($c[2] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(6590,-13572,6590,6599,0))";
+       $cc=2;
+    } else {if($c[3] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(13280,-306,6610,6599,0))";
+       $cc=3;
+    } else {if($c[4] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(6630,13060,6500,6550,0))";
+       $cc=4;
+    } else {if($c[5] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(-6470,13130,6550,6560,0))";
+       $cc=5;
+    } else {if($c[6] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(-13169,-105,6599,6599,0))";
+       $cc=6;
+    } else {if($c[7] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(-6580,-13438,6570,6599,0))";
+       $cc=7;
+    } } } } } } }
+
+    if(($c[2] eq 0)and(2 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(6590,-13572,6590,6599,0))";}
+    if(($c[3] eq 0)and(3 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(13280,-306,6610,6599,0))";}
+    if(($c[4] eq 0)and(4 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(6630,13060,6500,6550,0))";}
+    if(($c[5] eq 0)and(5 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(-6470,13130,6550,6560,0))";}
+    if(($c[6] eq 0)and(6 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(-13169,-105,6599,6599,0))";}
+    if(($c[7] eq 0)and(7 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(-6580,-13438,6570,6599,0))";}
+
+# Eliminate the bad edge of MOS1 CCD#4 after the loss of CCD#3
+
+    $delxf=(13180 - $cflim)/2.0;
+    $xfave=13180-$delxf;
+    print "cflim, xfave, delxf: $cflim $xfave $delxf \n";
+    if(($revo>2382) and ($c[4] eq 1) and (4 gt $cc)){
+      $ccddef=$ccddef."&&!((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0))";
+      print "cflim, xfave, delxf: $cflim $xfave $delxf \n";
+    }
+
+# Set the selection for MOS2
+
+  } else {
+    if($c[1] eq 0){
+      $ccddef="&&!((DETX,DETY) in BOX(20,-40,6610,6610,0))";
+      $cc=1;
+    } else {if($c[2] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(6590,-13520,6630,6650,0))";
+       $cc=2;
+    } else {if($c[3] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(13320,-295,6620,6590,0))";
+       $cc=3;
+    } else {if($c[4] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(6610,13110,6590,6550,0))";
+       $cc=4;
+    } else {if($c[5] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(-6560,13180,6590,6600,0))";
+       $cc=5;
+    } else {if($c[6] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(-13190,-90,6600,6630,0))";
+       $cc=6;
+    } else {if($c[7] eq 0){
+       $ccddef="&&!((DETX,DETY) in BOX(-6620,-13438,6620,6599,0))";
+       $cc=7;
+    } } } } } } }
+    if(($c[2] eq 0)and(2 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(6590,-13520,6630,6650,0))";}
+    if(($c[3] eq 0)and(3 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(13320,-295,6620,6590,0))";}
+    if(($c[4] eq 0)and(4 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(6610,13110,6590,6550,0))";}
+    if(($c[5] eq 0)and(5 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(-6560,13180,6590,6600,0))";}
+    if(($c[6] eq 0)and(6 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(-13190,-90,6600,6630,0))";}
+    if(($c[7] eq 0)and(7 gt $cc)){$ccddef=$ccddef."&&!((DETX,DETY) in BOX(-6620,-13438,6620,6599,0))";}
+  }
+
+  $cc=0;
+  $ccddefa = " ";
+  if($c[1] eq 1){
+      $ccddefa=$ccddefa."&&((CCDNR == 1)";
+      $cc=1;
+  } else {if($c[2] eq 1){
+      $ccddefa=$ccddefa."&&((CCDNR == 2)";
+      $cc=2;
+  } else {if($c[3] eq 1){
+      $ccddefa=$ccddefa."&&((CCDNR == 3)";
+      $cc=3;
+  } else {if($c[4] eq 1){
+      $ccddefa=$ccddefa."&&((CCDNR == 4)";
+      $cc=4;
+  } else {if($c[5] eq 1){
+      $ccddefa=$ccddefa."&&((CCDNR == 5)";
+      $cc=5;
+  } else {if($c[6] eq 1){
+      $ccddefa=$ccddefa."&&((CCDNR == 6)";
+      $cc=6;
+  } else {if($c[7] eq 1){
+      $ccddefa=$ccddefa."&&((CCDNR == 7)";
+      $cc=7;
+  } } } } } } }
+  if(($c[2] eq 1)and(2 gt $cc)){$ccddefa=$ccddefa."||(CCDNR == 2)";}
+  if(($c[3] eq 1)and(3 gt $cc)){$ccddefa=$ccddefa."||(CCDNR == 3)";}
+  if(($c[4] eq 1)and(4 gt $cc)){$ccddefa=$ccddefa."||(CCDNR == 4)";}
+  if(($c[5] eq 1)and(5 gt $cc)){$ccddefa=$ccddefa."||(CCDNR == 5)";}
+  if(($c[6] eq 1)and(6 gt $cc)){$ccddefa=$ccddefa."||(CCDNR == 6)";}
+  if(($c[7] eq 1)and(7 gt $cc)){$ccddefa=$ccddefa."||(CCDNR == 7)";}
+
+# Close the region description
+
+  if($cc gt 0){ $ccddefa=$ccddefa.")";
+  }
+
+# Add the source exclusion file if desired
+
+  $maskitsky=" ";
+  if($mask eq 1) {
+    $maskitsky="mos".$prefix."-bkg_region-sky.fits";
+    print "$maskitsky \n";
+  }
+  if($mask eq 2) {
+    $maskitsky="mos".$prefix."-bkg_region-sky-s.fits";
+    print "$maskitsky \n";
+  }
+  if($mask eq 3) {
+    $maskitsky="mos".$prefix."-bkg_region-sky-h.fits";
+    print "$maskitsky \n";
+  }
+
+  $maskitdet=" ";
+  if($mask eq 1) {
+    $maskitdet="mos".$prefix."-bkg_region-det.fits";
+    print "$maskitdet \n";
+  }
+  if($mask eq 2) {
+    $maskitdet="mos".$prefix."-bkg_region-det-s.fits";
+    print "$maskitdet \n";
+  }
+  if($mask eq 3) {
+    $maskitdet="mos".$prefix."-bkg_region-det-h.fits";
+    print "$maskitdet \n";
+  }
+
+# Check to see if the files exists
+
+  if(-r $maskitsky) {
+    print "SKY region file exists.  Proceed with source exclusion. \n";
+    $maskitsky="&&region(".$maskitsky.")" ;
+    print "maskitsky: $maskitsky\n";
+  } else {
+    if($mask eq 0) {
+      print "Proceed with no source exclusion. \n";
+    } else {
+      print "SKY region file does not exist.  Proceed with no source exclusion. \n";
+      $maskitsky="";
+    }
+  }
+
+# Check to see if the file exists
+
+  if(-r $maskitdet) {
+    print "DET region file exists.  Proceed with source exclusion. \n";
+    $maskitdet="&&region(".$maskitdet.")" ;
+    print "maskitdet: $maskitdet\n";
+  } else {
+    if($mask eq 0) {
+      print "Proceed with no source exclusion. \n";
+    } else {
+      print "DET region file does not exist.  Proceed with no source exclusion. \n";
+      $maskitdet="";
+    }
+  }
+
+  print "ccddef: $ccddef\n";
+  print "ccddefa: $ccddefa\n";
+
+# Definitions
+#   corndef is a definition of the corner pixels
+#   chipdef is a definition of the location of each chip
+#   fulldef is a definition of the full FOV
+#       in detector coordinates
+
+  if($det eq "mos1"){
+
+# Out of date, should be corrected, Was Corrected
+
+    if($revo<2383){
+      $corndef="&&!(((DETX,DETY) in CIRCLE(100,-200,17700))".
+               "||((DETX,DETY) in CIRCLE(834,135,17100))".
+               "||((DETX,DETY) in CIRCLE(770,-803,17100))".
+               "||((DETX,DETY) in BOX(-20,-17000,6500,500,0))".
+               "||((DETX,DETY) in BOX(5880,-20500,7500,1500,10))".
+               "||((DETX,DETY) in BOX(-5920,-20500,7500,1500,350))".
+               "||((DETX,DETY) in BOX(-20,-20000,5500,500,0)))";
+      @chipdef=("((DETX,DETY) in BOX(20,-60,6610,6570,0))", 
+                "((DETX,DETY) in BOX(6550,-13572,6590,6599,0))",
+                "((DETX,DETY) in BOX(13280,-306,6610,6599,0))",
+                "((DETX,DETY) in BOX(6700,13070,6530,6560,0))",
+                "((DETX,DETY) in BOX(-6410,13130,6570,6560,0))",
+                "((DETX,DETY) in BOX(-13169,-105,6599,6599,0))",
+                "((DETX,DETY) in BOX(-6540,-13438,6570,6599,0))");
+      $fulldef="&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))".
+                "||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))".
+                "||((DETX,DETY) IN circle(97,-172,17152)))";
+    } else {
+      $corndef="&&!(((DETX,DETY) in CIRCLE(100,-200,17700))".
+               "||((DETX,DETY) in CIRCLE(834,135,17100))".
+               "||((DETX,DETY) in CIRCLE(770,-803,17100))".
+               "||((DETX,DETY) in BOX(-20,-17000,6500,500,0))".
+               "||((DETX,DETY) in BOX(5880,-20500,7500,1500,10))".
+               "||((DETX,DETY) in BOX(-5920,-20500,7500,1500,350))".
+               "||((DETX,DETY) in BOX(-20,-20000,5500,500,0))".
+               "||((DETX,DETY) in BOX(80,18600,150,1300,0))".
+               "||((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0)))";
+      @chipdef=("((DETX,DETY) in BOX(20,-60,6610,6570,0))", 
+               "((DETX,DETY) in BOX(6550,-13572,6590,6599,0))",
+               "((DETX,DETY) in BOX(13280,-306,6610,6599,0))",
+               "(((DETX,DETY) in BOX(6700,13070,6530,6560,0))&&!".
+               "((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0)))",
+               "((DETX,DETY) in BOX(-6410,13130,6570,6560,0))",
+               "((DETX,DETY) in BOX(-13169,-105,6599,6599,0))",
+               "((DETX,DETY) in BOX(-6540,-13438,6570,6599,0))");
+      $fulldef="&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))".
+               "||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))".
+               "||((DETX,DETY) IN circle(97,-172,17152)))".
+               "&&!((DETX,DETY) IN BOX(".$xfave.",13005,".$delxf.",6575,0))";
+    }
+  } else {
+    $corndef="&&!(((DETX,DETY) IN CIRCLE(435,1006,17100))".
+             "||((DETX,DETY) IN CIRCLE(-34,68,17700))".
+             "||((DETX,DETY) IN BOX(-20,-17000,6500,500,0))".
+             "||((DETX,DETY) IN BOX(5880,-20500,7500,1500,10))".
+             "||((DETX,DETY) IN BOX(-5920,-20500,7500,1500,350))".
+             "||((DETX,DETY) IN BOX(-20,-20000,5500,500,0)))";
+    @chipdef=("((DETX,DETY) IN BOX(20,-60,6610,6590,0))",
+              "((DETX,DETY) IN BOX(6580,-13530,6620,6640,0))",
+              "((DETX,DETY) IN BOX(13320,-295,6620,6590,0))",
+              "((DETX,DETY) IN BOX(6610,13110,6590,6550,0))",
+              "((DETX,DETY) IN BOX(-6560,13180,6590,6600,0))",
+              "((DETX,DETY) IN BOX(-13190,-90,6600,6630,0))",
+              "((DETX,DETY) IN BOX(-6620,-13438,6620,6599,0))");
+    $fulldef="&&(((DETX,DETY) IN circle(-61,-228,17085))".
+              "||((DETX,DETY) IN box(14.375,-16567.6,5552.62,795.625,0)))";
+  }
+
+# Get the definition of the object region
+
+  if(-r $region) {
+    open(REG,$region);
+    $FOVdef=<REG>;
+    chomp($FOVdef);
+    close(REG);
+  } else {
+    print "$region not found\n";
+    print "Will default to no additional selection\n";
+    print "   \n";
+    $FOVdef="";
+  }
+  print "Area Selection: $FOVdef\n";
+  print "   \n";
+
+  open (JUNK_HNDL,">>command.csh"); 
+
+# Extract the corner region from observation data into event file
+
+  $eventfile="mos".$prefix."-corn.fits";
+  if(-r $eventfile) {
+    print "corner event file already exists: $eventfile\n";
+    print "   \n";
+  } else {
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+        "expression='(PATTERN<=12)".$ccddef."&&(((FLAG & 0x766a0f63) == 0)".
+        "||((FLAG & 0x766a0763) == 0))".$corndef.
+        "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
+        "filterexposure=yes filteredset=".$eventfile;
+    } else {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+        "expression='(PATTERN<=12)".$ccddef."&&((FLAG & 0x766a0f63) == 0)".$corndef.
+        "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
+        "filterexposure=yes filteredset=".$eventfile;
+    }
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+  }
+
+# Extract the entire FOV region from observation data into an image
+
+  $imfile="mos".$prefix."-obj-im.fits";
+  if(-r $imfile) {
+    print "image file already exists: $imfile\n";
+    print "   \n";
+    if($clobber==1) {
+      print "clobber the existing file\n";
+      print "   \n";
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+          $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
+          "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+          "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+          "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+          "yimagemin=3401 updateexposure=yes filterexposure=yes";
+      } else {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+          "'(PATTERN<=12)&&((FLAG == 0)".
+          $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
+          "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+          "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+          "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+          "yimagemin=3401 updateexposure=yes filterexposure=yes";
+      }
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+    }    
+  } else {
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+        $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
+        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+        "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+        "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+        "yimagemin=3401 updateexposure=yes filterexposure=yes";
+    } else {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+        "'(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitsky."&&(PI in [300:8000])' ".
+        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+        "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+        "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+        "yimagemin=3401 updateexposure=yes filterexposure=yes";
+    }
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+  }
+
+# Extract the entire FOV region from observation data into an image
+# Do it again but use all events.  This will be a mask for calculating
+# the SP scaling
+
+  $imfile="mos".$prefix."-obj-im-sp-det.fits";
+  if(-r $imfile) {
+    print "image file already exists: $imfile\n";
+    print "   \n";
+    if($clobber==1) {
+      print "clobber the existing file\n";
+      print "   \n";
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))"
+          .$fulldef.$ccddef.$maskitdet.$FOVdef."' ".
+          "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+      } else {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+          "'(PATTERN<=12)&&(FLAG == 0)".$fulldef.$ccddef.$maskitdet.$FOVdef."' ".
+          "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+      }
+      print "   \n";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+    }
+  } else {
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+        $fulldef.$ccddef.$maskitdet.$FOVdef."' ".
+        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+        "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+        "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+    } else {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+        "'(PATTERN<=12)&&(FLAG == 0)".$fulldef.$ccddef.$maskitdet.$FOVdef."' ".
+        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+        "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+        "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+    }
+    print "   \n";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+  }
+
+# Now create an expsore map in detector coordiantes for MOS1 data
+# after the loss of CCD#3
+
+  if(($det eq "mos1") and ($revo>2382) and ($cflim>0) and ($elow>0)) {
+    $imfile="mos".$prefix."-exp-im-det.fits";
+    if(-r $imfile) {
+      print "Exposure map file already exists: $imfile\n";
+      print "   \n";
+      if($clobber==1) {
+        print "clobber the existing file\n";
+        print "   \n";
+        $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+          "expimageset=".$imfile." imageset=mos".$prefix."-obj-im-sp-det.fits ".
+          "pimax=8000 pimin=300 withdetcoords=yes" ;
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+        print "   \n";
+      }
+    } else {
+      $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+        "expimageset=".$imfile." imageset=mos".$prefix."-obj-im-sp-det.fits ".
+        "pimax=8000 pimin=300 withdetcoords=yes" ;
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      print "   \n";
+    }
+    $comm="rot-im-det-sky prefix=".$prefix." mask=0 elow=".$cflim. #xflim
+      " ehigh=0 mode=4";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+    $comm="rot-im-det-sky prefix=".$prefix." mask=0 elow=".$elow.
+      " ehigh=".$ehigh." mode=5";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+  }
+
+# Extract the entire FOV region and band from observation data into an 
+# image in detector coords
+
+  if($ehigh > 0) {
+    $imfile="mos".$prefix."-obj-im-det-".$elow."-".$ehigh.".fits";
+    if(-r $imfile) {
+      print "image file already exists: $imfile\n";
+      print "   \n";
+      if($clobber==1) {
+        print "clobber the existing file\n";
+        print "   \n";
+        if(($det eq "mos1") and ($revo>2382)) {
+          $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+             "filtertype=expression expression=".
+            "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+            $ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
+            $fulldef.$FOVdef."' ".
+            "imagebinning='imageSize' imagedatatype='Int32' ".
+            "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+            "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+            "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+            "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+        } else {
+          $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+            "filtertype=expression expression=".
+            "'(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
+            $fulldef.$FOVdef."' ".
+            "imagebinning='imageSize' imagedatatype='Int32' ".
+            "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+            "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+            "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+            "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+        }
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+        print "   \n";
+      }
+    } else {
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+          "filtertype=expression expression=".
+          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+          $ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
+          $fulldef.$FOVdef."' ".
+          "imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+      } else {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+          "filtertype=expression expression=".
+          "'(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
+          $fulldef.$FOVdef."' ".
+          "imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+      }
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      print "   \n";
+    }
+  }
+
+#  Create an attitude file
+
+  $affile="atthk.fits";
+  if(-r $affile) {
+    print "attitude file already exists: $affile\n";
+    print "   \n";
+  } else {
+    $comm="atthkgen atthkset=".$affile." timestep=1 ";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+  }
+
+#  Now make an exposure map for the FOV image
+
+  $imfile="mos".$prefix."-exp-im.fits";
+  if(-r $imfile) {
+    print "exposure image file already exists: $imfile\n";
+    print "   \n";
+    if($clobber==1) {
+      print "clobber the existing file\n";
+      print "   \n";
+      $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+        "expimageset=".$imfile." imageset=mos".$prefix."-obj-im.fits ".
+        "pimax=8000 pimin=300 withdetcoords=no" ;
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      print "   \n";
+
+#  Make a mask
+
+      $comm="emask detmaskset=mos".$prefix."-mask-im.fits ".
+        "expimageset=".$imfile." threshold1=0.01 threshold2=0.5" ;
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      print "   \n";
+    }
+  } else {
+    $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+      "expimageset=".$imfile." imageset=mos".$prefix."-obj-im.fits ".
+      "pimax=8000 pimin=300 withdetcoords=no" ;
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+
+#  Make a mask
+
+    $comm="emask detmaskset=mos".$prefix."-mask-im.fits ".
+      "expimageset=".$imfile." threshold1=0.01 threshold2=0.5" ;
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+  }
+
+#  Extract the entire FOV region from observation data into spectral file
+#  then run backscale, generate response
+
+  $specfile="mos".$prefix."-obj.pi";
+  if(-r $specfile) {
+    print "spectrum file already exists: $specfile\n";
+    print "   \n";
+  } else {
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
+        "expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+        $FOVdef.$ccddef.$maskitdet.$fulldef."' ".
+        "filtertype=expression".
+        " keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+        "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+        "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
+    } else {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
+        "expression='(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$ccddef.$maskitdet.$fulldef."' ".
+        "filtertype=expression".
+        " keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+        "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+        "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
+    }
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+
+    $comm="backscale spectrumset=".$specfile." badpixlocation=".$detpref.
+      " withbadpixcorr=yes" ;
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+  }
+
+#  Generate the RMF
+#  print "Position 1\n";
+  $rmffile="mos".$prefix.".rmf";
+#  print "Position 2 $rmffile\n";
+  if(-r $rmffile) {
+    print "rmf file already exists: $rmffile\n";
+    print "   \n";
+  } else {
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+        "filtertype=expression expression=".
+        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))"
+        .$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+        "imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=detmap.ds squarepixels=yes ignorelegallimits=no ".
+        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
+        "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
+        "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+    } else {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+        "filtertype=expression expression=".
+        "'(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+        "imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=detmap.ds squarepixels=yes ignorelegallimits=no ".
+        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
+        "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
+        "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+    }
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+
+    $comm="rmfgen format=var rmfset=".$rmffile." spectrumset=".$specfile." ".
+      "threshold=1.0e-6 detmaptype=dataset detmaparray=detmap.ds";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm"; 
+    print "   \n";
+  }
+
+#  Generate the ARF, use a detector map
+
+  $arffile="mos".$prefix.".arf";
+  if(-r $arffile) {
+    print "arf file already exists: $arffile\n";
+    print "   \n";
+  } else {
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+        "filtertype=expression expression=".
+        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+        $FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+        "imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=detmap.ds squarepixels=yes ignorelegallimits=no ".
+        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
+        "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
+        "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+    } else {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+        "filtertype=expression expression=".
+        "'(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+        "imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=detmap.ds squarepixels=yes ignorelegallimits=no ".
+        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
+        "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
+        "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+    }
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+
+    $comm="arfgen arfset=".$arffile." spectrumset=".$specfile." ".
+      "withrmfset=yes rmfset=mos".$prefix.".rmf extendedsource=yes modelee=no ".
+      "withbadpixcorr=no detmaptype=dataset detmaparray=detmap.ds ".
+      " badpixlocation=".$detpref." modelootcorr=no";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm"; 
+    print "   \n";
+  }
+
+  if($ehigh > 0) {
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".$ccddefa.$maskitsky."&&".
+        "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
+        " filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh.".fits squarepixels=yes ".
+        "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+        "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+        "yimagemin=3401 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+    } else {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+        "'(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitsky."&&".
+        "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
+        " filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+        "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh.".fits squarepixels=yes ".
+        "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+        "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+        "yimagemin=3401 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+    }
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+
+#  Make an exposure map for the region and band
+
+    $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+      "expimageset=mos".$prefix."-exp-im-".$elow."-".$ehigh.".fits ".
+      "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh.".fits ".
+      "pimax=".$ehigh." pimin=".$elow." withdetcoords=no";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+
+#  Make an mask for the region and band
+
+    $comm="emask detmaskset=mos".$prefix."-mask-im-".$elow."-".$ehigh.".fits ".
+    "expimageset=mos".$prefix."-exp-im-".$elow."-".$ehigh.".fits ".
+    "threshold1=0.1 threshold2=0.5";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+  }
+#  Extract separately for each chip
+#
+#  For chip 1 just get object region from FWC and backscale that
+
+  if($c[1] == 1) {
+    $chip=1;
+    $tempchip=$chipdef[$chip-1];
+    print "$chip\n";
+
+    $specfile="mos".$prefix."-".$chip."ff.pi";
+
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
+        "withfilteredset=yes expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+        "&&".$tempchip.$ccddef.$maskitdet.$fulldef.$FOVdef."' ".
+        "withspectrumset=yes ".
+        "spectrumset=mos".$prefix."-".$chip."ff.pi energycolumn=PI spectralbinsize=5 ".
+        "withspecranges=yes specchannelmin=0 specchannelmax=11999";
+    } else {
+      $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
+        "withfilteredset=yes expression='(PATTERN<=12)&&(FLAG == 0)".
+        "&&".$tempchip.$ccddef.$maskitdet.$fulldef.$FOVdef."' ".
+        "withspectrumset=yes ".
+        "spectrumset=mos".$prefix."-".$chip."ff.pi energycolumn=PI spectralbinsize=5 ".
+        "withspecranges=yes specchannelmin=0 specchannelmax=11999";
+    }
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+    print "   \n";
+
+    $comm="backscale spectrumset=mos".$prefix."-".$chip."ff.pi ".
+       "badpixlocation=".$detpref." withbadpixcorr=yes";
+
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";  
+    print "   \n";
+
+#  Make an image of the fwc data in a band for the central chip
+
+    if($ehigh > 0) {
+
+#  Need to take care of the window mode case for the central CCD
+#  First make an image of the observation data for the central chip
+
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+          "expression='".$tempchip."&&(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+          $ccddefa.$maskitdet."&&".
+          "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
+          " filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh."-ccd1.fits squarepixels=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+      } else {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+          "expression='".$tempchip."&&(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitdet."&&".
+          "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
+          " filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh."-ccd1.fits squarepixels=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+      }
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      print "   \n";
+
+#  Next make an exposure map for the region and band for the central CCD
+
+      $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+        "expimageset=mos".$prefix."-exp-im-".$elow."-".$ehigh."-ccd1.fits ".
+        "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh."-ccd1.fits ".
+        "pimax=".$ehigh." pimin=".$elow." withdetcoords=yes";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      print "   \n";
+
+#  Next make a mask for the region and band for the central CCD
+
+      $comm="emask detmaskset=mos".$prefix."-mask-im-".$elow."-".$ehigh."-ccd1.fits ".
+      "expimageset=mos".$prefix."-exp-im-".$elow."-".$ehigh."-ccd1.fits ".
+      "threshold1=0.01 threshold2=0.5";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      print "   \n";
+
+#  Make an image of the fwc data in a band for the central chip
+
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
+          "withfilteredset=yes ".
+          "expression='(PATTERN <= 12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+          $FOVdef.$fulldef.$ccddef.$maskitdet."&&".
+          $tempchip."&&(PI in [".$elow.":".$ehigh."])' imagebinning='imageSize' ".
+          "imagedatatype='Int32' ".
+          "imageset=mos".$prefix."-im".$chip."-".$elow."-".$ehigh.".fits squarepixels=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+      } else {
+        $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
+          "withfilteredset=yes ".
+          "expression='(PATTERN <= 12)&&(FLAG == 0)".$FOVdef.$fulldef.$ccddef.$maskitdet."&&".
+          $tempchip."&&(PI in [".$elow.":".$ehigh."])' imagebinning='imageSize' ".
+          "imagedatatype='Int32' ".
+          "imageset=mos".$prefix."-im".$chip."-".$elow."-".$ehigh.".fits squarepixels=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+      }
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";  
+      print "   \n";
+
+#  Mask the FWC image
+
+      $comm="farith mos".$prefix."-im".$chip."-".$elow."-".$ehigh.".fits ".
+        "'mos".$prefix."-mask-im-".$elow."-".$ehigh."-ccd1.fits[MASK]' ".
+        "mos".$prefix."-im".$chip."-".$elow."-".$ehigh.
+        "-mask.fits MUL copyprime=yes ";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";  
+      print "   \n";
+
+#  Rename the FWC image
+
+      $comm="mv mos".$prefix."-im".$chip."-".$elow."-".$ehigh."-mask.fits ".
+        "mos".$prefix."-im".$chip."-".$elow."-".$ehigh.".fits ";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";  
+      print "   \n";
+    }
+
+#  Make a spectrum of the observation data for the central chip
+
+    $specfile="mos".$prefix."-".$chip."obj.pi";
+
+    if(($det eq "mos1") and ($revo>2382)) {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+        "expression='".$tempchip."&&".
+        "(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+        $FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+        "filtertype=expression keepfilteroutput=no updateexposure=yes ".
+        "filterexposure=yes withspectrumset=yes ".
+        "spectrumset=mos".$prefix."-".$chip."obj.pi energycolumn=PI ".
+        "spectralbinsize=5 withspecranges=yes ".
+        "specchannelmin=0 specchannelmax=11999";
+    } else {
+      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+        "expression='".$tempchip."&&".
+        "(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+        "filtertype=expression keepfilteroutput=no updateexposure=yes ".
+        "filterexposure=yes withspectrumset=yes ".
+        "spectrumset=mos".$prefix."-".$chip."obj.pi energycolumn=PI ".
+        "spectralbinsize=5 withspecranges=yes ".
+        "specchannelmin=0 specchannelmax=11999";
+    }
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";  
+    print "   \n";
+
+    $comm="backscale spectrumset=mos".$prefix."-".$chip."obj.pi ".
+      "badpixlocation=".$detpref." withbadpixcorr=yes";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";  
+    print "   \n";
+  }  
+
+#  Now do the remainder of chips
+
+  for($chip=2;$chip<=7;$chip++){
+    print "$chip\n";
+    if($c[$chip] == 1) {
+      $tempchip=$chipdef[$chip-1];
+
+#  Extract a spectrum from the corner pixel data from the observation, 
+#  then backscale it
+
+      $specfile="mos".$prefix."-".$chip."oc.pi";
+      if(-r $specfile) {
+        print "spectrum file already exists: $specfile\n";
+        print "   ";
+      } else {
+        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+          "expression='".$tempchip."' filtertype=expression keepfilteroutput=no ".
+          "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI spectralbinsize=5 ".
+          "withspecranges=yes specchannelmin=0 specchannelmax=11999";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+        print "   \n";
+
+        $comm="backscale spectrumset=".$specfile." useodfatt=no ".
+          "badpixlocation=".$detpref." withbadpixcorr=yes ignoreoutoffov=no";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+        print "   \n";
+      }
+
+#  Extract a spectrum of the observation data from the FOV
+
+      $specfile="mos".$prefix."-".$chip."obj.pi";
+
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+          "expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+          $FOVdef.$fulldef."&&".$tempchip.
+          $ccddef.$maskitdet."' filtertype=expression ".
+          "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+          "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+          " spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
+      } else {
+        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+          "expression='(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$fulldef."&&".$tempchip.
+          $ccddef.$maskitdet."' filtertype=expression ".
+          "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+          "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+          " spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
+      }
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";  
+      print "   \n";
+
+      $comm="backscale spectrumset=".$specfile." ".
+        "badpixlocation=".$detpref." withbadpixcorr=yes ";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";  
+      print "   \n";
+
+# Set up for the FWC data with selection of appropriate files
+# Determine the rate
+
+      system "rm temp_events.fits";
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+          "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
+          "&&".$tempchip."&&(PI in [300:10000])' ".
+          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+          "updateexposure=yes filterexposure=yes ";
+      } else {
+        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+          "expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)".
+          "&&".$tempchip."&&(PI in [300:10000])' ".
+          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+          "updateexposure=yes filterexposure=yes ";
+      }
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      system "fkeypar temp_events.fits NAXIS2";
+      $cnts=`pget fkeypar value`;
+      chomp($cnts);
+      system "fkeypar temp_events.fits LIVETI0".$chip;
+      $expo=`pget fkeypar value`;
+      chomp($expo);
+      $rate=$cnts/$expo;
+      $rate=$rate*100.;
+      system "rm temp_events.fits";
+
+# Determine the hardness ratio
+
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+          "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
+          "&&".$tempchip."&&(PI in [500:800])' ".
+          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+          "updateexposure=yes filterexposure=yes ";
+      } else {
+        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+          "expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)".
+          "&&".$tempchip."&&(PI in [500:800])' ".
+          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+          "updateexposure=yes filterexposure=yes ";
+      }
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      system "fkeypar temp_events.fits NAXIS2";
+      $lowe=`pget fkeypar value`;
+      chomp($lowe);
+      system "rm temp_events.fits";
+
+      if(($det eq "mos1") and ($revo>2382)) {
+        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+           "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
+           "&&".$tempchip."&&(PI in [2500:5000])' ".
+          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+          "updateexposure=yes filterexposure=yes ";
+      } else {
+        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+           "expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)".
+           "&&".$tempchip."&&(PI in [2500:5000])' ".
+          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+          "updateexposure=yes filterexposure=yes ";
+      }
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+      system "fkeypar temp_events.fits NAXIS2";
+      $hige=`pget fkeypar value`;
+      chomp($hige);
+      system "rm temp_events.fits";
+      $hard=$hige/$lowe;
+      $hardsig=sqrt(($hige/($lowe*$lowe))+(($hige*$hige*$lowe)/($lowe*$lowe*$lowe*$lowe)));
+
+# Determine which FWC data file is required
+# Currently this defaults to the "good" parts version
+# until considerably more testing can be done
+
+      $suff="";
+      if($det eq "mos1"){
+        if($chip==4){
+          if($rate < 5.0){
+            $temphard=0.90;
+          } else {
+            if($rate < 7.0){
+             $temphard=0.25*$rate - 0.35;
+            } else {
+              $temphard=1.4;
+            }
+          }
+          if(($hard+$hardsig) < $temphard){
+#            $suff="-anom";
+            print "MOS1 CCD #4 is in an anomolous state\n";
+            print "Here there be Dragons - Untested Analysis\n";
+            $mosccd[4]=0;
+          } else {
+            if($hard-$hardsig >= $temphard){
+              $suff="";
+            } else {
+              $suff="";
+              print "MOS1 CCD #4 is one sigma within the definition of an anomolous state\n";
+              print "Here there could be Dragons\n";
+              $mosccd[4]=2;
+            }
+          }
+        } else {
+          if($chip==5){
+            $temphard=1.44 + 0.074*$rate;
+            if(($hard+$hardsig) < $temphard){
+#              $suff="-anom";
+              print "MOS1 CCD #5 is in an anomolous state\n";
+              print "Here there be Dragons - Untested Analysis\n";
+              $mosccd[5]=0;
+            } else {
+              if(($hard-$hardsig) >= $temphard){
+                $suff="";
+              } else {
+                $suff="";
+                print "MOS1 CCD #5 is one sigma within the definition of an anomolous state\n";
+                print "Here there could be Dragons\n";
+                $mosccd[4]=2;
+              }
+            }
+          } else {
+            if(($hard+$hardsig) < 1.0){
+#              $suff="-anom";
+              print "MOS1 CCD #".$chip." may be in an anomolous state\n";
+              print "Here there be Dragons - Untested Analysis\n";
+              $mosccd[$chip]=0;
+            } else {
+              if($hard-$hardsig >= 1.0){
+                $suff="";
+              } else {
+                $suff="";
+                print "MOS1 CCD #".$chip." is one sigma within the definition of an anomolous state\n";
+                print "Here there could be Dragons\n";
+                $mosccd[$chip]=2;
+              }
+            }
+          } 
+        }
+      } else {
+        if($chip==2){
+          if(($hard+$hardsig) < 1.0){
+#            $suff="-anom";
+            print "MOS2 CCD #2 is in an anomolous state\n";
+            print "Here there be Dragons - Untested Analysis\n";
+            $mosccd[5]=0;
+          } else {
+            if($hard-$hardsig >= 1.0){
+              $suff="";
+            } else {
+              $suff="";
+              print "MOS2 CCD #2 is one sigma within the definition of an anomolous state\n";
+              print "Here there could be Dragons\n";
+              $mosccd[4]=2;
+            }
+          }
+        } else {
+          if($chip == 5){
+            if($rate < 2.75){
+              $temphard=0.0;
+            } else {
+              if($rate < 7.2){
+                $temphard=0.18*$rate + 0.4056;
+              } else {
+                $temphard=1.7;
+              }
+            }
+            if(($hard+$hardsig) < $temphard){
+#              $suff="-anom";
+              print "MOS2 CCD #5 is in an anomolous state\n";
+              print "Here there be Dragons - Untested Analysis\n";
+              $mosccd[4]=0;
+            } else {
+              if($hard-$hardsig >= $temphard){
+                $suff="";
+              } else {
+                $suff="";
+                print "MOS2 CCD #5 is one sigma within the definition of an anomolous state\n";
+                print "Here there could be Dragons \n";
+                $mosccd[4]=2;
+              }
+            }
+          } else {
+            if(($hard+$hardsig) < 1.0){
+#              $suff="-anom";
+              $suff="";
+              print "MOS2 CCD #".$chip." may be in an anomolous state\n";
+              print "Here there be Dragons - Untested Analysis\n";
+              $mosccd[$chip]=0;
+            } else {
+              if($hard-$hardsig >= 1.0){
+                $suff="";
+              } else {
+                $suff="";
+                print "MOS2 CCD #".$chip." is one sigma within the definition of an anomolous state\n";
+                print "Here there could be Dragons\n";
+                $mosccd[$chip]=2;
+              }
+            }
+          }
+        }
+      }
+      print $caldb."/".$det."-fwc".$suff.".fits.gz";
+      print "   \n";
+
+#  Extract a spectrum from the corner pixel data from the FWC data, 
+#  then backscale it
+
+      $specfile="mos".$prefix."-".$chip."fc.pi";
+      if(-r $specfile) {
+        print "spectrum file already exists: $specfile\n";
+        print "   \n";
+      } else {
+        $comm="evselect table=".$caldb."/".$det."-fwc".$suff.".fits.gz:EVENTS ".
+          "withfilteredset=yes ".
+          "expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)&&".$tempchip.
+          $corndef."' filtertype=expression keepfilteroutput=no ".
+          "withspectrumset=yes spectrumset=".$specfile." ".
+          "energycolumn=PI spectralbinsize=5 ".
+          "withspecranges=yes specchannelmin=0 specchannelmax=11999 ";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   ";
+        system "$comm";
+
+        $comm="backscale spectrumset=".$specfile." useodfatt=no ".
+        "badpixlocation=".$detpref." withbadpixcorr=yes ignoreoutoffov=no ";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+      }
+
+#  Extract a spectrum from the FOV region from the FWC data, backscale it
+
+      $specfile="mos".$prefix."-".$chip."ff.pi";
+
+      $comm="evselect table=".$caldb."/".$det."-fwc".$suff.".fits.gz:EVENTS ".
+        "withfilteredset=yes ".
+        "expression='(FLAG == 0)".$FOVdef.$fulldef."&&".$tempchip.$ccddef.$maskitdet.
+        "' withspectrumset=yes ".
+        "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+        "spectrumset=".$specfile." energycolumn=PI spectralbinsize=5 ".
+        "withspecranges=yes specchannelmin=0 specchannelmax=11999 ";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+
+      $comm="backscale spectrumset=".$specfile." ".
+        "badpixlocation=".$detpref." withbadpixcorr=yes ";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+
+#  Make an image of the fwc data in the input band
+
+      if($ehigh > 0) {
+        $comm="evselect table=".$caldb."/".$det."-fwc".$suff.".fits.gz:EVENTS ".
+          "withfilteredset=yes ".
+          "expression='".$tempchip.$ccddef.$maskitdet."&&".
+          "(FLAG == 0)&&(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
+          "imagebinning='imageSize' imagedatatype='Int32' ".
+          "imageset=mos".$prefix."-im".$chip."-".$elow."-".$ehigh.".fits squarepixels=yes ".
+          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+          " yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+      }
+    }
+  }
+
+  system "rm -f detmap.ds filtered.fits";
+
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
+
+  for($chip=2;$chip<=7;$chip++){
+    if($c[$chip] ne 0) {
+      if ($mosccd[$chip] eq 0) {
+        $comm="WARNING";
+        print "$comm\n";
+        $comm="CCD #".$chip." is in an anomolous state.  The model QPB spectrum ";
+        print "$comm\n";
+        $comm="is only valid above ~1 keV";
+        print "$comm\n";
+        $comm="If other CCDs are in use and if data for E<1 keV are to be used ";
+        print "$comm\n";
+        $comm="mos spectra should be rerun excluding ".$det." CCD #".$chip;
+        print "$comm\n";
+      } else {
+        if ($mosccd[$chip] eq 2) {
+          $comm="WARNING";
+          print "$comm\n";
+          $comm="CCD #".$chip." is less than 1 sigma below the threshold indicating "; 
+          print "$comm\n";
+          $comm="indicating that it in an anomolous state.  The model QPB spectrum ";
+          print "$comm\n";
+          $comm="is of questionable validity below ~1 keV, the model above ~1 keV is valid";
+          print "$comm\n";
+        }
+      }
+    }
+  }

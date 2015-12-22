@@ -3254,9 +3254,11 @@ I prepare some event lists without corner events for manual extraction.
         evselect:- selected 71843 rows from the input table.
     atran(sas)@treble$
 
-Return PN spectra to usage, just for sheer convenience in extracting the object
-and background spectra; restores file added in commit
-e7c4cfb1b5aef5c0749ab1c64b1919b49b32c937.
+Woops, actually, that wasn't really necessary.  Oh well.
+
+Return modified version of ESAS `pn-spectra` to usage, just for sheer
+convenience in extracting the object and background spectra; restores file
+added in commit `e7c4cfb1b5aef5c0749ab1c64b1919b49b32c937`.
 
 I use OOT event ratio 0.0016 for PrimeLargeWindow mode, and add elsif
 statements to that block to make life easier (see my notes from earlier in Dec
@@ -3290,6 +3292,44 @@ regions.  Notably, both bkg and src regions are a bit larger (esp. for
 
 As part of this process, I also fixed a bug in `reg2xmmdet.pl` where regions
 outside detector FOV would cause error and return invalid regions.
+I confirm that I don't get that weird failure for call to mos-spectra on obsid
+0551000201 with exposure mos1S001 and src region, so everything looks good.
+
+It's possible that I forgot to kill some child processes, earlier.
+My current procedure is just to inspect output of `ps aux` if I'm killing and
+restarting these nohup calls.
+
+morning: looks ok, runs completed successfully.  No obvious errors yet (haven't
+inspected all log files), some warnings that should be double checked.  From
+first glance they look benign (datasubspace too complex for background region,
+etc...)
+
+
+Tuesday 2015 December 22
+========================
+
+A few remarks on spectrum extraction runs:
+* Log messages "Spectrum file already exists" are OK.  These only occur for
+  files that aren't affected by user input (observation corner data, FWC corner
+  data, attitude file atthk.fits, 
+
+  I'm worried that quadrant/chip observation files, which I am not destroying
+  or updating, are getting re-used without my knowledge, which would result in
+  subtly incorrect data...
+  Answer: quadrant/chip data are OK, not being reused.
+  I am renaming `pnS003-obj.{pi,arf,rmf}` files, so they are not being reused.
+  So all is good.
+  Scanning mos-spectra code I see the same behavior.  So, data are a OK.
+
+  Modified pn-spectra-mod to output slightly more helpful logging messages
+  (notify me precisely which files are being re-used).
+  Create mos-spectra-mod to, again, output slightly more helpful logging
+  messages.  Otherwise identical to original ESAS version.
+  
+
+
+
+
 
 
 
@@ -3308,8 +3348,6 @@ carry this out as:
     fwc bkg, 0551000201 detx/dety + rmf/arf
 
 Working on this..
-
-
 7. add mosaicking step.
 8. check on SWPC emission (be sure to updateexposure when making time cuts, and
    check flare GTIs)
