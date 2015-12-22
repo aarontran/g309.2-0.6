@@ -3274,9 +3274,40 @@ Otherwise, identical to SAS 2014 version of pn-spectra.
     atran(sas)@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' >& 20151221_nohup_specbackgrp_0087940201.log &
     [1] 28792
 
+NOTE this failed on 0551000201 src at a call to:
+    backscale spectrumset=mos1S001-7ff.pi badpixlocation=mos1S001-clean.fits withbadpixcorr=yes
+but worked fine on bkg.  Not sure why.  Re-running mos-spectra with identical
+(old) parameters worked fine.  Very odd.
+
+Re-run the pipeline with using (1) new cheese masks, (2) new source/bkg
+regions.  Notably, both bkg and src regions are a bit larger (esp. for
+0551000201) so we should have somewhat better statistics.
+
+    atran@cooper:/data/mpofls/atran/research/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; specbackgrp_0551000201 src; specbackgrp_0551000201 bkg' > & 20151221_nohup_specbackgrp_0551000201.log &
+    [1] 7895
+    atran@statler:/data/mpofls/atran/research/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' > & 20151221_nohup_specbackgrp_0087940201.log &
+    [1] 29343
+
+As part of this process, I also fixed a bug in `reg2xmmdet.pl` where regions
+outside detector FOV would cause error and return invalid regions.
 
 
 
+
+I also wanted to use FWC data to get the potentially useful quantities:
+* ratio & normalizations of instrumental lines in source region
+* ratio & normalizations of instrumental lines in background region
+* ratio & normalizations of instrumental lines in (source - background) spectra
+
+This will be useful in different situations.
+
+carry this out as:
+    fwc src, 0087940201 detx/dety + rmf/arf
+    fwc bkg, 0087940201 detx/dety + rmf/arf
+    fwc src, 0551000201 detx/dety + rmf/arf
+    fwc bkg, 0551000201 detx/dety + rmf/arf
+
+Working on this..
 
 
 7. add mosaicking step.

@@ -1,39 +1,35 @@
 #!/bin/bash
 
-echo "MOS1 BACKSCAL calculation"
-fkeypar 0087940201/odf/repro/mos1S001-src-grp50.pi BACKSCAL
-SRC_BACKSCAL="$(pget fkeypar value)"
-fkeypar 0087940201/odf/repro/mos1S001-bkg-grp50.pi BACKSCAL
-BKG_BACKSCAL="$(pget fkeypar value)"
-echo "src: $SRC_BACKSCAL"
-echo "bkg: $BKG_BACKSCAL"
-echo "($SRC_BACKSCAL) / ($BKG_BACKSCAL)"
-# Why the fuck is bc -l giving me some total crap
-# NORM=$(echo "($SRC_BACKSCAL) / ($BKG_BACKSCAL)" | bc -l)
-NORM=$(perl -e "print( ($SRC_BACKSCAL) / ($BKG_BACKSCAL) );")
-echo "src/bkg: $NORM"
+# Must run after sourcing sasinit (just to get ftools)
 
-echo "MOS2 BACKSCAL calculation"
-fkeypar 0087940201/odf/repro/mos2S002-src-grp50.pi BACKSCAL
-SRC_BACKSCAL="$(pget fkeypar value)"
-fkeypar 0087940201/odf/repro/mos2S002-bkg-grp50.pi BACKSCAL
-BKG_BACKSCAL="$(pget fkeypar value)"
-echo "src: $SRC_BACKSCAL"
-echo "bkg: $BKG_BACKSCAL"
-echo "($SRC_BACKSCAL) / ($BKG_BACKSCAL)"
-#NORM=$(echo "($SRC_BACKSCAL) / ($BKG_BACKSCAL)" | bc -l)
-NORM=$(perl -e "print( ($SRC_BACKSCAL) / ($BKG_BACKSCAL) );")
-echo "src/bkg: $NORM"
+if [ "$#" -ne 1 ]
+then
+    echo "Error: one argument (obsid) required, exiting"
+    exit 1
+fi
 
-echo "PN BACKSCAL calculation"
-fkeypar 0087940201/odf/repro/pnS003-src-grp50.pi BACKSCAL
-SRC_BACKSCAL="$(pget fkeypar value)"
-fkeypar 0087940201/odf/repro/pnS003-bkg-grp50.pi BACKSCAL
-BKG_BACKSCAL="$(pget fkeypar value)"
-echo "src: $SRC_BACKSCAL"
-echo "bkg: $BKG_BACKSCAL"
-echo "($SRC_BACKSCAL) / ($BKG_BACKSCAL)"
-#NORM=$(echo "($SRC_BACKSCAL) / ($BKG_BACKSCAL)" | bc -l)
-NORM=$(perl -e "print( ($SRC_BACKSCAL) / ($BKG_BACKSCAL) );")
-echo "src/bkg: $NORM"
+obsid=$1
+
+# Ideally deduce this from the folder files, but whatever
+exps="mos1S001 mos2S002 pnS003"
+
+for exp in $exps
+do
+  echo "${exp} BACKSCAL calculation"
+
+  fkeypar "${obsid}/odf/repro/${exp}-src-grp50.pi" BACKSCAL
+  SRC_BACKSCAL="$(pget fkeypar value)"
+  fkeypar "${obsid}/odf/repro/${exp}-bkg-grp50.pi" BACKSCAL
+  BKG_BACKSCAL="$(pget fkeypar value)"
+
+  echo "src: $SRC_BACKSCAL"
+  echo "bkg: $BKG_BACKSCAL"
+  # Why the fuck is bc -l giving me some total crap
+  # NORM=$(echo "($SRC_BACKSCAL) / ($BKG_BACKSCAL)" | bc -l)
+  NORM=$(perl -e "print( ($SRC_BACKSCAL) / ($BKG_BACKSCAL) );")
+  echo "src/bkg = ($SRC_BACKSCAL) / ($BKG_BACKSCAL) = $NORM"
+  echo ""
+done
+
+echo "If you got ANY warnings from fkeypar, results are invalid!"
 

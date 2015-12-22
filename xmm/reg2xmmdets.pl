@@ -12,6 +12,8 @@
 use strict;
 use warnings;
 
+$| = 1;  # Set autoflush
+
 my ($region_file, $calinfoset) = @ARGV;
 
 my $arcsec2detxy = 20;  # Each unit of DETX/Y is 0.05 arcseconds.
@@ -29,7 +31,7 @@ while(<$reg_fh>) {
     $dec =~ s/([\d]+):([\d]+):([\d.]+)/$1d$2m$3s/;  # Convert colons to d/m/s
 
     my $cmd = "esky2det datastyle='user' outunit='det' withheader='no' -V 0"
-        . " ra='$ra' dec='$dec' calinfoset='$calinfoset'";
+        . " ra='$ra' dec='$dec' calinfoset='$calinfoset' checkfov='no'";
     my $result = `$cmd`;
     my ($detx, $dety) = ($result =~ /([0-9.-]+)\s+([0-9.-]+)/);
     my $detr = $radius * $arcsec2detxy;

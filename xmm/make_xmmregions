@@ -2,6 +2,11 @@
 
 # Must run after sourcing sasinit for correct obsid
 
+# WARNING: this is hardcoded for obsids 0087940201 and 0551000201.
+# Assumes the presence of files mos1S001-ori.fits, mos2S002-ori.fits,
+# pnS003-ori.fits from successful {mos,pn}-filter runs.
+
+
 obsid=$1
 
 if [ "$#" -ne 1 ]
@@ -17,18 +22,23 @@ then
     exit 1
 fi
 
-evlists=$(ls -1 ${XMM_PATH}/${obsid}/odf/repro/*-ori.fits)
+exposures="mos1S001 mos2S002 pnS003"  # Would be better to infer this...
+#evlists=$(ls -1 ${XMM_PATH}/${obsid}/odf/repro/*-ori.fits)
 regions=$(ls -1 ${XMM_PATH}/regs/*.reg)
 
-for objreg in $regions;
+for obj_reg in $regions;
 do
-    for evli in $evlists;
-    do
-        obj_stem=$(basename $objreg | cut -d "." -f 1)
-        instr_stem=$(basename $evli | cut -d "-" -f 1)
-        detreg="${XMM_PATH}/regs/${obsid}/reg_${instr_stem}_${obj_stem}.txt"
+    # Parse out region (obj) name
+    obj="$(basename $obj_reg | cut -d "." -f 1)"
 
-        echo "Running: reg2xmmdets.pl $objreg $evli > $detreg"
-        reg2xmmdets.pl $objreg $evli > $detreg
+    for exp in $exposures;
+    do
+        evli="${XMM_PATH}/${obsid}/odf/repro/${exp}-ori.fits"
+        # instr_stem="$(basename $evli | cut -d "-" -f 1)"
+
+        det_reg="${XMM_PATH}/regs/${obsid}/reg_${exp}_${obj}.txt"
+
+        echo "Running: reg2xmmdets.pl $obj_reg $evli > $det_reg"
+        reg2xmmdets.pl $obj_reg $evli > $det_reg
     done
 done
