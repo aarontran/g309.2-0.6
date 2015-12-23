@@ -3319,17 +3319,351 @@ A few remarks on spectrum extraction runs:
   Answer: quadrant/chip data are OK, not being reused.
   I am renaming `pnS003-obj.{pi,arf,rmf}` files, so they are not being reused.
   So all is good.
-  Scanning mos-spectra code I see the same behavior.  So, data are a OK.
+  Scanning mos-spectra code I see the same behavior.  So, data are a-OK.
 
   Modified pn-spectra-mod to output slightly more helpful logging messages
   (notify me precisely which files are being re-used).
   Create mos-spectra-mod to, again, output slightly more helpful logging
   messages.  Otherwise identical to original ESAS version.
-  
+
+  AHA.  0551000201, mos-spectra for exposures 1S001 and 2S002 needs to be re-run.
+  The files mos1S001-obj.pi, mos1S001-obj.rmf, mos1S001-obj.arf were NOT moved
+  prior to my script run, therefore they didn't get overwritten...
+  Same for 0087940201... argh `-_-`.
+
+  Check the files for:
+
+    corner event file already exists: mos1S001-corn.fits
+    image file already exists: mos1S001-obj-im.fits
+    image file already exists: mos1S001-obj-im-sp-det.fits
+    attitude file already exists
+    exposure image file already exists: mos1S001-exp-im.fits
+    spectrum file already exists: mos1S001-obj.pi
+    rmf file already exists: mos1S001.rmf
+    arf file already exists: mos1S001.arf
+
+  and see if they need to be re-run.
+  * -obj.pi, .rmf, .arf must to be recomputed
+  * attitude file atthk.fits is fine
+  * -exp-im.fits is fine, no region selection
+  * -im-sp-det is NOT fine, needs to be regenerated -- depends on region
+  * -obj-im is fine, but risk that you need to regenerate if you change the ccd
+     selection...
+  * -corn same problem, if you change CCD selection you may need to re-compute
+    this
+
+  Visually confirm this in ds9 tomorrow
+  I think best to set clobber parameter to 1...
+  note that -corn.fits file is NOT subject to clobber parameter.
+
+* Data Subspace issue.
+
+    From: http://xmm.esac.esa.int/sas/current/doc/arfgen/node16.html
+    "arfgen extracts spatial information from the Data Sub-Space (DSS) stored in the
+    spectral dataset"
+
+  OK, need to re-run this.  I'm just going to select an annulus region for
+  background now, and modify my scripts to make it work.
+
+Sat down today and hashed out a lot more details about ARF/RMF computation and
+background subtraction.  I might have gone over some before, but still hadn't
+completely ingrained (e.g., why we need to compute ARF using an image map taken
+to represent the true source distribution -- neglecting PSF effects even, which
+I'm not thinking about now).
+
+Wondering whether the simple first order correction of ratio of effective
+areas, integrated over energy, should be made when doing a basic (XSPEC/Sherpa
+style) background subtraction...
+Of course this is irrelevant for QPB, which is indeed a straight subtraction,
+and the "generating spectrum" is not completely understood nor can it be
+modeled as a source spectrum, since it's tied to detector electronics etc.  In
+practice it will obey different RMFs/ARFs than for x-ray photons.
 
 
+Wednesday 2015 December 23
+==========================
+
+Today I addressed the following issues:
+* overly complex data subspace expression breaks BACKSCAL calculation
+  - make new background region for this
+* more aggressive pt source masking to improve new larger regions
+* inconsistent file clobbering leads to incorrect spectra, (1) incorrect object
+  spectra when files aren't moved after manual run of {mos,pn}-spectra, and (2)
+  incorrect QPB caused by non-clobbering of corner file, so that -4oc.pi
+  includes MOS1 CCD4 noise that should have been removed
+* confirmed that using clobber parameter with mos-spectra is safe
+* fixed clobber behavior for pn-spectra to my liking
+* restored missing pnS003-clean-oot.fits file (bug in chainfilter scripts)
+
+## New background regions
+
+Created new background region (annulus), r1 = 510" and r2 = 700".
+Adjusted source region; circle with r = 400".
+Both have same center: ra 13:46:35.381, dec -62:54:01.44,510.
+Ratio of areas is 229900 / 160000 ~ 1.44.  Conveniently, background annulus is
+entirely within 2x the source region radius.
+
+Source region is large (r = 6.67 arcmin); it encloses main shell of MOST radio
+contours.
+
+Modified region conversion (ds9->xmm) code to parse annuli.  Tested resulting
+expressions with evselect by hand and it looks good.
 
 
+## Change pt source masking
+
+Use merged PPS image to assess pt source masking (change `cheese_smell`).
+Use more aggressive source masking, so we can use the larger regions safely.
+With current (scale=0.5, rate=2, dist=40) mask, I'm missing a few (1-2ish)
+point sources in the new regions.  Not a big difference, but I think it helps,
+and I erred in not looking at merged images before.
+
+For both 0087940201 and 0551000201, return to masks with default parameters:
+scale=0.25, rate=1, dist=40.  On the merged PPS image with much better SNR, it
+becomes apparent that most sources are real.
+Unfortunately, mask for 0551000201 also removes a few small pt-like sources in
+the SNR; I'm not sure if these are real pt sources or not.
+
+For now, accept the loss of some data and slightly inconsistent masking.
+A todo is to improve this masking slightly.  Only marginal improvement
+expected.
+
+
+## More spectrum extraction pipeline fixes -- clobbering behavior
+
+Modified `mos-spectra-mod` to clobber old files.
+
+This might not be safe, since clobber parameter is not officially documented.
+The code triggered by clobber=1 could be out of date or wrong.  I walk through
+the script briefly and check by eye that clobber commands are identical to
+commands without clobber.  Not a guarantee but at least a cursory check.
+
+* [OK] -obj-im.fits
+* [OK] -obj-im-sp-det.fits
+* [OK] -exp-im-det.fits
+* [OK] -obj-im-det-$elow-$ehigh.fits
+* [OK] -exp-im.fits
+
+Also add clobber=1 to `mos_back` and `pn_back` calls.  Again, I don't know what
+clobber does here -- `mos_back_mod.f90` is not as easy to decipher.  But I
+think this is safe, it's semi-documented, and it's a simple parameter...
+
+## Apparent error in mos-spectra clobbering behavior, tied to cflim usage
+
+### Reading of situation
+
+-corn file isn't be overwritten by default.  Scripts {mos,pn}-filter don't
+apply CCD cuts when creating -corn, but {mos,pn}-spectra do.  Is this OK for
+our spectrum extraction and QPB calculation?  We use -corn file to:
+* extract -oc.pi spectra.
+* compute hardness ratios
+If corn.fits file does not have MOS1 CCD4 cut applied, the extracted -4oc.pi
+spectrum will still include enhanced edge counts that should have been cut.
+
+This is a dangerous error!  What happens, a little closer to code:
+1. cflim cut is applied to ccddef for MOS1.
+2. If corner file doesn't already exist, generate corner event list
+   with user-selected CCDs and cflim cut
+3. use -corn.fits file to extract -oc.pi spectra for all CCDs.
+
+I see two issues
+1. the corner file MUST be re-generated here, at least to incorporate the
+   cflim cut.
+2. if we change the CCD definitions or cflim, it often happens that files are
+   NOT clobbered.  This risks leaving the user with old files that DON'T
+   reflect the selected excisions.
+   For CCD omissions, this is fine; we don't care about that CCD anyways.
+   (I havent checked that all-detector images/etc are OK)
+
+   For cflim, we must update the files.
+   If we changed our mind and re-included a CCD, this would also be a problem.
+
+3. I rely on renaming files to regenerate spectra, and non-clobbering behavior
+   works fine.  But this is not always a safe assumption when I'm running the
+   script by hand, quickly.
+
+I confirmed this by looking at select expression in FITS header for
+mos1S001-4oc.pi, running a select on PI=[200:900] and the selected CCD box on
+mos1S001-corn.fits, and inspecting the resulting image.  Very obvious band of
+bright emission at CCD4 edge, that would not have been removed from corner
+spectrum.
+
+This is not a concern for PN because I'm not omitting quadrants, and there is
+no manual excision of CCD regions here.  But, it could become an issue if PN
+ever sustains damage to one CCD or a subpart of a CCD.
+
+### Take evasive action (mos-spectra)
+
+__Change script to clobber:__
+* -corn.pi
+* -obj.pi
+* .rmf
+* .arf
+* -[1-7]oc.pi
+Because these need to be recomputed if CCD selections change, if cflim
+changes, if cheese masks change, etc.
+If I only change regions (and rename -obj.pi, .rmf, .arf in between calls),
+these files wouldn't need to be clobbered (cflim bug aside)
+
+__Files that are NOT clobbered:__
+* atthk.fits is always the same
+* -[1-7]fc.pi will not change unless CALDB is updated
+does NOT include cflim cut, this is OK
+
+__Files already always clobbered (region-dependent):__
+* -[1-7]ff.pi  <- includes ccddef and cflim cut correctly
+* -[1-7]obj.pi <- includes ccddef and cflim cut correctly
+
+__Files clobbered by clobber=1 parameter listed above and already addressed__
+
+Because I clobber -corn.pi and regenerate the file with user-specified ccddef,
+we won't be able to compute the hardness ratio for omitted chips.  I think
+that's OK, as long as either:
+1. user runs mos-spectra first with all CCDs enabled
+2. mos-filter suffices to identify anomalous state chips
+
+Other possible issue, we could hit divide by zero errors.
+Eh.
+Run and fix if needed.
+
+### (pn-spectra) stick close to holding sector MV-7
+
+__Files that are NOT clobbered:__
+* atthk.fits            <- ok, this never changes
+* -corn.pi
+* -corn-oot.pi
+* -obj-im.fits
+* -exp-im.fits (and -mask-im.fits)
+* -obj-im-oot.fits
+* -obj-im-sp-det.fits
+* -obj-im-det-$elow-$ehigh.fits
+* -obj-im-det-$elow-$ehigh-oot.fits
+* -obj.pi
+* -obj-oot.pi
+* .rmf
+* .arf
+* -[1-4]oc.pi
+* -[1-4]oc-oot.pi
+* -[1-4]fc.pi           <- ok, this doesn't change unless CALDB is updated
+* -[1-4]fc-oot.pi       <- ok, this doesn't change unless CALDB is updated
+
+__Files that are always clobbered (region-dependent):__
+* -[1-4]obj.pi
+* -[1-4]obj-oot.pi
+* -[1-4]ff.pi
+
+changed all 14 checks to clobber the files.
+
+I go ahead and clobber the rest of them to be totally safe...
+changes to GTI, masks, etc would necessitate updates
+
+Concern: -corn file created by pn-filter does NOT use the same (more
+conservative) flags as used by pn-spectra.  This is OK because pn-filter does
+NOT create corner lists/images anymore; the code has been disabled internally
+(via hardcoded cornproc parameter, same as commenting out).
+
+
+## Restore missing pnS003-clean-oot.fits (cause of errors in pn-spectra runs)
+
+Error in pn-spectra call -- could not find pnS003-clean-oot.fits.  What
+happened?!  Related to my ad hoc modifications.
+I had moved the -oot file, but not applied the new GTI filtering and replaced
+it.  Fixed in chainfilter scripts.
+
+
+## Change final manual filtering step
+
+{mos,pn}-spectra already apply correct flags when making object spectra.
+I quickly check (see output below) that corner spectra are OK even if we don't
+apply strictest filtering.
+
+So I change this behavior and remove it from the (direct) pipeline.
+This is more consistent with nominal ESAS run.
+
+
+First just get corner counts, no filtering beyond mos-filter selections:
+
+    atran(sas)@treble:/data/mpofls/atran/research/g309/xmm/0087940201/odf/repro$ evselect table=mos1S001-clean2.fits filteredset=asdf.fits expression='!(CIRCLE(100,-200,17700,DETX,DETY)||CIRCLE(834,135,17100,DETX,DETY)||CIRCLE(770,-803,17100,DETX,DETY)||BOX(-20,-17000,6500,500,0,DETX,DETY)||BOX(5880,-20500,7500,1500,10,DETX,DETY)||BOX(-5920,-20500,7500,1500,350,DETX,DETY)||BOX(-20,-20000,5500,500,0,DETX,DETY)||BOX(-12900,16000,250,4000,0,DETX,DETY)||BOX(80,18600,150,1300,0,DETX,DETY)||BOX(-10,-18800,125,1500,0,DETX,DETY))'
+    ...
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] started:  2015-12-23T22:42:30.000
+    evselect:- selected 5452 rows from the input table.
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] ended:    2015-12-23T22:42:31.000
+
+Now, get corner counts using mos-{filter,spectra} selections for -corn.fits
+
+    atran(sas)@treble:/data/mpofls/atran/research/g309/xmm/0087940201/odf/repro$ evselect table=mos1S001-clean2.fits filteredset=asdf.fits expression='(PATTERN<=12)&&((FLAG & 0x766a0f63) == 0)&&!(CIRCLE(100,-200,17700,DETX,DETY)||CIRCLE(834,135,17100,DETX,DETY)||CIRCLE(770,-803,17100,DETX,DETY)||BOX(-20,-17000,6500,500,0,DETX,DETY)||BOX(5880,-20500,7500,1500,10,DETX,DETY)||BOX(-5920,-20500,7500,1500,350,DETX,DETY)||BOX(-20,-20000,5500,500,0,DETX,DETY)||BOX(-12900,16000,250,4000,0,DETX,DETY)||BOX(80,18600,150,1300,0,DETX,DETY)||BOX(-10,-18800,125,1500,0,DETX,DETY))'
+    ...
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] started:  2015-12-23T22:43:15.000
+    evselect:- selected 5452 rows from the input table.
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] ended:    2015-12-23T22:43:16.000
+
+Now, get corner counts using manual filters.  First `#XMMEA_EM` or corner:
+
+    atran(sas)@treble:/data/mpofls/atran/research/g309/xmm/0087940201/odf/repro$ evselect table=mos1S001-clean2.fits filteredset=asdf.fits expression='(PATTERN<=12)&&(#XMMEA_EM||(FLAG==0x10000))&&!(CIRCLE(100,-200,17700,DETX,DETY)||CIRCLE(834,135,17100,DETX,DETY)||CIRCLE(770,-803,17100,DETX,DETY)||BOX(-20,-17000,6500,500,0,DETX,DETY)||BOX(5880,-20500,7500,1500,10,DETX,DETY)||BOX(-5920,-20500,7500,1500,350,DETX,DETY)||BOX(-20,-20000,5500,500,0,DETX,DETY)||BOX(-12900,16000,250,4000,0,DETX,DETY)||BOX(80,18600,150,1300,0,DETX,DETY)||BOX(-10,-18800,125,1500,0,DETX,DETY))'
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] started:  2015-12-23T22:45:42.000
+    evselect:- selected 5452 rows from the input table.
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] ended:    2015-12-23T22:45:42.000
+
+Then `FLAG==0` or corner:
+
+    atran(sas)@treble:/data/mpofls/atran/research/g309/xmm/0087940201/odf/repro$ evselect table=mos1S001-clean2.fits filteredset=asdf.fits expression='(PATTERN<=12)&&((FLAG==0)||(FLAG==0x10000))&&!(CIRCLE(100,-200,17700,DETX,DETY)||CIRCLE(834,135,17100,DETX,DETY)||CIRCLE(770,-803,17100,DETX,DETY)||BOX(-20,-17000,6500,500,0,DETX,DETY)||BOX(5880,-20500,7500,1500,10,DETX,DETY)||BOX(-5920,-20500,7500,1500,350,DETX,DETY)||BOX(-20,-20000,5500,500,0,DETX,DETY)||BOX(-12900,16000,250,4000,0,DETX,DETY)||BOX(80,18600,150,1300,0,DETX,DETY)||BOX(-10,-18800,125,1500,0,DETX,DETY))'
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] started:  2015-12-23T22:45:59.000
+    evselect:- selected 5452 rows from the input table.
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] ended:    2015-12-23T22:45:59.000
+
+Looks like no difference, so that's good.  Note, this is important to check for
+-corn because the -corn event list is fed directly into -[1-7]oc.pi.
+
+
+## Massive pipeline rerun
+
+Started around 6:07pm Weds Dec 23
+
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; chainfilter_0551000201; specbackgrp_0551000201 src; specbackgrp_0551000201 bkg' > & 20151223_pipeline_0551000201.log &
+    [1] 2382
+
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; chainfilter_0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' > & 20151223_pipeline_0087940201.log &
+    [1] 31415
+
+
+Standing TO-DOs
+1. check that pipeline rerun was successful (grep all log files for "error")
+2. Check value of integrals of ARF over energy
+   for source and background (use backup of Nov spectra for this);
+   see whether it makes sense to apply this manually when subtracting
+   backgrounds extracted from distinctly different detector regions.
+3. check whether we need to adjust ARF/RMF.
+   The detmap used for flux weighting includes all the background signal.
+   But, the RMF/ARF only applies to genuine X-ray photons; we have no
+   way to tell a priori which is which (or the exact flux %).
+   Maybe we can do an iterative process.
+4. account for vignetting in instrumental lines.
+   this is only important if I decide to use FWC data to get line
+   ratios/normalizations, which requires
+   - characterizing timescale of line variations in FWC data, or corner data
+     from db of public observations?!
+   - actually fitting for said ratios/normalizations.  Parts of ARF are
+     relevant, parts are not; I can use arfgen to compute a special ARF for
+     this.
+5. check surrounding observations for 0551000201 to see how stable (or not) the
+   PN QPB is in time.  If it looks stable we can use those obsids to extract PN
+   corner spectra.
+   If not, skip
+
+Only some of these are all that critical.
+I'm a little uncertain about the rmf/arf thing.
+assuming small background it's ok. but our backgrounds are huge.
+
+I need to explicitly note which spectra _cannot_ be fit without the soft proton
+power law (diagnose using plot of unfolded spectra).
+
+Low-priority TO-DO (defer to later): remove pt sources within SNR region, and
+merge pt source lists from each obsid.  Use ESAS region task to make
+"stinky-cheese" masks with manually specified point sources.
+
+Low-priority: in mos-spectra, rev>2382 also allows ((FLAG & 0x800) != 0)... I
+don't know whether this is whats desired but OK.  Worried it would let events
+with 0x800 + OTHER flags through.
 
 
 
@@ -3356,6 +3690,11 @@ Items to review with Pat on reduction + analysis
 * epreject offset correction
 * point source masking
 * adjustment to GTIs
+
+Other misc. things I've done:
+* uncovered confusion in SAS doc for evselect (asked helpdesk, tbd...)
+* extensively modify clobber behavior in {mos,pn}-spectra-mod
+  (maybe warrants emailing ESAS devs)
 
 
 
@@ -3592,6 +3931,8 @@ of the ESAS CALDB.  This file looks like a bunch of FWC data all merged
 together.
 
 ## mos\_back, pn\_back "synopsis"
+
+See notes from October 12ish on this.  Well explained in Kuntz/Snowden.
 
 Scripts mos\_back / pn\_back are compiled Fortran, unfortunately, so I can't
 decipher what they do directly.  What do they output?

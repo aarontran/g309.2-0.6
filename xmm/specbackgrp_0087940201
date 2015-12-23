@@ -66,18 +66,18 @@ mv command.csh pn-spectra_pnS003_${RSTEM}_cmd.csh
 # Compute QPB
 # diag=2 creates more diagnostic output files (.qdp plots)
 echo "Running mos_back prefix=1S001 ..."
-mos_back prefix=1S001 caldb=$CALDB \
-    diag=2 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+mos_back prefix=1S001 caldb=$CALDB diag=2 clobber=1 \
+    elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
   >& mos_back_mos1S001_${RSTEM}.log
 
 echo "Running mos_back prefix=2S002 ..."
-mos_back prefix=2S002 caldb=$CALDB \
-    diag=2 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+mos_back prefix=2S002 caldb=$CALDB diag=2 clobber=1 \
+    elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
   >& mos_back_mos2S002_${RSTEM}.log
 
 echo "Running pn_back prefix=S003 ..."
-pn_back prefix=S003 caldb=$CALDB \
-    diag=2 elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
+pn_back prefix=S003 caldb=$CALDB diag=2 clobber=1 \
+    elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
   >& pn_back_pnS003_${RSTEM}.log
 
 ### Move files to avoid clobbering.
@@ -137,3 +137,6 @@ grppha infile="pnS003-${RSTEM}-os.pi" outfile="!pnS003-${RSTEM}-os-grp50.pi" \
           group min 50 & exit" \
     chatter=10 \
   >& grppha_pnS003_${RSTEM}.log
+
+echo "Finished extracting ${RSTEM} spectra for ${OBSID}!\n"
+

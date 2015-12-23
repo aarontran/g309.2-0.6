@@ -41,6 +41,15 @@ mv mos1S001-cheese.fits mos1S001-cheese_scale_0.25_rate_2_dist_40.fits
 mv mos2S002-cheese.fits mos2S002-cheese_scale_0.25_rate_2_dist_40.fits
 mv   pnS003-cheese.fits   pnS003-cheese_scale_0.25_rate_2_dist_40.fits
 
+# Decrease rate alone from default
+# scale=0.25 rate=0.5 dist=40
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+    scale=0.25 rate=0.5 dist=40.0 clobber=0 elow=400 ehigh=7200
+mv mos1S001-cheese.fits mos1S001-cheese_scale_0.25_rate_0.5_dist_40.fits
+mv mos2S002-cheese.fits mos2S002-cheese_scale_0.25_rate_0.5_dist_40.fits
+mv   pnS003-cheese.fits   pnS003-cheese_scale_0.25_rate_0.5_dist_40.fits
+
 # Increase rate even more from default
 # scale=0.25 rate=4 dist=40
 

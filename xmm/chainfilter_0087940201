@@ -50,79 +50,74 @@ foreach exp ($EXPS)
     else
         set gtifilt = "(TIME >= 115364540)"
     endif
-    evselect table=${exp}-clean-ori.fits filteredset=${exp}-clean2.fits \
+    evselect table="${exp}-clean-ori.fits" filteredset="${exp}-clean.fits" \
         expression="${gtifilt}" \
         updateexposure=yes filterexposure=yes \
         keepfilteroutput=yes withfilteredset=yes filtertype=expression 
+    if ($exp == $PNEXP) then
+	evselect table="${exp}-clean-oot-ori.fits" filteredset="${exp}-clean-oot.fits" \
+	    expression="${gtifilt}" \
+	    updateexposure=yes filterexposure=yes \
+	    keepfilteroutput=yes withfilteredset=yes filtertype=expression 
+    endif
 
     # Light curves to check that manual time cuts were applied successfully
     # Match filtering params for ${exp}-rate.fits from espfilt
     if ($exp != $PNEXP) then
-        set pattfilt = '(PATTERN<=12)'
+        set pattfilt = "(PATTERN<=12)"
     else
-        set pattfilt = '(PATTERN<=4)'
+        set pattfilt = "(PATTERN<=4)"
     endif
     # ${exp}-ori-lc.fits is the same as ${exp}-rate.fits, but with coarser binning
-    evselect table=${exp}-ori.fits \
+    evselect table="${exp}-ori.fits" \
         expression="${pattfilt}&&(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)&&((FLAG & 0x766a0f63)==0)" \
-        withrateset=yes rateset=${exp}-ori-lc.fits \
+        withrateset=yes rateset="${exp}-ori-lc.fits" \
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
-    evselect table=${exp}-clean-ori.fits \
+    evselect table="${exp}-clean-ori.fits" \
         expression="(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)" \
-        withrateset=yes rateset=${exp}-clean-ori-lc.fits \
+        withrateset=yes rateset="${exp}-clean-ori-lc.fits" \
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
-    evselect table=${exp}-clean2.fits \
+    evselect table="${exp}-clean.fits" \
         expression="(PI in [2500:12000])&&((FLAG & 0xfb0000) == 0)" \
-        withrateset=yes rateset=${exp}-clean-final-lc.fits \
+        withrateset=yes rateset="${exp}-clean-final-lc.fits" \
         maketimecolumn=yes makeratecolumn=yes timecolumn='TIME' timebinsize=50 \
         keepfilteroutput=no
     # 0x766a0f63 is used for obsids before XMM revolution 2383 in espfilt and {mos,pn}-filter
     # 0xfb0000 is used in espfilt to create FOV lightcurves; this removes out
     # of FOV events and obviously bad events (cosmic rays, bad pixels, etc)
 
-    # Final manual filtering
+    # Manual filtering, just a side product
     # mos{1S001,2S002}-clean-ori.fits were already filtered by:
     #  '(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)'
     # pnS003-clean-ori.fits was already filtered by:
     #  '(PATTERN<= 4)&&((FLAG & 0x766a0f63)==0)'
     # Nevertheless re-specify PATTERN to be quite explicit.
     # Note that FLAG filtering may be overly restrictive for images
+    # and FLAG==0 for MOS is stricter than recommended #XMMEA_EM
     # Allow FLAG==0x10000 (corners) for mos/pn-spectra
-    if ($exp != $PNEXP) then
-        set finalfilt = "(PATTERN<=12)&&(#XMMEA_EM||(FLAG==0x10000))"
-    else
-        set finalfilt = "(PATTERN<=4)&&((FLAG==0)||(FLAG==0x10000))"
-    endif
-    evselect table=${exp}-clean2.fits filteredset=${exp}-clean.fits \
-        expression="${finalfilt}" \
+    evselect table="${exp}-clean.fits" filteredset="${exp}-clean-manfilt.fits" \
+        expression="${pattfilt}&&((FLAG==0)||(FLAG==0x10000))" \
         updateexposure=no filterexposure=no \
         keepfilteroutput=yes withfilteredset=yes filtertype=expression
-
-    # Final manual filtering, but remove out-of-FOV events
-    if ($exp != $PNEXP) then
-        set finalfilt = "(PATTERN<=12)&&(#XMMEA_EM)"
-    else
-        set finalfilt = "(PATTERN<=4)&&((FLAG==0))"
+    if ($exp == $PNEXP) then
+	evselect table="${exp}-clean-oot.fits" filteredset="${exp}-clean-manfilt-oot.fits" \
+	    expression="${pattfilt}&&((FLAG==0)||(FLAG==0x10000))" \
+	    updateexposure=no filterexposure=no \
+	    keepfilteroutput=yes withfilteredset=yes filtertype=expression
     endif
-    evselect table=${exp}-clean2.fits filteredset=${exp}-clean-fov.fits \
-        expression="${finalfilt}" \
-        updateexposure=no filterexposure=no \
-        keepfilteroutput=yes withfilteredset=yes filtertype=expression
 
-    # NOTE: {mos,pn}-spectra already apply (PATTERN<=12)&&(FLAG==0) or 
+    # NOTE: {mos,pn}-spectra apply (PATTERN<=12)&&(FLAG==0) or 
     # (PATTERN<=4)&&(FLAG==0) when extracting object spectra (-obj.pi,
-    # -obj-oot.pi), so we are OK...
-    # still useful for us to have conveniently filtered event lists, but not
-    # critical.
+    # -obj-oot.pi)
 end
 
 
 # cheese must be run after manual GTI edits; probably benefits from running
 # after additional FLAG filter step
 cheese prefixm="${MOSEXP_N}" prefixp="${PNEXP_N}" \
-    scale=0.5 rate=2.0 dist=40.0 clobber=1 elow=400 ehigh=7200
+    scale=0.25 rate=1.0 dist=40.0 clobber=1 elow=400 ehigh=7200
 mv command.csh cheese_cmd.csh
 mv emllist.fits cheese_emllist.fits
 

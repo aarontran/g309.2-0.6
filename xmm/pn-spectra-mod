@@ -350,6 +350,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $eventfile="pn".$prefix."-corn.fits";
   if(-r $eventfile) {
     print "Corner event file already exists: $eventfile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
@@ -366,6 +367,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $eventfile="pn".$prefix."-corn-oot.fits";
   if(-r $eventfile) {
     print "OOT corner event file already exists: $eventfile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
@@ -384,6 +386,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $imfile="pn".$prefix."-obj-im.fits";
   if(-r $imfile) {
     print "Image file already exists: $imfile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
@@ -407,6 +410,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $imfile="pn".$prefix."-exp-im.fits";
   if(-r $imfile) {
     print "Exposure image file already exists: $imfile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
@@ -434,6 +438,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $imfile="pn".$prefix."-obj-im-oot.fits";
   if(-r $imfile) {
     print "OOT image file already exists: $imfile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
@@ -459,6 +464,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $imfile="pn".$prefix."-obj-im-sp-det.fits";
   if(-r $imfile) {
     print "SP image file already exists: $imfile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
@@ -483,6 +489,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
     $imfile="pn".$prefix."-obj-im-det-".$elow."-".$ehigh.".fits";
     if(-r $imfile) {
       print "Band image file already exists: $imfile\n";
+      print " BUT, regenerating file anyways! (hacky modification)\n";
       print "   \n";
     } else {
       $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
@@ -527,6 +534,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
     $imfile="pn".$prefix."-obj-im-det-".$elow."-".$ehigh."-oot.fits";
     if(-r $imfile) {
       print "OOT band image file already exists: $imfile\n";
+      print " BUT, regenerating file anyways! (hacky modification)\n";
       print "   \n";
     } else {
       $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
@@ -551,6 +559,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $specfile="pn".$prefix."-obj.pi";
   if(-r $specfile) {
     print "Spectrum file already exists: $specfile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     if($regsel eq 0){
@@ -588,6 +597,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $specfile="pn".$prefix."-obj-oot.pi";
   if(-r $specfile) {
     print "OOT spectrum file already exists: $specfile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     if($regsel eq 0){
@@ -621,6 +631,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $rmffile="pn".$prefix.".rmf";
   if(-r $rmffile) {
     print "rmf file already exists: $rmffile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     $comm="rmfgen format=var rmfset=".$rmffile.
@@ -637,6 +648,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   $arffile="pn".$prefix.".arf";
   if(-r $arffile) {
     print "arf file already exists: $arffile\n";
+    print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   } else {
     if($regsel eq 0){
@@ -789,6 +801,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
       $specfile="pn".$prefix."-".$quadrant."oc.pi";
       if(-r $specfile) {
         print "spectrum file already exists: $specfile\n";
+        print " BUT, regenerating file anyways! (hacky modification)\n";
         print "   ";
       } else {
         $comm="evselect table=pn".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
@@ -816,6 +829,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
       $specfileoot="pn".$prefix."-".$quadrant."oc-oot.pi";
       if(-r $specfileoot) {
         print "spectrum file already exists: $specfileoot\n";
+        print " BUT, regenerating file anyways! (hacky modification)\n";
         print "   ";
       } else {
         $comm="evselect table=pn".$prefix."-corn-oot.fits:EVENTS ".

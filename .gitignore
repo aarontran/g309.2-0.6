@@ -8,6 +8,10 @@ most/G309.2-0.6.ps
 # Manually exclude MOST contour(s)
 most/*.con
 
+# Exclude derived DETX/DETY regions
+xmm/regs/0551000201/reg*.txt
+xmm/regs/0087940201/reg*.txt
+
 # Exclude temporary SAS source download
 xmm/xmmsas_20141104_1833
 
