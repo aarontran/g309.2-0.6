@@ -26,9 +26,13 @@ MANIFEST.*
 ccf.cif
 
 # Logging output, etc
-xmm/*/odf/repro/*gti*.txt
-xmm/*/odf/repro/command.csh
-xmm/*/odf/repro/*cmd.csh
+xmm/*/odf/**/*gti*.txt
+xmm/*/odf/**/command.csh
+xmm/*/odf/**/*cmd.csh
+xmm/*/odf/**/*/*cmd.csh
+# cfa git is 1.7.1 so ** doesn't work quite right...
+# just add a special case
+
 
 # Chandra files
 chandra/*/00README
@@ -38,6 +42,8 @@ chandra/*/00README
 *.fits
 *.FIT
 *.FITS
+*.ftz
+*.FTZ
 # Quick and dandy plotter files (from XMM ESAS)
 *.qdp
 # Spectrum files

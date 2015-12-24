@@ -352,34 +352,32 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "Corner event file already exists: $eventfile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-      "expression='(PATTERN <= ".$pattern.")".$ccddef."&&((FLAG & 0x762a097c) == 0)".$corndef.
-      "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
-      " filterexposure=yes filteredset=".$eventfile ;
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
   }
+  $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+    "expression='(PATTERN <= ".$pattern.")".$ccddef."&&((FLAG & 0x762a097c) == 0)".$corndef.
+    "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
+    " filterexposure=yes filteredset=".$eventfile ;
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
 
   $eventfile="pn".$prefix."-corn-oot.fits";
   if(-r $eventfile) {
     print "OOT corner event file already exists: $eventfile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
-      "expression='(PATTERN <= ".$pattern.")".$ccddef."&&((FLAG & 0x762a097c) == 0)".$corndef.
-      "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
-      " filterexposure=yes filteredset=".$eventfile ;
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
   }
+  $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
+    "expression='(PATTERN <= ".$pattern.")".$ccddef."&&((FLAG & 0x762a097c) == 0)".$corndef.
+    "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
+    " filterexposure=yes filteredset=".$eventfile ;
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
 
 # Extract the entire FOV region from observation data into an image
 
@@ -388,22 +386,21 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "Image file already exists: $imfile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-      "expression=".
-      "'(PATTERN <= ".$pattern.")&&(FLAG == 0)&&(PI in [400:7200])".
-      $ccddef.$fulldef.$ruffovdef.$maskitsky."' ".
-      "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-      "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-      "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
-      "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
-      "yimagemin=3401 updateexposure=yes filterexposure=yes ";
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
   }
+  $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+    "expression=".
+    "'(PATTERN <= ".$pattern.")&&(FLAG == 0)&&(PI in [400:7200])".
+    $ccddef.$fulldef.$ruffovdef.$maskitsky."' ".
+    "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+    "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+    "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+    "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+    "yimagemin=3401 updateexposure=yes filterexposure=yes ";
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
 
 #  Now make an exposure map for the FOV image
 
@@ -412,26 +409,25 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "Exposure image file already exists: $imfile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
-      "expimageset=".$imfile." imageset=pn".$prefix."-obj-im.fits ".
-      "pimax=10000 pimin=300 withdetcoords=no ";
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
+  }
+  $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+    "expimageset=".$imfile." imageset=pn".$prefix."-obj-im.fits ".
+    "pimax=10000 pimin=300 withdetcoords=no ";
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
 
 #  Make a mask
 
-    $comm="emask detmaskset=pn".$prefix."-mask-im.fits ".
-      "expimageset=".$imfile." threshold1=0.01 threshold2=5.0 ";
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
-  }
+  $comm="emask detmaskset=pn".$prefix."-mask-im.fits ".
+    "expimageset=".$imfile." threshold1=0.01 threshold2=5.0 ";
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
 
 # Extract the entire FOV region from observation data into an image - OOT data
 
@@ -440,22 +436,21 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "OOT image file already exists: $imfile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
-      "expression=".
-      "'(PATTERN <= ".$pattern.")&&(FLAG == 0)&&(PI in [400:7200])".
-      $ccddef.$fulldef.$ruffovdef.$maskitsky."' ".
-      "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-      "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-      "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
-      "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
-      "yimagemin=3401 updateexposure=yes filterexposure=yes ";
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
   }
+  $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
+    "expression=".
+    "'(PATTERN <= ".$pattern.")&&(FLAG == 0)&&(PI in [400:7200])".
+    $ccddef.$fulldef.$ruffovdef.$maskitsky."' ".
+    "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+    "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+    "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+    "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+    "yimagemin=3401 updateexposure=yes filterexposure=yes ";
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
 
 # Extract the selected region from observation data into an image
 # Do it again but use all events.  This will be a mask for calculating
@@ -466,11 +461,79 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "SP image file already exists: $imfile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
+  }
+  $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+     $fulldef.$ccddef.$FOVdef.$ruffovdef.$maskitdet."' ".
+    "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+    "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+    "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+    "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+    "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
+
+# Extract the selected region and band from observation data into an 
+# image in detector coords
+
+  if($ehigh > 0) {
+    $imfile="pn".$prefix."-obj-im-det-".$elow."-".$ehigh.".fits";
+    if(-r $imfile) {
+      print "Band image file already exists: $imfile\n";
+      print " BUT, regenerating file anyways! (hacky modification)\n";
+      print "   \n";
+    }
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-      "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-       $fulldef.$ccddef.$FOVdef.$ruffovdef.$maskitdet."' ".
-      "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+      "filtertype=expression expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+      "&&(PI in [".$elow.":".$ehigh."])".$ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
+      "imagebinning='imageSize' imagedatatype='Int32' ".
+      "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+      "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+      "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+      "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+
+#  Make an exposure map in detector coords for the band
+
+    $expdetfile="pn".$prefix."-exp-im-det-".$elow."-".$ehigh.".fits";
+    $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+      "expimageset=".$expdetfile." imageset=".$imfile." withdetcoords=yes ".
+      "pimax=".$ehigh." pimin=".$elow." withdetcoords=yes ";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+
+#  Make a mask
+
+    $comm="emask detmaskset=pn".$prefix."-mask-im-det-".$elow."-".$ehigh.".fits ".
+      "expimageset=".$expdetfile." threshold1=0.01 threshold2=5.0 ";
+    print JUNK_HNDL "$comm\n";
+    print JUNK_HNDL "   \n";
+    print "$comm\n";
+    print "   \n";
+    system "$comm";
+
+#  Make another image in detector coords from OOT events
+
+    $imfile="pn".$prefix."-obj-im-det-".$elow."-".$ehigh."-oot.fits";
+    if(-r $imfile) {
+      print "OOT band image file already exists: $imfile\n";
+      print " BUT, regenerating file anyways! (hacky modification)\n";
+      print "   \n";
+    }
+    $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
+      "filtertype=expression expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+      "&&(PI in [".$elow.":".$ehigh."])".$ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
+      "imagebinning='imageSize' imagedatatype='Int32' ".
       "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
       "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
       "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
@@ -482,77 +545,6 @@ $author="S. L. Snowden, based on the mos-spectra code";
     system "$comm";
   }
 
-# Extract the selected region and band from observation data into an 
-# image in detector coords
-
-  if($ehigh > 0) {
-    $imfile="pn".$prefix."-obj-im-det-".$elow."-".$ehigh.".fits";
-    if(-r $imfile) {
-      print "Band image file already exists: $imfile\n";
-      print " BUT, regenerating file anyways! (hacky modification)\n";
-      print "   \n";
-    } else {
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-        "filtertype=expression expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-        "&&(PI in [".$elow.":".$ehigh."])".$ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
-        "imagebinning='imageSize' imagedatatype='Int32' ".
-        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
-        "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
-        "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
-
-#  Make an exposure map in detector coords for the band
-
-      $expdetfile="pn".$prefix."-exp-im-det-".$elow."-".$ehigh.".fits";
-      $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
-        "expimageset=".$expdetfile." imageset=".$imfile." withdetcoords=yes ".
-        "pimax=".$ehigh." pimin=".$elow." withdetcoords=yes ";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
-
-#  Make a mask
-
-      $comm="emask detmaskset=pn".$prefix."-mask-im-det-".$elow."-".$ehigh.".fits ".
-        "expimageset=".$expdetfile." threshold1=0.01 threshold2=5.0 ";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
-    }
-
-#  Make another image in detector coords from OOT events
-
-    $imfile="pn".$prefix."-obj-im-det-".$elow."-".$ehigh."-oot.fits";
-    if(-r $imfile) {
-      print "OOT band image file already exists: $imfile\n";
-      print " BUT, regenerating file anyways! (hacky modification)\n";
-      print "   \n";
-    } else {
-      $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ".
-        "filtertype=expression expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-        "&&(PI in [".$elow.":".$ehigh."])".$ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
-        "imagebinning='imageSize' imagedatatype='Int32' ".
-        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
-        "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
-        "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
-    }
-  }
-
 #  Extract the selected FOV region from observation data into spectral file
 #  then run backscale, generate response
 
@@ -561,36 +553,35 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "Spectrum file already exists: $specfile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    if($regsel eq 0){
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
-        "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-        $ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
-        "filtertype=expression ".
-        "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
-        "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
-        "spectralbinsize=5 withspecranges=yes ".
-        "specchannelmin=0 specchannelmax=20479 ";
-    } else {
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
-        "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$ccddef.
-        $fulldef.$ruffovdef.$maskitdet."' filtertype=expression ".
-        "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
-        "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
-        "spectralbinsize=5 withspecranges=yes ".
-        "specchannelmin=0 specchannelmax=20479 ";
-    }
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
-
-    $comm="backscale spectrumset=".$specfile.
-      " badpixlocation=".$detpref." withbadpixcorr=yes ";
-    print JUNK_HNDL "$comm\n";
-    system "$comm";
   }
+  if($regsel eq 0){
+    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
+      "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+      $ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
+      "filtertype=expression ".
+      "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+      "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+      "spectralbinsize=5 withspecranges=yes ".
+      "specchannelmin=0 specchannelmax=20479 ";
+  } else {
+    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
+      "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$ccddef.
+      $fulldef.$ruffovdef.$maskitdet."' filtertype=expression ".
+      "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+      "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+      "spectralbinsize=5 withspecranges=yes ".
+      "specchannelmin=0 specchannelmax=20479 ";
+  }
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
+
+  $comm="backscale spectrumset=".$specfile.
+    " badpixlocation=".$detpref." withbadpixcorr=yes ";
+  print JUNK_HNDL "$comm\n";
+  system "$comm";
 
 #  Extract the OOT spectrum
 
@@ -599,32 +590,31 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "OOT spectrum file already exists: $specfile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    if($regsel eq 0){
-      $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ". 
-        " expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-        $ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
-        "filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes ".
-        "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
-        "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479";
-    } else {
-      $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ". 
-        "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$ccddef.$fulldef.$ruffovdef.$maskitdet."' ".
-        "filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes ".
-        "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
-        "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479";
-    }
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
-
-    $comm="backscale spectrumset=pn".$prefix."-obj-oot.pi ".
-      "badpixlocation=".$detprefoot." withbadpixcorr=yes ";
-    print JUNK_HNDL "$comm\n";
-    system "$comm";
   }
+  if($regsel eq 0){
+    $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ". 
+      " expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+      $ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
+      "filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+      "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+      "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479";
+  } else {
+    $comm="evselect table=".$detprefoot.":EVENTS withfilteredset=yes ". 
+      "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$ccddef.$fulldef.$ruffovdef.$maskitdet."' ".
+      "filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+      "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+      "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=20479";
+  }
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
+
+  $comm="backscale spectrumset=pn".$prefix."-obj-oot.pi ".
+    "badpixlocation=".$detprefoot." withbadpixcorr=yes ";
+  print JUNK_HNDL "$comm\n";
+  system "$comm";
 
 #  Generate the RMF
 
@@ -633,15 +623,14 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "rmf file already exists: $rmffile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    $comm="rmfgen format=var rmfset=".$rmffile.
-      " spectrumset=pn".$prefix."-obj.pi threshold=1.0e-6 ";
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm"; 
   }
+  $comm="rmfgen format=var rmfset=".$rmffile.
+    " spectrumset=pn".$prefix."-obj.pi threshold=1.0e-6 ";
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm"; 
 
 #  Generate the ARF, use a detector map
 
@@ -650,41 +639,40 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "arf file already exists: $arffile\n";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
-  } else {
-    if($regsel eq 0){
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-        "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-        $ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
-        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-        "imageset=detmap.ds squarepixels=yes ignorelegallimits=yes ".
-        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=60 ximagemax=19500 ".
-        "ximagemin=-19499 ycolumn='DETY' yimagesize=60 yimagemax=19500 ".
-        "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
-    } else {
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-        "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$ccddef.$fulldef.$ruffovdef.$maskitdet."' ".
-        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-        "imageset=detmap.ds squarepixels=yes ignorelegallimits=yes ".
-        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=60 ximagemax=19500 ".
-        "ximagemin=-19499 ycolumn='DETY' yimagesize=60 yimagemax=19500 ".
-        "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
-    }
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
-
-    $comm="arfgen arfset=pn".$prefix.".arf spectrumset=pn".$prefix."-obj.pi ".
-      "withrmfset=yes rmfset=pn".$prefix.".rmf extendedsource=yes modelee=no ".
-      "withbadpixcorr=no detmaptype=dataset detmaparray=detmap.ds ".
-      " badpixlocation=pn".$prefix."-clean.fits modelootcorr=no ";
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm"; 
   }
+  if($regsel eq 0){
+    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+      "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+      $ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
+      "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+      "imageset=detmap.ds squarepixels=yes ignorelegallimits=yes ".
+      "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=60 ximagemax=19500 ".
+      "ximagemin=-19499 ycolumn='DETY' yimagesize=60 yimagemax=19500 ".
+      "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
+  } else {
+    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+      "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$ccddef.$fulldef.$ruffovdef.$maskitdet."' ".
+      "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+      "imageset=detmap.ds squarepixels=yes ignorelegallimits=yes ".
+      "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=60 ximagemax=19500 ".
+      "ximagemin=-19499 ycolumn='DETY' yimagesize=60 yimagemax=19500 ".
+      "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
+  }
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
+
+  $comm="arfgen arfset=pn".$prefix.".arf spectrumset=pn".$prefix."-obj.pi ".
+    "withrmfset=yes rmfset=pn".$prefix.".rmf extendedsource=yes modelee=no ".
+    "withbadpixcorr=no detmaptype=dataset detmaparray=detmap.ds ".
+    " badpixlocation=pn".$prefix."-clean.fits modelootcorr=no ";
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm"; 
 
 #  Make an image for the region and band in sky coords
 
@@ -803,57 +791,55 @@ $author="S. L. Snowden, based on the mos-spectra code";
         print "spectrum file already exists: $specfile\n";
         print " BUT, regenerating file anyways! (hacky modification)\n";
         print "   ";
-      } else {
-        $comm="evselect table=pn".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
-          "expression='(PATTERN <= ".$pattern.")".$tempquad.$fulldef.$corndef.
-          "' filtertype=expression ".
-          "keepfilteroutput=no withspectrumset=yes spectrumset=".$specfile.
-          " energycolumn=PI spectralbinsize=5 ".
-          "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
-        print JUNK_HNDL "$comm\n";
-        print JUNK_HNDL "   \n";
-        print "$comm\n";
-        print "   \n";
-        system "$comm";
-
-        $comm="backscale spectrumset=".$specfile.
-          " badpixlocation=pn".$prefix."-clean.fits withbadpixcorr=yes ".
-          "ignoreoutoffov=no ";
-        print JUNK_HNDL "$comm\n";
-        print JUNK_HNDL "   \n";
-        print "$comm\n";
-        print "   \n";
-        system "$comm";
       }
+      $comm="evselect table=pn".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+        "expression='(PATTERN <= ".$pattern.")".$tempquad.$fulldef.$corndef.
+        "' filtertype=expression ".
+        "keepfilteroutput=no withspectrumset=yes spectrumset=".$specfile.
+        " energycolumn=PI spectralbinsize=5 ".
+        "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+
+      $comm="backscale spectrumset=".$specfile.
+        " badpixlocation=pn".$prefix."-clean.fits withbadpixcorr=yes ".
+        "ignoreoutoffov=no ";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
 
       $specfileoot="pn".$prefix."-".$quadrant."oc-oot.pi";
       if(-r $specfileoot) {
         print "spectrum file already exists: $specfileoot\n";
         print " BUT, regenerating file anyways! (hacky modification)\n";
         print "   ";
-      } else {
-        $comm="evselect table=pn".$prefix."-corn-oot.fits:EVENTS ".
-          "expression='(PATTERN <= ".$pattern.")".$tempquad.$fulldef.$corndef.
-          "' filtertype=expression ".
-          "withfilteredset=yes keepfilteroutput=no withspectrumset=yes ".
-          "spectrumset=".$specfileoot.
-          " energycolumn=PI spectralbinsize=5 ".
-          "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
-        print JUNK_HNDL "$comm\n";
-        print JUNK_HNDL "   \n";
-        print "$comm\n";
-        print "   \n";
-        system "$comm";
-
-        $comm="backscale spectrumset=".$specfileoot.
-          " badpixlocation=pn".$prefix."-clean.fits withbadpixcorr=yes ".
-          " ignoreoutoffov=no";
-        print JUNK_HNDL "$comm\n";
-        print JUNK_HNDL "   \n";
-        print "$comm\n";
-        print "   \n";
-        system "$comm";
       }
+      $comm="evselect table=pn".$prefix."-corn-oot.fits:EVENTS ".
+        "expression='(PATTERN <= ".$pattern.")".$tempquad.$fulldef.$corndef.
+        "' filtertype=expression ".
+        "withfilteredset=yes keepfilteroutput=no withspectrumset=yes ".
+        "spectrumset=".$specfileoot.
+        " energycolumn=PI spectralbinsize=5 ".
+        "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
+
+      $comm="backscale spectrumset=".$specfileoot.
+        " badpixlocation=pn".$prefix."-clean.fits withbadpixcorr=yes ".
+        " ignoreoutoffov=no";
+      print JUNK_HNDL "$comm\n";
+      print JUNK_HNDL "   \n";
+      print "$comm\n";
+      print "   \n";
+      system "$comm";
 
 # Set up for the FWC data with the selection of appropriate files
 # Determine the rate

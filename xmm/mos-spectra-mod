@@ -442,7 +442,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
           "yimagemin=3401 updateexposure=yes filterexposure=yes";
       } else {
         $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
-          "'(PATTERN<=12)&&((FLAG == 0)".
+          "'(PATTERN<=12)&&(FLAG == 0)".
           $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
           "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
           "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".

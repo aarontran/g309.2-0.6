@@ -3625,9 +3625,55 @@ Started around 6:07pm Weds Dec 23
     atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; chainfilter_0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' > & 20151223_pipeline_0087940201.log &
     [1] 31415
 
+Thursday 2015 December 24
+=========================
+
+## Pipeline re-run and review of errors
+
+Amateur mistake was made.  In pn-spectra-mod, added messages that I was
+regenerating files, but forgot to actually remove else {...} blocks.
+
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; chainfilter_0551000201; specbackgrp_0551000201 src; specbackgrp_0551000201 bkg' >& 20151224_pipeline_0551000201.log &
+    [1] 502
+
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; chainfilter_0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' >& 20151224_pipeline_0087940201.log &
+    [1] 28979
+
+Anyways, re-run, it only takes about 1.5 hrs
+
+Checking for errors in logs.  nohup logs (`20151224_pipeline_*`) are OK.
+Use the following commands:
+
+    cat *.log | grep -in error > errcheck.log
+    (in vim) :g/^\d\+:evselect.*/d
+
+In logs for both obsids:
+* epevents errors related to CTI correction are OK
+* grppha logs look good.
+* Error related to -obj-im.fits regeneration in
+  `mos-spectra_{mos1S001,mos2S002}_{src,bkg}.log` files.
+  which I believe is caused by an extra parenthesis in the selection
+  expression.  This is line 445 of the original mos-spectra script
+  (`xmmsas_20141104_1833`); you can contrast to the version for rev>2382, which
+  does have the correct parenthesis setup.
+
+  Normally, -obj-im.fits is already created by cheese; mos-spectra would not
+  run this command.
+
+  In this case, I won't re-run the pipeline.  It's an error, but doesn't affect
+  our work.
+
+In mos-filter log for 0551000201 only: error creating a temp file with command:
+    evselect table=mos1S001-corn.fits:EVENTS withfilteredset=yes
+        expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)&&(CCDNR==6)&&(PI in [300:10000])'
+        ...
+MOS1 CCD6 is the (first) missing CCD.  The script tries to get the number of
+corner counts (NAXIS2 = number of rows) but fails.  This is OK, and mos-filter
+proceeds from the error normally.
+
+
 
 Standing TO-DOs
-1. check that pipeline rerun was successful (grep all log files for "error")
 2. Check value of integrals of ARF over energy
    for source and background (use backup of Nov spectra for this);
    see whether it makes sense to apply this manually when subtracting
