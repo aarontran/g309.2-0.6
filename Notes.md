@@ -3671,18 +3671,44 @@ MOS1 CCD6 is the (first) missing CCD.  The script tries to get the number of
 corner counts (NAXIS2 = number of rows) but fails.  This is OK, and mos-filter
 proceeds from the error normally.
 
+## Checking normalization of effective area
+
+The src/bkg arfs for 0087940201 mos1S001 differ by ~1.24x at low energies;
+starting from ~5 keV, the ratio increases almost linearly to ~1.7x at 12 keV.
+
+Similar effect for 0551000201 mos2S002, except increasing from ~1.7x to 3.1x
+at 12 keV.  Quite a substantial correction is needed.
+
+So this basically captures vignetting at different energies, where vignetting
+is worst at around 12 keV (PN shows some of the interesting response to 15 keV)
+depending on the region/detector positioning.
+
+Straight subtraction makes the background look dimmer than it really is.
+It would be good to apply this correction.
+
+(src - qpb_src) - (bkg - qpb_bkg), then model accordingly.
+
+## Set up script for background subtraction
+
+specmeth, to be renamed.
+
+
+
 
 
 Standing TO-DOs
-2. Check value of integrals of ARF over energy
-   for source and background (use backup of Nov spectra for this);
-   see whether it makes sense to apply this manually when subtracting
-   backgrounds extracted from distinctly different detector regions.
 3. check whether we need to adjust ARF/RMF.
    The detmap used for flux weighting includes all the background signal.
    But, the RMF/ARF only applies to genuine X-ray photons; we have no
    way to tell a priori which is which (or the exact flux %).
    Maybe we can do an iterative process.
+
+   E.g., after the background subtraction, does the absolute magnitude of the
+   ARF need to decrease by about a factor of two?
+   I don't think it should...
+   maybe that's the intent of BACKSCAL keywords, to offset this effect? I don't
+   know.
+
 4. account for vignetting in instrumental lines.
    this is only important if I decide to use FWC data to get line
    ratios/normalizations, which requires
@@ -3695,6 +3721,26 @@ Standing TO-DOs
    PN QPB is in time.  If it looks stable we can use those obsids to extract PN
    corner spectra.
    If not, skip
+
+   Adjacent obsids are (searching revolutions 1691-1694):
+   * 0554600401 (SGR 1806-20) -- PN full frame, good
+       (2009-03-03 15:34:01 to 2009-03-04 02:54:15) -- 41ks
+   * 0551851301 (RX J0647.7+7015) -- PN ext full frame, good
+       (2009-03-04 05:03:54 to 2009-03-05 02:15:19) -- 76ks
+   * (before) 0552800201 (XTE J1810-197) -- PN large window
+   * 0551000201 (2009-03-06 10:55:31 to 2009-03-07 02:50:01)
+   * radzone
+   * 0604940101 (CTA1) -- PN small window
+   * 0553110201 (G341.2+0.9) -- PN full frame, good
+       (2009-03-09 15:01:14 to 2009-03-09 21:02:35) -- 22ks
+   * 0553850101 (PSR J1734-3333) -- large window, not useful
+   * 0551120301 (Proxima Cen) -- large window (holy shit that's bright)
+   * 0550410301 (Geminga) -- small window
+   * 0551761001 (3C153) -- full frame, good
+       (2009-03-10 20:13:55 to 2009-03-11 02:37:32) -- 23ks
+
+   We have a baseline of about 4 observations within 1 week, centered on the
+   observation of 0551000201.
 
 Only some of these are all that critical.
 I'm a little uncertain about the rmf/arf thing.

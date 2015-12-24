@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Procedure for straight background subtraction
+# Use (src - qpb_src) with BACKFILE = (back - qpb_back)
+
+OBSIDS="0087940201 0551000201"
+
+## 0087940201 operations
+
+for obsid in $OBSIDS;
+do
+
+  cd "${XMM_PATH}/${obsid}/odf/repro"
+
+  # Slew of file copying; mathpha will not accept dashes in filenames
+  fstems="mos1S001_src mos2S002_src mos1S001_bkg mos2S002_bkg"
+  cp mos1S001-src.pi     mos1S001_src.pi
+  cp mos1S001-src-qpb.pi mos1S001_src_qpb.pi
+  cp mos1S001-bkg.pi     mos1S001_bkg.pi
+  cp mos1S001-bkg-qpb.pi mos1S001_bkg_qpb.pi
+  cp mos2S002-src.pi     mos2S002_src.pi
+  cp mos2S002-src-qpb.pi mos2S002_src_qpb.pi
+  cp mos2S002-bkg.pi     mos2S002_bkg.pi
+  cp mos2S002-bkg-qpb.pi mos2S002_bkg_qpb.pi
+  if [[ $obsid = "0087940201" ]]; then
+    fstems="${fstems} pnS003_src_os pnS003_bkg_os"
+    cp pnS003-src-os.pi  pnS003_src_os.pi
+    cp pnS003-src-qpb.pi pnS003_src_os_qpb.pi
+    cp pnS003-bkg-os.pi  pnS003_bkg_os.pi
+    cp pnS003-bkg-qpb.pi pnS003_bkg_os_qpb.pi
+  fi
+
+  # Subtract QPB spectra
+  for fstem in $fstems;
+  do
+    mathpha expr="${fstem}.pi - ${fstem}_qpb.pi" outfil="!${fstem}_sqpb.pi" \
+        units=C auxfiles="${fstem}.pi" exposure="${fstem}.pi" areascal='%' \
+        properr='yes' \
+        ncomments=0
+    # auxfiles sets: backfile, backscal, corrfile, corrscal, respfile, ancrfile
+  done
+
+  # Set BACKFILE and group
+  grppha infile="mos1S001_src_sqpb.pi" outfile="!mos1S001_src_sqpb.pi" \
+    comm="chkey BACKFILE mos1S001_bkg_sqpb.pi & \
+          chkey RESPFILE mos1S001-src.rmf & \
+          chkey ANCRFILE mos1S001-src.arf & \
+          group min 50 & exit" \
+    chatter=10
+  grppha infile="mos2S002_src_sqpb.pi" outfile="!mos2S002_src_sqpb.pi" \
+    comm="chkey BACKFILE mos2S002_bkg_sqpb.pi & \
+          chkey RESPFILE mos2S002-src.rmf & \
+          chkey ANCRFILE mos2S002-src.arf & \
+          group min 50 & exit" \
+    chatter=10
+  if [[ $obsid = "0087940201" ]]; then
+    grppha infile="pnS003_src_os_sqpb.pi" outfile="!pnS003_src_os_sqpb.pi" \
+      comm="chkey BACKFILE pnS003_bkg_os_sqpb.pi & \
+            chkey RESPFILE pnS003-src.rmf & \
+            chkey ANCRFILE pnS003-src.arf & \
+            group min 50 & exit" \
+      chatter=10
+  fi
+
+done
