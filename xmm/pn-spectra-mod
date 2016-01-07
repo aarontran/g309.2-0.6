@@ -674,6 +674,19 @@ $author="S. L. Snowden, based on the mos-spectra code";
   print "   \n";
   system "$comm"; 
 
+#########################################################
+# START customization (variant, use detector map for RMF)
+
+  $rmffile_dmap="pn".$prefix."-dmap.rmf";
+  $dmap="detmap.ds";  # Use file just created for arfgen
+  $comm="rmfgen format=var rmfset=".$rmffile_dmap.
+    " spectrumset=pn".$prefix."-obj.pi threshold=1.0e-6 ".
+    " detmaptype=dataset detmaparray=".$dmap;
+  &run_and_print($comm);
+
+# END customization (variant, use detector map for RMF)
+#########################################################
+
 #  Make an image for the region and band in sky coords
 
   if($ehigh > 0) {
@@ -727,6 +740,76 @@ $author="S. L. Snowden, based on the mos-spectra code";
     print "   \n";
     system "$comm";
   }
+
+##############################################
+# START customization
+
+#  Extract the selected FOV region from __FWC__ data into spectral file
+#  then run backscale, generate response
+
+# Same as calls for -{1-4}ff.pi, but apply quadrant exclusions ($ccddef)
+# instead of individual $tempquad filters
+
+#  Extract the main FWC spectrum
+  $specfile_ff="pn".$prefix."-obj-ff.pi";
+  $comm="evselect table=".$fwcfile.":EVENTS withfilteredset=yes ".
+    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+    $ccddef.$ruffovdef.$FOVdef.$fulldef.$maskitdet."' ".
+    "withspectrumset=yes ".
+    "spectrumset=".$specfile_ff." energycolumn=PI spectralbinsize=5 ".
+    "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
+  &run_and_print($comm);
+
+  $comm="backscale spectrumset=".$specfile_ff.
+    " badpixlocation=".$detpref." withbadpixcorr=yes ";
+  &run_and_print($comm);
+
+#  Extract the OOT spectrum
+  $specfile_ff_oot="pn".$prefix."-obj-ff-oot.pi";
+  $comm="evselect table=".$fwcootfile.":EVENTS withfilteredset=yes ". 
+    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+    $ccddef.$ruffovdef.$FOVdef.$fulldef.$maskitdet."' ".
+    "withspectrumset=yes ".
+    "spectrumset=".$specfile_ff_oot." energycolumn=PI spectralbinsize=5 ".
+    "withspecranges=yes specchannelmin=0 specchannelmax=20479";
+  &run_and_print($comm);
+
+  $comm="backscale spectrumset=".$specfile_ff_oot.
+    "badpixlocation=".$detprefoot." withbadpixcorr=yes ";
+  &run_and_print($comm);
+
+#  Generate the RMF
+  $rmffile_ff="pn".$prefix."-ff.rmf";
+  $comm="rmfgen format=var rmfset=".$rmffile_ff.
+    " spectrumset=".$specfile_ff." threshold=1.0e-6 ";
+  &run_and_print($comm);
+
+#  Generate the ARF, use a FWC detector map
+  $detmap_ff="detmap_ff.ds";
+  $comm="evselect table=".$fwcfile.":EVENTS withfilteredset=yes ".
+    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
+    $ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
+    "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+    "imageset=".$detmap_ff." squarepixels=yes ignorelegallimits=yes ".
+    "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=60 ximagemax=19500 ".
+    "ximagemin=-19499 ycolumn='DETY' yimagesize=60 yimagemax=19500 ".
+    "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
+  &run_and_print($comm);
+
+  $arffile_ff="pn".$prefix."-ff.arf";
+  $comm="arfgen arfset=".$arffile_ff." spectrumset=".$specfile_ff.
+    "withrmfset=yes rmfset=".$rmffile_ff." extendedsource=yes modelee=no ".
+    "withbadpixcorr=no detmaptype=dataset detmaparray=".$detmap_ff." ".
+    "badpixlocation=".$detpref." modelootcorr=no "
+    "modeleffarea=no modelfiltertrans=no ";
+  # Do NOT model eff. area or filter trans. for FWC ARF
+  # I don't know if this also removes mirror vignetting from ARF
+  &run_and_print($comm);
+
+  system "rm -f $detmap_ff";
+
+# END customization
+##############################################
 
 #  Extract region spectra separately for each quad
 
@@ -1124,3 +1207,17 @@ $author="S. L. Snowden, based on the mos-spectra code";
   print "$comm\n";
   print "   \n";
   system "$comm";  
+
+
+# Print a command to output .csh and terminal, then execute command.
+# Depends on existence of "global" filehandle JUNK_HNDL
+sub run_and_print {
+
+  my $comm = $_[0];
+
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
+}

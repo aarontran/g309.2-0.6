@@ -921,6 +921,73 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     system "$comm";
     print "   \n";
   }
+
+
+##############################################
+# START customization
+
+#  Extract the entire FOV region from __FWC__ data into spectral file
+#  then run backscale, generate response
+
+  $specfile_ff="mos".$prefix."-obj-ff.pi";
+  $fwcfile=$caldb."/".$det."-fwc.fits.gz";
+
+  # Standard ESAS filters for MOS
+  $filt="";
+  if(($det eq "mos1") and ($revo>2382)) {
+    $filt="(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))"
+  } else {
+    $filt="(PATTERN<=12)&&(FLAG == 0)"
+  }
+
+  # Same as call for -{1-7}ff.pi
+  $comm="evselect table=".$fwcfile.":EVENTS ".
+    "withfilteredset=yes ".
+    "expression='".$filt.$ccddef.$maskitdet.$fulldef.$FOVdef."' ".
+    "withspectrumset=yes ".
+    "spectrumset=".$specfile_ff." energycolumn=PI spectralbinsize=5 ".
+    "withspecranges=yes specchannelmin=0 specchannelmax=11999";
+  &run_and_print($comm);
+
+  $comm="backscale spectrumset=".$specfile_ff." badpixlocation=".$detpref.
+    " withbadpixcorr=yes" ;
+  &run_and_print($comm);
+
+#  Generate detmap for FWC data, use for both RMF and ARF
+  $detmap_ff = "detmap_ff.ds";
+  $comm="evselect table=".$fwcfile.":EVENTS withfilteredset=yes ".
+    "filtertype=expression ".
+    "expression='".$filt.$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+    "imagebinning='imageSize' imagedatatype='Int32' ".
+    "imageset=".$detmap_ff." squarepixels=yes ignorelegallimits=no ".
+    "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
+    "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
+    "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+  &run_and_print($comm);
+
+#  Generate the RMF, use a FWC detector map
+  $rmffile_ff="mos".$prefix."-ff.rmf";
+  $comm="rmfgen format=var rmfset=".$rmffile_ff." spectrumset=".$specfile_ff." ".
+    "threshold=1.0e-6 detmaptype=dataset detmaparray=".$detmap_ff;
+  &run_and_print($comm);
+
+#  Generate the ARF, use a FWC detector map
+  $arffile_ff="mos".$prefix."-ff.arf";
+  $comm="arfgen arfset=".$arffile_ff." spectrumset=".$specfile_ff." ".
+    "withrmfset=yes rmfset=".$rmffile_ff." extendedsource=yes modelee=no ".
+    "withbadpixcorr=no detmaptype=dataset detmaparray=".$detmap_ff." ".
+    "badpixlocation=".$fwcfile." modelootcorr=no ".
+    "modeleffarea=no modelfiltertrans=no ";
+  # Do NOT model eff. area or filter trans. for FWC ARF
+  # I don't know if this also removes mirror vignetting from ARF
+  &run_and_print($comm);
+
+  system "rm -f $detmap_ff";
+
+# END customization
+##############################################
+
+
 #  Extract separately for each chip
 #
 #  For chip 1 just get object region from FWC and backscale that
@@ -1518,3 +1585,18 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       }
     }
   }
+
+
+# Print a command to output .csh and terminal, then execute command.
+# Depends on existence of "global" filehandle JUNK_HNDL
+sub run_and_print {
+
+  my $comm = $_[0];
+
+  print JUNK_HNDL "$comm\n";
+  print JUNK_HNDL "   \n";
+  print "$comm\n";
+  print "   \n";
+  system "$comm";
+  print "   \n";
+}

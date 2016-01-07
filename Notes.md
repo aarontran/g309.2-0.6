@@ -3693,34 +3693,135 @@ It would be good to apply this correction.
 specmeth, to be renamed.
 
 
+Tuesday-Wednesday 2016 January 5-6 -- plan corrections, get FWC spectra
+=======================================================================
+
+## Address lingering questions about ARF/RMF corrections
+
+* Adding ARF correction (first order effect) before XSPEC bkg subtraction?
+
+  YES, but note that this may further mess up instrumental line subtraction.
+  Assuming ARF is flatter for instrumental lines than sky background (due to no
+  mirror vignetting), then background instrumental lines will be
+  over-estimated.
+
+  Quantify effect of change by generating spectra with/without correction.
+
+  Checked BACKSCAL ratios against manually computed ratios from ESAS cheese
+  images, they look ok (ratio is right to ~ a few %; worse if we don't account
+  for pt src mask. Trying to reproduce absolute BACKSCAL values by computing
+  area in (arcsec^2) from cheese images is worse, off by ~10%. I don't know
+  where the discrepancy comes from.
+
+* Adjust ARF/RMF to reflect weighting of (estimated) "true source", rather than
+  use weighting based on source + x-ray background + detector background + ...
+
+  DEFER or SKIP.
+
+  Maybe possible, but requires (background, soft proton, SWCX) subtracted
+  images to generate a new detector map.
+
+  Only necessary for "straight" background subtraction.  If modeling both
+  SNR and background separately, ARF/RMF should be weighted with background.
+  (but ideally without QPB).  Background subtraction already implicitly assumes
+  uniform RMF/ARF across detector, so we can't remove this systematic error
+  entirely.
+
+* Addressing vignetting in instrumental lines?
+
+  YES -- approach as follows:
+
+  1. extract spectra from FWC data -- fit with arf none, since we care only
+     about the channel space signal, not how it's produced.
+     (alternative: generate custom arf without vignetting/filters.
+      ARF's energy dependence subtly alters shape of modeled lines -- most
+      important for PN, due to high energy instrumental lines.)
+  2. from FWC spectrum fit, compute line ratios + normalizations.  Rescale
+     by exposure times.
+  3. use ratios/normalizations in instrumental line fits.  Note that QPB +
+     lines may differ from (all FWC QPB) + lines, as ESAS extracts QPB spectra
+     that are specifically matched to indiv observation.
+
+  If I am NOT using FWC data, and NOT propagating normalizations across
+  different fits (background -> source region), no issue.  Free normalizations
+  will account for this.
+
+  But, if this works, will help remove 1-2 parameters from fits.
+  Could be very useful, esp. in constraining Al/Si lines.
+
+  Low priority: check temporal variations in instrumental lines in FWC data, or
+  corner data from DB of public observations.
+
+## Implement FWC spectrum extraction to get instrumental lines
+
+Modify "mos-spectra-mod" and "pn-spectra-mod" to extract spectrum, RMF, ARF
+from FWC data.  Copy basic parameters from elsewhere in script
+(spectralbinsize, specchannel{min,max}; use standard $ccddef, $maskitdet,
+$fulldef, $FOVdef).  Modify specbackgrp scripts to copy resulting fwc files.
+
+Remarks:
+* __Explicitly remove effective area + filter from ARF for FWC data__
+
+* backscale correction requires bad pixel locations, taken from BADPIX
+  extensions in an event list FITS file.  I would have guessed better to use
+  FWC data for badpix, but the corner spectra use -clean.fits for this.  So I
+  just imitate ESAS behavior here.  Don't think it really matters; I'm not
+  using FWC spectrum BACKSCAL for anything anyways
+
+* (MOS) detmap for ARF and RMF are the same; I omit duplicate command in my
+  modification (when creating rmf/arf for -obj.pi, same detmap gets created
+  twice)
+
+* (PN) Why doesn't RMF for PN use a detector map???
+  For now, I imitate ESAS and do NOT use detmap for PN RMF.  But this should be
+  investigated and fixed.  I don't know how much difference it makes...
+
+## Test new FWC spectrum extraction
+
+    atran@statler:/data/mpofls/atran/research/g309/xmm$ source sasinit 0087940201
+    atran(sas)@statler$ cd 0087940201/odf/repro
+    atran(sas)@statler$ make_xmmregions 0087940201
+    ...
+    atran(sas)@statler$ mos-spectra-mod prefix=1S001 caldb="${XMM_PATH}/caldb" region="/data/mpofls/atran/research/g309/xmm/regs/0087940201/reg_mos1S001_src.txt" mask=1 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd7=1 ccd6=0 cflim=12000 >& mos-spectra_mos1S001_src.log
+
+Running nominally, I think good enough to commit and revisit in 1-2 hrs.
+
+## Implement OOT subtraction / count rate scaling for FWC data
+
+This is necessary to correctly estimate instrumental line normalizations.
+
+Do OOT subtraction myself; this is normally done in pn_back
+(base off of `xmmsas_20141104_1833/packages/esas/src/pn_back_mod.f90`).
+Added to `specbackgrp_*` scripts for now.
+
+(IN WORKS ON specbackgrp_0551000201)
+
+Several variants to test:
+1. extract line normalizations/ratios using
+   - no arf
+   - arf without effarea/filter
+2. for PN, perform a standard fit using
+   - non-detmapped RMF
+   - detmapped RMF
+   (if this works, also use a detmap for pnS003-obj-ff.rmf)
+
+
+## Implement ARF correction by taking mean ARF ratio in some energy band
 
 
 
 Standing TO-DOs
-3. check whether we need to adjust ARF/RMF.
-   The detmap used for flux weighting includes all the background signal.
-   But, the RMF/ARF only applies to genuine X-ray photons; we have no
-   way to tell a priori which is which (or the exact flux %).
-   Maybe we can do an iterative process.
+===============
 
-   E.g., after the background subtraction, does the absolute magnitude of the
-   ARF need to decrease by about a factor of two?
-   I don't think it should...
-   maybe that's the intent of BACKSCAL keywords, to offset this effect? I don't
-   know.
+ESAS: vet and submit bug fix for MOS1 CCD4 strip removal; inquire about
+detector map for PN RMF...
 
-4. account for vignetting in instrumental lines.
-   this is only important if I decide to use FWC data to get line
-   ratios/normalizations, which requires
-   - characterizing timescale of line variations in FWC data, or corner data
-     from db of public observations?!
-   - actually fitting for said ratios/normalizations.  Parts of ARF are
-     relevant, parts are not; I can use arfgen to compute a special ARF for
-     this.
-5. check surrounding observations for 0551000201 to see how stable (or not) the
+1. check temporal variation of instrumental lines in (a) FWC data or (b) corner
+   data from DB of public observations
+
+2. check surrounding observations for 0551000201 to see how stable (or not) the
    PN QPB is in time.  If it looks stable we can use those obsids to extract PN
-   corner spectra.
-   If not, skip
+   corner spectra.  If not, skip.
 
    Adjacent obsids are (searching revolutions 1691-1694):
    * 0554600401 (SGR 1806-20) -- PN full frame, good
@@ -3742,12 +3843,11 @@ Standing TO-DOs
    We have a baseline of about 4 observations within 1 week, centered on the
    observation of 0551000201.
 
-Only some of these are all that critical.
-I'm a little uncertain about the rmf/arf thing.
-assuming small background it's ok. but our backgrounds are huge.
+* Explicitly note which spectra _cannot_ be fit without the soft proton power
+  law (diagnose using plot of unfolded spectra).
 
-I need to explicitly note which spectra _cannot_ be fit without the soft proton
-power law (diagnose using plot of unfolded spectra).
+* Explicitly note relative sizes of backgrounds for different instruments, and
+  obsids.
 
 Low-priority TO-DO (defer to later): remove pt sources within SNR region, and
 merge pt source lists from each obsid.  Use ESAS region task to make
@@ -3779,6 +3879,7 @@ Working on this..
    check flare GTIs)
 
 Items to review with Pat on reduction + analysis
+(have ssh -X running on computer to pull up docs if needed)
 * epreject offset correction
 * point source masking
 * adjustment to GTIs

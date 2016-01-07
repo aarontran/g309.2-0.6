@@ -40,7 +40,10 @@ do
     # auxfiles sets: backfile, backscal, corrfile, corrscal, respfile, ancrfile
   done
 
-  # Set BACKFILE and group
+  # TODO add ARF scaling correction for 0-5keV range.
+  # create alternative "arfcorr" files
+
+  # Set keywords and group
   grppha infile="mos1S001_src_sqpb.pi" outfile="!mos1S001_src_sqpb.pi" \
     comm="chkey BACKFILE mos1S001_bkg_sqpb.pi & \
           chkey RESPFILE mos1S001-src.rmf & \
