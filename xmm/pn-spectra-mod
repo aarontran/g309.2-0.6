@@ -778,10 +778,13 @@ $author="S. L. Snowden, based on the mos-spectra code";
     "badpixlocation=".$detprefoot." withbadpixcorr=yes ";
   &run_and_print($comm);
 
+  # Force $specfile temporarily; cannot use FWC spectrum for RMF/ARF extraction
+  $specfile="pn".$prefix."-obj.pi";
+
 #  Generate the RMF
   $rmffile_ff="pn".$prefix."-ff.rmf";
   $comm="rmfgen format=var rmfset=".$rmffile_ff.
-    " spectrumset=".$specfile_ff." threshold=1.0e-6 ";
+    " spectrumset=".$specfile." threshold=1.0e-6 ";
   &run_and_print($comm);
 
 #  Generate the ARF, use a FWC detector map
@@ -797,10 +800,10 @@ $author="S. L. Snowden, based on the mos-spectra code";
   &run_and_print($comm);
 
   $arffile_ff="pn".$prefix."-ff.arf";
-  $comm="arfgen arfset=".$arffile_ff." spectrumset=".$specfile_ff.
+  $comm="arfgen arfset=".$arffile_ff." spectrumset=".$specfile." ".
     "withrmfset=yes rmfset=".$rmffile_ff." extendedsource=yes modelee=no ".
     "withbadpixcorr=no detmaptype=dataset detmaparray=".$detmap_ff." ".
-    "badpixlocation=".$detpref." modelootcorr=no "
+    "badpixlocation=".$detpref." modelootcorr=no ".
     "modeleffarea=no modelfiltertrans=no ";
   # Do NOT model eff. area or filter trans. for FWC ARF
   # I don't know if this also removes mirror vignetting from ARF

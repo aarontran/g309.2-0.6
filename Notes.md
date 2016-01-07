@@ -3784,7 +3784,34 @@ Remarks:
     ...
     atran(sas)@statler$ mos-spectra-mod prefix=1S001 caldb="${XMM_PATH}/caldb" region="/data/mpofls/atran/research/g309/xmm/regs/0087940201/reg_mos1S001_src.txt" mask=1 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd7=1 ccd6=0 cflim=12000 >& mos-spectra_mos1S001_src.log
 
-Running nominally, I think good enough to commit and revisit in 1-2 hrs.
+Running nominally.
+Result: cannot extract RMF and ARF for FWC-extracted spectra
+
+    ** rmfgen: error (blockNotFound), Could not find block with qualified name
+    '/proj/xmm/ccf/EMOS1_FILTERTRANSX_0014.CCF:FILTER-CLOSED' in dataset with name
+    '/proj/xmm/ccf/EMOS1_FILTERTRANSX_0014.CCF'
+
+Identical error for arfgen, despite the fact that I set "modeleffarea=no" and
+"modelfiltertrans=no".  I cannot fit the FWC data without a response matrix.
+
+Can I create a response matrix using the spectrumset for the current
+observation?  It should depend only on the region (in detector coordinates) and
+the detector map weighting.  From a quick look at XSPEC, this seems reasonable.
+Try again using the actual observation spectrumset...
+
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; specbackgrp_0551000201 src; specbackgrp_0551000201 bkg' >& 20160107_specfwctest_0551000201.log &
+    [1] 6409
+
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' >& 20160107_specfwctest_0087940201.log &
+    [1] 14673
+
+        (failed 2x more due to bugs in pn-spectra-mod, fixed and re-ran)
+
+I think this will be fine, frankly.  It doesn't have to be perfect, and it
+won't be perfect, because we're using these files to estimate ratios in order
+to better fit backgrounds to be subtracted from / modeled out of the actual
+data.
+
 
 ## Implement OOT subtraction / count rate scaling for FWC data
 

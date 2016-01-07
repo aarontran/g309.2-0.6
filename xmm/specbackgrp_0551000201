@@ -132,40 +132,39 @@ mv pnS003-dmap.rmf       pnS003-${RSTEM}-dmap.rmf
 # Remove OOT events from pnS003-obj-ff.pi
 # (thread: xmm.esac.esa.int/sas/current/documentation/threads/EPIC_OoT.shtml)
 # "+1" is an extension specifier... but already [1] by default, so I omit.
-
-# Formula from pn_back:
-# amsca * ( cts / (BACKSCAL * EXPOSURE) - cts_oot / (BACKSCAL_oot * # # EXPOSURE_oot) )
-# where amsca=1440000 converts BACKSCAL from detector pixels to arcmin^2
-# Important to get correct normalization for XSPEC, because we are
-# fitting to pn_back returned spectra with units cts/(arcmin^2 * s).
-AMSCA=1440000
-
-
-fparkey fitsfile="pnS003-${RSTEM}-ff-oot.pi" keyword=TTYPE2 value=CTS_OOT 
-    # Rename column to CTS_OOT
-faddcol infile="pnS003-${RSTEM}-ff.pi" colfile="pnS003-${RSTEM}-ff-oot.pi" \
-      colname=CTS_OOT
-    # Copy renamed column over to non-oot file
-
-#            if(mode .eq. 'PrimeFullWindow') then
-#                print *, 'PN Mode: ', mode
-#                ootsca = 0.0630
-#                print 2993, ootsca
-# 2993           format(' OOT Scale: ',f8.4)
-#                print *, ' '
-#            elseif(mode .eq. 'PrimeFullWindowExtended3 ') then
-#                print *, 'PN Mode: ', mode
-#                ootsca = 0.0232
-#                print 2993, ootsca
-#                print *, ' '
-#            elseif(mode .eq. 'PrimeFullWindowExtended5 ') then
-#                print *, 'PN Mode: ', mode
-
-fcalc clobber=yes infile="pnS003-${RSTEM}-ff.pi" outfile="pnS003-${RSTEM}-ff-os.pi" \
-      clname=CTS_OOT expr=CTS_OOT*0.063
-
-fparkey fitsfile="pnS003-${RSTEM}-ff-oot.pi" keyword=TTYPE2 value=COUNTS
-    # Undo rename operation!
+### 
+### # Formula from pn_back:
+### # amsca * ( cts / (BACKSCAL * EXPOSURE) - cts_oot / (BACKSCAL_oot * # # EXPOSURE_oot) )
+### # where amsca=1440000 converts BACKSCAL from detector pixels to arcmin^2
+### # Important to get correct normalization for XSPEC, because we are
+### # fitting to pn_back returned spectra with units cts/(arcmin^2 * s).
+### AMSCA=1440000
+### 
+### fparkey fitsfile="pnS003-${RSTEM}-ff-oot.pi" keyword=TTYPE2 value=CTS_OOT 
+###     # Rename column to CTS_OOT
+### faddcol infile="pnS003-${RSTEM}-ff.pi" colfile="pnS003-${RSTEM}-ff-oot.pi" \
+###       colname=CTS_OOT
+###     # Copy renamed column over to non-oot file
+### 
+### #            if(mode .eq. 'PrimeFullWindow') then
+### #                print *, 'PN Mode: ', mode
+### #                ootsca = 0.0630
+### #                print 2993, ootsca
+### # 2993           format(' OOT Scale: ',f8.4)
+### #                print *, ' '
+### #            elseif(mode .eq. 'PrimeFullWindowExtended3 ') then
+### #                print *, 'PN Mode: ', mode
+### #                ootsca = 0.0232
+### #                print 2993, ootsca
+### #                print *, ' '
+### #            elseif(mode .eq. 'PrimeFullWindowExtended5 ') then
+### #                print *, 'PN Mode: ', mode
+### 
+### fcalc clobber=yes infile="pnS003-${RSTEM}-ff.pi" outfile="pnS003-${RSTEM}-ff-os.pi" \
+###       clname=CTS_OOT expr=CTS_OOT*0.063
+### 
+### fparkey fitsfile="pnS003-${RSTEM}-ff-oot.pi" keyword=TTYPE2 value=COUNTS
+###     # Undo rename operation!
 
 # Group the spectra
 echo "Bin output spectra and assign {BACK,RESP,ANCR}FILE keywords"

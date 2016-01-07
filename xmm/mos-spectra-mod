@@ -965,15 +965,18 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     "yimagemin=-19499 updateexposure=yes filterexposure=yes";
   &run_and_print($comm);
 
+  # Here, $specfile is guaranteed to be -obj.pi
+  # Cannot use FWC spectrum for RMF/ARF extraction
+
 #  Generate the RMF, use a FWC detector map
   $rmffile_ff="mos".$prefix."-ff.rmf";
-  $comm="rmfgen format=var rmfset=".$rmffile_ff." spectrumset=".$specfile_ff." ".
+  $comm="rmfgen format=var rmfset=".$rmffile_ff." spectrumset=".$specfile." ".
     "threshold=1.0e-6 detmaptype=dataset detmaparray=".$detmap_ff;
   &run_and_print($comm);
 
 #  Generate the ARF, use a FWC detector map
   $arffile_ff="mos".$prefix."-ff.arf";
-  $comm="arfgen arfset=".$arffile_ff." spectrumset=".$specfile_ff." ".
+  $comm="arfgen arfset=".$arffile_ff." spectrumset=".$specfile." ".
     "withrmfset=yes rmfset=".$rmffile_ff." extendedsource=yes modelee=no ".
     "withbadpixcorr=no detmaptype=dataset detmaparray=".$detmap_ff." ".
     "badpixlocation=".$fwcfile." modelootcorr=no ".
