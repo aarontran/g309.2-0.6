@@ -577,7 +577,7 @@ particular, sky X-ray background).
 > particularly the division of the background between the quiescent component
 > and the soft proton component where these components have significantly
 > different spatial features, should be useful to those interested in the
-> photometry of small regions. 
+> photometry of small regions.
 
 Instrumental background varies a lot.  Al line is bright over most of MOS with
 some spots (CCD edges, seemingly random streaks/corners) not as bright.  Si
@@ -603,7 +603,7 @@ which I have done for these new src/bkg
 regions.
 
 In sky coords (fk5), here's a basic ds9 region covering most of the remnant:
- 
+
 	circle(13:46:47.553, -62:51:02.52, 239.76")
 
 this region just butts up against the bright star HD11xxxx, trying to get as
@@ -676,7 +676,7 @@ Outputs:
     # Instrument: EPN
     # detX       detY
      -2282.3    -8363.5
-									      
+
     # Instrument: EMOS1
     # detX       detY
       4819.1     6857.7
@@ -686,7 +686,7 @@ Outputs:
     # Instrument: EPN
     # detX       detY
       7190.8    -4720.2
-									      
+
     # Instrument: EMOS1
     # detX       detY
      -3188.2   -10855.1
@@ -840,15 +840,15 @@ rmf/arf files, group min 50, and check out in XSPEC.
 
     mos1S001-obj-src-grp.pi
     mos1S001-obj-bkg-grp.pi
-    grppha mos2S002-obj-src.pi mos2S002-obj-src-grp.pi 'chkey BACKFILE mos2S002-back-src.pi & chkey RESPFILE mos2S002-src.rmf & chkey ANCRFILE mos2S002-src.arf & group min 50 & exit' 
-    grppha mos2S002-obj-bkg.pi mos2S002-obj-bkg-grp.pi 'chkey BACKFILE mos2S002-back-bkg.pi & chkey RESPFILE mos2S002-bkg.rmf & chkey ANCRFILE mos2S002-bkg.arf & group min 50 & exit' 
+    grppha mos2S002-obj-src.pi mos2S002-obj-src-grp.pi 'chkey BACKFILE mos2S002-back-src.pi & chkey RESPFILE mos2S002-src.rmf & chkey ANCRFILE mos2S002-src.arf & group min 50 & exit'
+    grppha mos2S002-obj-bkg.pi mos2S002-obj-bkg-grp.pi 'chkey BACKFILE mos2S002-back-bkg.pi & chkey RESPFILE mos2S002-bkg.rmf & chkey ANCRFILE mos2S002-bkg.arf & group min 50 & exit'
 
-Observation: 
+Observation:
 * mos1S001-obj-bkg-grp.pi from 0087940201 (Hughes) looks awful, extremely sharp rise at/above 5 keV.
 * mos2S002-obj-bkg-grp.pi from 0087940201 (Hughes) looks awful, like MOS1
 * pnS003-obj-bkg-grp.pi from 0087940201 (Hughes) looks awful, like MOS1.  Same extremely sharp rise above 5 keV. WHY?
 * mos1S001-obj-bkg-grp.pi from 0551000201 (Motch) looks OK, appears to be a very slight trend up in the unfolded spectrum
-* mos2S002-obj-bkg-grp.pi from 0551000201 (Motch) looks OK, similar to MOS1 
+* mos2S002-obj-bkg-grp.pi from 0551000201 (Motch) looks OK, similar to MOS1
 
 PLAN:
 0. clean up all these damn notes.
@@ -874,32 +874,32 @@ results, to first order.
     Model phabs<1>*vrnei<2> Source No.: 1   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   phabs      nH         10^22    0.881905     +/-  0.263328     
-       2    2   vrnei      kT         keV      1.62262      +/-  0.351555     
-       3    2   vrnei      kT_init    keV      0.541260     +/-  5.22617E-02  
-       4    2   vrnei      H                   0.190000     +/-  29.4756      
-       5    2   vrnei      He                  1.97384      +/-  67.0333      
+       1    1   phabs      nH         10^22    0.881905     +/-  0.263328
+       2    2   vrnei      kT         keV      1.62262      +/-  0.351555
+       3    2   vrnei      kT_init    keV      0.541260     +/-  5.22617E-02
+       4    2   vrnei      H                   0.190000     +/-  29.4756
+       5    2   vrnei      He                  1.97384      +/-  67.0333
        6    2   vrnei      C                   1.00000      frozen
        7    2   vrnei      N                   0.0          frozen
-       8    2   vrnei      O                   7.33475      +/-  10.1127      
+       8    2   vrnei      O                   7.33475      +/-  10.1127
        9    2   vrnei      Ne                  0.0          frozen
-      10    2   vrnei      Mg                  0.633630     +/-  0.164212     
+      10    2   vrnei      Mg                  0.633630     +/-  0.164212
       11    2   vrnei      Si                  3.91065      frozen
       12    2   vrnei      S                   4.98210      frozen
-      13    2   vrnei      Ar                  3.17513      +/-  1.42175      
-      14    2   vrnei      Ca                  7.39625      +/-  6.31153      
-      15    2   vrnei      Fe                  0.165129     +/-  0.120787     
-      16    2   vrnei      Ni                  1.07152      +/-  1.43786      
-      17    2   vrnei      Tau        s/cm^3   1.00000E+08  +/-  1.42943E+10  
+      13    2   vrnei      Ar                  3.17513      +/-  1.42175
+      14    2   vrnei      Ca                  7.39625      +/-  6.31153
+      15    2   vrnei      Fe                  0.165129     +/-  0.120787
+      16    2   vrnei      Ni                  1.07152      +/-  1.43786
+      17    2   vrnei      Tau        s/cm^3   1.00000E+08  +/-  1.42943E+10
       18    2   vrnei      Redshift            0.0          frozen
-      19    2   vrnei      norm                1.36767E-03  +/-  3.93857E-04  
+      19    2   vrnei      norm                1.36767E-03  +/-  3.93857E-04
     ________________________________________________________________________
 
 
     Fit statistic : Chi-Squared =         214.48 using 198 PHA bins.
 
     Test statistic : Chi-Squared =         214.48 using 198 PHA bins.
-     Reduced chi-squared =         1.1594 for    185 degrees of freedom 
+     Reduced chi-squared =         1.1594 for    185 degrees of freedom
      Null hypothesis probability =   6.780013e-02
 
 ANYWAYS, back to the main problem.
@@ -1005,7 +1005,7 @@ IF that doesn't work -- consider excising the affected data?
     tar -xvf files.tar
     mv 0087940201/* .
     rmdir 0087940201/
-    
+
     cd odf
     tar -xzvf 0087940201.tar.gz
     tar -xvf 0315_0087940201.TAR
@@ -1086,9 +1086,9 @@ Quick test to confirm:
     atran(sas)@treble:~/rsch/xmm/0087940201_esas/ODF/repro$ xspec
     ...
     XSPEC12>data 1:1 mos1S001-obj-src-grp.pi
-    XSPEC12>data 2:2 ../../../0551000201_esas/ODF/repro/mos1S001-obj-src-grp.pi 
-    XSPEC12>response 2 ../../../0551000201_esas/ODF/repro/mos1S001-src.rmf 
-    XSPEC12>arf 2 ../../../0551000201_esas/ODF/repro/mos1S001-src.arf 
+    XSPEC12>data 2:2 ../../../0551000201_esas/ODF/repro/mos1S001-obj-src-grp.pi
+    XSPEC12>response 2 ../../../0551000201_esas/ODF/repro/mos1S001-src.rmf
+    XSPEC12>arf 2 ../../../0551000201_esas/ODF/repro/mos1S001-src.arf
     XSPEC12>cpd /xw
     XSPEC12>setplot en
     XSPEC12>ignore **:**-0.2,10.0-**
@@ -1102,9 +1102,9 @@ Quick test to confirm:
 This is extremely confusing.  Let's try again
 
     cd ../../../0551000201_esas/ODF/repro
-    XSPEC12>data 1:1 mos1S001-obj-src-grp.pi 
+    XSPEC12>data 1:1 mos1S001-obj-src-grp.pi
     XSPEC12>data 2:2 ../../../0087940201_esas/ODF/repro/mos1S001-obj-src-grp.pi
-    XSPEC12>response 2 ../../../0087940201_esas/ODF/repro/mos1S001-src.rmf 
+    XSPEC12>response 2 ../../../0087940201_esas/ODF/repro/mos1S001-src.rmf
     XSPEC12>arf 2 ../../../0087940201_esas/ODF/repro/mos1S001-src.arf
     XSPEC12>cpd /xw
     XSPEC12>setplot en
@@ -1117,7 +1117,7 @@ This is extremely confusing.  Let's try again
 Looks the same.  OK...
 
     atran(sas)@treble:~/rsch/xmm/0551000201_esas/ODF/repro$ xspec
-    XSPEC12>data 1:1 mos1S001-obj-src-grp.pi 
+    XSPEC12>data 1:1 mos1S001-obj-src-grp.pi
     XSPEC12>cpd /xw; setplot en; ignore **:**-0.2,10.0-**
     XSPEC12>backgrnd none
     XSPEC12>mo phabs*po
@@ -1167,8 +1167,8 @@ Here are the relevant commands to generate some plots
     Model powerlaw<1> Source No.: 1   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   powerlaw   PhoIndex            0.0          +/-  0.0          
-       2    1   powerlaw   norm                1.00000      +/-  0.0          
+       1    1   powerlaw   PhoIndex            0.0          +/-  0.0
+       2    1   powerlaw   norm                1.00000      +/-  0.0
     ________________________________________________________________________
     XSPEC12>backgrnd 2 none
     XSPEC12>setplot back
@@ -1238,15 +1238,15 @@ A trial fit for background of 0551000201
        Min. Signif.   Max. # Bins   Error Type
 		    0.00000             1         quad
 
-     Responses read: 
+     Responses read:
        ../../../mos1-diag.rsp associated with spectrum 1 source 2
 	      energies: 2400 channels: 111
        mos1S001-bkg.rmf associated with spectrum 1 source 1
 	      energies: 2400 channels: 111
-     Distinct RMF files: 
+     Distinct RMF files:
 	     ../../../mos1-diag.rsp     mos1S001-bkg.rmf
 
-    1 file 1 spectrum 
+    1 file 1 spectrum
     Spectrum 1  Spectral Data File: mos1S001-obj-bkg-grp.pi
     Net count rate (cts/s) for Spectrum:1  4.336e-02 +/- 1.894e-03 (52.6 % total)
      Assigned to Data Group 1 and Plot Group 1
@@ -1271,27 +1271,27 @@ A trial fit for background of 0551000201
     Model apec<1>   +   phabs<2>*apec<3>   +   phabs<4>*powerlaw<5>   +  gaussian<6>  + gaussian<7> + gaussian<8> Source No.: 1   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   apec       kT         keV      8.03414E-03  +/-  1.93120E+05  
+       1    1   apec       kT         keV      8.03414E-03  +/-  1.93120E+05
        2    1   apec       Abundanc            1.00000      frozen
        3    1   apec       Redshift            0.0          frozen
-       4    1   apec       norm                5.00876E-04  +/-  3.51269E+05  
+       4    1   apec       norm                5.00876E-04  +/-  3.51269E+05
        5    2   phabs      nH         10^22    1.00000      frozen
-       6    3   apec       kT         keV      0.963260     +/-  0.162959     
+       6    3   apec       kT         keV      0.963260     +/-  0.162959
        7    3   apec       Abundanc            1.00000      frozen
        8    3   apec       Redshift            0.0          frozen
-       9    3   apec       norm                2.01873E-04  +/-  4.01491E-05  
+       9    3   apec       norm                2.01873E-04  +/-  4.01491E-05
       10    4   phabs      nH         10^22    1.00000      frozen
       11    5   powerlaw   PhoIndex            1.46000      frozen
-      12    5   powerlaw   norm                2.34497E-05  +/-  1.64495E-05  
+      12    5   powerlaw   norm                2.34497E-05  +/-  1.64495E-05
       13    6   gaussian   LineE      keV      1.49000      frozen
       14    6   gaussian   Sigma      keV      0.0          frozen
-      15    6   gaussian   norm                2.76225E-05  +/-  2.39728E-06  
+      15    6   gaussian   norm                2.76225E-05  +/-  2.39728E-06
       16    7   gaussian   LineE      keV      1.75000      frozen
       17    7   gaussian   Sigma      keV      0.0          frozen
-      18    7   gaussian   norm                6.79513E-06  +/-  1.65755E-06  
+      18    7   gaussian   norm                6.79513E-06  +/-  1.65755E-06
       19    8   gaussian   LineE      keV      0.650000     frozen
       20    8   gaussian   Sigma      keV      0.0          frozen
-      21    8   gaussian   norm                1.25548E-05  +/-  6.27539E-06  
+      21    8   gaussian   norm                1.25548E-05  +/-  6.27539E-06
     ________________________________________________________________________
 
 
@@ -1299,8 +1299,8 @@ A trial fit for background of 0551000201
     Model sp:powerlaw<1> Source No.: 2   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   powerlaw   PhoIndex            0.820121     +/-  0.151480     
-       2    1   powerlaw   norm                4.11614E-03  +/-  9.96526E-04  
+       1    1   powerlaw   PhoIndex            0.820121     +/-  0.151480
+       2    1   powerlaw   norm                4.11614E-03  +/-  9.96526E-04
     ________________________________________________________________________
 
        Using energies from responses.
@@ -1308,7 +1308,7 @@ A trial fit for background of 0551000201
     Fit statistic : Chi-Squared =          28.10 using 37 PHA bins.
 
     Test statistic : Chi-Squared =          28.10 using 37 PHA bins.
-     Reduced chi-squared =          1.041 for     27 degrees of freedom 
+     Reduced chi-squared =          1.041 for     27 degrees of freedom
      Null hypothesis probability =   4.057593e-01
      Weighting method: standard
     XSPEC12>
@@ -1352,17 +1352,17 @@ AND, a trial fit for the SNR in 0551000201 using the background parameters above
        Min. Signif.   Max. # Bins   Error Type
 		    0.00000             1         quad
 
-     Responses read: 
+     Responses read:
        ../../../mos1-diag.rsp associated with spectrum 1 source 2
 	      energies: 2400 channels: 185
        mos1S001-src.rmf associated with spectrum 1 source 1
 	      energies: 2400 channels: 185
        mos1S001-src.rmf associated with spectrum 1 source 3
 	      energies: 2400 channels: 185
-     Distinct RMF files: 
+     Distinct RMF files:
 	     ../../../mos1-diag.rsp     mos1S001-src.rmf
 
-    1 file 1 spectrum 
+    1 file 1 spectrum
     Spectrum 1  Spectral Data File: mos1S001-obj-src-grp.pi
     Net count rate (cts/s) for Spectrum:1  2.681e-01 +/- 3.796e-03 (80.9 % total)
      Assigned to Data Group 1 and Plot Group 1
@@ -1417,24 +1417,24 @@ AND, a trial fit for the SNR in 0551000201 using the background parameters above
     Model snr:phabs<1>*vnei<2> Source No.: 3   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   phabs      nH         10^22    0.646077     +/-  3.73739E-02  
-       2    2   vnei       kT         keV      4.59166      +/-  0.973791     
+       1    1   phabs      nH         10^22    0.646077     +/-  3.73739E-02
+       2    2   vnei       kT         keV      4.59166      +/-  0.973791
        3    2   vnei       H                   1.00000      frozen
        4    2   vnei       He                  1.00000      frozen
        5    2   vnei       C                   1.00000      frozen
        6    2   vnei       N                   1.00000      frozen
        7    2   vnei       O                   0.144388     frozen
-       8    2   vnei       Ne                  1.11844E-02  +/-  3.03557E-02  
-       9    2   vnei       Mg                  0.304664     +/-  5.38739E-02  
-      10    2   vnei       Si                  2.00172      +/-  0.169084     
-      11    2   vnei       S                   4.88936      +/-  0.647425     
+       8    2   vnei       Ne                  1.11844E-02  +/-  3.03557E-02
+       9    2   vnei       Mg                  0.304664     +/-  5.38739E-02
+      10    2   vnei       Si                  2.00172      +/-  0.169084
+      11    2   vnei       S                   4.88936      +/-  0.647425
       12    2   vnei       Ar                  3.88010      frozen
       13    2   vnei       Ca                  5.28715      frozen
       14    2   vnei       Fe                  7.12438E-02  frozen
       15    2   vnei       Ni                  0.957365     frozen
-      16    2   vnei       Tau        s/cm^3   1.31766E+10  +/-  1.02414E+09  
+      16    2   vnei       Tau        s/cm^3   1.31766E+10  +/-  1.02414E+09
       17    2   vnei       Redshift            0.0          frozen
-      18    2   vnei       norm                1.18284E-03  +/-  1.40108E-04  
+      18    2   vnei       norm                1.18284E-03  +/-  1.40108E-04
     ________________________________________________________________________
 
 
@@ -1451,7 +1451,7 @@ AND, a trial fit for the SNR in 0551000201 using the background parameters above
     Fit statistic : Chi-Squared =         223.75 using 136 PHA bins.
 
     Test statistic : Chi-Squared =         223.75 using 136 PHA bins.
-     Reduced chi-squared =         1.7480 for    128 degrees of freedom 
+     Reduced chi-squared =         1.7480 for    128 degrees of freedom
      Null hypothesis probability =   3.435070e-07
      Weighting method: standard
     XSPEC12>
@@ -1491,11 +1491,11 @@ Brief list of available data:
   Obsid 4554 does overlap the remnant, no grating.  Not likely to contribute much
   (short 15ks exposure, XMM-Newton effective area >> Chandra)
 * MOST radio, 0.83GHz, resolution 43"
-* ATCA 1.34GHz (gaensler paper) + simultaneous HI 1.420GHz. ~24" resolution 
+* ATCA 1.34GHz (gaensler paper) + simultaneous HI 1.420GHz. ~24" resolution
 
 Way behind, been tied up with ACA constraint stuff.
 
-## Repo organization 
+## Repo organization
 
 Finished a short Makefile tutorial (software carpentry) yesterday.
 
@@ -1545,7 +1545,7 @@ runs `mos_back` and `pn_back`, and renames some files.  But, then this appears
 on my terminal:
 
     atran(sas)@statler:~/rsch/g309/xmm/0087940201/odf/repro$ specbackgrp src
-    You should not see this! 
+    You should not see this!
 
 And, pressing enter creates more "You should not see this!" messages.
 Cause: line breaks in commands being passed to grppha.
@@ -1597,7 +1597,7 @@ Using same source region as before with newly reprocessed data,
 I'm getting VERY slightly different DETX/Y coordinates.
 Here's an example for MOS1 detector.
 
-    DS9 fk5: 
+    DS9 fk5:
     0087940201: &&((DETX,DETY) IN circle(-2056.3, -1681.7, 4795.2))
     0551000201: &&((DETX,DETY) IN circle(-4649.7, -2786.9, 4795.2))()
 
@@ -1626,13 +1626,13 @@ Result (working in `/data/mpofls/atran/research/g309/xmm`):
     > reg2xmmdets.pl regs/src.reg w3browse/0087940201/ODF/repro/P0087940201M1S001MIEVLI0000.FIT
     &&((DETX,DETY) IN circle(-2054.8, -1689.5, 4795.2))
 
-    > setenv SAS_ODF $XMM_PATH/0551000201/odf/repro/1692_0551000201_SCX00000SUM.SAS 
-    > setenv SAS_CCF $XMM_PATH/0551000201/odf/repro/ccf.cif 
+    > setenv SAS_ODF $XMM_PATH/0551000201/odf/repro/1692_0551000201_SCX00000SUM.SAS
+    > setenv SAS_CCF $XMM_PATH/0551000201/odf/repro/ccf.cif
     > reg2xmmdets.pl regs/src.reg 0551000201/odf/repro/mos1S001-ori.fits
     &&((DETX,DETY) IN circle(-4649.7, -2786.9, 4795.2))
 
-    > setenv SAS_ODF $XMM_PATH/w3browse/0551000201/ODF/repro/1692_0551000201_SCX00000SUM.SAS 
-    > setenv SAS_CCF $XMM_PATH/w3browse/0551000201/ODF/repro/ccf.cif 
+    > setenv SAS_ODF $XMM_PATH/w3browse/0551000201/ODF/repro/1692_0551000201_SCX00000SUM.SAS
+    > setenv SAS_CCF $XMM_PATH/w3browse/0551000201/ODF/repro/ccf.cif
     > reg2xmmdets.pl regs/src.reg w3browse/0551000201/ODF/repro/P0551000201M1S001MIEVLI0000.FIT
     &&((DETX,DETY) IN circle(-4649.7, -2786.9, 4795.2))
 
@@ -1769,7 +1769,7 @@ space (but obviously affects model).
 But, removing rmf entirely kills our ability to move to energy space.
 Hypothesis: XSPEC makes some assumption on the RMF to show it in energy space,
 say, making it diagonal.
-I'm not sure how they send the model to energy -- I would assume that 
+I'm not sure how they send the model to energy -- I would assume that
 it's folded through rmf/arf, then passed through the assumed RMF (undoing the
 RMF step), something like
 
@@ -1793,10 +1793,10 @@ rmfgen, arfgen, detmap, etc.
     # (ignoring datagroup "1" for now)
 
     data 1:1 mos1S001-bkg.pi
-    data 1:1 mos1S001-bkg-grp50.pi 
+    data 1:1 mos1S001-bkg-grp50.pi
     response 1:1 mos1S001-bkg.rmf
     arf 1:1 mos1S001-bkg.arf
-    resp 2:1 ../../../caldb/mos1-diag.rsp 
+    resp 2:1 ../../../caldb/mos1-diag.rsp
     arf 2:1 none
 
     # source 1 (model 1) folds through resp/arf 1:2 to fit data (:2)
@@ -1807,8 +1807,8 @@ rmfgen, arfgen, detmap, etc.
     # source 3 (model 3) folds through resp/arf 3:2 to fit data (:2)
 
     data 2:2 mos1S001-src.pi
-    data 2:2 mos1S001-src-grp50.pi 
-    resp 2:2 ../../../caldb/mos1-diag.rsp 
+    data 2:2 mos1S001-src-grp50.pi
+    resp 2:2 ../../../caldb/mos1-diag.rsp
     arf 2:2 none
     resp 3:2 mos1S001-src.rmf
     arf 3:2 mos1S001-src.arf
@@ -1849,28 +1849,28 @@ Looks pretty good, I'd say.
     Model Model Component  Parameter  Unit     Value
      par  comp
                                Data group: 1
-       1    1   gaussian   LineE      keV      1.49016      +/-  1.85407E-03  
+       1    1   gaussian   LineE      keV      1.49016      +/-  1.85407E-03
        2    1   gaussian   Sigma      keV      0.0          frozen
-       3    1   gaussian   norm                5.81723E-05  +/-  2.45807E-06  
-       4    2   gaussian   LineE      keV      1.85002      +/-  1.07660E-02  
+       3    1   gaussian   norm                5.81723E-05  +/-  2.45807E-06
+       4    2   gaussian   LineE      keV      1.85002      +/-  1.07660E-02
        5    2   gaussian   Sigma      keV      0.0          frozen
-       6    2   gaussian   norm                1.07773E-05  +/-  2.73666E-06  
-       7    3   gaussian   LineE      keV      1.48910      +/-  1.04283E-02  
+       6    2   gaussian   norm                1.07773E-05  +/-  2.73666E-06
+       7    3   gaussian   LineE      keV      1.48910      +/-  1.04283E-02
        8    3   gaussian   Sigma      keV      0.0          frozen
        9    3   gaussian   norm                0.0          frozen
-      10    4   gaussian   LineE      keV      7.45584      +/-  2.40032E-02  
+      10    4   gaussian   LineE      keV      7.45584      +/-  2.40032E-02
       11    4   gaussian   Sigma      keV      0.0          frozen
       12    4   gaussian   norm                0.0          frozen
-      13    5   gaussian   LineE      keV      5.34317      +/-  4.50433E-02  
+      13    5   gaussian   LineE      keV      5.34317      +/-  4.50433E-02
       14    5   gaussian   Sigma      keV      0.0          frozen
       15    5   gaussian   norm                0.0          frozen
-      16    6   gaussian   LineE      keV      8.04000      +/-  4.60735E-03  
+      16    6   gaussian   LineE      keV      8.04000      +/-  4.60735E-03
       17    6   gaussian   Sigma      keV      0.0          frozen
       18    6   gaussian   norm                0.0          frozen
-      19    7   gaussian   LineE      keV      8.58980      +/-  3.91053E-02  
+      19    7   gaussian   LineE      keV      8.58980      +/-  3.91053E-02
       20    7   gaussian   Sigma      keV      0.0          frozen
       21    7   gaussian   norm                0.0          frozen
-      22    8   gaussian   LineE      keV      8.85013      +/-  2.37674E-02  
+      22    8   gaussian   LineE      keV      8.85013      +/-  2.37674E-02
       23    8   gaussian   Sigma      keV      0.0          frozen
       24    8   gaussian   norm                0.0          frozen
                                Data group: 2
@@ -1907,22 +1907,22 @@ Looks pretty good, I'd say.
       54    2   gaussian   norm                0.0          frozen
       55    3   gaussian   LineE      keV      1.48910      = instr:p7
       56    3   gaussian   Sigma      keV      0.0          = instr:p8
-      57    3   gaussian   norm                8.83618E-06  +/-  1.30864E-06  
+      57    3   gaussian   norm                8.83618E-06  +/-  1.30864E-06
       58    4   gaussian   LineE      keV      7.45584      = instr:p10
       59    4   gaussian   Sigma      keV      0.0          = instr:p11
-      60    4   gaussian   norm                1.05592E-05  +/-  2.01838E-06  
+      60    4   gaussian   norm                1.05592E-05  +/-  2.01838E-06
       61    5   gaussian   LineE      keV      5.34317      = instr:p13
       62    5   gaussian   Sigma      keV      0.0          = instr:p14
-      63    5   gaussian   norm                3.52263E-06  +/-  1.36904E-06  
+      63    5   gaussian   norm                3.52263E-06  +/-  1.36904E-06
       64    6   gaussian   LineE      keV      8.04000      = instr:p16
       65    6   gaussian   Sigma      keV      0.0          = instr:p17
-      66    6   gaussian   norm                9.86675E-05  +/-  4.10001E-06  
+      66    6   gaussian   norm                9.86675E-05  +/-  4.10001E-06
       67    7   gaussian   LineE      keV      8.58980      = instr:p19
       68    7   gaussian   Sigma      keV      0.0          = instr:p20
-      69    7   gaussian   norm                1.22391E-05  +/-  3.08128E-06  
+      69    7   gaussian   norm                1.22391E-05  +/-  3.08128E-06
       70    8   gaussian   LineE      keV      8.85013      = instr:p22
       71    8   gaussian   Sigma      keV      0.0          = instr:p23
-      72    8   gaussian   norm                2.50312E-05  +/-  3.63480E-06  
+      72    8   gaussian   norm                2.50312E-05  +/-  3.63480E-06
     ________________________________________________________________________
 
 
@@ -1931,8 +1931,8 @@ Looks pretty good, I'd say.
     Model Model Component  Parameter  Unit     Value
      par  comp
                                Data group: 1
-       1    1   powerlaw   PhoIndex            0.519159     +/-  1.80841E-02  
-       2    1   powerlaw   norm                4.25692E-02  +/-  1.30967E-03  
+       1    1   powerlaw   PhoIndex            0.519159     +/-  1.80841E-02
+       2    1   powerlaw   norm                4.25692E-02  +/-  1.30967E-03
     ________________________________________________________________________
 
 
@@ -1941,8 +1941,8 @@ Looks pretty good, I'd say.
     Model Model Component  Parameter  Unit     Value
      par  comp
                                Data group: 2
-       1    1   powerlaw   PhoIndex            0.507269     +/-  1.78046E-02  
-       2    1   powerlaw   norm                4.05707E-02  +/-  1.25785E-03  
+       1    1   powerlaw   PhoIndex            0.507269     +/-  1.78046E-02
+       2    1   powerlaw   norm                4.05707E-02  +/-  1.25785E-03
     ________________________________________________________________________
 
 
@@ -1951,8 +1951,8 @@ Looks pretty good, I'd say.
     Model Model Component  Parameter  Unit     Value
      par  comp
                                Data group: 3
-       1    1   powerlaw   PhoIndex            0.762193     +/-  2.69742E-02  
-       2    1   powerlaw   norm                7.68172E-02  +/-  2.86196E-03  
+       1    1   powerlaw   PhoIndex            0.762193     +/-  2.69742E-02
+       2    1   powerlaw   norm                7.68172E-02  +/-  2.86196E-03
     ________________________________________________________________________
 
 
@@ -1966,16 +1966,16 @@ Looks pretty good, I'd say.
        3    3   apec       kT         keV      1.00000      frozen
        4    3   apec       Abundanc            1.00000      frozen
        5    3   apec       Redshift            0.0          frozen
-       6    3   apec       norm                1.57651E-05  +/-  6.96728E-06  
+       6    3   apec       norm                1.57651E-05  +/-  6.96728E-06
        7    4   phabs      nH         10^22    1.00000      frozen
        8    5   powerlaw   PhoIndex            1.40000      frozen
-       9    5   powerlaw   norm                7.99979E-15  +/-  1.56934E-05  
+       9    5   powerlaw   norm                7.99979E-15  +/-  1.56934E-05
       10    6   apec       kT         keV      0.300000     frozen
       11    6   apec       Abundanc            1.00000      frozen
       12    6   apec       Redshift            0.0          frozen
-      13    6   apec       norm                1.58997E-03  +/-  4.04653E-04  
+      13    6   apec       norm                1.58997E-03  +/-  4.04653E-04
                                Data group: 2
-      14    1   constant   factor              1.11725      +/-  0.228343     
+      14    1   constant   factor              1.11725      +/-  0.228343
       15    2   constant   factor              1.00000      frozen
       16    3   apec       kT         keV      1.00000      = xrb:p3
       17    3   apec       Abundanc            1.00000      = xrb:p4
@@ -1989,7 +1989,7 @@ Looks pretty good, I'd say.
       25    6   apec       Redshift            0.0          = xrb:p12
       26    6   apec       norm                1.58997E-03  = xrb:p13
                                Data group: 3
-      27    1   constant   factor              0.411642     +/-  9.18809E-02  
+      27    1   constant   factor              0.411642     +/-  9.18809E-02
       28    2   constant   factor              1.00000      frozen
       29    3   apec       kT         keV      1.00000      = xrb:p3
       30    3   apec       Abundanc            1.00000      = xrb:p4
@@ -2008,7 +2008,7 @@ Looks pretty good, I'd say.
     Fit statistic : Chi-Squared =         664.01 using 593 PHA bins.
 
     Test statistic : Chi-Squared =         664.01 using 593 PHA bins.
-     Reduced chi-squared =         1.1732 for    566 degrees of freedom 
+     Reduced chi-squared =         1.1732 for    566 degrees of freedom
      Null hypothesis probability =   2.720152e-03
     XSPEC12>pl ld
 
@@ -2112,7 +2112,7 @@ needed.  Intensities, and ratios of lines, are definitely not the same.
   Probably, similar line but energy adjusted due to presence of remaining
   electrons or something...
 
-  IF the photons/particles that induce fluorescent emission are predominantly 
+  IF the photons/particles that induce fluorescent emission are predominantly
   NOT focused down the telescope boresight, then it should be easy to
   characterize lines regardless of sky position (barring obscenely bright
   things like Cyg X-1 or whatever).
@@ -2345,18 +2345,18 @@ Fit 0087940201, all 3 instruments, background spectrum, using `back.xcm` then
 invoking back 1 none, back 2 none, back 3 none to discard QPBs.
 
     Test statistic : Chi-Squared =         696.33 using 612 PHA bins.
-     Reduced chi-squared =         1.1883 for    586 degrees of freedom 
+     Reduced chi-squared =         1.1883 for    586 degrees of freedom
      Null hypothesis probability =   1.109445e-03
 
     Test statistic : Chi-Squared =         647.76 using 612 PHA bins.
-     Reduced chi-squared =         1.1054 for    586 degrees of freedom 
+     Reduced chi-squared =         1.1054 for    586 degrees of freedom
      Null hypothesis probability =   3.890180e-02
 
 
 1. Fit with background (QPB) present
 
     Test statistic : Chi-Squared =         170.29 using 169 PHA bins.
-     Reduced chi-squared =         1.0846 for    157 degrees of freedom 
+     Reduced chi-squared =         1.0846 for    157 degrees of freedom
      Null hypothesis probability =   2.215537e-01
 
     ========================================================================
@@ -2365,17 +2365,17 @@ invoking back 1 none, back 2 none, back 3 none to discard QPBs.
      par  comp
        1    1   gaussian   LineE      keV      1.49000      frozen
        2    1   gaussian   Sigma      keV      0.0          frozen
-       3    1   gaussian   norm                5.45958E-05  +/-  3.57696E-06  
+       3    1   gaussian   norm                5.45958E-05  +/-  3.57696E-06
        4    2   gaussian   LineE      keV      1.75000      frozen
        5    2   gaussian   Sigma      keV      0.0          frozen
-       6    2   gaussian   norm                2.71880E-06  +/-  2.37192E-06  
+       6    2   gaussian   norm                2.71880E-06  +/-  2.37192E-06
 
     ========================================================================
     Model spm1:powerlaw<1> Source No.: 3   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   powerlaw   PhoIndex            0.472479     +/-  2.52238E-02  
-       2    1   powerlaw   norm                3.93902E-02  +/-  2.12869E-03  
+       1    1   powerlaw   PhoIndex            0.472479     +/-  2.52238E-02
+       2    1   powerlaw   norm                3.93902E-02  +/-  2.12869E-03
 
     ========================================================================
     Model swcx:gaussian<1> + gaussian<2> Source No.: 6   Active/On
@@ -2383,10 +2383,10 @@ invoking back 1 none, back 2 none, back 3 none to discard QPBs.
      par  comp
        1    1   gaussian   LineE      keV      0.560000     frozen
        2    1   gaussian   Sigma      keV      0.0          frozen
-       3    1   gaussian   norm                4.23113E-05  +/-  1.88449E-05  
+       3    1   gaussian   norm                4.23113E-05  +/-  1.88449E-05
        4    2   gaussian   LineE      keV      0.650000     frozen
        5    2   gaussian   Sigma      keV      0.0          frozen
-       6    2   gaussian   norm                7.37661E-06  +/-  9.13970E-06  
+       6    2   gaussian   norm                7.37661E-06  +/-  9.13970E-06
 
     ========================================================================
     Model xrb:constant<1>*constant<2>(apec<3> + phabs<4>(powerlaw<5> + apec<6>)) Source No.: 1   Active/On
@@ -2394,23 +2394,23 @@ invoking back 1 none, back 2 none, back 3 none to discard QPBs.
      par  comp
        1    1   constant   factor              1.00000      frozen
        2    2   constant   factor              1.00000      frozen
-       3    3   apec       kT         keV      0.800876     +/-  9.67488E-02  
+       3    3   apec       kT         keV      0.800876     +/-  9.67488E-02
        4    3   apec       Abundanc            1.00000      frozen
        5    3   apec       Redshift            0.0          frozen
-       6    3   apec       norm                2.71665E-05  +/-  8.04079E-06  
-       7    4   phabs      nH         10^22    1.85473      +/-  0.601081     
+       6    3   apec       norm                2.71665E-05  +/-  8.04079E-06
+       7    4   phabs      nH         10^22    1.85473      +/-  0.601081
        8    5   powerlaw   PhoIndex            1.40000      frozen
-       9    5   powerlaw   norm                1.49479E-08  +/-  3.56009E-05  
-      10    6   apec       kT         keV      0.344765     +/-  0.106170     
+       9    5   powerlaw   norm                1.49479E-08  +/-  3.56009E-05
+      10    6   apec       kT         keV      0.344765     +/-  0.106170
       11    6   apec       Abundanc            1.00000      frozen
       12    6   apec       Redshift            0.0          frozen
-      13    6   apec       norm                5.40461E-03  +/-  7.67162E-03  
+      13    6   apec       norm                5.40461E-03  +/-  7.67162E-03
 
 
 2. Fit after calling `back none` to remove QPB.
 
     Test statistic : Chi-Squared =         175.28 using 169 PHA bins.
-     Reduced chi-squared =         1.1164 for    157 degrees of freedom 
+     Reduced chi-squared =         1.1164 for    157 degrees of freedom
      Null hypothesis probability =   1.512035e-01
 
     ========================================================================
@@ -2419,44 +2419,44 @@ invoking back 1 none, back 2 none, back 3 none to discard QPBs.
      par  comp
        1    1   gaussian   LineE      keV      1.49000      frozen
        2    1   gaussian   Sigma      keV      0.0          frozen
-       3    1   gaussian   norm                5.41860E-05  +/-  3.63455E-06  
+       3    1   gaussian   norm                5.41860E-05  +/-  3.63455E-06
        4    2   gaussian   LineE      keV      1.75000      frozen
        5    2   gaussian   Sigma      keV      0.0          frozen
-       6    2   gaussian   norm                2.58837E-06  +/-  2.37059E-06  
+       6    2   gaussian   norm                2.58837E-06  +/-  2.37059E-06
     ...
 
     Model spm1:powerlaw<1> Source No.: 3   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   powerlaw   PhoIndex            0.439894     +/-  2.13021E-02  
-       2    1   powerlaw   norm                4.75057E-02  +/-  2.18412E-03  
+       1    1   powerlaw   PhoIndex            0.439894     +/-  2.13021E-02
+       2    1   powerlaw   norm                4.75057E-02  +/-  2.18412E-03
 
     Model swcx:gaussian<1> + gaussian<2> Source No.: 6   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
        1    1   gaussian   LineE      keV      0.560000     frozen
        2    1   gaussian   Sigma      keV      0.0          frozen
-       3    1   gaussian   norm                4.18679E-05  +/-  1.88575E-05  
+       3    1   gaussian   norm                4.18679E-05  +/-  1.88575E-05
        4    2   gaussian   LineE      keV      0.650000     frozen
        5    2   gaussian   Sigma      keV      0.0          frozen
-       6    2   gaussian   norm                6.96550E-06  +/-  9.14624E-06  
+       6    2   gaussian   norm                6.96550E-06  +/-  9.14624E-06
 
     Model xrb:constant<1>*constant<2>(apec<3> + phabs<4>(powerlaw<5> + apec<6>)) Source No.: 1   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
        1    1   constant   factor              1.00000      frozen
        2    2   constant   factor              1.00000      frozen
-       3    3   apec       kT         keV      0.805529     +/-  0.103846     
+       3    3   apec       kT         keV      0.805529     +/-  0.103846
        4    3   apec       Abundanc            1.00000      frozen
        5    3   apec       Redshift            0.0          frozen
-       6    3   apec       norm                2.53347E-05  +/-  8.01923E-06  
-       7    4   phabs      nH         10^22    1.85336      +/-  0.638269     
+       6    3   apec       norm                2.53347E-05  +/-  8.01923E-06
+       7    4   phabs      nH         10^22    1.85336      +/-  0.638269
        8    5   powerlaw   PhoIndex            1.40000      frozen
-       9    5   powerlaw   norm                1.04421E-17  +/-  3.59608E-05  
-      10    6   apec       kT         keV      0.341441     +/-  0.182041     
+       9    5   powerlaw   norm                1.04421E-17  +/-  3.59608E-05
+      10    6   apec       kT         keV      0.341441     +/-  0.182041
       11    6   apec       Abundanc            1.00000      frozen
       12    6   apec       Redshift            0.0          frozen
-      13    6   apec       norm                5.18351E-03  +/-  1.03722E-02  
+      13    6   apec       norm                5.18351E-03  +/-  1.03722E-02
 
 
 Maybe we can find an alternate way to work around this...
@@ -2530,7 +2530,7 @@ And I use adu=20 and adu<20 (PHA column in FITS files) to look at actual data.
 
     It is recommended to control the results by accumulating an image below
     20 adu after this task: this image shows the pixels where an offset shift
-    was applied (Fig.5). 
+    was applied (Fig.5).
 
 Running epchain with runepreject=Y for 0087940201 PNS003, but epreject failed
 for both OOT and regular runs.
@@ -2643,7 +2643,7 @@ Inspect rawevents01.dat.  From the epchain logging output:
 
         evselect:- selected 0 rows from the input table.
 
-BINGO.  
+BINGO.
 Aside: after epevents call (converts rawevents01.dat to events01.dat),
 epchain calls attcalc on events01.dat; this just adds X/Y columns to FITS event
 list and has no effect on ADU<20 events.
@@ -2684,12 +2684,12 @@ FLAG, OFF_COR; no PI value is assigned.
 Inspecting the ADU<20 events in DS9, I note
 * spread due to epframes randomizing position of events within pixel
   (if you count blocks, comes out about right, nearly 64 pixels)
-* a lot more events than I would expect.  Could be associated with 
+* a lot more events than I would expect.  Could be associated with
   flaring in this observation?!...
   (do we need to run soft flare filtering first?)
 
 After epevents is run, events list has added:
-    DETX, DETY, PHA_CTI, PI, PATTERN, 
+    DETX, DETY, PHA_CTI, PI, PATTERN,
 
 OK, try running process without epreject, as:
 
@@ -2716,9 +2716,9 @@ This should be pretty negligible, I think -- especially since it's just
 isolated to a few pixels, and is thus a ~1% effect.
 
 We have much bigger fish to fry.
-    
 
-    
+
+
 Tuesday 2015 December 8 -- more on epreject
 ===========================================
 
@@ -2831,7 +2831,7 @@ set symmetric limits about the Gaussian-ish distribution centered on 0).
 I observe a fair amount of noise subtraction (positive delta, red spots),
 especially on "left" CCDs (2, 3, 11, 12).  There is one REALLY bright spot on
 CCD 10, where epreject results in net addition of +200 counts.
-On some modified columns, a lot of shifting (alternating add/substract) 
+On some modified columns, a lot of shifting (alternating add/substract)
 (look like they could be readout streaks, but are not)
 
 Yes, epreject removes some noise in very soft images (0.12 to 0.20 keV), when
@@ -3311,7 +3311,7 @@ Tuesday 2015 December 22
 A few remarks on spectrum extraction runs:
 * Log messages "Spectrum file already exists" are OK.  These only occur for
   files that aren't affected by user input (observation corner data, FWC corner
-  data, attitude file atthk.fits, 
+  data, attitude file atthk.fits,
 
   I'm worried that quadrant/chip observation files, which I am not destroying
   or updating, are getting re-used without my knowledge, which would result in
@@ -3989,8 +3989,8 @@ yielding parameters:
     Model TBabs<1>*vnei<2> Source No.: 1   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   TBabs      nH         10^22    1.76700      +/-  3.11133E-02  
-       2    2   vnei       kT         keV      3.96000      +/-  0.252459     
+       1    1   TBabs      nH         10^22    1.76700      +/-  3.11133E-02
+       2    2   vnei       kT         keV      3.96000      +/-  0.252459
        3    2   vnei       H                   1.00000      frozen
        4    2   vnei       He                  1.00000      frozen
        5    2   vnei       C                   1.00000      frozen
@@ -3998,22 +3998,22 @@ yielding parameters:
        7    2   vnei       O                   1.00000      frozen
        8    2   vnei       Ne                  1.00000      frozen
        9    2   vnei       Mg                  1.00000      frozen
-      10    2   vnei       Si                  3.80658      +/-  0.104544     
-      11    2   vnei       S                   3.97469      +/-  0.205606     
+      10    2   vnei       Si                  3.80658      +/-  0.104544
+      11    2   vnei       S                   3.97469      +/-  0.205606
       12    2   vnei       Ar                  1.00000      frozen
       13    2   vnei       Ca                  1.00000      frozen
       14    2   vnei       Fe                  1.00000      frozen
       15    2   vnei       Ni                  1.00000      frozen
-      16    2   vnei       Tau        s/cm^3   1.58020E+10  +/-  5.18094E+08  
+      16    2   vnei       Tau        s/cm^3   1.58020E+10  +/-  5.18094E+08
       17    2   vnei       Redshift            0.0          frozen
-      18    2   vnei       norm                3.22627E-03  +/-  1.35549E-04  
+      18    2   vnei       norm                3.22627E-03  +/-  1.35549E-04
     ________________________________________________________________________
 
 
     Fit statistic : Chi-Squared =        2197.05 using 1278 PHA bins.
 
     Test statistic : Chi-Squared =        2197.05 using 1278 PHA bins.
-     Reduced chi-squared =        1.72724 for   1272 degrees of freedom 
+     Reduced chi-squared =        1.72724 for   1272 degrees of freedom
      Null hypothesis probability =   2.628829e-52
 
 Remarks:
@@ -4059,15 +4059,15 @@ affect fits).
 
     XSPEC12>back 1 mos1S001_bkg_sqpb.pi
     Net count rate (cts/s) for Spectrum:1  3.605e-01 +/- 8.075e-03 (36.2 % total)
-    XSPEC12>back 1 mos1S001_bkg_sqpb_arfcorr.pi 
+    XSPEC12>back 1 mos1S001_bkg_sqpb_arfcorr.pi
     Net count rate (cts/s) for Spectrum:1  1.898e-01 +/- 8.487e-03 (19.1 % total)
     XSPEC12>back 2 mos2S002_bkg_sqpb.pi
     Net count rate (cts/s) for Spectrum:2  4.106e-01 +/- 8.121e-03 (39.1 % total)
     XSPEC12>back 2 mos2S002_bkg_sqpb_arfcorr.pi
     Net count rate (cts/s) for Spectrum:2  2.011e-01 +/- 8.610e-03 (19.1 % total)
-    XSPEC12>back 3 pnS003_bkg_os_sqpb.pi 
+    XSPEC12>back 3 pnS003_bkg_os_sqpb.pi
     Net count rate (cts/s) for Spectrum:3  7.945e-01 +/- 1.615e-02 (29.6 % total)
-    XSPEC12>back 3 pnS003_bkg_os_sqpb_arfcorr.pi 
+    XSPEC12>back 3 pnS003_bkg_os_sqpb_arfcorr.pi
     Net count rate (cts/s) for Spectrum:3  2.855e-01 +/- 1.705e-02 (10.7 % total)
 
 OK, much less dramatic change after applying energy ranges
@@ -4075,15 +4075,15 @@ OK, much less dramatic change after applying energy ranges
 
     XSPEC12>back 1 mos1S001_bkg_sqpb.pi
     Net count rate (cts/s) for Spectrum:1  3.831e-01 +/- 7.583e-03 (42.1 % total)
-    XSPEC12>back 1 mos1S001_bkg_sqpb_arfcorr.pi 
+    XSPEC12>back 1 mos1S001_bkg_sqpb_arfcorr.pi
     Net count rate (cts/s) for Spectrum:1  2.408e-01 +/- 7.949e-03 (26.4 % total)
     XSPEC12>back 2 mos2S002_bkg_sqpb.pi
     Net count rate (cts/s) for Spectrum:2  3.988e-01 +/- 7.656e-03 (42.0 % total)
     XSPEC12>back 2 mos2S002_bkg_sqpb_arfcorr.pi
     Net count rate (cts/s) for Spectrum:2  2.180e-01 +/- 8.104e-03 (22.9 % total)
-    XSPEC12>back 3 pnS003_bkg_os_sqpb.pi 
+    XSPEC12>back 3 pnS003_bkg_os_sqpb.pi
     Net count rate (cts/s) for Spectrum:3  1.068e+00 +/- 1.265e-02 (54.4 % total)
-    XSPEC12>back 3 pnS003_bkg_os_sqpb_arfcorr.pi 
+    XSPEC12>back 3 pnS003_bkg_os_sqpb_arfcorr.pi
     Net count rate (cts/s) for Spectrum:3  8.262e-01 +/- 1.318e-02 (42.0 % total)
 
 First fit, abund=1 (solar) for all.
@@ -4092,8 +4092,8 @@ First fit, abund=1 (solar) for all.
     Model TBabs<1>*vnei<2> Source No.: 1   Active/On
     Model Model Component  Parameter  Unit     Value
      par  comp
-       1    1   TBabs      nH         10^22    2.20476      +/-  5.30039E-02  
-       2    2   vnei       kT         keV      1.35985      +/-  9.08687E-02  
+       1    1   TBabs      nH         10^22    2.20476      +/-  5.30039E-02
+       2    2   vnei       kT         keV      1.35985      +/-  9.08687E-02
        3    2   vnei       H                   1.00000      frozen
        4    2   vnei       He                  1.00000      frozen
        5    2   vnei       C                   1.00000      frozen
@@ -4101,22 +4101,22 @@ First fit, abund=1 (solar) for all.
        7    2   vnei       O                   1.00000      frozen
        8    2   vnei       Ne                  1.00000      frozen
        9    2   vnei       Mg                  1.00000      frozen
-      10    2   vnei       Si                  4.23944      +/-  0.152323     
-      11    2   vnei       S                   4.69722      +/-  0.313183     
+      10    2   vnei       Si                  4.23944      +/-  0.152323
+      11    2   vnei       S                   4.69722      +/-  0.313183
       12    2   vnei       Ar                  1.00000      frozen
       13    2   vnei       Ca                  1.00000      frozen
       14    2   vnei       Fe                  1.00000      frozen
       15    2   vnei       Ni                  1.00000      frozen
-      16    2   vnei       Tau        s/cm^3   2.24616E+10  +/-  1.89956E+09  
+      16    2   vnei       Tau        s/cm^3   2.24616E+10  +/-  1.89956E+09
       17    2   vnei       Redshift            0.0          frozen
-      18    2   vnei       norm                6.08443E-03  +/-  5.94876E-04  
+      18    2   vnei       norm                6.08443E-03  +/-  5.94876E-04
     ________________________________________________________________________
 
 
     Fit statistic : Chi-Squared =        2680.18 using 1278 PHA bins.
 
     Test statistic : Chi-Squared =        2680.18 using 1278 PHA bins.
-     Reduced chi-squared =        2.10706 for   1272 degrees of freedom 
+     Reduced chi-squared =        2.10706 for   1272 degrees of freedom
      Null hypothesis probability =  1.695962e-102
 
 BIG difference!
@@ -4309,7 +4309,7 @@ CURIOUSLY, pn-filter doesn't do this...  pn-filter does create an empty
 	Typically run as:
 		withoutoftime=Y keepintermediate=raw
 	then run a second time as:
-		withoutoftime=N (is default and can thus be omitted) 
+		withoutoftime=N (is default and can thus be omitted)
 
 	Result:
 		P0551000201OBX000ATTTSR0000.FIT		atthkgen output
