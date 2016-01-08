@@ -3692,6 +3692,9 @@ It would be good to apply this correction.
 
 specmeth, to be renamed.
 
+(edit, jan 7 2016: while setting this up, I was uncertain exactly how to
+propagate errors in bkg subtraction -- revisit this)
+
 
 Tuesday-Wednesday 2016 January 5-6 -- plan corrections, get FWC spectra
 =======================================================================
@@ -3797,6 +3800,11 @@ Identical error for arfgen, despite the fact that I set "modeleffarea=no" and
 Can I create a response matrix using the spectrumset for the current
 observation?  It should depend only on the region (in detector coordinates) and
 the detector map weighting.  From a quick look at XSPEC, this seems reasonable.
+
+It doesn't have to be perfect, and it won't be perfect, because we're using
+these files to estimate ratios in order to better fit backgrounds to be
+subtracted from / modeled out of the actual data.
+
 Try again using the actual observation spectrumset...
 
     atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; specbackgrp_0551000201 src; specbackgrp_0551000201 bkg' >& 20160107_specfwctest_0551000201.log &
@@ -3805,35 +3813,355 @@ Try again using the actual observation spectrumset...
     atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' >& 20160107_specfwctest_0087940201.log &
     [1] 14673
 
-        (failed 2x more due to bugs in pn-spectra-mod, fixed and re-ran)
-
-I think this will be fine, frankly.  It doesn't have to be perfect, and it
-won't be perfect, because we're using these files to estimate ratios in order
-to better fit backgrounds to be subtracted from / modeled out of the actual
-data.
+Failed 2x more due to bugs in pn-spectra-mod, fixed and re-ran as needed.
 
 
-## Implement OOT subtraction / count rate scaling for FWC data
+Thursday 2016 January 7 -- more changes to fit/pipeline procedure
+=================================================================
 
-This is necessary to correctly estimate instrumental line normalizations.
+Inspect new logs for mos-spectra/pn-spectra and mos_back/pn_back.
+Added error check script, and found yet another bug in pn-spectra-mod.  Made
+fix, re-ran script.  Errors look good.
 
-Do OOT subtraction myself; this is normally done in pn_back
-(base off of `xmmsas_20141104_1833/packages/esas/src/pn_back_mod.f90`).
-Added to `specbackgrp_*` scripts for now.
+## Preliminary test of FWC line fitting procedure
 
-(IN WORKS ON specbackgrp_0551000201)
+All done on 0087940201 mos1S001 exposure.
+
+Fit FWC in bkg region with a broken power law + 2 gaussians (ignore <0.3keV),
+using FWC-weighted RMF, no ARF.  This yields...
+    Al line (1.49 keV): norm=3.89662E-02
+    Si line (1.75 keV): norm=7.31105E-03
+with FWC ARF on INSTR LINES ONLY:
+    Al line (1.49 keV): norm=4.67590E-02
+    Si line (1.75 keV): norm=8.68996E-03
+    (note that ARF actually requires LARGER normalization; I assume this is
+     because ARF without vignetting/filter only models detector QE, basically)
+The fit with FWC arf looks kind of weird -- makes it more troublesome to model
+the QPB continuum (used only to get the lines, so we discard broken power law
+parameters after)
+
+Now, fit the observation background spectrum.  NOTE: remember to remove ARF for
+instrumental lines.
+with default ARF (mos1S001-bkg.arf):
+    Al line (1.49 keV): norm=9.34806E-05
+    Si line (1.75 keV): norm=1.41575E-05
+    (obviously leads to incorrect normalizations)
+no ARF:
+    Al line (1.49 keV): norm=2.75227E-02
+    Si line (1.75 keV): norm=3.78328E-03
+WITH FWC ARF (mos1S001-bkg-ff.arf):
+    Al line (1.49 keV): norm=3.29999E-02
+    Si line (1.75 keV): norm=4.48052E-03
+
+Compare ratios:
+    FWC fitted line ratio (without ARF): 5.33
+    FWC fitted line ratio (with ARF on lines only): 5.38
+    Obs fitted line ratio (without ARF): 6.60
+    Obs fitted line ratio (with FWC ARF): 7.36
+Lots of variation.  Unsurprising, given lots of APEC and soft proton emission.
+
+What happens if we fix the line ratio to FWC value of 5.33?
+  without ARF: Resulting chi-squared (334 vs. 333) is basically the same!
+    If we fix this ratio, the fit "adjusts".  Clear residual at Al line peak in
+    either case, regardless of fixing ratio or not.
+  with FWC ARF: chi-squared jumps from 333.7 to 335.8.  Basically no
+  difference!
+
+  Note I am letting the following parameters float:
+  * apec kT (both cool and hot components)
+  * phabs nH
+  * soft proton power law index
+  * normalizations for all components (instr lines, swpc, sp,
+    apec/powerlaw/apec)
+  Total: 11 free parameters, if instr line ratio is fixed.
+
+  With instr line ratio fixed, with FWC ARF, and some parameter twiddling,
+  adding further SWCX components only marginally improves fit.
+  E.g., dropping chi-squared to 327 after adding two C VI lines at 0.37/0.48
+  keV and allowing SWCX line energies to float.
+  Really marginal, not physically meaningful.
+
+What happens if we fix the absolute normalizations (ARF none)?
+  Fit worsens significantly (chi-squared jumps to ~400?).
+  We simply overshoot the line; no amount of adjustment can fix this except for
+  decreasing soft proton power law norm, which would cause fit to fail from
+  above 2 keV, so that's not an option.
+
+Now, fit FWC in src region
+    Al line (1.49 keV): norm=2.24813E-02
+    Si line (1.75 keV): norm=8.14144E-03
+    Ratio is: 2.7612
+Yep, big difference.
+
+Verdict: yes, use line ratios to inform fits.  Use FWC-weighted ARF.
+Don't use normalizations; I think the PN lines + MOS Al lines are strong enough
+to be better determined from actual data.  But consider:
+1. maybe let line ratios float, parameterized by constant term
+2. maybe use and freeze normalizations (also freezing ratio), then allow
+   absolute normalization to vary via constant term.
+
+
+## Skip OOT subtraction / count rate scaling for FWC data
+
+OOT subtraction is normally done in pn_back
+(see `xmmsas_20141104_1833/packages/esas/src/pn_back_mod.f90`).
+This would be necessary to correctly estimate instrumental line normalizations.
+
+But, quickly comparing spectra, including those not processed by pn_back,
+suggests that spectra are already correctly scaled.
+This confuses me, because `pn_back` scales "-os" spectra to per-second and
+per-arcminute, but I don't see any reason that the spectra extracted from
+evselect calls in `pn-spectra` should be scaled this way.
+
+  -obj.pi in pn-spectra is created normally, typical call to evselect and
+    backscale.  File has 4096 channels (0-4095) with counts column.
+    BACKSCAL = 183399504
+    EXPOSURE = 1.7959E+04 (weighted live time of CCDs)
+  -obj-oot.pi in pn-spectra is basically the same.
+    4096 channels
+    BACKSCAL = 183399504
+    EXPOSURE = 1.92951073607287E+04 (weighted live time of CCDs)
+        (differs from non-oot file by ~6.9%)
+  -obj-os.pi from `pn_back` is markedly NOT the same.  Data stored as count
+    rate (counts/second) + stat err for 4096 channels.
+    BACKSCAL = 1.8340E+08
+    EXPOSURE = 1.7959E+04  (same as -obj.pi)
+
+OK.  Now, why do the counts appear fairly consistent in XSPEC?
+Review source code `pn_back_mod.f90`.
+
+    obj_cnts = spec - [ ootsca * spec_oot * (obj_expo / expo_oot)
+                            * (obj_back / back_oot) ]
+    obj_cnts *= obj_cnts / obj_expo
+
+    resulting formula is:
+
+        spec/obj_expo - [ootsca * (spec_oot /expo_oot) * (obj_back / back_oot)]
+
+        (i.e., take spectrum counts and subtract OOT counts, scaled by
+        exposure/backscal AND OOT scaling factor.  Result is still counts.)
+
+    then convert obj_cnts to a count rate. (scale both cnts + stat-err by
+        obj_expo)
+
+ANSWER: amsca factor is ONLY used for the per-quadrant OOT subtraction.  OK.
+
+
+Upon some reflection, OOT subtraction doesn't matter, because we're looking at:
+1. 1% to 6% correction
+2. uniform shift across energies, which would not affect line ratios.
+
+The normalizations will be slightly off.  But we are tacking on a constant
+factor to deal even larger discrepancies between observation/FWC data, and it's
+not likely we're going to report or use this constant anywhere.  So as long as
+we are internally aware that the normalizations from FWC data are not OOT
+corrected, that's OK.
+
+So, completely skip this to save time (a few hours mucking with FTOOLs).
+
+
+## Implement ARF correction by taking mean ARF ratio in some energy band
+
+NOW, before doing this, you should actually perform fits and see if they make
+any difference.  Compare using a set of background-subtracted fits as follows.
+
+### fit without "ARF correction" to bkg-subtracted spectra
+
+    data 1:1 mos1S001_src_sqpb.pi
+    data 1:2 mos2S002_src_sqpb.pi
+    data 1:3 pnS003_src_os_sqpb.pi
+    # backgrounds are _bkg_sqpb.pi (and _bkg_os_sqpb.pi)
+
+    cpd /xw
+    setplot en
+
+    # ignore 1:1-22,398-414 2:1-24,413-431 3:1-29,545-673
+    ignore 1:**-0.3,11.0-**
+    ignore 2:**-0.3,11.0-**
+    ignore 3:**-0.4,11.0-**
+
+    abund wilm
+    model TBabs*vnei
+
+yielding parameters:
+
+    ========================================================================
+    Model TBabs<1>*vnei<2> Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   TBabs      nH         10^22    1.76700      +/-  3.11133E-02  
+       2    2   vnei       kT         keV      3.96000      +/-  0.252459     
+       3    2   vnei       H                   1.00000      frozen
+       4    2   vnei       He                  1.00000      frozen
+       5    2   vnei       C                   1.00000      frozen
+       6    2   vnei       N                   1.00000      frozen
+       7    2   vnei       O                   1.00000      frozen
+       8    2   vnei       Ne                  1.00000      frozen
+       9    2   vnei       Mg                  1.00000      frozen
+      10    2   vnei       Si                  3.80658      +/-  0.104544     
+      11    2   vnei       S                   3.97469      +/-  0.205606     
+      12    2   vnei       Ar                  1.00000      frozen
+      13    2   vnei       Ca                  1.00000      frozen
+      14    2   vnei       Fe                  1.00000      frozen
+      15    2   vnei       Ni                  1.00000      frozen
+      16    2   vnei       Tau        s/cm^3   1.58020E+10  +/-  5.18094E+08  
+      17    2   vnei       Redshift            0.0          frozen
+      18    2   vnei       norm                3.22627E-03  +/-  1.35549E-04  
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =        2197.05 using 1278 PHA bins.
+
+    Test statistic : Chi-Squared =        2197.05 using 1278 PHA bins.
+     Reduced chi-squared =        1.72724 for   1272 degrees of freedom 
+     Null hypothesis probability =   2.628829e-52
+
+Remarks:
+* from the manual fitting, both Si and S must be free to achieve a good fit.
+* the kT value is still quite high, which Pat was surprised by before
+* significant residual at soft energies for both MOS and PN (<0.8 keV)
+* large absolute residuals in MOS and PN associated w/instrumental line subtraction
+
+### fit with "ARF correction" to bkg-subtracted spectra
+
+NOW, try again by applying arf factor to backgrounds via mathpha, before
+fitting.
+
+From my script `arf_assess.py`, I estimate the ratios of data between 0-5keV
+by eyeballing plots.  (that is, ratio of src-region ARF / bkg-region ARF)
+    MOS1: 1.25
+    MOS2: 1.32
+    PN: 1.27
+ARF discrepancy increases further at high energies, but we have almost no
+signal there anyways due to the really high background.  So I expect ARF
+correction for <5keV to suffice.
+
+    # Only set backscal and exposure, since these are the only two that matter
+    # for XSPEC backgrounds
+    # Careful; exposure=CALC is incorrect here.
+
+    mathpha expr="1.25 * mos1S001_bkg_sqpb.pi" outfil="mos1S001_bkg_sqpb_arfcorr.pi" \
+        units=C exposure="mos1S001_bkg_sqpb.pi" backscal='%' areascal='%' \
+        properr='yes' ncomments=0
+
+    mathpha expr="1.32 * mos2S002_bkg_sqpb.pi" outfil="mos2S002_bkg_sqpb_arfcorr.pi" \
+        units=C exposure="mos2S002_bkg_sqpb.pi" backscal='%' areascal='%' \
+        properr='yes' ncomments=0
+
+    mathpha expr="1.27 * pnS003_bkg_os_sqpb.pi" outfil="pnS003_bkg_os_sqpb_arfcorr.pi" \
+        units=R exposure="pnS003_bkg_os_sqpb.pi" backscal='%' areascal='%' \
+        properr='yes' ncomments=0
+
+UNCOVERED minor bug in spectrum subtraction script (specmeth); set units=R for
+PN exposures!  Don't fix immediately, because it will require me to restart
+this short analysis (probably affects error calculation though, which does
+affect fits).
+
+    XSPEC12>back 1 mos1S001_bkg_sqpb.pi
+    Net count rate (cts/s) for Spectrum:1  3.605e-01 +/- 8.075e-03 (36.2 % total)
+    XSPEC12>back 1 mos1S001_bkg_sqpb_arfcorr.pi 
+    Net count rate (cts/s) for Spectrum:1  1.898e-01 +/- 8.487e-03 (19.1 % total)
+    XSPEC12>back 2 mos2S002_bkg_sqpb.pi
+    Net count rate (cts/s) for Spectrum:2  4.106e-01 +/- 8.121e-03 (39.1 % total)
+    XSPEC12>back 2 mos2S002_bkg_sqpb_arfcorr.pi
+    Net count rate (cts/s) for Spectrum:2  2.011e-01 +/- 8.610e-03 (19.1 % total)
+    XSPEC12>back 3 pnS003_bkg_os_sqpb.pi 
+    Net count rate (cts/s) for Spectrum:3  7.945e-01 +/- 1.615e-02 (29.6 % total)
+    XSPEC12>back 3 pnS003_bkg_os_sqpb_arfcorr.pi 
+    Net count rate (cts/s) for Spectrum:3  2.855e-01 +/- 1.705e-02 (10.7 % total)
+
+OK, much less dramatic change after applying energy ranges
+(MOS 0.3-11 keV, PN 0.4-11keV as above)
+
+    XSPEC12>back 1 mos1S001_bkg_sqpb.pi
+    Net count rate (cts/s) for Spectrum:1  3.831e-01 +/- 7.583e-03 (42.1 % total)
+    XSPEC12>back 1 mos1S001_bkg_sqpb_arfcorr.pi 
+    Net count rate (cts/s) for Spectrum:1  2.408e-01 +/- 7.949e-03 (26.4 % total)
+    XSPEC12>back 2 mos2S002_bkg_sqpb.pi
+    Net count rate (cts/s) for Spectrum:2  3.988e-01 +/- 7.656e-03 (42.0 % total)
+    XSPEC12>back 2 mos2S002_bkg_sqpb_arfcorr.pi
+    Net count rate (cts/s) for Spectrum:2  2.180e-01 +/- 8.104e-03 (22.9 % total)
+    XSPEC12>back 3 pnS003_bkg_os_sqpb.pi 
+    Net count rate (cts/s) for Spectrum:3  1.068e+00 +/- 1.265e-02 (54.4 % total)
+    XSPEC12>back 3 pnS003_bkg_os_sqpb_arfcorr.pi 
+    Net count rate (cts/s) for Spectrum:3  8.262e-01 +/- 1.318e-02 (42.0 % total)
+
+First fit, abund=1 (solar) for all.
+
+    ========================================================================
+    Model TBabs<1>*vnei<2> Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   TBabs      nH         10^22    2.20476      +/-  5.30039E-02  
+       2    2   vnei       kT         keV      1.35985      +/-  9.08687E-02  
+       3    2   vnei       H                   1.00000      frozen
+       4    2   vnei       He                  1.00000      frozen
+       5    2   vnei       C                   1.00000      frozen
+       6    2   vnei       N                   1.00000      frozen
+       7    2   vnei       O                   1.00000      frozen
+       8    2   vnei       Ne                  1.00000      frozen
+       9    2   vnei       Mg                  1.00000      frozen
+      10    2   vnei       Si                  4.23944      +/-  0.152323     
+      11    2   vnei       S                   4.69722      +/-  0.313183     
+      12    2   vnei       Ar                  1.00000      frozen
+      13    2   vnei       Ca                  1.00000      frozen
+      14    2   vnei       Fe                  1.00000      frozen
+      15    2   vnei       Ni                  1.00000      frozen
+      16    2   vnei       Tau        s/cm^3   2.24616E+10  +/-  1.89956E+09  
+      17    2   vnei       Redshift            0.0          frozen
+      18    2   vnei       norm                6.08443E-03  +/-  5.94876E-04  
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =        2680.18 using 1278 PHA bins.
+
+    Test statistic : Chi-Squared =        2680.18 using 1278 PHA bins.
+     Reduced chi-squared =        2.10706 for   1272 degrees of freedom 
+     Null hypothesis probability =  1.695962e-102
+
+BIG difference!
+* chi-squared is worse (2200 -> 2700); red chi-squared (1.73 -> 2.11)
+  But, they're both bad enough that I'm willing to live with this.
+  In any case, the arf-correction is physically motivated.
+  And I think a large effect is the high-energy residuals, which are basically
+  consistent with the signal being totally washed by background.
+  IF I change fit to exclude all data above 8 keV, chi-squared improves significantly!
+  (without arf correction: chisqr = 1903, redchisqr = 1.69;
+   with arf correction: chisqr = 2055, redchisqr = 1.83)
+* Higher absorption (nH 1.77 -> 2.20)
+* Lower temperature (kT 3.96 -> 1.36)
+* Increased Si/S abundance (~3.8/4.0 to 4.2/4.7)
+* Slightly larger ionization age (tau 1.58E+10 -> 2.25E+10)
+* 2x larger norm for vnei (3.2E-03 -> 6.1E-03)
+  I assume this helps offset the temperature/absorption changes.
+
+Verdict: yes, this is an important correction; in fact I wish I could apply
+this correction as a function of energy/channel space.
+And, why not?  If I'm making such a crude correction, I can take it one step
+further by using the EBOUNDS table in the RMF file !!
+
+OK -- defer implementing this correction until discussion with Pat.
+Meanwhile, have fitting scripts working (incl. fix background subtraction bug, plots set up
+* bug fix for specmeth (units for PN; double check error prop... esp. if we do use)
+* SWPC spectrum cut
+* for rescaling bkg normalizations, need to scale by both EXPOSURE AND BACKSCAL.
+  make that correction
+
+
+
+
+Major test: fakeit/dummy with vnei and tbabs just to build intuition!!!
 
 Several variants to test:
 1. extract line normalizations/ratios using
    - no arf
-   - arf without effarea/filter
+   - {arf without effarea/filter} + {no arf for bkn power law}
 2. for PN, perform a standard fit using
    - non-detmapped RMF
    - detmapped RMF
    (if this works, also use a detmap for pnS003-obj-ff.rmf)
 
 
-## Implement ARF correction by taking mean ARF ratio in some energy band
 
 
 
@@ -3842,6 +4170,13 @@ Standing TO-DOs
 
 ESAS: vet and submit bug fix for MOS1 CCD4 strip removal; inquire about
 detector map for PN RMF...
+
+Verdict: yes, use line ratios to inform fits.  Use FWC-weighted ARF.
+Don't use normalizations; I think the PN lines + MOS Al lines are strong enough
+to be better determined from actual data.  But consider:
+1. maybe let line ratios float, parameterized by constant term
+2. maybe use and freeze normalizations (also freezing ratio), then allow
+   absolute normalization to vary via constant term.
 
 1. check temporal variation of instrumental lines in (a) FWC data or (b) corner
    data from DB of public observations

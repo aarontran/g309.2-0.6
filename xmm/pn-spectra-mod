@@ -775,7 +775,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
   &run_and_print($comm);
 
   $comm="backscale spectrumset=".$specfile_ff_oot.
-    "badpixlocation=".$detprefoot." withbadpixcorr=yes ";
+    " badpixlocation=".$detprefoot." withbadpixcorr=yes ";
   &run_and_print($comm);
 
   # Force $specfile temporarily; cannot use FWC spectrum for RMF/ARF extraction

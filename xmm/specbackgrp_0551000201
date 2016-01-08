@@ -43,7 +43,7 @@ cd "${XMM_PATH}/${OBSID}/odf/repro"
 make_xmmregions ${OBSID}
 
 # Spectrum extraction
-echo "Running mos-spectra prefix=1S001 ..."
+echo "Running mos-spectra-mod prefix=1S001 ..."
 mos-spectra-mod prefix=1S001 caldb=$CALDB \
     region="${RDIR}/reg_mos1S001_${RSTEM}.txt" \
     mask=1 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd7=1 \
@@ -52,7 +52,7 @@ mos-spectra-mod prefix=1S001 caldb=$CALDB \
   >& mos-spectra_mos1S001_${RSTEM}.log
 mv command.csh mos-spectra_mos1S001_${RSTEM}_cmd.csh
 
-echo "Running mos-spectra prefix=2S002 ..."
+echo "Running mos-spectra-mod prefix=2S002 ..."
 mos-spectra-mod prefix=2S002 caldb=$CALDB \
     region="${RDIR}/reg_mos2S002_${RSTEM}.txt" \
     mask=1 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd6=1 ccd7=1 \
@@ -89,6 +89,7 @@ mos_back prefix=2S002 caldb=$CALDB diag=2 clobber=1 \
 #    elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
 #  >& pn_back_pnS003_${RSTEM}.log
 
+
 ### Move files to avoid clobbering.
 ### Currently, just the spectra + soft proton image for proton-scale
 echo "Renaming output spectra"
@@ -105,11 +106,12 @@ mv mos2S002.rmf     mos2S002-${RSTEM}.rmf
 mv mos2S002.arf     mos2S002-${RSTEM}.arf
 mv mos2S002-obj-im-sp-det.fits mos2S002-${RSTEM}-sp.fits
 # PN
-mv pnS003-obj.pi    pnS003-${RSTEM}.pi
+mv pnS003-obj.pi        pnS003-${RSTEM}.pi
+mv pnS003-obj-oot.pi    pnS003-${RSTEM}-oot.pi
 #mv pnS003-obj-os.pi pnS003-${RSTEM}-os.pi  # Will fail
 #mv pnS003-back.pi   pnS003-${RSTEM}-qpb.pi   # Will fail
-mv pnS003.rmf       pnS003-${RSTEM}.rmf
-mv pnS003.arf       pnS003-${RSTEM}.arf
+mv pnS003.rmf           pnS003-${RSTEM}.rmf
+mv pnS003.arf           pnS003-${RSTEM}.arf
 mv pnS003-obj-im-sp-det.fits pnS003-${RSTEM}-sp.fits
 
 # Experimental outputs: FWC obj spectra for line norm/ratio extraction
@@ -129,42 +131,6 @@ mv pnS003-ff.rmf         pnS003-${RSTEM}-ff.rmf
 mv pnS003-ff.arf         pnS003-${RSTEM}-ff.arf
 mv pnS003-dmap.rmf       pnS003-${RSTEM}-dmap.rmf
 
-# Remove OOT events from pnS003-obj-ff.pi
-# (thread: xmm.esac.esa.int/sas/current/documentation/threads/EPIC_OoT.shtml)
-# "+1" is an extension specifier... but already [1] by default, so I omit.
-### 
-### # Formula from pn_back:
-### # amsca * ( cts / (BACKSCAL * EXPOSURE) - cts_oot / (BACKSCAL_oot * # # EXPOSURE_oot) )
-### # where amsca=1440000 converts BACKSCAL from detector pixels to arcmin^2
-### # Important to get correct normalization for XSPEC, because we are
-### # fitting to pn_back returned spectra with units cts/(arcmin^2 * s).
-### AMSCA=1440000
-### 
-### fparkey fitsfile="pnS003-${RSTEM}-ff-oot.pi" keyword=TTYPE2 value=CTS_OOT 
-###     # Rename column to CTS_OOT
-### faddcol infile="pnS003-${RSTEM}-ff.pi" colfile="pnS003-${RSTEM}-ff-oot.pi" \
-###       colname=CTS_OOT
-###     # Copy renamed column over to non-oot file
-### 
-### #            if(mode .eq. 'PrimeFullWindow') then
-### #                print *, 'PN Mode: ', mode
-### #                ootsca = 0.0630
-### #                print 2993, ootsca
-### # 2993           format(' OOT Scale: ',f8.4)
-### #                print *, ' '
-### #            elseif(mode .eq. 'PrimeFullWindowExtended3 ') then
-### #                print *, 'PN Mode: ', mode
-### #                ootsca = 0.0232
-### #                print 2993, ootsca
-### #                print *, ' '
-### #            elseif(mode .eq. 'PrimeFullWindowExtended5 ') then
-### #                print *, 'PN Mode: ', mode
-### 
-### fcalc clobber=yes infile="pnS003-${RSTEM}-ff.pi" outfile="pnS003-${RSTEM}-ff-os.pi" \
-###       clname=CTS_OOT expr=CTS_OOT*0.063
-### 
-### fparkey fitsfile="pnS003-${RSTEM}-ff-oot.pi" keyword=TTYPE2 value=COUNTS
-###     # Undo rename operation!
 
 # Group the spectra
 echo "Bin output spectra and assign {BACK,RESP,ANCR}FILE keywords"
