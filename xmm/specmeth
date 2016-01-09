@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# Procedure for straight background subtraction
-# Use (src - qpb_src) with BACKFILE = (back - qpb_back)
+# Procedure for straight background subtraction:
+# create (src - qpb_src) with BACKFILE = (back - qpb_back)
 
 OBSIDS="0087940201 0551000201"
-
-## 0087940201 operations
 
 for obsid in $OBSIDS;
 do
@@ -33,17 +31,57 @@ do
   # Subtract QPB spectra
   for fstem in $fstems;
   do
+    # Spectrum units: (c)ounts, (r)ate
+    uflag='C'
+    if [[ $fstem =~ "pn" ]]; then
+      uflag='R'
+    fi
     mathpha expr="${fstem}.pi - ${fstem}_qpb.pi" outfil="!${fstem}_sqpb.pi" \
-        units=C auxfiles="${fstem}.pi" exposure="${fstem}.pi" areascal='%' \
-        properr='yes' \
+        units="${uflag}" properr='yes' \
+        exposure="${fstem}.pi" backscal='%' areascal='%' \
         ncomments=0
+    # areascal=1; backscal is same for QPB and observation spectra
+    # Exposure + auxfiles set by src/bkg spectrum; QPB subtraction does not
+    # change exposure, area scaling, etc.
     # auxfiles sets: backfile, backscal, corrfile, corrscal, respfile, ancrfile
+
+    # raw spectrum has cts w/ Poisson error (keyword POISSERR='T')
+    # QPB has cts and statistical error, much smaller than Poisson error
+    # subtracting spectra -> Gaussian errors > POISS-0 errors
+    # and anyways, any of POISS-0,1,2,3 will fail on channels with negative
+    # counts (which does occur)
+
+    # From mathpha manpage:
+    # > If spectra are being subtracted then there is no general 
+    # > solution because the difference of two Poisson distributions is not 
+    # > itself Poisson (unlike the Gaussian case).
+
+    # We will bin the data before fitting, anyways.
   done
+
+  # Remove temporary files
+  rm mos1S001_src.pi
+  rm mos1S001_src_qpb.pi
+  rm mos1S001_bkg.pi
+  rm mos1S001_bkg_qpb.pi
+  rm mos2S002_src.pi
+  rm mos2S002_src_qpb.pi
+  rm mos2S002_bkg.pi
+  rm mos2S002_bkg_qpb.pi
+  if [[ $obsid = "0087940201" ]]; then
+    rm pnS003_src_os.pi
+    rm pnS003_src_os_qpb.pi
+    rm pnS003_bkg_os.pi
+    rm pnS003_bkg_os_qpb.pi
+  fi
 
   # TODO add ARF scaling correction for 0-5keV range.
   # create alternative "arfcorr" files
+  # pending further discussion.
 
-  # Set keywords and group
+  # Set keywords and group.  Note that group simply sets group column in
+  # spectrum; information is not lost.  Excess counts at highest channels (but
+  # < min bin size) are flagged as BAD and discarded.
   grppha infile="mos1S001_src_sqpb.pi" outfile="!mos1S001_src_sqpb.pi" \
     comm="chkey BACKFILE mos1S001_bkg_sqpb.pi & \
           chkey RESPFILE mos1S001-src.rmf & \
@@ -56,6 +94,7 @@ do
           chkey ANCRFILE mos2S002-src.arf & \
           group min 50 & exit" \
     chatter=10
+
   if [[ $obsid = "0087940201" ]]; then
     grppha infile="pnS003_src_os_sqpb.pi" outfile="!pnS003_src_os_sqpb.pi" \
       comm="chkey BACKFILE pnS003_bkg_os_sqpb.pi & \

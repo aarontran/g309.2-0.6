@@ -3821,7 +3821,12 @@ Thursday 2016 January 7 -- more changes to fit/pipeline procedure
 
 Inspect new logs for mos-spectra/pn-spectra and mos_back/pn_back.
 Added error check script, and found yet another bug in pn-spectra-mod.  Made
-fix, re-ran script.  Errors look good.
+fix, re-run script (just before leaving):
+
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; specbackgrp_0551000201 src; specbackgrp_0551000201 bkg' >& 20160108_specfwctest_0551000201.log &
+    [1] 31583
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; specbackgrp_0087940201 src; specbackgrp_0087940201 bkg' >& 20160108_specfwctest_0087940201.log &
+    [1] 11585
 
 ## Preliminary test of FWC line fitting procedure
 
@@ -3855,7 +3860,7 @@ WITH FWC ARF (mos1S001-bkg-ff.arf):
 
 Compare ratios:
     FWC fitted line ratio (without ARF): 5.33
-    FWC fitted line ratio (with ARF on lines only): 5.38
+    FWC fitted line ratio (with ARF on lines only): 5.38  <- not much difference, I'll just use FWC ARF because it is physically motivated
     Obs fitted line ratio (without ARF): 6.60
     Obs fitted line ratio (with FWC ARF): 7.36
 Lots of variation.  Unsurprising, given lots of APEC and soft proton emission.
@@ -4141,27 +4146,89 @@ And, why not?  If I'm making such a crude correction, I can take it one step
 further by using the EBOUNDS table in the RMF file !!
 
 OK -- defer implementing this correction until discussion with Pat.
-Meanwhile, have fitting scripts working (incl. fix background subtraction bug, plots set up
-* bug fix for specmeth (units for PN; double check error prop... esp. if we do use)
-* SWPC spectrum cut
-* for rescaling bkg normalizations, need to scale by both EXPOSURE AND BACKSCAL.
-  make that correction
+
+
+Friday 2016 January 8 -- spectrum fitting setup
+===============================================
+
+## Error propagation with mathpha
+
+properr=yes sums the errors on inputs in quadrature (ok for Gaussian errors)
+properr=no sums counts, then treats errors as poisson in different ways.
+    POISS-0 default, sqrt(n); POISS-1,2,3 uses Gehrels approximations
+Note that Gaussian errors, for counts (n1+n2) with initially Poisson errors,
+are just sqrt(n), same as POISS-0.
+
+    initial MOS/PN spectrum from evselect is just counts, no error column.
+        POISSERR=T is set in spectrum header.
+
+    QPB spectrum from {mos,pn}-back is counts and STAT-ERR, much smaller than
+        Poissonian errors.  Counts are fractional + derived from Megasec. of
+        FWC data, scaled down to our observation.
+
+
+    NOW, QPB is definitely not Poissonian error, much smaller.
+    E.g., mos1S001-bkg-qpb.pi channel 56 has 6.04 +/- 0.36 counts.
+    The continuum bridge fit around channels 250-375 has ZERO errors.
+
+    This will underestimate errors.
+
+We MUST use properr=yes if subtracted spectrum can have negative counts
+(everything else takes sqrt(n) stuff).  Propagated Gaussian errors will reflect
+relatively high confidence in the QPB background that ESAS produces.  Because
+we're subtracting two spectra, Gaussian errors will be larger than POISS-0
+errors, which is desirable.
+
+May not matter, since XSPEC will recompute errors when fitting grppha-binned
+data anyways.
+
+Bug fix: auxfiles keyword was not working -- I think because i/p spectum was
+missing many keywords besides BACKSCAL, it failed and defaulted to null values.
+So BACKSCAL was not set correctly.  Fixed this and kept re-running background
+subtraction script.
+
+## Double check scaling for transferring background model to SNR
+
+Currently scaling by backscal value.  Because XSPEC already divides out
+EXPOSURE before fitting spectrum (see manual), we don't need to adjust for
+that.
+
+## Mess around with models in XSPEC
+
+To get a sense of tbabs, vnei behavior as viewed through XMM-Newton ARF/RMF.
+Inspect and prepare a ton of plots.
 
 
 
+## Standing list of questions
+* Check about ARF correction for background sub.
+  Tested w/ straight fit from 0-5 keV; could go as far as assuming diagonal RMF
+  and mapping straight to channel space (interpolating if needed).
+  Doesn't matter if we go with straight background modeling.
 
-Major test: fakeit/dummy with vnei and tbabs just to build intuition!!!
+* Documentation on XSPEC errors, for grouped spectra?
+  Wondering if errors in spectrum are used at all, and how propagated in case
+  they are binned via grppha (vs. "setplot rebin")
 
-Several variants to test:
-1. extract line normalizations/ratios using
-   - no arf
-   - {arf without effarea/filter} + {no arf for bkn power law}
-2. for PN, perform a standard fit using
+
+* compile massive list of questions and updates for Pat...
+* set up fitting script for all FWC data to get line ratios/normalizations
+* set up fitting script for bkg, including 0551000201
+    try 1. freeze line ratios/norms, use constant term to parameterize norm
+    2. let line ratio float, to compare (use constant term to parameterize
+       deviation from FWC ratio)
+* set up fitting script for src,
+* SWPC spectrum cut and fit, after done
+
+(one more remark: fits with bkg subtraction, by eye I keep thinking the little
+peaks correspond to SWPC emission. but hard to say.)
+
+
+* for PN, perform a standard fit (say, bkg sub) using
    - non-detmapped RMF
    - detmapped RMF
    (if this works, also use a detmap for pnS003-obj-ff.rmf)
-
-
+   Really unsure why ESAS script doesn't use detmap for this.
 
 
 
@@ -4170,13 +4237,6 @@ Standing TO-DOs
 
 ESAS: vet and submit bug fix for MOS1 CCD4 strip removal; inquire about
 detector map for PN RMF...
-
-Verdict: yes, use line ratios to inform fits.  Use FWC-weighted ARF.
-Don't use normalizations; I think the PN lines + MOS Al lines are strong enough
-to be better determined from actual data.  But consider:
-1. maybe let line ratios float, parameterized by constant term
-2. maybe use and freeze normalizations (also freezing ratio), then allow
-   absolute normalization to vary via constant term.
 
 1. check temporal variation of instrumental lines in (a) FWC data or (b) corner
    data from DB of public observations
@@ -4219,21 +4279,6 @@ Low-priority: in mos-spectra, rev>2382 also allows ((FLAG & 0x800) != 0)... I
 don't know whether this is whats desired but OK.  Worried it would let events
 with 0x800 + OTHER flags through.
 
-
-
-
-I also wanted to use FWC data to get the potentially useful quantities:
-* ratio & normalizations of instrumental lines in source region
-* ratio & normalizations of instrumental lines in background region
-* ratio & normalizations of instrumental lines in (source - background) spectra
-
-This will be useful in different situations.
-
-carry this out as:
-    fwc src, 0087940201 detx/dety + rmf/arf
-    fwc bkg, 0087940201 detx/dety + rmf/arf
-    fwc src, 0551000201 detx/dety + rmf/arf
-    fwc bkg, 0551000201 detx/dety + rmf/arf
 
 Working on this..
 7. add mosaicking step.

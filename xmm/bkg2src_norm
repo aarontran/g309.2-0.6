@@ -24,12 +24,12 @@ do
 
   echo "src: $SRC_BACKSCAL"
   echo "bkg: $BKG_BACKSCAL"
-  # Why the fuck is bc -l giving me some total crap
+  # For some reason, bc -l doesn't work, didn't figure out why
   # NORM=$(echo "($SRC_BACKSCAL) / ($BKG_BACKSCAL)" | bc -l)
   NORM=$(perl -e "print( ($SRC_BACKSCAL) / ($BKG_BACKSCAL) );")
   echo "src/bkg = ($SRC_BACKSCAL) / ($BKG_BACKSCAL) = $NORM"
   echo ""
 done
 
-echo "If you got ANY warnings from fkeypar, results are invalid!"
+echo "If you got ANY warnings from fkeypar, subsequent results are invalid!"
 
