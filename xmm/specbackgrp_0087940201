@@ -122,8 +122,20 @@ mv pnS003-ff.rmf         pnS003-${RSTEM}-ff.rmf
 mv pnS003-ff.arf         pnS003-${RSTEM}-ff.arf
 mv pnS003-dmap.rmf       pnS003-${RSTEM}-dmap.rmf
 
+# Set keywords for FWC spectra
+# NOTE that we are not using OOT-subtracted spectra for PN
+exposures="mos1S001 mos2S002 pnS003"
+for exp in $exposures
+do
+  grppha infile="${exp}-${RSTEM}-ff.pi" outfile="!${exp}-${RSTEM}-ff-key.pi" \
+    comm="chkey BACKFILE NONE & \
+          chkey RESPFILE ${exp}-${RSTEM}-ff.rmf & \
+          chkey ANCRFILE ${exp}-${RSTEM}-ff.arf & \
+          exit"
+done
 
-# Group the spectra
+
+# Group the observation spectra
 echo "Bin output spectra and assign {BACK,RESP,ANCR}FILE keywords"
 
 grppha infile="mos1S001-${RSTEM}.pi" outfile="!mos1S001-${RSTEM}-grp50.pi" \

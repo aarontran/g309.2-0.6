@@ -1,0 +1,54 @@
+# XSPEC commands to fit FWC data for PN
+
+statistic chi
+
+# Helpful commands to pull out model line
+# XSPEC12> iplot
+# PLT> rescale Y 1e-4 1
+# PLT> co ?
+# PLT> co 2 on 2
+# PLT> pl
+# PLT> exit
+
+# ----- Set filenames here (!) -----
+data 1:1 pnS003-src-ff-key.pi
+response  2:1 ../../../caldb/pn-diag.rsp
+arf 2:1 none
+
+ignore **:**-1.0,12.0-**
+
+model  1:instr gaussian + gaussian + gaussian + gaussian + gaussian
+           1.49      -0.05          0          0      1e+06      1e+06
+              0      -0.05          0          0         10         20
+           1e-2       0.01          0          0      1e+20      1e+24
+           7.49      -0.05          0          0      1e+06      1e+06
+              0      -0.05          0          0         10         20
+           1e-2       0.01          0          0      1e+20      1e+24
+           8.05      -0.05          0          0      1e+06      1e+06
+              0      -0.05          0          0         10         20
+           1e-2       0.01          0          0      1e+20      1e+24
+           8.62      -0.05          0          0      1e+06      1e+06
+              0      -0.05          0          0         10         20
+           1e-2       0.01          0          0      1e+20      1e+24
+           8.90      -0.05          0          0      1e+06      1e+06
+              0      -0.05          0          0         10         20
+           1e-2       0.01          0          0      1e+20      1e+24
+model  2:conti bknpower
+            1.5       0.01         -3         -2          9         10
+              5       0.01          0       0.01      1e+06      1e+06
+            0.2       0.01         -3         -2          9         10
+           1e-2       0.01          0          0      1e+20      1e+24
+
+# First, fit only for continuum and normalizations
+freeze instr:1-15
+thaw instr:3,6,9,12,15
+query yes
+fit
+
+# Then, allow line widths to vary to improve the fit
+thaw instr:2,5,8,11,14
+fit
+
+cpd /xw
+setplot en
+pl ld res delch
