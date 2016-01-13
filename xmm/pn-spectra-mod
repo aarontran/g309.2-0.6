@@ -750,11 +750,18 @@ $author="S. L. Snowden, based on the mos-spectra code";
 # Same as calls for -{1-4}ff.pi, but apply quadrant exclusions ($ccddef)
 # instead of individual $tempquad filters
 
+# Hacky workarounds to process LargeWindow observations
+  $areasel = $ccddef.$ruffovdef.$FOVdef.$fulldef.$maskitdet;
+  if($submode =~ /PrimeLargeWindow/) {
+      # Replace $fulldef, with changed DETY width for LargeWindow mode
+      $halfdef="&&((DETX,DETY) in BOX(-2196,-1110,16060,8160,0))";
+      $areasel = $ccddef.$ruffovdef.$FOVdef.$halfdef.$maskitdet;
+  }
+
 #  Extract the main FWC spectrum
   $specfile_ff="pn".$prefix."-obj-ff.pi";
   $comm="evselect table=".$fwcfile.":EVENTS withfilteredset=yes ".
-    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-    $ccddef.$ruffovdef.$FOVdef.$fulldef.$maskitdet."' ".
+    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$areasel."' ".
     "withspectrumset=yes ".
     "spectrumset=".$specfile_ff." energycolumn=PI spectralbinsize=5 ".
     "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
@@ -767,8 +774,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
 #  Extract the OOT spectrum
   $specfile_ff_oot="pn".$prefix."-obj-ff-oot.pi";
   $comm="evselect table=".$fwcootfile.":EVENTS withfilteredset=yes ". 
-    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-    $ccddef.$ruffovdef.$FOVdef.$fulldef.$maskitdet."' ".
+    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$areasel."' ".
     "withspectrumset=yes ".
     "spectrumset=".$specfile_ff_oot." energycolumn=PI spectralbinsize=5 ".
     "withspecranges=yes specchannelmin=0 specchannelmax=20479";
@@ -790,8 +796,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
 #  Generate the ARF, use a FWC detector map
   $detmap_ff="detmap_ff.ds";
   $comm="evselect table=".$fwcfile.":EVENTS withfilteredset=yes ".
-    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
-    $ccddef.$fulldef.$FOVdef.$ruffovdef.$maskitdet."' ".
+    "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$areasel."' ".
     "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
     "imageset=".$detmap_ff." squarepixels=yes ignorelegallimits=yes ".
     "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=60 ximagemax=19500 ".

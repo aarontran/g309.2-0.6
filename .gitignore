@@ -1,6 +1,6 @@
 # .gitignore for G309.2-0.6 project
 
-img-notes/*.png
+results-interm
 
 most/G309.2-0.6.fits
 most/G309.2-0.6.jpg

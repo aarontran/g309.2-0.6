@@ -16,7 +16,7 @@ Websites I'm looking at, to see what kind of filtering/cleaning can be done
 
 Thursday 2015 September 17
 ==========================
-Initial meeting with Pat about this project.  See my notes.
+Initial meeting with Pat about this project.  See my (paper) notes.
 
 
 Monday 2015 September 21
@@ -4165,13 +4165,8 @@ are just sqrt(n), same as POISS-0.
     QPB spectrum from {mos,pn}-back is counts and STAT-ERR, much smaller than
         Poissonian errors.  Counts are fractional + derived from Megasec. of
         FWC data, scaled down to our observation.
-
-
-    NOW, QPB is definitely not Poissonian error, much smaller.
-    E.g., mos1S001-bkg-qpb.pi channel 56 has 6.04 +/- 0.36 counts.
-    The continuum bridge fit around channels 250-375 has ZERO errors.
-
-    This will underestimate errors.
+        E.g., mos1S001-bkg-qpb.pi channel 56 has 6.04 +/- 0.36 counts.
+        The continuum bridge fit around channels 250-375 has ZERO errors.
 
 We MUST use properr=yes if subtracted spectrum can have negative counts
 (everything else takes sqrt(n) stuff).  Propagated Gaussian errors will reflect
@@ -4196,44 +4191,795 @@ that.
 ## Mess around with models in XSPEC
 
 To get a sense of tbabs, vnei behavior as viewed through XMM-Newton ARF/RMF.
-Inspect and prepare a ton of plots.
+Inspect and prepare some plots.  Most conceptually tricky may be getting a feel
+for behavior of model w/ varying ionization timescale tau.
+1e8 - 1e13 sec ~ 3.2yrs to 32,000 yr
+So we might expect order 1e10 to 1e11 sec (300-3000yr) for young-mid age SNRs.
+
+This about matches what we're seeing (1e10 to 2e10) -- actually a little on the
+young side, given our guess of remnant age (Gaensler: ~1000 - 20000 yr based on
+HI absorption -> dist -> age).  With stated errors it could be as close as 3.8
+kpc, which may help account for the large inferred values of kT.
+Rakowski+ (2001) also report similar values of kT ~ 1-2, and favor a closer
+distance.
+
+
+Saturday - Wednesday 2016 January 9-13 -- pipelining (manual work) to SNR fit
+==============================================================================
+
+Most work done over Jan 9-11, numbers and results assembled; notes cleaned up
+over Jan 12-13.
+
+List of section headers:
+* Fix PN FWC extraction for LargeWindow submode
+* XSPEC fit of instrumental lines in FWC data (+)
+* Observation bkg fit, RMF/ARF handling for instrumental lines?
+* Observation bkg fit, notes and results
+  - 0087940201 bkg fit (+)
+  - 0551000201 bkg fit (+)
+* SNR fitting results
+  - Fit with ionization timescale tied to default 1e+11
+  - Fit with ionization timescale free
+* SNR fitting with (crude) straight background subtraction
+  - Fitting progression
+  - Investigate fit discrepancy w.r.t 2016 Jan 07 bkg-sub fits
+* Images to accompany notes
+
+(+) indicates sections with fit numbers used in downstream fits (currently by
+hand-copying, though this could be improved)
+
+Key results are also summarized in the file: `results_20160112.txt`
+(the results file contains some comments not given in notes, and vice
+versa; neither strictly supersedes the other's information content)
+
+
+Fix PN FWC extraction for LargeWindow submode
+---------------------------------------------
+
+MAJOR ERROR discovered: PN FWC extraction for 0551000201 must account for large
+frame window.  By itself, pn-spectra{-mod} selections don't include this.
+
+Try getting BOX for large window in DS9:
+  center = -3691.5, -1111.5
+  SIZE = 19648 x 16320
+Thus we need: -9271 < DETY < 7049, roughly.
+In pn-spectra-mod I add the definition
+
+  $halfdef="&&((DETX,DETY) in BOX(-2196,-1110,16060,8160,0))";
+
+NOTE: for current fitting process, this doesn't change anything since I'm not
+using 0551000201 PNS003 data at the moment.  I made script change, then
+proceeded with fits (need to re-run extraction pipeline, if we return to
+0551000201 PNS003 data).
+
+
+XSPEC fit of instrumental lines in FWC data
+-------------------------------------------
+
+Do this the stupidest possible way to save time.  Fit by hand with XSPEC
+"scripts" `ff_mos.xcm` and `ff_pn.xcm`, modifying the filenames in scripts and
+inspecting plots.  Almost certainly faster than writing a real script.
+
+MOS: fit Al 1.49 keV and Si 1.75 keV lines.
+PN: ESAS cookbook recommends lines at: 1.49, 7.49, 7.11, 8.05, 8.62, 8.90 keV.
+    Looking at 0551000201 src, four main lines in ~7-9 keV range:
+      weak-ish 7.49 (Ni K-alpha?)
+      strong 8.05 (Copper K-alpha?)
+      strong 8.62 (Zinc K-alpha?)
+      medium 8.90 (Copper K-beta?)
+
+Observations for PN fits:
+* faint forward-modeled lines around 6-7 keV appear to be channel-energy
+  redistribution effects.
+* Two small bumps not modeled (Mn, Cr lines)
+* fits to 0551000201, 0087940201 PN SRC __and__ background both show no need
+  for 7.11 keV line as recommended by ESAS.
+    0551000201 pnS003-bkg-ff: widen 1.49, 8.05 lines; then 8.62, 8.90
+  Fit normalizations are ~1e-4 or smaller (basically zero); so in practice we
+  can just ignore.  There are definitely more prominent features that I am NOT
+  modeling.
+* PN lines are generally wider than the Gaussians with sigma=0, especially in
+  0551000201 spectra.  To fix this, allow line widths to vary.
+
+Removed 7.11 keV line in background region fit script as a result.  I wonder if
+it's a typo.
+
+For MOS, parameters 3/6 indicate Al and Si line normalizations
+respectively.  Using custom FWC ARF (no filter/vignetting) for instrumental
+lines; no ARF for continuum background modeled by power law.  For PN, do a
+two-step fit: 1st fit normalizations, 2nd time let line widths float.
+
+0087940201 mos1 src
+   3    1   gaussian   norm                4.14609E-02  +/-  1.86937E-04
+   6    2   gaussian   norm                1.28250E-02  +/-  1.13420E-04
+0087940201 mos1 bkg
+   3    1   gaussian   norm                4.66742E-02  +/-  1.83855E-04
+   6    2   gaussian   norm                8.89327E-03  +/-  9.41538E-05
+0087940201 mos2 src
+   3    1   gaussian   norm                4.53064E-02  +/-  1.84964E-04
+   6    2   gaussian   norm                1.18173E-02  +/-  1.06179E-04
+0087940201 mos2 bkg
+   3    1   gaussian   norm                4.97471E-02  +/-  1.93144E-04
+   6    2   gaussian   norm                9.34134E-03  +/-  9.81577E-05
+0087940201 pn src
+   1    1   gaussian   LineE      keV      1.49000      frozen
+   2    1   gaussian   Sigma      keV      0.0          +/-  2.59243E-03  
+   3    1   gaussian   norm                3.34797E-02  +/-  2.78617E-04  
+   4    2   gaussian   LineE      keV      7.49000      frozen
+   5    2   gaussian   Sigma      keV      2.75955E-05  +/-  -1.00000     
+   6    2   gaussian   norm                1.23563E-02  +/-  1.86121E-04  
+   7    3   gaussian   LineE      keV      8.05000      frozen
+   8    3   gaussian   Sigma      keV      4.64571E-04  +/-  -1.00000     
+   9    3   gaussian   norm                8.81967E-02  +/-  3.69142E-04  
+  10    4   gaussian   LineE      keV      8.62000      frozen
+  11    4   gaussian   Sigma      keV      6.15888E-02  +/-  2.98145E-03  
+  12    4   gaussian   norm                1.85035E-02  +/-  2.69025E-04  
+  13    5   gaussian   LineE      keV      8.90000      frozen
+  14    5   gaussian   Sigma      keV      8.93654E-03  +/-  1.91152E-02  
+  15    5   gaussian   norm                1.09118E-02  +/-  2.38250E-04  
+0087940201 pn bkg
+   1    1   gaussian   LineE      keV      1.49000      frozen
+   2    1   gaussian   Sigma      keV      1.81761E-02  +/-  1.09565E-03  
+   3    1   gaussian   norm                3.43531E-02  +/-  2.68424E-04  
+   4    2   gaussian   LineE      keV      7.49000      frozen
+   5    2   gaussian   Sigma      keV      4.34900E-02  +/-  2.95195E-03  
+   6    2   gaussian   norm                1.51056E-02  +/-  2.16095E-04  
+   7    3   gaussian   LineE      keV      8.05000      frozen
+   8    3   gaussian   Sigma      keV      4.86598E-02  +/-  6.01155E-04  
+   9    3   gaussian   norm                0.126220     +/-  4.39045E-04  
+  10    4   gaussian   LineE      keV      8.62000      frozen
+  11    4   gaussian   Sigma      keV      8.53148E-02  +/-  2.69867E-03  
+  12    4   gaussian   norm                2.03146E-02  +/-  2.93500E-04  
+  13    5   gaussian   LineE      keV      8.90000      frozen
+  14    5   gaussian   Sigma      keV      3.23556E-02  +/-  3.91492E-03  
+  15    5   gaussian   norm                1.65277E-02  +/-  2.62839E-04  
+
+0551000201 mos1 src
+   3    1   gaussian   norm                3.33970E-02  +/-  1.53464E-04
+   6    2   gaussian   norm                2.00385E-02  +/-  1.25056E-04
+0551000201 mos1 bkg <- Si line is quite faint here w.r.t. QPB
+   3    1   gaussian   norm                6.04617E-02  +/-  2.02562E-04
+   6    2   gaussian   norm                3.38640E-03  +/-  7.56750E-05
+0551000201 mos2 src <- lines are pretty equal here
+   3    1   gaussian   norm                3.86562E-02  +/-  1.70168E-04
+   6    2   gaussian   norm                2.02123E-02  +/-  1.30830E-04
+0551000201 mos2 bkg <- reduced chi-squared a bit large; residuals a bit large
+   3    1   gaussian   norm                6.42723E-02  +/-  2.16655E-04
+   6    2   gaussian   norm                5.21779E-03  +/-  8.65451E-05
+0551000201 pn src
+  (invalid due to wrong FWC region selection -- must be redone)
+0551000201 pn bkg
+  (invalid due to wrong FWC region selection -- must be redone)
+
+
+Observation bkg fit, RMF/ARF handling for instrumental lines?
+-------------------------------------------------------------
+
+When we fit our observation background regions, should we use
+mos1S001-bkg.rmf/arf for the instrumental line model?  Both RMF and ARF are
+weighted by a FWC detector map rather than the actual image weighting. Does it
+make more sense to use the regular RMF already weighted?
+    - Assume that incorrect detector map weighting of instr lines doesn't
+      matter much (not possible to separate anyways)
+    - Use different ARF for instrumental lines
+    - Use same RMF for instrumental lines
+
+We can either say:
+
+    [f_{instr} * A_{fwc-instr} + f_{sky} * A_{qpb + instr + sky weighted}]
+        * R_{qpb + instr + sky}
+
+or:
+
+    f_{instr + sky} * R_{qpb + instr + sky}
+        * A_{qpb + instr + sky weighted}
+
+Neither of these are precisely correct.
+Case 1: `f_{sky}` should not include instr line emission in its weighting
+Case 2: `f_{instr...}` should not be forward-modeled through an ARF that
+  includes mirror effective area and filter transmission.  Doesn't matter for
+  two entirely free Gaussians, but does matter if we are trying to track
+  normalization as a sanity check.
+In both cases we should not include the QPB emission in the detector map, but
+that's more hassle than its worth to try to remove.  Anyways that should be
+fairly uniform across the detector; actual emission in our regions of interest
+should be pretty smooth-ish anyways (no sharp structure; point sources masked).
+
+We could test this by changing the ARF and seeing how the fit changes.
+But, remember that weighting is a lower order effect (1st order: distance from
+aimpoint, 2nd order -- distrib of flux within annulus from aimpoint).
+
+I opt for case 1, using filter wheel closed ARF without vignetting/mirrors for
+instrumental line model.
+
+
+Observation bkg fit, notes and results
+--------------------------------------
+
+Error: local component (unabsorbed APEC) kT should be 0.1 keV, not 1 keV.  Big
+difference!  That actually suffices to explain the low energy emission in my
+background regions.
+E.g., Kuntz & Snowden (2010) study Chandra 1Ms view of M101 and find
+    kT_local ~ 0.10
+    kT_distant ~ 0.24 (XMM), 0.27 (Chandra ACIS-S)
+Note for Kuntz&Snowden, M101 is well above galactic plane so I think
+`kT_distant` would be higher for our data.
+Similar for Maggi+ (2015) study of LMC remnants; they have kT ~ 0.085 due to
+Henley and Shelton 2008.
+
+SWCX doesn't seem necessary, after changing unabsorbed APEC kT to 0.1 keV.
+APEC explains the low-energy signal pretty well by itself.
+
+I don't get the sense that PN/MOS soft proton power laws are well constrained,
+despite them being the dominant component at high energy.  Too much going on
+towards low-energy end of spectrum; lever arm for fitting is not great.
+
+Two assumptions we could make:
+1. line ratios, up to normalization, are same between bkg-ff and bkg (and
+   src-ff,src)
+2. ratio of line normalizations are same between (bkg-ff, src-ff) as for
+   (bkg,src)
+Taking both assumptions would completely constrain instrumental lines.
+I'll just stick to 1 for now; no particular reason
+
+### 0087940201 bkg fit
+
+Some comments:
+* removed constant terms in front of xrb. expect the normalizations to be same for all detectors
+* mos1, mos2 power laws for SP contamination should be about the same
+
+    ========================================================================
+    Model instr:constant<1>(gaussian<2> + gaussian<3> + gaussian<4> + gaussian<5> + gaussian<6> + gaussian<7>) Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   constant   factor              0.708683     +/-  3.44735E-02  
+       2    2   gaussian   LineE      keV      1.49000      frozen
+       3    2   gaussian   Sigma      keV      0.0          frozen
+       4    2   gaussian   norm                4.66700E-02  frozen
+       5    3   gaussian   LineE      keV      1.75000      frozen
+       6    3   gaussian   Sigma      keV      0.0          frozen
+       7    3   gaussian   norm                8.89300E-03  frozen
+      [... omitted norm=0 PN lines]
+                               Data group: 2
+      20    1   constant   factor              0.672653     +/-  3.21214E-02  
+      21    2   gaussian   LineE      keV      1.49000      = instr:p2
+      22    2   gaussian   Sigma      keV      0.0          = instr:p3
+      23    2   gaussian   norm                4.97500E-02  frozen
+      24    3   gaussian   LineE      keV      1.75000      = instr:p5
+      25    3   gaussian   Sigma      keV      0.0          = instr:p6
+      26    3   gaussian   norm                9.34100E-03  frozen
+      [... omitted norm=0 PN lines]
+                               Data group: 3
+      39    1   constant   factor              0.630177     +/-  1.91208E-02  
+      40    2   gaussian   LineE      keV      1.49000      = instr:p2
+      41    2   gaussian   Sigma      keV      0.0          = instr:p3
+      42    2   gaussian   norm                3.43500E-02  frozen
+      [... omit norm=0 Si 1.75 keV line]
+      46    4   gaussian   LineE      keV      7.49000      = instr:p8
+      47    4   gaussian   Sigma      keV      0.0          = instr:p9
+      48    4   gaussian   norm                1.51100E-02  frozen
+      49    5   gaussian   LineE      keV      8.05000      = instr:p11
+      50    5   gaussian   Sigma      keV      0.0          = instr:p12
+      51    5   gaussian   norm                0.126000     frozen
+      52    6   gaussian   LineE      keV      8.62000      = instr:p14
+      53    6   gaussian   Sigma      keV      0.0          = instr:p15
+      54    6   gaussian   norm                2.03100E-02  frozen
+      55    7   gaussian   LineE      keV      8.90000      = instr:p17
+      56    7   gaussian   Sigma      keV      0.0          = instr:p18
+      57    7   gaussian   norm                1.65300E-02  frozen
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model spm1:powerlaw<1> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   powerlaw   PhoIndex            0.425247     +/-  1.92588E-02  
+       2    1   powerlaw   norm                6.06012E-02  +/-  2.38054E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model spm2:powerlaw<1> Source No.: 4   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 2
+       1    1   powerlaw   PhoIndex            0.421315     +/-  1.73107E-02  
+       2    1   powerlaw   norm                6.44559E-02  +/-  2.29311E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model sppn:powerlaw<1> Source No.: 5   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 3
+       1    1   powerlaw   PhoIndex            0.379473     +/-  4.83896E-02  
+       2    1   powerlaw   norm                7.82846E-02  +/-  7.92473E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model xrb:apec<1> + TBabs<2>(powerlaw<3> + apec<4>) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   apec       kT         keV      0.233540     +/-  1.03482E-02  
+       2    1   apec       Abundanc            1.00000      frozen
+       3    1   apec       Redshift            0.0          frozen
+       4    1   apec       norm                2.40035E-04  +/-  1.95080E-05  
+       5    2   TBabs      nH         10^22    1.37624      +/-  0.116844     
+       6    3   powerlaw   PhoIndex            1.40000      frozen
+       7    3   powerlaw   norm                1.28596E-04  +/-  2.75718E-05  
+       8    4   apec       kT         keV      0.394366     +/-  4.53429E-02  
+       9    4   apec       Abundanc            1.00000      frozen
+      10    4   apec       Redshift            0.0          frozen
+      11    4   apec       norm                4.36818E-03  +/-  1.50767E-03  
+      [... omit duplicate tied parameters 12-33 for data groups 2,3]
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =        1188.56 using 1070 PHA bins.
+
+    Test statistic : Chi-Squared =        1188.56 using 1070 PHA bins.
+     Reduced chi-squared =        1.12659 for   1055 degrees of freedom 
+     Null hypothesis probability =   2.496193e-03
+
+
+### 0551000201 bkg fit
+
+Fit result looks good, but the wildly differing soft proton (SP) power laws
+between MOS1/2 are concerning.  Reassuring that XRB physical values are about
+the same, although nH differs by ~30%...
+
+(!) Do missing CCDs have an effect?  Which would cause soft proton spectrum to
+appear softer for MOS2 vs. MOS1.  They should be same angle off-optical-axis.
+
+    ========================================================================
+    Model instr:constant<1>(gaussian<2> + gaussian<3>) Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   constant   factor              1.42947      +/-  4.29158E-02  
+       2    2   gaussian   LineE      keV      1.49000      frozen
+       3    2   gaussian   Sigma      keV      0.0          frozen
+       4    2   gaussian   norm                6.04600E-02  frozen
+       5    3   gaussian   LineE      keV      1.75000      frozen
+       6    3   gaussian   Sigma      keV      0.0          frozen
+       7    3   gaussian   norm                3.38600E-03  frozen
+                               Data group: 2
+       8    1   constant   factor              1.45193      +/-  3.99731E-02  
+       9    2   gaussian   LineE      keV      1.49000      = instr:p2
+      10    2   gaussian   Sigma      keV      0.0          = instr:p3
+      11    2   gaussian   norm                6.42700E-02  frozen
+      12    3   gaussian   LineE      keV      1.75000      = instr:p5
+      13    3   gaussian   Sigma      keV      0.0          = instr:p6
+      14    3   gaussian   norm                5.21800E-03  frozen
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model spm1:powerlaw<1> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   powerlaw   PhoIndex            0.533904     +/-  5.17374E-02  
+       2    1   powerlaw   norm                2.97647E-02  +/-  3.06942E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model spm2:powerlaw<1> Source No.: 4   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 2
+       1    1   powerlaw   PhoIndex            1.04537      +/-  0.100371     
+       2    1   powerlaw   norm                1.50520E-02  +/-  2.50700E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model xrb:apec<1> + TBabs<2>(powerlaw<3> + apec<4>) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   apec       kT         keV      0.226875     +/-  2.28387E-02  
+       2    1   apec       Abundanc            1.00000      frozen
+       3    1   apec       Redshift            0.0          frozen
+       4    1   apec       norm                2.30391E-04  +/-  4.00245E-05  
+       5    2   TBabs      nH         10^22    1.07922      +/-  0.146038     
+       6    3   powerlaw   PhoIndex            1.40000      frozen
+       7    3   powerlaw   norm                4.60753E-04  +/-  3.22715E-05  
+       8    4   apec       kT         keV      0.355641     +/-  3.06881E-02  
+       9    4   apec       Abundanc            1.00000      frozen
+      10    4   apec       Redshift            0.0          frozen
+      11    4   apec       norm                4.55666E-03  +/-  1.63213E-03  
+      [... omit duplicate tied parameters 12-22 for data groups 2,3]
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =         520.77 using 495 PHA bins.
+
+    Test statistic : Chi-Squared =         520.77 using 495 PHA bins.
+     Reduced chi-squared =         1.0782 for    483 degrees of freedom 
+     Null hypothesis probability =   1.138531e-01
+
+
+SNR fitting results
+-------------------
+
+General set-up for combined fit of all five exposures
+* do NOT let constants float for XRB
+* progressively thaw SNR tbabs/vnei parameters to get better fit
+  - in order: Si, S, kT, nH, Tau
+
+Some errors hit while fitting (in order of realization):
+1. accidentally tied 0551000201 MOS data to 0087940201 (fixed)
+2. forgot to correctly scale XRB normalizations based on BACKSCAL ratios.
+    Because bkg data were scaled by exposure already when fitted,
+    no need to do exposure adjustment.  Only need to adjust XRB, SP power law
+    components. Instrumental lines taken from SRC region FWC.
+      For 0087940201, no big deal; BACKSCAL ratio is ~0.97
+      For 0551000201, BACKSCAL ratio is ~0.7.
+    (fixed)
+3. typo in ARF assignment for 0551000201 data (fixed)
+
+The following fit results reflect all three corrections just noted.
+
+General observation: residuals show a lot of systematic structure, especially
+at low energy.  I think we're not correctly capturing all processes at play.
+
+### Fit with ionization timescale tied to default 1e+11
+
+(after having freed Si,S,kT,nH progressively)
+
+    TBabs nH    2.43      +/-  3.9E-02  10^22
+    vnei  kT    0.89      +/-  1.9E-02  keV
+    vnei  Si    4.37      +/-  0.13
+    vnei  S     3.75      +/-  0.15
+    vnei  norm  1.03E-02  +/-  5.52E-04
+
+    MOS1 instr con: 0.91
+    MOS2 instr con: 0.82
+    PN instr con: 0.57
+    MOS1 (motch) instr con: 1.48
+    MOS2 (motch) instr con: 1.63
+
+    MOS1 SP: n=0.42, norm 7.2e-2
+    MOS2 SP: n=0.50, norm 8.7e-2
+    PN SP: n=0.55, norm 0.15
+    MOS1 (motch) SP: n=0.40, norm 6.4e-2
+    MOS2 (motch) SP: n=0.79, norm 3.5e-2  (!)
+
+    Fit statistic : Chi-Squared =        2911.67 using 2240 PHA bins.
+    Test statistic : Chi-Squared =        2911.67 using 2240 PHA bins.
+     Reduced chi-squared =        1.31156 for   2220 degrees of freedom
+
+### Same fit, now with Tau free
+
+(nH, kT, Si, S, Tau, norm free)
+
+    TBabs nH    2.10      +/-  3.9E-02  10^22
+    vnei  kT    1.71      +/-  0.10     kev
+    vnei  Si    4.39      +/-  0.12
+    vnei  S     3.94      +/-  0.16
+    vnei  Tau   2.35E+10  +/-  1.3E+09  s/cm^3
+    vnei  norm  4.52E-03  +/-  3.0E-04
+
+    MOS1 instr con: 1.02
+    MOS2 instr con: 0.92
+    PN instr con: 0.60
+    MOS1 (motch) instr con: 1.62
+    MOS2 (motch) instr con: 1.75
+
+    MOS1 SP: n=0.41, norm 6.8e-2
+    MOS2 SP: n=0.49, norm 8.2e-2
+    PN SP: n=0.53, norm 0.14
+    MOS1 (motch) SP: n=0.36, norm 5.7e-2
+    MOS2 (motch) SP: n=0.83, norm 3.0e-2  (!)
+
+    Fit statistic : Chi-Squared =        2790.84 using 2240 PHA bins.
+    Test statistic : Chi-Squared =        2790.84 using 2240 PHA bins.
+     Reduced chi-squared =        1.25770 for   2219 degrees of freedom
+
+SNR fitting with (crude) straight background subtraction
+--------------------------------------------------------
+
+### Fitting progression
+
+Start with nH,kT,Tau free, then thaw Si,S.
+With all solar abundances, we get a poor fit, to no one's surprise.
+Residuals show a line-shaped excess around Si He-alpha region.
+
+    ========================================================================
+    Model TBabs<1>*vnei<2> Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   TBabs      nH         10^22    4.20507      +/-  2.74597E-02  
+       2    2   vnei       kT         keV      0.693725     +/-  8.45959E-03  
+       [... omit frozen abundances ...]
+      16    2   vnei       Tau        s/cm^3   6.16578E+10  +/-  4.37994E+09  
+      17    2   vnei       Redshift            0.0          frozen
+      18    2   vnei       norm                7.73004E-02  +/-  2.45807E-03
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =       12656.35 using 1877 PHA bins.
+    Test statistic : Chi-Squared =       12656.35 using 1877 PHA bins.
+     Reduced chi-squared =       6.757260 for   1873 degrees of freedom 
+     Null hypothesis probability =   0.000000e+00
+
+Freeze nH, kT, Tau; free Si, fit.
+
+    Yields Si = 1.75, chi-squared = 10674.72, reduced chi-squared 5.69
+    Improvement, but still a lot of error in residuals.
+
+Thaw nH,kT,Tau, with Si still free.
+
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   TBabs      nH         10^22    2.69465      +/-  3.04639E-02  
+       2    2   vnei       kT         keV      1.51774      +/-  4.28172E-02  
+      10    2   vnei       Si                  2.64083      +/-  4.54133E-02  
+      16    2   vnei       Tau        s/cm^3   2.85722E+10  +/-  1.21985E+09  
+      18    2   vnei       norm                9.75483E-03  +/-  4.07743E-04
+
+    Fit statistic : Chi-Squared =        9499.25 using 1877 PHA bins.
+    Test statistic : Chi-Squared =        9499.25 using 1877 PHA bins.
+     Reduced chi-squared =        5.07438 for   1872 degrees of freedom 
+     Null hypothesis probability =   0.000000e+00
+
+Thaw all of nH,kT,Tau,Si,S.
+
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   TBabs      nH         10^22    2.12828      +/-  2.61716E-02  
+       2    2   vnei       kT         keV      2.02251      +/-  7.39041E-02  
+      10    2   vnei       Si                  3.82517      +/-  6.42711E-02  
+      11    2   vnei       S                   4.88114      +/-  0.181313     
+      16    2   vnei       Tau        s/cm^3   1.54760E+10  +/-  4.70120E+08  
+      18    2   vnei       norm                4.87415E-03  +/-  2.01638E-04  
+
+    Fit statistic : Chi-Squared =        7391.95 using 1877 PHA bins.
+    Test statistic : Chi-Squared =        7391.95 using 1877 PHA bins.
+     Reduced chi-squared =        3.95080 for   1871 degrees of freedom 
+     Null hypothesis probability =   0.000000e+00
+
+The chi-squared is quite high.  Increasing ignore range, to fit only
+0.7-5.0keV, doesn't have much effect (reduced chi-squared still around 4).
+
+Qualitatively, PNS003 data seems to be the worst of the lot.
+Dropping data groups 3,4,5 and only fitting 0087940201 MOS1 and MOS2 actually
+helps a ton.  Reduced chi-squared becomes 1.4.
+
+Now to be clear, the PN fit doesn't look terrible -- I speculate that the poor fit occurs because the XSPEC errors don't account for increased error due to spectrum subtraction.
+
+### Investigate fit discrepancy w.r.t. 2016 Jan 07 bkg-sub fits
+
+Somehow, the fits aren't as good as my previous ad hoc test (see 2016 Jan 7
+notes on ARF correction).  By eye it looks ok, but chi-squared is much worse.
+
+On Friday Jan 8 (after my ad hoc fit result) I fixed a major bug in "specmeth"
+where BACKSCAL keyword was not propagating correctly.
+Subtracted spectra would have incorrect BACKSCAL; both bkg and src spectra
+would have BACKSCAL 1.  Now that doesn't explain things for 0087940201 since
+the bkg/src regions cover almost the same geometric area, and BACKSCAL scaling
+wouldn't have changed much.  Same goes for EXPOSURE values (which should have
+been correctly propagated regardless).
+
+Maybe the change in fitting result occurs due to the change in PN error?!
+I return to "specmeth" script and temporarily change the mathpha call for QPB
+subtraction to 1. erroneously assume (c)ounts for PN spectra, and 2.
+erroneously set BACKSCAL = 1.
+
+With nH, kT, Tau free; Si,S = 1 fixed (includes 0551000201 exposures)
+
+       1    1   TBabs      nH         10^22    4.26441      +/-  5.62672E-02  
+       2    2   vnei       kT         keV      0.680138     +/-  2.54352E-02  
+      16    2   vnei       Tau        s/cm^3   5.84882E+10  +/-  7.52978E+09  
+      18    2   vnei       norm                6.99632E-02  +/-  6.26161E-03
+
+    Fit statistic : Chi-Squared =        7133.16 using 1881 PHA bins.
+    Test statistic : Chi-Squared =        7133.16 using 1881 PHA bins.
+     Reduced chi-squared =        3.80030 for   1877 degrees of freedom 
+     Null hypothesis probability =   0.000000e+00
+
+OK, huge difference.  Now, thaw Si, S abundances and fit.
+
+       1    1   TBabs      nH         10^22    2.43575      +/-  5.29364E-02  
+       2    2   vnei       kT         keV      1.20324      +/-  6.23764E-02  
+      10    2   vnei       Si                  4.46075      +/-  0.136747     
+      11    2   vnei       S                   5.84094      +/-  0.408087     
+      16    2   vnei       Tau        s/cm^3   1.95345E+10  +/-  1.15500E+09  
+      18    2   vnei       norm                7.21904E-03  +/-  6.40248E-04
+
+    Fit statistic : Chi-Squared =        5086.12 using 1881 PHA bins.
+    Test statistic : Chi-Squared =        5086.12 using 1881 PHA bins.
+     Reduced chi-squared =        2.71260 for   1875 degrees of freedom 
+     Null hypothesis probability =  7.817741e-294
+
+And, to try to replicate previous results, remove 0551000201 MOS exposures.
+Result:
+
+       1    1   TBabs      nH         10^22    2.20285      +/-  5.29141E-02  
+       2    2   vnei       kT         keV      1.36096      +/-  9.12594E-02  
+      10    2   vnei       Si                  4.24679      +/-  0.150958     
+      11    2   vnei       S                   4.71260      +/-  0.315012     
+      16    2   vnei       Tau        s/cm^3   2.24117E+10  +/-  1.66643E+09  
+      18    2   vnei       norm                6.06976E-03  +/-  5.90217E-04
+
+    Fit statistic : Chi-Squared =        2680.20 using 1278 PHA bins.
+    Test statistic : Chi-Squared =        2680.20 using 1278 PHA bins.
+     Reduced chi-squared =        2.10708 for   1272 degrees of freedom 
+     Null hypothesis probability =  1.687869e-102
+
+Happily, this was EXACTLY what I got last time, to individual parameter values.
+Quick check with BACKSCAL error removes indicates that yes, error arises due
+only to incorrect subtraction in PN data.
+
+Two errors: BACKSCAL and PN ct rate not fixed; ARF correction in place
+    Net count rate (cts/s) for Spectrum:1  2.408e-01 +/- 7.949e-03 (26.4 % total)
+    Net count rate (cts/s) for Spectrum:2  2.180e-01 +/- 8.104e-03 (22.9 % total)
+    Net count rate (cts/s) for Spectrum:3  8.262e-01 +/- 1.318e-02 (42.0 % total)
+
+BACKSCAL error fixed, PN ct rate error not fixed; ARF correction in place
+    Net count rate (cts/s) for Spectrum:1  2.522e-01 +/- 7.892e-03 (27.7 % total)
+    Net count rate (cts/s) for Spectrum:2  2.555e-01 +/- 7.926e-03 (26.9 % total)
+    Net count rate (cts/s) for Spectrum:3  8.512e-01 +/- 1.307e-02 (43.3 % total)
+
+Both errors fixed.
+    Net count rate (cts/s) for Spectrum:1  2.522e-01 +/- 7.892e-03 (27.7 % total)
+    Net count rate (cts/s) for Spectrum:2  2.555e-01 +/- 7.926e-03 (26.9 % total)
+    Net count rate (cts/s) for Spectrum:3  8.491e-01 +/- 7.824e-03 (43.3 % total)
+
+BACKSCAL error causes a ~5-10% error in bkg subtraction; PN error causes a
+smaller error in ct rates, but somehow significantly worsens the fit.
+
+OK.  So now we understand the cause of the discrepancy.
+
+### Investigating why bkg subtraction fits look so poor
+
+Now, running correct background subtraction... I notice that
+`0087940201/odf/repro/pnS003_src_os_sqpb.pi` has rate column (good) but no
+error column (bad), and the POISSERR keyword is set to true (?!).
+
+Troubleshoot this to give background subtraction a "proper" treatment.
+
+Also some manual subtraction / rebinning may be in order, to help with fit
+statistics.
 
 
 
-## Standing list of questions
-* Check about ARF correction for background sub.
-  Tested w/ straight fit from 0-5 keV; could go as far as assuming diagonal RMF
-  and mapping straight to channel space (interpolating if needed).
-  Doesn't matter if we go with straight background modeling.
+## Images to accompany notes
 
-* Documentation on XSPEC errors, for grouped spectra?
-  Wondering if errors in spectrum are used at all, and how propagated in case
-  they are binned via grppha (vs. "setplot rebin")
+Plots of the various fit results are given in:
+    20160112_bkg_fit_0087940201.png
+    20160112_bkg_fit_0551000201.png
+    20160112_snr_fit_allfree.png
+        nH,kT,Tau free; Si,S free; SP power law gamma and norms free
+        XRB fixed; instr fixed (except prefactor constants)
+    20160112_snr_fit_rebin.png
+    20160112_snr_fit_zoom_rebin.png
+        as above, but zoomed in and with a fine binning
+        (setplot rebin 15 100)
+        rescale Y 1e-4 2.5
+    20160112_sqpb_noise.png
+
+The plot of `sqpb_noise` is of the background subtracted data -- the plot is
+erroneous (PN data not subtracted correctly due to typo in an XSPEC command)
+and filled with noise from the subtraction process (this is expected).
+
+## Notes from Pat meeting, Tues Jan 12
+
+* ARF/RMF weighting could be a 1st order effect (but we're still trying to
+  figure out zero-th order anyways)
+* In general, don't touch abundances until you've considered all other
+  parameters (kT, nH, Tau)
+* Omitting PNS003 is fine.  Not that much data loss, and QPB analysis
+  assumptions would be tenuous...
+* First-order ARF correction OK, obviously not worth sweating higher-energy
+  ratio deviation
+* FWC assumption of equivalent line ratios... that's the main question
+
+* vnei ionization timescale (s/cm^3): assuming n=1, then yes, Tau ~ 1e11 is
+  what is expected; indeed several times 10^11 or even larger is common.
+  Tau ~ few x 10^10 is unusual.
+  We might expect smaller Tau in spectra of recently shocked material (assuming
+  spatially resolved), but for integrated spectra, no...
 
 
-* compile massive list of questions and updates for Pat...
-* set up fitting script for all FWC data to get line ratios/normalizations
-* set up fitting script for bkg, including 0551000201
-    try 1. freeze line ratios/norms, use constant term to parameterize norm
-    2. let line ratio float, to compare (use constant term to parameterize
-       deviation from FWC ratio)
-* set up fitting script for src,
-* SWPC spectrum cut and fit, after done
-
-(one more remark: fits with bkg subtraction, by eye I keep thinking the little
-peaks correspond to SWPC emission. but hard to say.)
+FIT results to show:
+* Show main fit, with a few different parameters frozen/freed
+  Tau = 1e+11 frozen; kT = 1 frozen
+* Fits w/ straight background subtraction
+  - results with and without ARF correction
+* Background modeling
+  - allow instrumental line ratios to float; see how fit differs if at all
+  - freeze SP power laws to bkg fit values
+* Show results of fit after cutting based on SWPC time series (GSFC XMM GOF)
 
 
-* for PN, perform a standard fit (say, bkg sub) using
-   - non-detmapped RMF
-   - detmapped RMF
-   (if this works, also use a detmap for pnS003-obj-ff.rmf)
-   Really unsure why ESAS script doesn't use detmap for this.
+## A few reading remarks on (v)(v)nei model
+
+Running down list from XSPEC equil manual page, in reverse chronological order:
+
+Borkowsky, Lyerly, Reynolds (2001) -- augment vnei by accounting for:
+* spatial integration along line-of-sight through remnant (in this case I think
+  completely integrated spectrum of remnant)
+* discrepancy between electron / ion temperatures at shock
+  (models evolution of this parameter)
+Corresponds to sedov (& vsedov) in XSPEC.
+
+Liedahl, Osterheld, Goldstein (1995) -- Fe L-shell calculation for 0.7-1.5 keV
+emission
+
+Borkowski, Sarazin, Blondin (1993) -- NEI emission calculation for Kepler SNR
+First, find time-dependent (non-equilibrium) ion fractions:
+* assume fully ionized H, He; compute state for C,N,O,Ne,Mg,Si,S,Ca,Fe,Ni
+* neglect 3-body collisions, given low density of plasma
+* assume collisional / de-excitation processes < radiative decay; i.e.,
+  all excitation assumes interacting ions initially at ground state,
+  all de-excitation assumed by emission (if not forbidden or whatever)
+* neglect ambient radiation field; no stimulated radiation transitions,
+  no alteration of gas dynamics/processes due to radiation
+* optically thin; gas' own radiation passes straight through
+Equation (5) describes time-dependent collisional ionization and recombination
+(both radiative and dielectronic recombination.
+ From http://www.nist.gov/pml/div684/grp01/research-324.cfm
+ radiative recomb = ion captures electron + emits a photon, from energy decr.
+ dielectronic recomb = ion captures electron + promote an electron to higher
+   orbit, then that state eventually decays and radiates)
+Collisional + recombination rates taken from Hamilton,Sarazin,Chevalier(1983)
+
+With modeled ion fractions in hand from model, use another code
+Hamilton+ (1983) and Wise&Sarazin (1993) to compute free-free, free-bound, and
+line emission from all ions (H, He, C, N, ..., Fe, Ni).
+
+Hamilton, Sarazin, Chevalier (1983, ApJS) -- didn't look closely, since I think
+conceptually it's pretty clear.  A few bullets...
+* with assumptions (as re-stated in Borkowski+ 1993),
+    ionization/recombination rates ~ density
+    emissivities ~ density^2
+* Table 1 provides the default solar abundances (`log10[N(X)/N_H] + 12`)
+* more description of the specific ionization / "de-ionization" processes,
+  specific citations on collisional ionization, autoionization, recombination;
+  temperature dependence is important.
+This looks like a good, fundamental paper to read.
+
+
+## SWPC cut analysis
+
+SWPC cut for 0087940201 test
+    0087940201 plots:
+        Start: 1.15354e8; stop: 1.15394e8  (span 40ks)
+        Cut at time = 25000s + 1.1535e8 seconds
+            = 115,350,000 + 25,000 ~ 115,375,000s
+        est. proton density pre-cut ~8, post-cut ~4
+        est. SWCX emission pre-cut ~3e12, post-cut ~1e12 and lower (to 1e11?)
+    0551000201 plots:
+        Start: 3.52724237e8, stop: 3.52778429e8 (span 50ks)
+        est. SWCX emission ~1.5e12 during the quiet period
+            jumps to ~2e12 in our flaring periods (already excised)
+        est. proton density ~4 (arbitrary units) during quiet period
+
+
 
 
 
 Standing TO-DOs
 ===============
+
+PENDING QUESTIONS
+* Documentation on XSPEC error calculation for grouped spectra?
+  - Are errors in spectrum used at all?  If so, how propagated?
+  - Some doc on propagation in setplot rebin; not sure if applies to
+    grouping set by grppha.
+* PN - perform fit with and without detmapped RMF
+
+REMINDER TO SELF: the PNS003 filterwheel fit does NOT include OOT correction!
 
 ESAS: vet and submit bug fix for MOS1 CCD4 strip removal; inquire about
 detector map for PN RMF...
@@ -4265,9 +5011,6 @@ detector map for PN RMF...
    We have a baseline of about 4 observations within 1 week, centered on the
    observation of 0551000201.
 
-* Explicitly note which spectra _cannot_ be fit without the soft proton power
-  law (diagnose using plot of unfolded spectra).
-
 * Explicitly note relative sizes of backgrounds for different instruments, and
   obsids.
 
@@ -4284,17 +5027,6 @@ Working on this..
 7. add mosaicking step.
 8. check on SWPC emission (be sure to updateexposure when making time cuts, and
    check flare GTIs)
-
-Items to review with Pat on reduction + analysis
-(have ssh -X running on computer to pull up docs if needed)
-* epreject offset correction
-* point source masking
-* adjustment to GTIs
-
-Other misc. things I've done:
-* uncovered confusion in SAS doc for evselect (asked helpdesk, tbd...)
-* extensively modify clobber behavior in {mos,pn}-spectra-mod
-  (maybe warrants emailing ESAS devs)
 
 
 
