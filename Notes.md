@@ -4223,7 +4223,9 @@ List of section headers:
 * SNR fitting with (crude) straight background subtraction
   - Fitting progression
   - Investigate fit discrepancy w.r.t 2016 Jan 07 bkg-sub fits
+  - Investigate why bkg subtraction fits are so bad
 * Images to accompany notes
+* Notes from Pat meeting, Tues Jan 12
 
 (+) indicates sections with fit numbers used in downstream fits (currently by
 hand-copying, though this could be improved)
@@ -4840,17 +4842,78 @@ smaller error in ct rates, but somehow significantly worsens the fit.
 
 OK.  So now we understand the cause of the discrepancy.
 
-### Investigating why bkg subtraction fits look so poor
+### Investigate why bkg subtraction fits are so bad
 
-Now, running correct background subtraction... I notice that
-`0087940201/odf/repro/pnS003_src_os_sqpb.pi` has rate column (good) but no
-error column (bad), and the POISSERR keyword is set to true (?!).
+Returning to correct background subtraction, the fit quality is terrible.
+The data are not helping, looking at error bars in `20160112_sqpb_noise.png`.
+What's going on?  I speculate that (1) the error bars could be incorrectly
+computed, or (2) the binning is crap because we bin before background
+subtraction.
 
-Troubleshoot this to give background subtraction a "proper" treatment.
+QPB-subtracted spectrum `0087940201/odf/repro/pnS003_src_os_sqpb.pi` has rate
+column but no error column, and the POISSERR keyword is set to true.
+With properr=yes, default error method POISS-0 still sets POISSERR keyword to
+True, so no error column is written in either MOS or PN data.  Recall that this
+was forced because our counts are sometimes negative; any other method will
+cause mathpha to spew errors/warnings.
 
-Also some manual subtraction / rebinning may be in order, to help with fit
-statistics.
+Could grppha binning be messing up errors for count rate data?  From manual
+check of one bin (summing counts in channels manually), grppha does bin count
+rate data correctly, just scaling by EXPOSURE keyword.  So the grouping is OK
+for PN if we are sticking to Poisson errors.
 
+Let us trace the error propagation:
+
+    mos1S001-src.pi, pnS003-src-os.pi, ...
+        Counts and count rates, no edits.  Poisson errors are OK.
+
+    mos1S001-src-qpb.pi, pnS003-src-qpb.pi, ...
+        Count rate with relatively small statistical error
+
+    mos1S001_src_sqpb.pi, pnS003_src_os_sqpb.pi
+        Counts and count rates, with Poisson errors assumed.
+        Given that QPB errors are small-ish, this seems acceptable, although we
+        should recognize that purely Poisson errors are an underestimate.
+        (and, we are totally ignoring systematics)
+
+    XSPEC fit view of: mos1S001_src_sqpb_grp50.pi, back=mos1S001_bkg_sqpb.pi
+        Sum background-subtracted-counts in each bin; compute purely Poisson
+        error
+
+Can we get XSPEC to use more reasonable errors?
+
+From XSPEC manual for data command:
+> A data file has the total observed counts for a number of channels and a
+> factor for the size of any systematic error. Each channel is converted to a
+> count rate per unit area (assumed cm–2). The default background file is used
+> for background subtraction. An error term is calculated using Poisson
+> statistics and any systematic error indicated in the file
+
+But, I know from plotting QPB that XSPEC is able to use `STAT_ERR` column in
+spectrum file.  I wish the XSPEC manual would describe the error determination
+code.
+
+From an old CIAO page:
+> If the data are grouped then XSPEC calculates the `GRP_STAT_ERR = sqrt(SUM
+> STAT_ERR**2)` over the group. This gives an error which is much larger than the
+> correct one calculated from the counts in the group.
+
+Therefore, yes: in order to apply our own error propagation, we would have to:
+* perform background (XRB/lines) subtraction manually (must do this before binning)
+* bin subtracted data
+* add `STAT_ERR` column by hand, and set POISSERR=F
+
+For now, I will:
+* perform background (XRB/lines) subtraction manually
+* bin subtracted data
+* allow us to fit with POISSERR
+
+This completely neglects error propagation, and may mess up weighting in
+the fits.  But, fitting background-subtracted spectra is already an approximate
+method.  Please note to self: chi-squared is large because our error estimates
+are small, and our error estimates are flat-out wrong.  I record notes on
+implementation in a new section of the notes (this block of fitting notes is
+running long).
 
 
 ## Images to accompany notes
@@ -4891,16 +4954,27 @@ and filled with noise from the subtraction process (this is expected).
   spatially resolved), but for integrated spectra, no...
 
 
-FIT results to show:
-* Show main fit, with a few different parameters frozen/freed
-  Tau = 1e+11 frozen; kT = 1 frozen
-* Fits w/ straight background subtraction
-  - results with and without ARF correction
-* Background modeling
-  - allow instrumental line ratios to float; see how fit differs if at all
-  - freeze SP power laws to bkg fit values
-* Show results of fit after cutting based on SWPC time series (GSFC XMM GOF)
 
+Wednesday 2016 January 13 -- tweak bkg-subtraction fits, SWCX cut, NEI reading
+==============================================================================
+
+## Corrected background subtraction
+
+
+## SWPC cut analysis
+
+SWPC cut for 0087940201 test
+    0087940201 plots:
+        Start: 1.15354e8; stop: 1.15394e8  (span 40ks)
+        Cut at time = 25000s + 1.1535e8 seconds
+            = 115,350,000 + 25,000 ~ 115,375,000s
+        est. proton density pre-cut ~8, post-cut ~4
+        est. SWCX emission pre-cut ~3e12, post-cut ~1e12 and lower (to 1e11?)
+    0551000201 plots:
+        Start: 3.52724237e8, stop: 3.52778429e8 (span 50ks)
+        est. SWCX emission ~1.5e12 during the quiet period
+            jumps to ~2e12 in our flaring periods (already excised)
+        est. proton density ~4 (arbitrary units) during quiet period
 
 ## A few reading remarks on (v)(v)nei model
 
@@ -4950,36 +5024,27 @@ conceptually it's pretty clear.  A few bullets...
 This looks like a good, fundamental paper to read.
 
 
-## SWPC cut analysis
-
-SWPC cut for 0087940201 test
-    0087940201 plots:
-        Start: 1.15354e8; stop: 1.15394e8  (span 40ks)
-        Cut at time = 25000s + 1.1535e8 seconds
-            = 115,350,000 + 25,000 ~ 115,375,000s
-        est. proton density pre-cut ~8, post-cut ~4
-        est. SWCX emission pre-cut ~3e12, post-cut ~1e12 and lower (to 1e11?)
-    0551000201 plots:
-        Start: 3.52724237e8, stop: 3.52778429e8 (span 50ks)
-        est. SWCX emission ~1.5e12 during the quiet period
-            jumps to ~2e12 in our flaring periods (already excised)
-        est. proton density ~4 (arbitrary units) during quiet period
-
-
 
 
 
 Standing TO-DOs
 ===============
 
+FIT results to prepare:
+* Background modeling
+  - allow instrumental line ratios to float; see how fit differs if at all
+  - freeze SP power laws to bkg fit values
+* show fits on either side of cut based on SWPC time series (GSFC XMM GOF)
+
 PENDING QUESTIONS
-* Documentation on XSPEC error calculation for grouped spectra?
-  - Are errors in spectrum used at all?  If so, how propagated?
-  - Some doc on propagation in setplot rebin; not sure if applies to
-    grouping set by grppha.
 * PN - perform fit with and without detmapped RMF
 
-REMINDER TO SELF: the PNS003 filterwheel fit does NOT include OOT correction!
+REMINDER TO SELF:
+* PNS003 filterwheel fit does NOT include OOT correction!
+* (background subtraction fits) fitting binned spectra in XSPEC, with
+  POISSERR = true, __underestimates__ the true error.
+  The opposite approach of letting XSPEC adding all errors in quadrature will
+  strongly overestimate the error.
 
 ESAS: vet and submit bug fix for MOS1 CCD4 strip removal; inquire about
 detector map for PN RMF...
