@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# mos1S001 source spectrum extractions, before/after t=115375000
+# to assess effect (if any) of SWCX contamination on spectra
+
+evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&(FLAG == 0)&&(TIME <= 115375000)&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))&&region(mos1S001-bkg_region-det.fits)&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))' filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes withspectrumset=yes spectrumset=mos1S001-src-precut.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999
+
+backscale spectrumset=mos1S001-src-precut.pi badpixlocation=mos1S001-clean.fits withbadpixcorr=yes
+
+evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes expression='(PATTERN<=12)&&(FLAG == 0)&&(TIME > 115375000)&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))&&region(mos1S001-bkg_region-det.fits)&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))' filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes withspectrumset=yes spectrumset=mos1S001-src-postcut.pi energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999
+
+backscale spectrumset=mos1S001-src-postcut.pi badpixlocation=mos1S001-clean.fits withbadpixcorr=yes
+
+grppha infile="mos1S001-src-precut.pi" outfile="!mos1S001-src-precut-key.pi" \
+    comm="chkey BACKFILE mos1S001-src-qpb.pi & \
+          chkey RESPFILE mos1S001-src.rmf & \
+          chkey ANCRFILE mos1S001-src.arf & \
+          group min 50 & exit"
+
+grppha infile="mos1S001-src-postcut.pi" outfile="!mos1S001-src-postcut-key.pi" \
+    comm="chkey BACKFILE mos1S001-src-qpb.pi & \
+          chkey RESPFILE mos1S001-src.rmf & \
+          chkey ANCRFILE mos1S001-src.arf & \
+          group min 50 & exit"

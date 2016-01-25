@@ -45,21 +45,21 @@ make_xmmregions ${OBSID}
 echo "Running mos-spectra-mod prefix=1S001 ..."
 mos-spectra-mod prefix=1S001 caldb=$CALDB \
     region="${RDIR}/reg_mos1S001_${RSTEM}.txt" \
-    mask=1 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+    mask=1 elow=300 ehigh=1250 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
   >& mos-spectra_mos1S001_${RSTEM}.log
 mv command.csh mos-spectra_mos1S001_${RSTEM}_cmd.csh
 
 echo "Running mos-spectra-mod prefix=2S002 ..."
 mos-spectra-mod prefix=2S002 caldb=$CALDB \
     region="${RDIR}/reg_mos2S002_${RSTEM}.txt" \
-    mask=1 elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+    mask=1 elow=300 ehigh=1250 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
   >& mos-spectra_mos2S002_${RSTEM}.log
 mv command.csh mos-spectra_mos2S002_${RSTEM}_cmd.csh
 
 echo "Running pn-spectra-mod prefix=S003 ..."
 pn-spectra-mod prefix=S003 caldb=$CALDB \
     region="${RDIR}/reg_pnS003_${RSTEM}.txt" \
-    mask=1 elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
+    mask=1 elow=300 ehigh=1250 quad1=1 quad2=1 quad3=1 quad4=1 \
   >& pn-spectra_pnS003_${RSTEM}.log
 mv command.csh pn-spectra_pnS003_${RSTEM}_cmd.csh
 
@@ -67,17 +67,17 @@ mv command.csh pn-spectra_pnS003_${RSTEM}_cmd.csh
 # diag=2 creates more diagnostic output files (.qdp plots)
 echo "Running mos_back prefix=1S001 ..."
 mos_back prefix=1S001 caldb=$CALDB diag=2 clobber=1 \
-    elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+    elow=300 ehigh=1250 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
   >& mos_back_mos1S001_${RSTEM}.log
 
 echo "Running mos_back prefix=2S002 ..."
 mos_back prefix=2S002 caldb=$CALDB diag=2 clobber=1 \
-    elow=0 ehigh=0 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+    elow=300 ehigh=1250 ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
   >& mos_back_mos2S002_${RSTEM}.log
 
 echo "Running pn_back prefix=S003 ..."
 pn_back prefix=S003 caldb=$CALDB diag=2 clobber=1 \
-    elow=0 ehigh=0 quad1=1 quad2=1 quad3=1 quad4=1 \
+    elow=300 ehigh=1250 quad1=1 quad2=1 quad3=1 quad4=1 \
   >& pn_back_pnS003_${RSTEM}.log
 
 

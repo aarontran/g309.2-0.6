@@ -188,17 +188,17 @@ ignore 2:**-0.3,11.0-**
 # Normalizations only
 fit
 
-thaw spm1:1
-thaw spm2:1
+#thaw spm1:1
+#thaw spm2:1
 #thaw sppn:1
 
-fit
-
-## Float kT for local unabsorbed APEC (kT~0.1keV), absorption (nH), and galactic
-## halo absorbed APEC (kT~0.25keV)
-thaw xrb:1,5,8
-
-fit
+#fit
+#
+### Float kT for local unabsorbed APEC (kT~0.1keV), absorption (nH), and galactic
+### halo absorbed APEC (kT~0.25keV)
+#thaw xrb:1,5,8
+#
+#fit
 
 # Some manual adjustments (alternately freeze/thaw parameters and re-fit)
 # may be required

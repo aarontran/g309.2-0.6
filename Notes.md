@@ -4960,6 +4960,140 @@ Wednesday 2016 January 13 -- tweak bkg-subtraction fits, SWCX cut, NEI reading
 
 ## Corrected background subtraction
 
+Comment: mathpha help page is internally inconsistent (in one place it states
+ERRMETH='POISS-0' is default, in another it states 'POISS-1' to be default.
+In practice (CfA install) mathpha is using 'POISS-0' with properr=Y.
+
+Implemented subtraction in renamed script `spec_subtract` (formerly
+`specmeth`).
+
+Data, error bars, and fits look mostly like crap.  I'm really confused.
+Thinking it's not worth spending a lot of time on this analysis.
+
+Plotting together:
+    mos1S001_src_sqpb.pi or mos1S001-src-grp50.pi
+    mos1S001_bkg_sqpb.pi or mos1S001-bkg-grp50.pi
+at least makes it clear that background-subtracted data look like crap, but
+don't look wrong.
+
+I think the reason that explicit background fit succeeds, is that by fitting
+five backgrounds simultaneously we're improving the signal to noise ratio by
+sqrt(5) or so.  Granted the SP contamination is still poorly constrained, but
+it's something.
+
+
+## Quick fit with soft proton power law values/normalizations fixed
+
+First, try freezing power-law indices + norms and fitting solely with
+1. absorbed vnei
+2. instrumental line normalizations (ratios fixed)
+
+       1    1   constant   factor              0.762071     +/-  4.68849E-02  
+      20    1   constant   factor              0.710206     +/-  4.35130E-02  
+      39    1   constant   factor              0.622259     +/-  2.39189E-02  
+      58    1   constant   factor              1.32411      +/-  6.40511E-02  
+      77    1   constant   factor              1.41944      +/-  5.83450E-02  
+
+       1    1   TBabs      nH         10^22    3.45748      +/-  3.28116E-02  
+       2    2   vnei       kT         keV      1.01224      +/-  2.53497E-02  
+      10    2   vnei       Si                  1.00000      frozen
+      11    2   vnei       S                   1.00000      frozen
+      16    2   vnei       Tau        s/cm^3   4.25097E+10  +/-  3.74442E+09  
+      18    2   vnei       norm                2.81065E-02  +/-  1.32207E-03
+
+    Fit statistic : Chi-Squared =        6909.61 using 2240 PHA bins.
+    Test statistic : Chi-Squared =        6909.61 using 2240 PHA bins.
+     Reduced chi-squared =        3.09709 for   2231 degrees of freedom 
+     Null hypothesis probability =   0.000000e+00
+
+
+Next, thaw Si abundance.
+
+       1    1   constant   factor              0.902636     +/-  4.61271E-02  
+      20    1   constant   factor              0.843641     +/-  4.27518E-02  
+      39    1   constant   factor              0.631403     +/-  2.38970E-02  
+      58    1   constant   factor              1.53552      +/-  6.30878E-02  
+      77    1   constant   factor              1.61105      +/-  5.75167E-02
+
+       1    1   TBabs      nH         10^22    2.04067      +/-  2.40066E-02  
+       2    2   vnei       kT         keV      3.77705      +/-  0.165704     
+      10    2   vnei       Si                  3.37841      +/-  6.83132E-02  
+      11    2   vnei       S                   1.00000      frozen
+      16    2   vnei       Tau        s/cm^3   1.89320E+10  +/-  4.56341E+08  
+      18    2   vnei       norm                3.95179E-03  +/-  1.12318E-04 
+
+    Fit statistic : Chi-Squared =        4680.94 using 2240 PHA bins.
+    Test statistic : Chi-Squared =        4680.94 using 2240 PHA bins.
+     Reduced chi-squared =        2.09908 for   2230 degrees of freedom 
+     Null hypothesis probability =  7.613902e-176
+
+Next, thaw S abundance.
+
+       1    1   constant   factor              0.999009     +/-  4.61798E-02  
+      20    1   constant   factor              0.936468     +/-  4.27946E-02  
+      39    1   constant   factor              0.646228     +/-  2.39052E-02  
+      58    1   constant   factor              1.67338      +/-  6.32476E-02  
+      77    1   constant   factor              1.73166      +/-  5.76348E-02
+
+       1    1   TBabs      nH         10^22    1.76978      +/-  2.40078E-02  
+       2    2   vnei       kT         keV      5.65797      +/-  0.418605     
+      10    2   vnei       Si                  4.03651      +/-  8.46934E-02  
+      11    2   vnei       S                   3.98772      +/-  0.153752     
+      16    2   vnei       Tau        s/cm^3   1.61445E+10  +/-  3.07349E+08  
+      18    2   vnei       norm                2.73357E-03  +/-  7.51694E-05
+
+    Fit statistic : Chi-Squared =        3908.74 using 2240 PHA bins.
+    Test statistic : Chi-Squared =        3908.74 using 2240 PHA bins.
+     Reduced chi-squared =        1.75358 for   2229 degrees of freedom 
+     Null hypothesis probability =   2.016358e-95
+
+So, OK, clearly worse.  A lot of error coming from hard tail for 0551000201
+MOS1 exposure only; seems to be a bit better for others.
+Try freeing that normalization (`thaw spm1motch:2`).  Normalization
+basically doubles from 2.976E-02 to ~6.4E-2.
+
+       1    1   constant   factor              1.01946      +/-  4.62352E-02  
+      20    1   constant   factor              0.955373     +/-  4.28486E-02  
+      39    1   constant   factor              0.662830     +/-  2.38826E-02  
+      58    1   constant   factor              1.53899      +/-  6.35252E-02  
+      77    1   constant   factor              1.75845      +/-  5.77082E-02
+
+       1    1   TBabs      nH         10^22    1.88757      +/-  2.88516E-02  
+       2    2   vnei       kT         keV      3.30791      +/-  0.179701     
+      10    2   vnei       Si                  4.19088      +/-  9.77357E-02  
+      11    2   vnei       S                   3.90718      +/-  0.155719     
+      16    2   vnei       Tau        s/cm^3   1.71551E+10  +/-  4.42182E+08  
+      18    2   vnei       norm                3.16319E-03  +/-  1.34972E-04
+
+    Model spm1motch:powerlaw<1>*constant<2> Source No.: 7   Active/On
+       1    1   powerlaw   PhoIndex            0.534000     frozen
+       2    1   powerlaw   norm                6.57093E-02  +/-  1.34021E-03  
+       3    2   constant   factor              0.769000     frozen
+
+    Fit statistic : Chi-Squared =        3218.15 using 2240 PHA bins.
+    Test statistic : Chi-Squared =        3218.15 using 2240 PHA bins.
+     Reduced chi-squared =        1.44441 for   2228 degrees of freedom 
+     Null hypothesis probability =   2.061282e-39
+
+OK, that's not terrible.  Same features mostly show up: low energy excess,
+systematic-looking waviness to residuals.
+
+I think the next steps will be
+1. make that 3 band image (handling exposure maps correctly)
+2. separate out spectra plots to make it actually viewable...
+(maybe use sherpa...)
+
+
+## Irrelevant realization
+
+Does XMM SAS backscale account for missing CCDs?  If not, then my analysis of
+0551000201 MOS1 data has incorrect BACKSCAL, which might explain the
+normalization discrepancy in the fit w/ SP power law fixed...
+
+Answer: yes, it does.  Recall that MOS2 CCD5 was omitted due to anomalous state
+behavior, which does explain why the backscal ratios are similar.  Cheese masks
+don't reflect my exclusion of CCD5.
+
 
 ## SWPC cut analysis
 
@@ -4975,6 +5109,36 @@ SWPC cut for 0087940201 test
         est. SWCX emission ~1.5e12 during the quiet period
             jumps to ~2e12 in our flaring periods (already excised)
         est. proton density ~4 (arbitrary units) during quiet period
+
+Quick reference for time filtering, other than selectlib:
+http://heasarc.gsfc.nasa.gov/docs/xmm/abc/node8.html#SECTION00850000000000000000
+
+Pre-cut:
+    evselect:- selected 9600 rows from the input table.
+    ** evselect: warning (ExpBadDssGlobal), A filtering expression has been specified which may not allow for calculation of a uniform exposure for all events.  Please ensure that all TIME related filters are applied uniformly.
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] ended:    2016-01-14T03:01:30.000
+    ** evselect: warning (SummaryOfWarnings), 
+       warning ExpBadDssGlobal silently occurred 3 times
+Post-cut:
+    evselect:- selected 18531 rows from the input table.
+    ** evselect: warning (ExpBadDssGlobal), A filtering expression has been specified which may not allow for calculation of a uniform exposure for all events.  Please ensure that all TIME related filters are applied uniformly.
+    evselect:- evselect (evselect-3.62)  [xmmsas_20141104_1833-14.0.0] ended:    2016-01-14T03:02:20.000
+    ** evselect: warning (SummaryOfWarnings), 
+       warning ExpBadDssGlobal silently occurred 3 times
+
+Total: 28131 events matches mos1S001-src.pi extraction, good.
+
+The filtering expression warnings may affect calculated exposure times.  But,
+that doesn't affect our assessment, I think...
+In XSPEC the spectra qualitatively line up right, so I think it worked out.
+Anything else would just show up as a constant shift.
+
+Quick XSPEC plot, no background -- AND, with background + grouping --
+I see no obvious sign of contamination.
+
+Let's forge ahead with ignoring this contribution.
+Anyways, should be covered by soft unabsorbed APEC.
+
 
 ## A few reading remarks on (v)(v)nei model
 
@@ -5023,12 +5187,455 @@ conceptually it's pretty clear.  A few bullets...
   temperature dependence is important.
 This looks like a good, fundamental paper to read.
 
+Friday 2016 January 15 -- split spectrum fit plots in matplotlib
+================================================================
+
+A few fitting questions to investigate:
+
+* Fit background with MOS1/MOS2 soft proton power law indices tied?
+* Fit background from 0087940201 and 0551000201 together?
+* Use ESAS task "proton" to extrapolate src-region SP contamination, based
+  on bkg-region fits?
+* Freeze nH = 1.81e22 (fair bit higher than we're seeing in fits) for XRB?
+
+Major: need to break fit plots apart.  Just going to translate tools to PyXSPEC
+to get this done.
+
+Background fits with MOS SP power law indices tied
+--------------------------------------------------
+
+0087940201 bkg fit: the MOS1/2 power laws were already quite close to begin
+with (0.421 vs. 0.425).  The reduced chi-squared is marginally smaller,
+actually, from 1055 to 1056 dof.  Basically, no difference.
+
+    # Starting from only (nine) normalizations free
+    XSPEC12>fit
+    XSPEC12>thaw spm1:1 ; thaw spm2:1 ; thaw sppn:1
+    XSPEC12>newpar spm2:1=spm1:1
+    XSPEC12>fit
+    XSPEC12>thaw xrb:1,5,8 
+    XSPEC12>fit
+
+    instr:
+       1    1   constant   factor              0.709177     +/-  3.43667E-02  
+      20    1   constant   factor              0.672088     +/-  3.20058E-02  
+      39    1   constant   factor              0.630165     +/-  1.91210E-02  
+    spm1:
+       1    1   powerlaw   PhoIndex            0.422679     +/-  1.52330E-02  
+       2    1   powerlaw   norm                6.03719E-02  +/-  2.15721E-03  
+    spm2:
+       1    1   powerlaw   PhoIndex            0.422679     = spm1:p1
+       2    1   powerlaw   norm                6.45408E-02  +/-  2.21316E-03  
+    sppn:
+       1    1   powerlaw   PhoIndex            0.378153     +/-  4.83926E-02  
+       2    1   powerlaw   norm                7.80593E-02  +/-  7.90120E-03  
+    xrb:
+       1    1   apec       kT         keV      0.233432     +/-  1.03283E-02  
+       4    1   apec       norm                2.40479E-04  +/-  1.94625E-05  
+       5    2   TBabs      nH         10^22    1.37450      +/-  0.116894     
+       6    3   powerlaw   PhoIndex            1.40000      frozen
+       7    3   powerlaw   norm                1.29226E-04  +/-  2.75281E-05  
+       8    4   apec       kT         keV      0.394830     +/-  4.50515E-02  
+      11    4   apec       norm                4.35085E-03  +/-  1.51239E-03  
+
+    Fit statistic : Chi-Squared =        1188.60 using 1070 PHA bins.
+    Test statistic : Chi-Squared =        1188.60 using 1070 PHA bins.
+     Reduced chi-squared =        1.12556 for   1056 degrees of freedom 
+     Null hypothesis probability =   2.660039e-03
+
+0551000201 bkg fit:
+
+    # Starting from only (seven) normalizations free;
+    # initial fit chi-squared/dof = 604.64/488 = 1.2390
+    XSPEC12>fit
+    XSPEC12>thaw spm1:1 ; thaw spm2:1
+    XSPEC12>newpar spm2:1=spm1:1
+    XSPEC12>fit
+    # SP index free: chi-squared/dof = 589.95/487 = 1.2114
+    # residuals still quite poor, wave-like variation
+    XSPEC12>thaw xrb:1,5,8 
+    XSPEC12>fit
+
+    instr:
+       1    1   constant   factor              1.38973      +/-  4.28942E-02  
+       8    1   constant   factor              1.40637      +/-  4.02865E-02  
+    spm1:
+       1    1   powerlaw   PhoIndex            0.224776     +/-  8.60053E-02  
+       2    1   powerlaw   norm                1.57428E-02  +/-  2.66007E-03  
+    spm2:
+       1    1   powerlaw   PhoIndex            0.224776     = spm1:p1
+       2    1   powerlaw   norm                2.26595E-03  +/-  9.75420E-04  
+    xrb:
+       1    1   apec       kT         keV      8.65018E-02  +/-  7.95029E-03  
+       4    1   apec       norm                8.50525E-04  +/-  3.03417E-04  
+       5    2   TBabs      nH         10^22    0.138951     +/-  4.27661E-02  
+       6    3   powerlaw   PhoIndex            1.40000      frozen
+       7    3   powerlaw   norm                5.10379E-04  +/-  2.14015E-05  
+       8    4   apec       kT         keV      0.299661     +/-  2.18355E-02  
+      11    4   apec       norm                3.24175E-04  +/-  1.10656E-04  
+
+    Fit statistic : Chi-Squared =         547.00 using 495 PHA bins.
+    Test statistic : Chi-Squared =         547.00 using 495 PHA bins.
+     Reduced chi-squared =         1.1302 for    484 degrees of freedom 
+     Null hypothesis probability =   2.473836e-02
+
+    # Here's a better version, obtained after running:
+    XSPEC12> newpar xrb:5 1 ; freeze xrb:5
+    XSPEC12> fit
+    XSPEC12> thaw xrb:5
+    XSPEC12> fit
+    # Not very "scientific", but the parameter values appear more credible
+    # (reasonable nH) and much more comparable to values from 0087940201 fit
+
+    instr:
+       1    1   constant   factor              1.42406      +/-  4.28174E-02  
+       8    1   constant   factor              1.45022      +/-  4.00298E-02  
+    spm1:
+       1    1   powerlaw   PhoIndex            0.383103     +/-  6.85431E-02  
+       2    1   powerlaw   norm                2.13003E-02  +/-  2.88758E-03  
+    spm2:
+       1    1   powerlaw   PhoIndex            0.383103     = spm1:p1
+       2    1   powerlaw   norm                4.26962E-03  +/-  1.43290E-03  
+    xrb:
+       1    1   apec       kT         keV      0.209976     +/-  1.16570E-02  
+       4    1   apec       norm                3.52533E-04  +/-  2.97923E-05  
+       5    2   TBabs      nH         10^22    1.03740      +/-  0.101135     
+       6    3   powerlaw   PhoIndex            1.40000      frozen
+       7    3   powerlaw   norm                5.19103E-04  +/-  2.98144E-05  
+       8    4   apec       kT         keV      0.364388     +/-  3.07768E-02  
+      11    4   apec       norm                4.38368E-03  +/-  1.32865E-03  
+
+    Fit statistic : Chi-Squared =         542.39 using 495 PHA bins.
+    Test statistic : Chi-Squared =         542.39 using 495 PHA bins.
+     Reduced chi-squared =         1.1206 for    484 degrees of freedom 
+     Null hypothesis probability =   3.381268e-02
+
+Main verdict: not much effect that I can tell.
+
+Combined bkg fit (consistent XRB, float SP/instr lines)
+-------------------------------------------------------
+
+Tried porting over to PyXSPEC for a bit.  Time sink is the set-up process, for
+both XSPEC and PyXSPEC.  Mainly setting up parameters, hard-coding norm values,
+etc...  Realized, this is not really a script-friendly task.  I'm performing
+one fit [to rule them all], or a chain of such fits, and trying many variants
+of said fit pipeline in a one-off fashion.  So it doesn't make sense to script
+these, when there's not a lot to script "over".  So, stuck to XSPEC.
+
+Also (re-)figured out how to export data:  iplot, then wdata.
+It will save x, xerr, y, yerr, summed model, indiv model components
+Wrote starter script to plot the fits and actually see what's going on.
+
+New script `back_all.xcm`.
+
+A little funky -- fits are less stable (unsurprisingly)
+* PN power law index tends to float towards n=-0.25
+* nH tends to float towards small values (0.1e22 - 0.5e22)
+    but, sort of stable once it converges on the "nice" set of XRB parameters
+    apec kT ~ 0.22 unabsorbed
+    nH ~ 1.2
+    apec kT ~ 0.37 absorbed
+* coupling or de-coupling mos1/2 power laws doesn't seem to make an obviously
+  big difference.
+
+1:sppn:powerlaw[1]:PhoIndex:3>0.4, 0.01 0.1 0.2 1 1.4
+
+Here's one fit with PN pegged to 0.3
+
+    spm1:
+       1    1   powerlaw   PhoIndex            0.386206     +/-  1.27444E-02  
+       2    1   powerlaw   norm                5.35839E-02  +/-  1.41101E-03  
+    spm1motch:
+       1    1   powerlaw   PhoIndex            0.643859     +/-  2.39222E-02  
+       2    1   powerlaw   norm                4.20071E-02  +/-  1.65950E-03  
+    spm2:
+       1    1   powerlaw   PhoIndex            0.386206     = spm1:p1
+       2    1   powerlaw   norm                5.76602E-02  +/-  1.46190E-03  
+    spm2motch:
+       1    1   powerlaw   PhoIndex            0.643859     = spm1motch:p1
+       2    1   powerlaw   norm                2.00493E-02  +/-  1.34130E-03  
+    sppn:
+       1    1   powerlaw   PhoIndex            0.300000     frozen
+       2    1   powerlaw   norm                5.91043E-02  +/-  1.88141E-03  
+    xrb:
+       1    1   apec       kT         keV      0.229073     +/-  9.30238E-03  
+       4    1   apec       norm                2.51608E-04  +/-  1.25539E-05  
+       5    2   TBabs      nH         10^22    1.25395      +/-  8.88915E-02  
+       6    3   powerlaw   PhoIndex            1.40000      frozen
+       7    3   powerlaw   norm                2.48887E-04  +/-  1.62855E-05  
+       8    4   apec       kT         keV      0.373489     +/-  2.65382E-02  
+      11    4   apec       norm                4.55749E-03  +/-  1.08803E-03  
+
+    Fit statistic : Chi-Squared =        1881.74 using 1565 PHA bins.
+    Test statistic : Chi-Squared =        1881.74 using 1565 PHA bins.
+     Reduced chi-squared =        1.21638 for   1547 degrees of freedom 
+     Null hypothesis probability =   8.335663e-09
+
+Pegged to 0.2, chi-squared drops to 
+
+    spm1:
+       1    1   powerlaw   PhoIndex            0.370655     +/-  1.30874E-02  
+       2    1   powerlaw   norm                5.15866E-02  +/-  1.38651E-03  
+    spm1motch:
+       1    1   powerlaw   PhoIndex            0.625728     +/-  2.50292E-02  
+       2    1   powerlaw   norm                4.00473E-02  +/-  1.65360E-03  
+    spm2:
+       1    1   powerlaw   PhoIndex            0.370655     = spm1:p1
+       2    1   powerlaw   norm                5.55839E-02  +/-  1.44037E-03  
+    spm2motch:
+       1    1   powerlaw   PhoIndex            0.625728     = spm1motch:p1
+       2    1   powerlaw   norm                1.83640E-02  +/-  1.30890E-03  
+    sppn:
+       1    1   powerlaw   PhoIndex            0.200000     frozen
+       2    1   powerlaw   norm                4.89537E-02  +/-  1.55028E-03  
+    xrb:
+       1    1   apec       kT         keV      0.227647     +/-  8.73188E-03  
+       4    1   apec       norm                2.70157E-04  +/-  1.24291E-05  
+       5    2   TBabs      nH         10^22    1.24513      +/-  8.73373E-02  
+       6    3   powerlaw   PhoIndex            1.40000      frozen
+       7    3   powerlaw   norm                2.70931E-04  +/-  1.58232E-05  
+       8    4   apec       kT         keV      0.375206     +/-  2.61329E-02  
+      11    4   apec       norm                4.56488E-03  +/-  1.07852E-03  
+
+    Fit statistic : Chi-Squared =        1867.14 using 1565 PHA bins.
+    Test statistic : Chi-Squared =        1867.14 using 1565 PHA bins.
+     Reduced chi-squared =        1.20694 for   1547 degrees of freedom 
+     Null hypothesis probability =   3.113632e-08
+
+Pegged to 0.4, chi-squared increases further.  Affects MOS power laws slightly.
+(0.37 -> 0.4)
+
+    spm1:
+       1    1   powerlaw   PhoIndex            0.402701     +/-  1.24049E-02  
+       2    1   powerlaw   norm                5.57489E-02  +/-  1.44037E-03  
+    spm1motch:
+       1    1   powerlaw   PhoIndex            0.662104     +/-  2.27601E-02  
+       2    1   powerlaw   norm                4.40772E-02  +/-  1.66766E-03  
+    spm2:
+       1    1   powerlaw   PhoIndex            0.402701     = spm1:p1
+       2    1   powerlaw   norm                5.99068E-02  +/-  1.48803E-03  
+    spm2motch:
+       1    1   powerlaw   PhoIndex            0.662104     = spm1motch:p1
+       2    1   powerlaw   norm                2.19125E-02  +/-  1.37885E-03  
+    sppn:
+       1    1   powerlaw   PhoIndex            0.400000     frozen
+       2    1   powerlaw   norm                7.07393E-02  +/-  2.27065E-03  
 
 
+    Fit statistic : Chi-Squared =        1903.57 using 1565 PHA bins.
+    Test statistic : Chi-Squared =        1903.57 using 1565 PHA bins.
+     Reduced chi-squared =        1.23049 for   1547 degrees of freedom 
+     Null hypothesis probability =   1.069616e-09
+
+
+Wednesday,Thursday 2016 January 20-21 --
+========================================
+
+Tidy up spectrum dump/plot procedure from last Friday.
+Results to review with Pat...
+
+0. background subtracted fit looks terrible.  Could improve by correctly
+   propagating errors (but, deferring).
+
+   Initial fit (vnei fixed to defaults, norm free) : chi-squared = 177921
+   Fit with nH,kT,Tau freed : chi-squared <= 95374
+       (fit quite unstable, oscillated around a while before settling)
+       (I interrupted fit in interest of time)
+
+   Fit with all of nH,kT,Tau,Si,S free yielded:
+        (again, fit oscillating slowly; allowed to finish)
+        chi-squared = 50322
+        
+    I daresay, despite the low counts and incorrect error bars, the fit
+    looks pretty good.
+
+            TBabs  nH   10^22   2.36633      +/-  3.72574E-02  
+            vnei   kT   keV     2.66443      +/-  3.71669E-02  
+            vnei   Si           8.48006      +/-  0.117124     
+            vnei   S            6.90476      +/-  9.28183E-02  
+            vnei   Tau  s/cm^3  1.97230E+10  +/-  1.75384E+08
+
+    Also, try a fit with binning to minimum 25 rather than 50.
+    Just let nH, kT, Tau, Si, S all float immediately to save time.
+    Chi-squared = 40752, but not useful/meaningful to compare against anything.
+
+            TBabs  nH    10^22    2.10854      +/-  3.45018E-02  
+            vnei   kT    keV      1.89506      +/-  2.76788E-02  
+            vnei   Si             7.10899      +/-  0.107874     
+            vnei   S              7.03597      +/-  0.125545     
+            vnei   Tau   s/cm^3   2.09541E+10  +/-  3.23253E+08  
+            vnei   norm           2.61578E-03  +/-  7.38639E-05
+
+    Roughly the same idea... getting large kT, low Tau values.
+    Qualitatively comparable to full bkg modeling fit, despite bad statistics.
+    What's the deal?
+    Should we check with a sedov fit?
+
+
+1. Yes, stick to combined background fit using `back_all.xcm`.
+   On basis of fit to 0087940201 bkg alone, it seems reasonable to fix PN power
+   law index to somewhere in range 0.2 to 0.4; see results from last Friday.
+
+   For simplicity (and better chi-squared -> better fidelity to background), I
+   take power law index = 0.2 and roll with it.
+
+2. Re-run SNR fit using
+   - combined bkg fit result
+   - freezing MOS1/MOS2 parameters together for both 0087940201, 0551000201
+
+   Thaw snr:1,2,16 (nH, kT, Tau) and see where fit goes.
+   Letting just these three parameters vary improves fit drastically.
+   chisquared 17730 -> 5200
+   BUT, it yields the following values:
+
+        nH = 3.97082      +/-  4.18292E-02
+        kT = 0.691246     +/-  1.40359E-02
+        Tau =  7.88529E+10  +/-  9.16790E+09
+        norm = 6.02865E-02  +/-  3.14678E-03
+
+        Chi-Squared = 5234.69 using 2240 PHA bins
+        Reduced chi-squared = 2.35478 for 2223 degrees of freedom
+
+    There is a very clear residual signal around 1.85 keV for Si line.
+    Now, fitting with nH,kT,Tau,Si free.
+
+        nH = 2.40333      +/-  3.93432E-02
+        kT = 1.61836      +/-  8.15888E-02 
+        Si = 3.32760      +/-  8.22112E-02
+        Tau =  3.02280E+10  +/-  2.22489E+09
+        norm = 6.76236E-03  +/-  4.26485E-04
+            *** 10x smaller normalization (!) ***
+
+        Chi-Squared = 3526.81 using 2240 PHA bins.
+        Reduced chi-squared = 1.58722 for 2222 degrees of freedom 
+
+    Still exists clear residual signal around 2.45 keV for S line.
+    Now fitting with nH,kT,Tau,Si,S free.
+
+        nH = 2.06563      +/-  3.47055E-02
+        kT = 1.82765      +/-  0.102800
+        Si = 4.31783      +/-  0.115313
+        S  = 3.91380      +/-  0.161020
+        Tau =  2.25025E+10  +/-  1.17765E+09
+        norm = 4.36376E-03  +/-  2.40878E-04
+
+        Chi-Squared = 2797.45 using 2240 PHA bins.
+        Reduced chi-squared = 1.25954 for 2221 degrees of freedom
+
+    Finally, fit with nH=1.8, kT=1, Tau=1e11 fixed; Si/S free (maybe nH=1 would
+    have been more appropriate, woops).  Fit does not look terrible, but wavy
+    structure in residuals is more pronounced.
+
+        nH = 1.80000      frozen
+        kT = 1.00000      frozen
+        Si = 7.03629      +/-  0.133485
+        S  = 6.34056      +/-  0.165168
+        Tau =  1.00000E+11  frozen
+        norm = 4.75761E-03  +/-  6.96894E-05
+
+        Chi-Squared = 3307.64 using 2240 PHA bins.
+        Reduced chi-squared = 1.48725 for 2224 degrees of freedom
+
+    Now, thaw Tau and see what happens. --> immediately starts decreasing
+        Tau decreases slightly, S abundance increases slightly
+        not sure what effect this had. chi-squared 3308->3279
+    Refreeze Tau.  Reset Si/S to 1 (freeze) and fit only kT free.
+        kT jumps to 1.85 keV, not very good fit (clear Si/S residuals)
+    Then, thaw Si/S and re-fit.  Doesnt budge.
+        kT settles back to 0.97, Si=7.12, S=6.6
+        chi-squared 3308->3311
+
+    Anyways return to general fit with nH, kT, Tau, Si, S free.
+    At least the nH value seems credible (if rather high), I don't know how to
+    understand the kT/Tau values, which seem to imply a far younger age than we
+    expect for this remnant.
+
+
+3. First look at an ESAS generated image for scientific analysis.
+
+    # Following prescription for 0087940201 only
+    # NOTE: this is working off of files from 0087940201 bkg region.
+    # Output files:
+    # mos1S001-back-im-sky-300-1250.fits
+    # mos2S002-back-im-sky-300-1250.fits
+    # pnS003-back-im-sky-300-1250.fits
+
+    rot-im-det-sky prefix=1S001 elow=300 ehigh=1250 mode=1
+    rot-im-det-sky prefix=2S002 elow=300 ehigh=1250 mode=1
+    rot-im-det-sky prefix=S003 elow=300 ehigh=1250 mode=1
+
+    # NOTE: SP parameters may be more robustly fit from source region
+    # due to increased counts -- tied to, I think, placement of SNR along
+    # optical axis and steep vignetting function for SP flares
+
+    proton prefix=1S001 caldb="../../../caldb/" specname=mos1S001-bkg.pi \
+        ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 \
+        elow=300 ehigh=1250 pindex=0.37 pnorm="5.16e-2" spectrumcontrol=1 
+    rot-im-det-sky prefix=1S001 elow=300 ehigh=1250 mode=2
+
+    proton prefix=2S002 caldb="../../../caldb/" specname=mos2S002-bkg.pi ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1 elow=300 ehigh=1250 pindex=0.37 pnorm="5.56e-2" spectrumcontrol=1
+    rot-im-det-sky prefix=2S002 elow=300 ehigh=1250 mode=2
+
+    proton prefix=S003 caldb="../../../caldb/" specname=pnS003-bkg-os.pi ccd1=1 ccd2=1 ccd3=1 ccd4=1 elow=300 ehigh=1250 pindex=0.2 pnorm="4.90e-2" spectrumcontrol=1
+    rot-im-det-sky prefix=S003 elow=300 ehigh=1250 mode=2
+
+    comb caldb="../../../caldb/" elowlist=300 ehighlist=1250 mask=1 withpartcontrol=1 withsoftcontrol=1 withswcxcontrol=0 prefixlist="1S001 2S002 S003" alpha=1.7
+
+
+Another test, for 0087940201 mos1S001 src region ONLY:
+
+Three bands:
+    0.3 to 1.25 keV, 1.25 to 2.65 keV, 2.65 to 11 keV
+
+    evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes filtertype=expression expression='(PATTERN<=12)&&(FLAG == 0) &&((CCDNR == 1)||(CCDNR == 2)||(CCDNR == 3)||(CCDNR == 4)||(CCDNR == 5)||(CCDNR == 6)||(CCDNR == 7))&&region(mos1S001-bkg_region-det.fits)&&(PI in [300:1250])&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))' imagebinning='imageSize' imagedatatype='Int32' imageset=mos1S001-src-im-det-300-1250-test.fits squarepixels=yes ignorelegallimits=yes withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 yimagemin=-19499 updateexposure=yes filterexposure=yes
+
+    evselect:- selected 4787 rows from the input table.
+
+    evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes filtertype=expression expression='(PATTERN<=12)&&(FLAG == 0) &&((CCDNR == 1)||(CCDNR == 2)||(CCDNR == 3)||(CCDNR == 4)||(CCDNR == 5)||(CCDNR == 6)||(CCDNR == 7))&&region(mos1S001-bkg_region-det.fits)&&(PI in [1250:2650])&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))' imagebinning='imageSize' imagedatatype='Int32' imageset=mos1S001-src-im-det-1250-2650-test.fits squarepixels=yes ignorelegallimits=yes withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 yimagemin=-19499 updateexposure=yes filterexposure=yes
+
+    evselect:- selected 10042 rows from the input table.
+
+    evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes filtertype=expression expression='(PATTERN<=12)&&(FLAG == 0) &&((CCDNR == 1)||(CCDNR == 2)||(CCDNR == 3)||(CCDNR == 4)||(CCDNR == 5)||(CCDNR == 6)||(CCDNR == 7))&&region(mos1S001-bkg_region-det.fits)&&(PI in [2650:11000])&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))' imagebinning='imageSize' imagedatatype='Int32' imageset=mos1S001-src-im-det-2650-11000-test.fits squarepixels=yes ignorelegallimits=yes withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 yimagemin=-19499 updateexposure=yes filterexposure=yes
+
+    evselect:- selected 10026 rows from the input table.
+
+Loads of helpful suggestions from Pat today, + reprise meeting next Tues 2p.
+
+background subtraction:
+- the approach I took, pat hasn't really seen before
+  generally group, then let xspec do background subtraction
+- what the hell is wrong with PN
+- consider not binning and using Cstatistic... make stat purists happy
+- with my binning approach: try setting a larger group minimum, then do the bkg
+  subtraction... ideally would like to have an adaptive binning or whatever, oh
+  well.
+
+Fits:
+- no, don't put much stock in fits with x/y/z fixed if no physical insight
+- better to do with bounds -- but, obviously, not so meaningful if you run up
+  against the bound walls...
+- do try (emphasized highly) fitting SNR + bkg regions together
+  1. don't discard information on bkg
+  2. when doing error commands, should consider uncertainties in background...
+- soft excess around 0.5-1 keV
+  * try freeing O, Ne?
+  * SWCX? - explained to Pat, disfavored
+  * see if it persists after fitting snr/bkg simultaneously.
+- do run error commands, get a sense of how well constrained these numbers are.
+  be advised that often it will stop and say, "found new best fit!"
+  and prompt you to continue.  keep an eye out for this; save XSPEC logs...
+- the "best fit" looks pretty good to Pat's eye, excepting funny bump
+- sedov is worth a shot.
+  obviously the vnei looks good already.
+  note that sedov is quite slow; error command will be even slower...
+- useful command: renorm, faster than fit...
+
+Registration tomorrow... or something.
 
 
 Standing TO-DOs
 ===============
+vim -R xmmsas_20141104_1833/packages/esas/src/proton_mod.f90 
 
 FIT results to prepare:
 * Background modeling

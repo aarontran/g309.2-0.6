@@ -116,28 +116,38 @@ model  1:xrb constant*(apec + tbabs(powerlaw + apec))
     0
     1e-4
 
-# 0087940201 XRB parameters
-newpar xrb:2 0.234
-newpar xrb:5 2.400e-4
-newpar xrb:6 1.376
-newpar xrb:8 1.286e-4
-newpar xrb:9 0.394
-newpar xrb:12 4.368e-3
+# Combined 0087940201 and 0551000201 bkg fit, XRB parameters
+newpar xrb:2 0.227626
+newpar xrb:5 2.70128E-04
+newpar xrb:6 1.24555
+newpar xrb:8 2.71089E-04
+newpar xrb:9 0.374650
+newpar xrb:12 4.58102E-03
 
-# 0551000201 XRB parameters
-newpar xrb:38 0.227
-newpar xrb:41 2.304e-4
-newpar xrb:42 1.079
-newpar xrb:44 4.608e-4
-newpar xrb:45 0.356
-newpar xrb:48 4.557e-3
-# Tie 0551000201 MOS2 to MOS1
-newpar xrb:50=xrb:38
-newpar xrb:53=xrb:41
-newpar xrb:54=xrb:42
-newpar xrb:56=xrb:44
-newpar xrb:57=xrb:45
-newpar xrb:60=xrb:48
+# deprecated temporarily -- using combined background fit now.
+# 0087940201 XRB parameters
+#newpar xrb:2 0.234
+#newpar xrb:5 2.400e-4
+#newpar xrb:6 1.376
+#newpar xrb:8 1.286e-4
+#newpar xrb:9 0.394
+#newpar xrb:12 4.368e-3
+
+# deprecated temporarily -- using combined background fit now.
+## 0551000201 XRB parameters
+#newpar xrb:38 0.227
+#newpar xrb:41 2.304e-4
+#newpar xrb:42 1.079
+#newpar xrb:44 4.608e-4
+#newpar xrb:45 0.356
+#newpar xrb:48 4.557e-3
+## Tie 0551000201 MOS2 to MOS1
+#newpar xrb:50=xrb:38
+#newpar xrb:53=xrb:41
+#newpar xrb:54=xrb:42
+#newpar xrb:56=xrb:44
+#newpar xrb:57=xrb:45
+#newpar xrb:60=xrb:48
 
 # Apply background AREASCAL ratios to get XRB normalizations right
 newpar xrb:1 0.983
@@ -146,7 +156,7 @@ newpar xrb:25 0.978
 newpar xrb:37 0.769
 newpar xrb:49 0.779
 
-# Freeze all parameters except constant terms
+# Freeze all parameters
 freeze xrb:*
 
 
@@ -240,23 +250,23 @@ freeze snr:1,2,16
 # But even then, because we're sampling different distances from optical axis
 # etc., likely to differ.  So best to let float...
 model 4:spm1 po*con
-    0.7
+    0.4
     1e-2
     1
 model 5:spm2 po*con
-    0.7
+    0.4
     1e-2
     1
 model 6:sppn po*con
-    0.7
+    0.2
     1e-2
     1
 model 7:spm1motch po*con
-    0.7
+    0.4
     1e-2
     1
 model 8:spm2motch po*con
-    0.7
+    0.4
     1e-2
     1
 
@@ -282,6 +292,24 @@ freeze sppn:3
 freeze spm1motch:3
 freeze spm2motch:3
 
+# TEST TODO TRIAL ERROR WARNING
+# Try fixing PN power law normalizations based on background fits.
+#newpar spm1:1 0.425
+#newpar spm1:2 6.060e-2
+#newpar spm2:1 0.421
+#newpar spm2:2 6.446e-2
+#newpar sppn:1 0.379
+#newpar sppn:2 7.828e-2
+#newpar spm1motch:1 0.534
+#newpar spm1motch:2 2.976e-2
+#newpar spm2motch:1 1.045
+#newpar spm2motch:2 1.505e-2
+#freeze spm1:*
+#freeze spm2:*
+#freeze sppn:*
+#freeze spm1motch:*
+#freeze spm2motch:*
+
 
 # Prepare to fit
 # --------------
@@ -303,9 +331,11 @@ fit
 
 thaw spm1:1
 thaw spm2:1
-thaw sppn:1
+#thaw sppn:1
 thaw spm1motch:1
 thaw spm2motch:1
+newpar spm2:1=spm1:1
+newpar spm2motch:1=spm1motch:1
 fit
     # chisqr ~ 18700 (redchisqr ~ 8.4)
 

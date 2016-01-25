@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Procedure for straight background subtraction:
-# create (src - qpb_src) with BACKFILE = (back - qpb_back)
+# Apply spectrum background subtraction for XSPEC fitting
+# 1. create QPB subtracted src and bkg spectra, suffixed "_sqpb.pi"
+# 2. directly subtract backgrounds from src spectra
 
 OBSIDS="0087940201 0551000201"
 
@@ -10,7 +11,7 @@ do
 
   cd "${XMM_PATH}/${obsid}/odf/repro"
 
-  # Slew of file copying; mathpha will not accept dashes in filenames
+  # Create temporary files; mathpha disallows dashes in filenames
   fstems="mos1S001_src mos2S002_src mos1S001_bkg mos2S002_bkg"
   cp mos1S001-src.pi     mos1S001_src.pi
   cp mos1S001-src-qpb.pi mos1S001_src_qpb.pi
@@ -49,14 +50,173 @@ do
     # subtracting spectra -> Gaussian errors > POISS-0 errors
     # and anyways, any of POISS-0,1,2,3 will fail on channels with negative
     # counts (which does occur)
-
-    # From mathpha manpage:
-    # > If spectra are being subtracted then there is no general 
-    # > solution because the difference of two Poisson distributions is not 
-    # > itself Poisson (unlike the Gaussian case).
-
-    # We will bin the data before fitting, anyways.
   done
+
+  # Apply ARF ratio correction (eyeballed) for bkg spectra
+  # Please note ratios are HARDCODED in mathpha calls
+  if [[ $obsid = "0087940201" ]]; then
+    mathpha expr="1.25 * mos1S001_bkg_sqpb.pi" outfil="!mos1S001_bkg_sqpb_arfcorr.pi" \
+      units='C' exposure="mos1S001_bkg_sqpb.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+    mathpha expr="1.32 * mos2S002_bkg_sqpb.pi" outfil="!mos2S002_bkg_sqpb_arfcorr.pi" \
+      units='C' exposure="mos2S002_bkg_sqpb.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+    mathpha expr="1.27 * pnS003_bkg_os_sqpb.pi" outfil="!pnS003_bkg_os_sqpb_arfcorr.pi" \
+      units='R' exposure="pnS003_bkg_os_sqpb.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+  fi
+  if [[ $obsid = "0551000201" ]]; then
+    mathpha expr=" 1.66 * mos1S001_bkg_sqpb.pi" outfil="!mos1S001_bkg_sqpb_arfcorr.pi" \
+      units='C' exposure="mos1S001_bkg_sqpb.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+    mathpha expr=" 1.67 * mos2S002_bkg_sqpb.pi" outfil="!mos2S002_bkg_sqpb_arfcorr.pi" \
+      units='C' exposure="mos2S002_bkg_sqpb.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+  fi
+
+  # Subtract ARF-adjusted backgrounds
+  mathpha expr="mos1S001_src_sqpb.pi - mos1S001_bkg_sqpb_arfcorr.pi" \
+      outfil="!mos1S001_src_sqpb_sbkg.pi" \
+      units='C' properr='yes' \
+      exposure="mos1S001_src_sqpb.pi" \
+      backscal="mos1S001_src_sqpb.pi" \
+      areascal="mos1S001_src_sqpb.pi" \
+      ncomments=0
+  mathpha expr="mos2S002_src_sqpb.pi - mos2S002_bkg_sqpb_arfcorr.pi" \
+      outfil="!mos2S002_src_sqpb_sbkg.pi" \
+      units='C' properr='yes' \
+      exposure="mos2S002_src_sqpb.pi" \
+      backscal="mos2S002_src_sqpb.pi" \
+      areascal="mos2S002_src_sqpb.pi" \
+      ncomments=0
+  if [[ $obsid = "0087940201" ]]; then
+    mathpha expr="pnS003_src_os_sqpb.pi - pnS003_bkg_os_sqpb_arfcorr.pi" \
+        outfil="!pnS003_src_os_sqpb_sbkg.pi" \
+        units='R' properr='yes' \
+        exposure="pnS003_src_os_sqpb.pi" \
+        backscal="pnS003_src_os_sqpb.pi" \
+        areascal="pnS003_src_os_sqpb.pi" \
+        ncomments=0
+  fi
+
+  # Finally, set keywords and group
+  # grppha sets group column in spectrum; no information is lost. Extra counts
+  # (< min bin size) at highest channels are flagged BAD and skipped by XSPEC.
+  grppha infile="mos1S001_src_sqpb_sbkg.pi" outfile="!mos1S001_src_sqpb_sbkg_grp50.pi" \
+    comm="chkey BACKFILE NONE & \
+          chkey RESPFILE mos1S001-src.rmf & \
+          chkey ANCRFILE mos1S001-src.arf & \
+          group min 50 & exit" \
+    chatter=10
+  grppha infile="mos2S002_src_sqpb_sbkg.pi" outfile="!mos2S002_src_sqpb_sbkg_grp50.pi" \
+    comm="chkey BACKFILE NONE & \
+          chkey RESPFILE mos2S002-src.rmf & \
+          chkey ANCRFILE mos2S002-src.arf & \
+          group min 50 & exit" \
+    chatter=10
+  if [[ $obsid = "0087940201" ]]; then
+    grppha infile="pnS003_src_os_sqpb_sbkg.pi" outfile="!pnS003_src_os_sqpb_sbkg_grp50.pi" \
+      comm="chkey BACKFILE NONE & \
+            chkey RESPFILE pnS003-src.rmf & \
+            chkey ANCRFILE pnS003-src.arf & \
+            group min 50 & exit" \
+      chatter=10
+  fi
+
+  # Experimental variant
+  grppha infile="mos1S001_src_sqpb_sbkg.pi" outfile="!mos1S001_src_sqpb_sbkg_grp25.pi" \
+    comm="chkey BACKFILE NONE & \
+          chkey RESPFILE mos1S001-src.rmf & \
+          chkey ANCRFILE mos1S001-src.arf & \
+          group min 25 & exit" \
+    chatter=10
+  grppha infile="mos2S002_src_sqpb_sbkg.pi" outfile="!mos2S002_src_sqpb_sbkg_grp25.pi" \
+    comm="chkey BACKFILE NONE & \
+          chkey RESPFILE mos2S002-src.rmf & \
+          chkey ANCRFILE mos2S002-src.arf & \
+          group min 25 & exit" \
+    chatter=10
+  if [[ $obsid = "0087940201" ]]; then
+    grppha infile="pnS003_src_os_sqpb_sbkg.pi" outfile="!pnS003_src_os_sqpb_sbkg_grp25.pi" \
+      comm="chkey BACKFILE NONE & \
+            chkey RESPFILE pnS003-src.rmf & \
+            chkey ANCRFILE pnS003-src.arf & \
+            group min 25 & exit" \
+      chatter=10
+  fi
+
+  # ========== VARIANT, subtract background without QPB subtraction ==========
+
+  # Apply ARF correction
+  if [[ $obsid = "0087940201" ]]; then
+    mathpha expr="1.25 * mos1S001_bkg.pi" outfil="!mos1S001_bkg_arfcorr.pi" \
+      units='C' exposure="mos1S001_bkg.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+    mathpha expr="1.32 * mos2S002_bkg.pi" outfil="!mos2S002_bkg_arfcorr.pi" \
+      units='C' exposure="mos2S002_bkg.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+    mathpha expr="1.27 * pnS003_bkg_os.pi" outfil="!pnS003_bkg_os_arfcorr.pi" \
+      units='R' exposure="pnS003_bkg_os.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+  fi
+  if [[ $obsid = "0551000201" ]]; then
+    mathpha expr=" 1.66 * mos1S001_bkg.pi" outfil="!mos1S001_bkg_arfcorr.pi" \
+      units='C' exposure="mos1S001_bkg.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+    mathpha expr=" 1.67 * mos2S002_bkg.pi" outfil="!mos2S002_bkg_arfcorr.pi" \
+      units='C' exposure="mos2S002_bkg.pi" backscal='%' areascal='%' \
+      properr='yes' ncomments=0
+  fi
+
+  # Subtract ARF-adjusted backgrounds
+  mathpha expr="mos1S001_src.pi - mos1S001_bkg_arfcorr.pi" \
+      outfil="!mos1S001_src_sbkg.pi" \
+      units='C' properr='yes' \
+      exposure="mos1S001_src.pi" \
+      backscal="mos1S001_src.pi" \
+      areascal="mos1S001_src.pi" \
+      ncomments=0
+  mathpha expr="mos2S002_src.pi - mos2S002_bkg_arfcorr.pi" \
+      outfil="!mos2S002_src_sbkg.pi" \
+      units='C' properr='yes' \
+      exposure="mos2S002_src.pi" \
+      backscal="mos2S002_src.pi" \
+      areascal="mos2S002_src.pi" \
+      ncomments=0
+  if [[ $obsid = "0087940201" ]]; then
+    mathpha expr="pnS003_src_os.pi - pnS003_bkg_os_arfcorr.pi" \
+        outfil="!pnS003_src_os_sbkg.pi" \
+        units='R' properr='yes' \
+        exposure="pnS003_src_os.pi" \
+        backscal="pnS003_src_os.pi" \
+        areascal="pnS003_src_os.pi" \
+        ncomments=0
+  fi
+
+  # Finally, set keywords and group
+  # grppha sets group column in spectrum; no information is lost. Extra counts
+  # (< min bin size) at highest channels are flagged BAD and skipped by XSPEC.
+  grppha infile="mos1S001_src_sbkg.pi" outfile="!mos1S001_src_sbkg_grp50.pi" \
+    comm="chkey BACKFILE NONE & \
+          chkey RESPFILE mos1S001-src.rmf & \
+          chkey ANCRFILE mos1S001-src.arf & \
+          group min 50 & exit" \
+    chatter=10
+  grppha infile="mos2S002_src_sbkg.pi" outfile="!mos2S002_src_sbkg_grp50.pi" \
+    comm="chkey BACKFILE NONE & \
+          chkey RESPFILE mos2S002-src.rmf & \
+          chkey ANCRFILE mos2S002-src.arf & \
+          group min 50 & exit" \
+    chatter=10
+  if [[ $obsid = "0087940201" ]]; then
+    grppha infile="pnS003_src_os_sbkg.pi" outfile="!pnS003_src_os_sbkg_grp50.pi" \
+      comm="chkey BACKFILE NONE & \
+            chkey RESPFILE pnS003-src.rmf & \
+            chkey ANCRFILE pnS003-src.arf & \
+            group min 50 & exit" \
+      chatter=10
+  fi
+  # ========== END VARIANT, subtract background w/o QPB subtraction ==========
 
   # Remove temporary files
   rm mos1S001_src.pi
@@ -72,53 +232,6 @@ do
     rm pnS003_src_os_qpb.pi
     rm pnS003_bkg_os.pi
     rm pnS003_bkg_os_qpb.pi
-  fi
-
-  # Set keywords and group.  Note that group simply sets group column in
-  # spectrum; information is not lost.  Excess counts at highest channels (but
-  # < min bin size) are flagged as BAD and discarded.
-  grppha infile="mos1S001_src_sqpb.pi" outfile="!mos1S001_src_sqpb_grp50.pi" \
-    comm="chkey BACKFILE mos1S001_bkg_sqpb.pi & \
-          chkey RESPFILE mos1S001-src.rmf & \
-          chkey ANCRFILE mos1S001-src.arf & \
-          group min 50 & exit" \
-    chatter=10
-  grppha infile="mos2S002_src_sqpb.pi" outfile="!mos2S002_src_sqpb_grp50.pi" \
-    comm="chkey BACKFILE mos2S002_bkg_sqpb.pi & \
-          chkey RESPFILE mos2S002-src.rmf & \
-          chkey ANCRFILE mos2S002-src.arf & \
-          group min 50 & exit" \
-    chatter=10
-
-
-  if [[ $obsid = "0087940201" ]]; then
-    grppha infile="pnS003_src_os_sqpb.pi" outfile="!pnS003_src_os_sqpb_grp50.pi" \
-      comm="chkey BACKFILE pnS003_bkg_os_sqpb.pi & \
-            chkey RESPFILE pnS003-src.rmf & \
-            chkey ANCRFILE pnS003-src.arf & \
-            group min 50 & exit" \
-      chatter=10
-
-    # ARF correction with ARF ratios for 0087940201
-    mathpha expr="1.25 * mos1S001_bkg_sqpb.pi" outfil="!mos1S001_bkg_sqpb_arfcorr.pi" \
-      units=C exposure="mos1S001_bkg_sqpb.pi" backscal='%' areascal='%' \
-      properr='yes' ncomments=0
-    mathpha expr="1.32 * mos2S002_bkg_sqpb.pi" outfil="!mos2S002_bkg_sqpb_arfcorr.pi" \
-      units=C exposure="mos2S002_bkg_sqpb.pi" backscal='%' areascal='%' \
-      properr='yes' ncomments=0
-    mathpha expr="1.27 * pnS003_bkg_os_sqpb.pi" outfil="!pnS003_bkg_os_sqpb_arfcorr.pi" \
-      units=R exposure="pnS003_bkg_os_sqpb.pi" backscal='%' areascal='%' \
-      properr='yes' ncomments=0
-  fi
-
-  if [[ $obsid = "0551000201" ]]; then
-    # ARF correction with ARF ratios for 0551000201 
-    mathpha expr=" 1.66 * mos1S001_bkg_sqpb.pi" outfil="!mos1S001_bkg_sqpb_arfcorr.pi" \
-      units=C exposure="mos1S001_bkg_sqpb.pi" backscal='%' areascal='%' \
-      properr='yes' ncomments=0
-    mathpha expr=" 1.67 * mos2S002_bkg_sqpb.pi" outfil="!mos2S002_bkg_sqpb_arfcorr.pi" \
-      units=C exposure="mos2S002_bkg_sqpb.pi" backscal='%' areascal='%' \
-      properr='yes' ncomments=0
   fi
 
 done

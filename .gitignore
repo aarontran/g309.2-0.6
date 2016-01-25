@@ -33,6 +33,8 @@ xmm/*/odf/**/*/*cmd.csh
 # cfa git is 1.7.1 so ** doesn't work quite right...
 # just add a special case
 
+# Generally, data files
+*.dat
 
 # Chandra files
 chandra/*/00README
