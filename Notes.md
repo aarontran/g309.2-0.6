@@ -5187,6 +5187,7 @@ conceptually it's pretty clear.  A few bullets...
   temperature dependence is important.
 This looks like a good, fundamental paper to read.
 
+
 Friday 2016 January 15 -- split spectrum fit plots in matplotlib
 ================================================================
 
@@ -5630,7 +5631,523 @@ Fits:
   note that sedov is quite slow; error command will be even slower...
 - useful command: renorm, faster than fit...
 
-Registration tomorrow... or something.
+
+
+
+Tuesday 2016 January 26 -- combined snr/bkg fit and XSPEC error runs
+====================================================================
+
+## Try accounting for 0.5-1keV bump with O,Ne free
+
+Previous "standard" fit with nH,kT,Tau,Si,S free; PN power law fixed to 0.2.
+
+    Fit statistic : Chi-Squared =        2812.40 using 2240 PHA bins.
+
+    Test statistic : Chi-Squared =        2812.40 using 2240 PHA bins.
+     Reduced chi-squared =        1.26571 for   2222 degrees of freedom 
+     Null hypothesis probability =   1.365424e-16
+
+against new fit with O, Ne free as well.
+
+    O ~ 4, Ne ~ 0.6
+    nH ~ 1.98, kT ~ 1.7, Tau ~ 2e10, Si ~ 4.4, S ~ 3.9
+
+    Helps a little bit, but not noticeably...
+
+    Fit statistic : Chi-Squared =        2702.86 using 2240 PHA bins.
+
+    Test statistic : Chi-Squared =        2702.86 using 2240 PHA bins.
+     Reduced chi-squared =        1.21750 for   2220 degrees of freedom 
+     Null hypothesis probability =   5.646876e-12
+
+
+
+A new best fit from joint fit of snr and bkg.  Data groups are:
+    1: 0087940201 MOS1 src
+    2: 0087940201 MOS2 src
+    3: 0087940201 PN src
+    4: 0551000201 MOS1 src
+    5: 0551000201 MOS2 src
+    6: 0087940201 MOS1 bkg
+    7: 0087940201 MOS2 bkg
+    8: 0087940201 PN bkg
+    9: 0551000201 MOS1 bkg
+    10: 0551000201 MOS2 bkg
+
+Started an XSPEC error run, with some fiddling, around 12:30...
+    XSPEC12>error snr:10
+     Parameter   Confidence Range (2.706)
+        10      3.90491      4.32517    (-0.19848,0.221781)
+Started a new run around 12:50.
+
+    XSPEC12>error snr:1,2,11,16
+     Parameter   Confidence Range (2.706)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 2.19373, 2.19397
+    and delta stat 2.6866, 2.73392
+    but latest trial 2.19386 gives 2.6837
+    Suggest that you check this result using the steppar command.
+         1      2.04851      2.19385    (-0.079417,0.0659235)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 1.59998, 1.57302
+    and delta stat 2.5531, 3.41036
+    but latest trial 1.59534 gives 2.46442
+    Suggest that you check this result using the steppar command.
+         2       1.5865        1.955    (-0.13324,0.23526)
+        11      3.39296      3.95987    (-0.259479,0.307435)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 2.59075e+10, 2.59523e+10
+    and delta stat 2.56306, 2.84881
+    but latest trial 2.5933e+10 gives 2.85962
+    Suggest that you check this result using the steppar command.
+        16  2.11784e+10  2.59299e+10    (-2.7046e+09,2.04689e+09)
+
+Check XRB parameter errors:
+
+    XSPEC12>error xrb:2,6,9
+     Parameter   Confidence Range (2.706)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 0.220108, 0.210198
+    and delta stat 1.86328, 2.74213
+    but latest trial 0.210584 gives 3.00948
+    Suggest that you check this result using the steppar command.
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 0.24061, 0.251438
+    and delta stat 2.6385, 12.051
+    but latest trial 0.240736 gives 2.44578
+    Suggest that you check this result using the steppar command.
+         2     0.215153     0.246024    (-0.0149965,0.0158742)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 1.06867, 0.914486
+    and delta stat 0, 2.81712
+    but latest trial 0.928353 gives 3.84069
+    Suggest that you check this result using the steppar command.
+         6     0.991579      1.19528    (-0.0770937,0.126602)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 0.407643, 0.440681
+    and delta stat 1.86402, 3.06947
+    but latest trial 0.428628 gives 4.43506
+    Suggest that you check this result using the steppar command.
+         9     0.347483     0.424162    (-0.0271213,0.0495577)
+
+
+    ========================================================================
+    Model instr:constant<1>(gaussian<2> + gaussian<3> + gaussian<4> + gaussian<5> + gaussian<6> + gaussian<7>) Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   constant   factor              0.937262     +/-  4.67237E-02  
+       2    2   gaussian   LineE      keV      1.49000      frozen
+       3    2   gaussian   Sigma      keV      0.0          frozen
+       4    2   gaussian   norm                4.14600E-02  frozen
+       5    3   gaussian   LineE      keV      1.75000      frozen
+       6    3   gaussian   Sigma      keV      0.0          frozen
+       7    3   gaussian   norm                1.28500E-02  frozen
+    [PN lines omitted]
+                               Data group: 2
+      20    1   constant   factor              0.876559     +/-  4.32935E-02  
+      21    2   gaussian   LineE      keV      1.49000      = instr:p2
+      22    2   gaussian   Sigma      keV      0.0          = instr:p3
+      23    2   gaussian   norm                4.53100E-02  frozen
+      24    3   gaussian   LineE      keV      1.75000      = instr:p5
+      25    3   gaussian   Sigma      keV      0.0          = instr:p6
+      26    3   gaussian   norm                1.18200E-02  frozen
+    [PN lines omitted]
+                               Data group: 3
+      39    1   constant   factor              0.601101     +/-  2.49396E-02  
+      40    2   gaussian   LineE      keV      1.49000      = instr:p2
+      41    2   gaussian   Sigma      keV      0.0          = instr:p3
+      42    2   gaussian   norm                3.34800E-02  frozen
+    [Si K line omitted]
+      46    4   gaussian   LineE      keV      7.49000      = instr:p8
+      47    4   gaussian   Sigma      keV      0.0          = instr:p9
+      48    4   gaussian   norm                1.23600E-02  frozen
+      49    5   gaussian   LineE      keV      8.05000      = instr:p11
+      50    5   gaussian   Sigma      keV      0.0          = instr:p12
+      51    5   gaussian   norm                8.82000E-02  frozen
+      52    6   gaussian   LineE      keV      8.62000      = instr:p14
+      53    6   gaussian   Sigma      keV      0.0          = instr:p15
+      54    6   gaussian   norm                1.85000E-02  frozen
+      55    7   gaussian   LineE      keV      8.90000      = instr:p17
+      56    7   gaussian   Sigma      keV      0.0          = instr:p18
+      57    7   gaussian   norm                1.09100E-02  frozen
+                               Data group: 4
+      58    1   constant   factor              1.67099      +/-  6.40617E-02  
+      59    2   gaussian   LineE      keV      1.49000      = instr:p2
+      60    2   gaussian   Sigma      keV      0.0          = instr:p3
+      61    2   gaussian   norm                3.34000E-02  frozen
+      62    3   gaussian   LineE      keV      1.75000      = instr:p5
+      63    3   gaussian   Sigma      keV      0.0          = instr:p6
+      64    3   gaussian   norm                2.00400E-02  frozen
+    [PN lines omitted]
+                               Data group: 5
+      77    1   constant   factor              1.84268      +/-  5.81769E-02  
+      78    2   gaussian   LineE      keV      1.49000      = instr:p2
+      79    2   gaussian   Sigma      keV      0.0          = instr:p3
+      80    2   gaussian   norm                3.86600E-02  frozen
+      81    3   gaussian   LineE      keV      1.75000      = instr:p5
+      82    3   gaussian   Sigma      keV      0.0          = instr:p6
+      83    3   gaussian   norm                2.02100E-02  frozen
+    [PN lines omitted]
+                               Data group: 6
+      96    1   constant   factor              0.684852     +/-  3.39676E-02  
+      97    2   gaussian   LineE      keV      1.49000      = instr:p2
+      98    2   gaussian   Sigma      keV      0.0          = instr:p3
+      99    2   gaussian   norm                4.66700E-02  frozen
+     100    3   gaussian   LineE      keV      1.75000      = instr:p5
+     101    3   gaussian   Sigma      keV      0.0          = instr:p6
+     102    3   gaussian   norm                8.89300E-03  frozen
+    [PN lines omitted]
+                               Data group: 7
+     115    1   constant   factor              0.651508     +/-  3.16701E-02  
+     116    2   gaussian   LineE      keV      1.49000      = instr:p2
+     117    2   gaussian   Sigma      keV      0.0          = instr:p3
+     118    2   gaussian   norm                4.97500E-02  frozen
+     119    3   gaussian   LineE      keV      1.75000      = instr:p5
+     120    3   gaussian   Sigma      keV      0.0          = instr:p6
+     121    3   gaussian   norm                9.34100E-03  frozen
+    [PN lines omitted]
+                               Data group: 8
+     134    1   constant   factor              0.639963     +/-  1.90249E-02  
+     135    2   gaussian   LineE      keV      1.49000      = instr:p2
+     136    2   gaussian   Sigma      keV      0.0          = instr:p3
+     137    2   gaussian   norm                3.43500E-02  frozen
+    [Si K line omitted]
+     141    4   gaussian   LineE      keV      7.49000      = instr:p8
+     142    4   gaussian   Sigma      keV      0.0          = instr:p9
+     143    4   gaussian   norm                1.51100E-02  frozen
+     144    5   gaussian   LineE      keV      8.05000      = instr:p11
+     145    5   gaussian   Sigma      keV      0.0          = instr:p12
+     146    5   gaussian   norm                0.126000     frozen
+     147    6   gaussian   LineE      keV      8.62000      = instr:p14
+     148    6   gaussian   Sigma      keV      0.0          = instr:p15
+     149    6   gaussian   norm                2.03100E-02  frozen
+     150    7   gaussian   LineE      keV      8.90000      = instr:p17
+     151    7   gaussian   Sigma      keV      0.0          = instr:p18
+     152    7   gaussian   norm                1.65300E-02  frozen
+                               Data group: 9
+     153    1   constant   factor              1.48159      +/-  4.23621E-02  
+     154    2   gaussian   LineE      keV      1.49000      = instr:p2
+     155    2   gaussian   Sigma      keV      0.0          = instr:p3
+     156    2   gaussian   norm                6.04600E-02  frozen
+     157    3   gaussian   LineE      keV      1.75000      = instr:p5
+     158    3   gaussian   Sigma      keV      0.0          = instr:p6
+     159    3   gaussian   norm                3.38600E-03  frozen
+    [PN lines omitted]
+                               Data group: 10
+     172    1   constant   factor              1.51164      +/-  3.94339E-02  
+     173    2   gaussian   LineE      keV      1.49000      = instr:p2
+     174    2   gaussian   Sigma      keV      0.0          = instr:p3
+     175    2   gaussian   norm                6.42700E-02  frozen
+     176    3   gaussian   LineE      keV      1.75000      = instr:p5
+     177    3   gaussian   Sigma      keV      0.0          = instr:p6
+     178    3   gaussian   norm                5.21800E-03  frozen
+    [PN lines omitted]
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model snr:TBabs<1>*vnei<2> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   TBabs      nH         10^22    2.12793      +/-  4.30337E-02  
+       2    2   vnei       kT         keV      1.71973      +/-  0.117876     
+       3    2   vnei       H                   1.00000      frozen
+       4    2   vnei       He                  1.00000      frozen
+       5    2   vnei       C                   1.00000      frozen
+       6    2   vnei       N                   1.00000      frozen
+       7    2   vnei       O                   1.00000      frozen
+       8    2   vnei       Ne                  1.00000      frozen
+       9    2   vnei       Mg                  1.00000      frozen
+      10    2   vnei       Si                  4.10339      +/-  0.118064     
+      11    2   vnei       S                   3.65251      +/-  0.157932     
+      12    2   vnei       Ar                  1.00000      frozen
+      13    2   vnei       Ca                  1.00000      frozen
+      14    2   vnei       Fe                  1.00000      frozen
+      15    2   vnei       Ni                  1.00000      frozen
+      16    2   vnei       Tau        s/cm^3   2.38845E+10  +/-  1.40433E+09  
+      17    2   vnei       Redshift            0.0          frozen
+      18    2   vnei       norm                4.86112E-03  +/-  3.39371E-04  
+                               Data group: 2
+    [snr model same for all data groups]
+                               Data group: 3
+    [snr model same for all data groups]
+                               Data group: 4
+    [snr model same for all data groups]
+                               Data group: 5
+    [snr model same for all data groups]
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model sp:powerlaw<1>*constant<2> Source No.: 4   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   powerlaw   PhoIndex            0.381644     +/-  1.32677E-02  
+       2    1   powerlaw   norm                5.75802E-02  +/-  1.60341E-03  
+       3    2   constant   factor              0.983000     frozen
+                               Data group: 2
+       4    1   powerlaw   PhoIndex            0.381644     = sp:p1
+       5    1   powerlaw   norm                6.25157E-02  +/-  1.74343E-03  
+       6    2   constant   factor              0.945000     frozen
+                               Data group: 3
+       7    1   powerlaw   PhoIndex            0.200835     +/-  4.51651E-02  
+       8    1   powerlaw   norm                6.29510E-02  +/-  5.62509E-03  
+       9    2   constant   factor              0.978000     frozen
+                               Data group: 4
+      10    1   powerlaw   PhoIndex            0.397736     +/-  2.10714E-02  
+      11    1   powerlaw   norm                6.41348E-02  +/-  2.64770E-03  
+      12    2   constant   factor              0.769000     frozen
+                               Data group: 5
+      13    1   powerlaw   PhoIndex            0.397736     = sp:p10
+      14    1   powerlaw   norm                2.00533E-02  +/-  1.48067E-03  
+      15    2   constant   factor              0.779000     frozen
+                               Data group: 6
+      16    1   powerlaw   PhoIndex            0.340924     +/-  1.34719E-02  
+      17    1   powerlaw   norm                4.82014E-02  +/-  1.32460E-03  
+      18    2   constant   factor              1.00000      frozen
+                               Data group: 7
+      19    1   powerlaw   PhoIndex            0.340924     = sp:p16
+      20    1   powerlaw   norm                5.20335E-02  +/-  1.38136E-03  
+      21    2   constant   factor              1.00000      frozen
+                               Data group: 8
+      22    1   powerlaw   PhoIndex            0.200000     frozen
+      23    1   powerlaw   norm                4.59799E-02  +/-  1.49250E-03  
+      24    2   constant   factor              1.00000      frozen
+                               Data group: 9
+      25    1   powerlaw   PhoIndex            0.586935     +/-  2.67066E-02  
+      26    1   powerlaw   norm                3.66085E-02  +/-  1.61620E-03  
+      27    2   constant   factor              1.00000      frozen
+                               Data group: 10
+      28    1   powerlaw   PhoIndex            0.586935     = sp:p25
+      29    1   powerlaw   norm                1.55066E-02  +/-  1.22479E-03  
+      30    2   constant   factor              1.00000      frozen
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model xrb:constant<1>(apec<2> + TBabs<3>(powerlaw<4> + apec<5>)) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   constant   factor              0.983000     frozen
+       2    2   apec       kT         keV      0.230149     +/-  6.47079E-03  
+       3    2   apec       Abundanc            1.00000      frozen
+       4    2   apec       Redshift            0.0          frozen
+       5    2   apec       norm                3.00393E-04  +/-  1.09362E-05  
+       6    3   TBabs      nH         10^22    1.06867      +/-  7.10901E-02  
+       7    4   powerlaw   PhoIndex            1.40000      frozen
+       8    4   powerlaw   norm                3.04254E-04  +/-  1.37856E-05  
+       9    5   apec       kT         keV      0.374602     +/-  2.00828E-02  
+      10    5   apec       Abundanc            1.00000      frozen
+      11    5   apec       Redshift            0.0          frozen
+      12    5   apec       norm                3.29394E-03  +/-  6.13048E-04  
+                               Data group: 2
+      13    1   constant   factor              0.945000     frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+                               Data group: 3
+      25    1   constant   factor              0.978000     frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+                               Data group: 4
+      37    1   constant   factor              0.769000     frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+                               Data group: 5
+      49    1   constant   factor              0.779000     frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+                               Data group: 6
+      61    1   constant   factor              1.00000      frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+                               Data group: 7
+      73    1   constant   factor              1.00000      frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+                               Data group: 8
+      85    1   constant   factor              1.00000      frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+                               Data group: 9
+      97    1   constant   factor              1.00000      frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+                               Data group: 10
+     109    1   constant   factor              1.00000      frozen
+    [xrb model, up to constant pre-factor,  same for all data groups]
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =        4608.36 using 3805 PHA bins.
+
+    Test statistic : Chi-Squared =        4608.36 using 3805 PHA bins.
+     Reduced chi-squared =        1.22302 for   3768 degrees of freedom 
+     Null hypothesis probability =   7.182096e-20
+
+
+Monday 2016 February 1 -- catch up, image creation
+==================================================
+This has been on the back-burner due to MP things, unfortunately.  Where did I
+leave off?
+
+Thurs Jan 20 -- reviewed fit results with Pat.
+* bkg subtraction -- could improve procedure. low priority.
+* sedov fit is worth an attempt
+* fit snr/bkg together (done)
+* better to use bounds if toying with fit parameters (of course noting if you
+  are running up against bound walls)
+* soft excess around 0.5-1 keV
+  * try freeing O, Ne (done, eh)
+  * see if persists after fitting snr/bkg together (small effect)
+* run error commands
+
+Tues Jan 26 -- again, quick touch of base on fit results.
+
+
+Let's break and jump to image creation for a little bit.
+
+Scribbled notes on image making:
+XMM SAS style pipeline to do this, probably easiest way to mosaic both
+0087940201 and 0551000201 (vs. ESAS procedure).
+
+## Just XMM SAS
+
+First, looking at Castro+ 2011 (G296.1-0.5 study), Daniel uses the tools:
+evselect, merge, eexpmap, emosaic to create his image of G296.1-0.5 from three
+distinct observations (nine instrument exposures).
+
+emosaic does the simplest possible thing: merge images (from evselect) and
+divide by merged exposure maps.
+> The task will only handle images which are a tangent plane projection of the
+> sky, for example those created from the X and Y columns of EPIC event lists
+> using evselect.
+NOTE: emosaic loop does handle reprojection of input images to output frame
+(by default, output to frame of first input image) -- which is what merge does
+as well.  Is merge even necessary?
+
+Comment: process of creating image mosaic should be distinguished from
+operation of EPIC in mosaic mode.  This mode improves efficiency of planned
+mosaicking observations by not recomputing CCD offset maps for each pointing.
+
+
+## ESAS approach
+
+http://xmm.esac.esa.int/sas/current/documentation/threads/esasmosaic_thread.shtml
+
+## ACTUAL ATTEMPT....
+MESS TO CLEAN UP.
+
+Based on fitting, background dominates below ~0.8 keV and above ~3 keV.
+
+Therefore create:
+1. broad band image from 0.8 to 3.3 keV
+2. three band images:
+   - 0.8 to 1.4 keV
+   - 1.75 to 2.3 keV (Si He alpha/beta)
+   - 2.3 to 3.3 keV (S He alpha/beta + muck)
+The region 1.4-1.75 keV is omitted to avoid strong MOS instrumental lines
+
+We won't get information on nonthermal continuum, unfortunately.
+Maybe check the Chandra observation...
+
+0087940201:
+    Started: 2016-02-02T18:23:10.000 = 13:23:10
+    Finished: 2016-02-02T18:37:42.000 = 13:37:42
+        (each exposure map takes ~ 2 minutes)
+        (weirdly, PN exposures took ~12 seconds -- ?!?! why so fast... or why is MOS so slow...)
+0551000201:
+    Started: 2016-02-02T18:45:10.000 = 13:45:10
+    Finished: 2016-02-02T18:57:01.000 = 13:57:01
+        (MOS command runs issue warning :** eexpmap: warning (NoExpoExt), Exposure extension not found )
+                (is it possible I need to rerun chainfilter...)
+
+Working with SAS tools: see the script `quick_image.sh`
+I'm not sure how ESAS selects its {x,y}image{size,min,max} values.
+Need to delve back into scripts.
+
+
+Trial three-band image parameters:
+    Bands: 0.8-1.4, 1.75-2.3, 2.3-3.3 keV 
+    Net exposure time is ~(25.3 + 25.9 + 21.0 + 22.0 + 22.5) ks
+    (obsids 0087940201 MOS1,MOS2,PN ; 0551000201 MOS1,MOS2)
+
+    Bin factor 4 -> ~2.85 arcsec pixels + additional
+    Gaussian smoothing, radius 10 (10 pixels?)
+        (net result: image smoothed to ~ 28.5 arcsec, 2-3x PSF half-width)
+
+    Scaling bounds:
+        2e-6 to 5e-5 (red),
+        1e-6 to 2.5e-5 (green),
+        2e-6 to 2.5e-5 (blue)
+
+    Aggressive colormap parameters to hide background signal
+
+
+Thursday 2016 February 4 -- spectra from smaller regions
+========================================================
+
+Select four new regions for spectral extraction, based on imaging analysis.
+
+    src_north_clump.reg -- bright in all three bands
+    src_SW_lobe.reg     -- kinda bright in all three bands...
+    src_E_lobe.reg      -- less bright in red (0.8-1.4 keV)
+    src_SE_dark.reg     -- X-ray dark, despite apparent radio limb
+
+Ran usual commands to create regions in XMM detector coordinates for each
+pointing.
+
+    source sasinit 0551000201
+    make_xmmregions 0551000201
+    source sasinit 0087940201
+    make_xmmregions 0087940201
+
+Then set up spectrum run, starting ~1900.
+
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0551000201; specbackgrp_0551000201 src_north_clump; specbackgrp_0551000201 src_SW_lobe; specbackgrp_0551000201 src_E_lobe; specbackgrp_0551000201 src_SE_dark;' >& 20160204_subsrc_0551000201.log &
+    [1] 24615
+
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c 'source sasinit 0087940201; specbackgrp_0087940201 src_north_clump; specbackgrp_0087940201 src_SW_lobe; specbackgrp_0087940201 src_E_lobe; specbackgrp_0087940201 src_SE_dark;' >& 20160204_subsrc_0087940201.log &
+    [1] 15316
+
+Finished around 2130 (0551000201) and 2320 (0087940201) -- this is quite slow.
+But not unreasonable for extraction of four spectrum regions.
+Please note counts
+
+Friday 2016 February 5 -- clean up (taking advantage of nice snow day)
+======================================================================
+
+Add keywording to FWC spectrum extraction (in script for 0087940201, forgot to
+update for 0551000201).  Manually add for FWC spectra from yesterday, creating:
+
+    ${exp}-src_E_lobe-ff-key.pi
+    ${exp}-src_SE_dark-ff-key.pi
+    ${exp}-src_SW_lobe-ff-key.pi
+    ${exp}-src_north_clump-ff-key.pi
+
+where ${exp} runs over "mos1S001, mos2S002, pnS003".
+Really need to consolidate scripts -- a lot of hassle to maintain separately.
+
+Looking at spectrum of north clump (0087940201 MOS1) -- should not look much
+different compared to integrated spectrum.  A few notes, from quick-and-dirty
+fits (no background modeling, just tossing in powerlaw to account for SP
+contamination)
+* S/Si peaks stand out even more w.r.t. background in north clump spectrum
+  preliminary fits suggest even higher Si/S abundances
+* clump fit, although very rough, appears compatible with lower kT ~ 1 keV
+  and higher ionization age Tau ~ 6e10.  But, fit to integrated src spectrum
+  (kT ~ 3.4 keV, Tau ~ 1.9e10) with same procedure does NOT match the combined
+  fitting results very well (kT ~ 1.7 keV, Tau ~ 2.4e10 from Jan 26).  I don't
+  think we should believe these numbers too much; only robust indication is
+  concentration of S and Si in this clump
+
+Reduced chi-squared ~ 2.7 with just fits to `tbabs*vnei, powerlaw, gauss+gauss`
+Ignoring cosmic X-ray background here, on assumption that its contribution is
+small -- although, looking at previous combined fits, the XRB makes a
+significant contribution around 0.3 to 1 keV
+
+
+TODOs:
+* remove some temporary files/spectra
+* clean up XSPEC dump parsing script (split_xs_out.pl, xs_bkg_plotter.py)
+* refactor spectrum fitting code -- either go back to PyXSPEC, write some
+  templating code, or whatever is necessary...
+
 
 
 Standing TO-DOs
@@ -5641,7 +6158,6 @@ FIT results to prepare:
 * Background modeling
   - allow instrumental line ratios to float; see how fit differs if at all
   - freeze SP power laws to bkg fit values
-* show fits on either side of cut based on SWPC time series (GSFC XMM GOF)
 
 PENDING QUESTIONS
 * PN - perform fit with and without detmapped RMF
