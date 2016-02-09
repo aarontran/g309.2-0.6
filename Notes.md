@@ -6256,7 +6256,20 @@ Manually re-run correct command with short shell script:
         >& "grppha_${exp}-${RSTEM}${os}.log"
     done
 
-OK.
+OK.  Executed for 0087940201 PN exposures (6 spectrum files + 6 logs affected).
+
+## Modifying pipeline to fit multiple region spectra
+
+Need to integrate a few things that are currently being done by hand:
+* FWC data fit to get instrumental line ratios (`ff_pn.xcm, ff_mos.xcm`)
+* backscal value extraction (`bkg2src_norm`)
+* import the FWC instrument lines and backscal values.  for each region + bkg
+  fit with 10 data groups, import 13 (bkg) + 13 (src) line norm values + 10
+  backscal ratios = 36 constant terms
+* after fit, script data dump (to .dat files) and plotting (`split_xs_out.pl`
+  and `xs_replotter.py`)
+
+Possible, but cumbersome, to continue extracting and copying numbers by hand
 
 Standing TODOs
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures.
@@ -6277,6 +6290,9 @@ Standing questions:
     Similarly passing mode=4,5 to rot-det-sky is not documented either.
 
     Anyways should ask...
+* Why does ESAS cookbook recommend PN line at 7.11 keV?
+  I haven't seen any evidence for this particular line
+  If anything, we should be modeling another line at around 5.3 keV (Cr line?)
 
 Reminders (caveats and loose threads):
 * source region differs slightly between exposures; therefore combined fit is
