@@ -53,14 +53,17 @@ set obsid = $1
 if ( $obsid != "") then
     setenv SAS_ODF `ls -1 $XMM_PATH/$obsid/odf/repro/*SUM.SAS`
     setenv SAS_CCF $XMM_PATH/$obsid/odf/repro/ccf.cif
+    setenv SAS_OBSID $obsid
     echo "setenv SAS_CCF $SAS_CCF"
     echo "setenv SAS_ODF $SAS_ODF"
+    echo "setenv SAS_OBSID $obsid"
     echo ""
     if ($SAS_ODF != "") then
 	echo "XMM SAS ready for $obsid"
     else
     	echo "ERROR: $obsid/odf/repro/*SUM.SAS not found!"
     	echo "       Did you run sasrepro?"
+	exit 1
     endif
 endif
 

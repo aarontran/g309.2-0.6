@@ -11,7 +11,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Make nice separated plots")
     parser.add_argument('--stem', default='snr', help="prefix stem for 5 dat files")
-    parser.add_argument('--reg', default='snr', help="region (bkg or snr)")
+    parser.add_argument('--reg', default='snr', help="region (bkg or snr) to set plotting behavior")
     args = parser.parse_args()
     stem, reg = args.stem, args.reg
     stem = args.stem

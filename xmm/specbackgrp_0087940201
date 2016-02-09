@@ -170,5 +170,5 @@ grppha infile="pnS003-${RSTEM}-os.pi" outfile="!pnS003-${RSTEM}-os-grp50.pi" \
     chatter=10 \
   >& grppha_pnS003_${RSTEM}.log
 
-echo "Finished extracting ${RSTEM} spectra for ${OBSID}!\n"
+echo "Finished extracting ${RSTEM} spectra for ${OBSID}!"
 

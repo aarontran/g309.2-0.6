@@ -5551,7 +5551,6 @@ Results to review with Pat...
     understand the kT/Tau values, which seem to imply a far younger age than we
     expect for this remnant.
 
-
 3. First look at an ESAS generated image for scientific analysis.
 
     # Following prescription for 0087940201 only
@@ -5583,7 +5582,7 @@ Results to review with Pat...
     comb caldb="../../../caldb/" elowlist=300 ehighlist=1250 mask=1 withpartcontrol=1 withsoftcontrol=1 withswcxcontrol=0 prefixlist="1S001 2S002 S003" alpha=1.7
 
 
-Another test, for 0087940201 mos1S001 src region ONLY:
+Another test just using evselect, for 0087940201 mos1S001 src region ONLY:
 
 Three bands:
     0.3 to 1.25 keV, 1.25 to 2.65 keV, 2.65 to 11 keV
@@ -5600,7 +5599,13 @@ Three bands:
 
     evselect:- selected 10026 rows from the input table.
 
-Loads of helpful suggestions from Pat today, + reprise meeting next Tues 2p.
+[note added Feb 8 2016: didn't go anywhere with these images.  ESAS process
+only creates image for background region, not useful.  evselect image for MOS1
+was ok but we need to be merging data to get anything useful]
+
+## Meeting notes
+
+Loads of helpful suggestions from Pat today, reprise meeting next Tues 2p.
 
 background subtraction:
 - the approach I took, pat hasn't really seen before
@@ -5632,8 +5637,6 @@ Fits:
 - useful command: renorm, faster than fit...
 
 
-
-
 Tuesday 2016 January 26 -- combined snr/bkg fit and XSPEC error runs
 ====================================================================
 
@@ -5660,7 +5663,7 @@ against new fit with O, Ne free as well.
      Reduced chi-squared =        1.21750 for   2220 degrees of freedom 
      Null hypothesis probability =   5.646876e-12
 
-
+## Joint fit of SNR and background
 
 A new best fit from joint fit of snr and bkg.  Data groups are:
     1: 0087940201 MOS1 src
@@ -5675,9 +5678,11 @@ A new best fit from joint fit of snr and bkg.  Data groups are:
     10: 0551000201 MOS2 bkg
 
 Started an XSPEC error run, with some fiddling, around 12:30...
+
     XSPEC12>error snr:10
      Parameter   Confidence Range (2.706)
         10      3.90491      4.32517    (-0.19848,0.221781)
+
 Started a new run around 12:50.
 
     XSPEC12>error snr:1,2,11,16
@@ -5730,6 +5735,17 @@ Check XRB parameter errors:
     Suggest that you check this result using the steppar command.
          9     0.347483     0.424162    (-0.0271213,0.0495577)
 
+Combined fit result.  Note that:
+* PN soft proton power law index is frozen to 0.2
+* MOS1/2 soft proton power law indices are tied, within same obsid/region
+  (00879... src, 00879... bkg, 0551... src, 0551... bkg)
+* instrumental line normalizations are hardcoded from FWC fits,
+  w/ constant prefactors free to vary
+* XRB usual parameters free, but fixed for all regions
+  place area-scaling factors in front of XRB values
+  to account for (sampled area times ARF) differences
+  between obsids (pointings) and regions.
+  (see 2016 Feb 08 notes: this actually needs to be fixed)
 
     ========================================================================
     Model instr:constant<1>(gaussian<2> + gaussian<3> + gaussian<4> + gaussian<5> + gaussian<6> + gaussian<7>) Source No.: 2   Active/On
@@ -5983,22 +5999,32 @@ Check XRB parameter errors:
 
 Monday 2016 February 1 -- catch up, image creation
 ==================================================
-This has been on the back-burner due to MP things, unfortunately.  Where did I
-leave off?
+
+This has been on the back-burner due to MP things.  Where did I leave off?
+(text below partially fleshed out on Mon Feb. 08)
+
+## Recap of recent fit results
 
 Thurs Jan 20 -- reviewed fit results with Pat.
-* bkg subtraction -- could improve procedure. low priority.
-* sedov fit is worth an attempt
+* bkg subtraction fits -- could improve procedure. Low priority.
+  - fix error bars by manually adding new column to FITS file
+  - change binning procedure, so XSPEC generates correct errors
+  - try not binning and using C statistic
 * fit snr/bkg together (done)
-* better to use bounds if toying with fit parameters (of course noting if you
-  are running up against bound walls)
+  - do document / show fits with Si/S frozen, then progressively thawing Si,S
+    and S,Si (in that order) to demonstrate that both elements likely need to
+    be enhanced in abundance (w.r.t. other elements)
 * soft excess around 0.5-1 keV
-  * try freeing O, Ne (done, eh)
-  * see if persists after fitting snr/bkg together (small effect)
-* run error commands
+  - try freeing O, Ne (done, eh)
+  - see if persists after fitting snr/bkg together (small effect)
+* sedov fit is worth an attempt, although slow
+* use bounds if toying with fit parameter ranges
+* run error commands to assess uncertainties
 
 Tues Jan 26 -- again, quick touch of base on fit results.
-
+* fit with O,Ne free made a small difference (chi-squared 2800 -> 2700)
+  with O ~ 4, Ne ~ 0.6
+* combined snr+bkg fit and error runs -- did not check results w/ steppar yet
 
 Let's break and jump to image creation for a little bit.
 
@@ -6006,7 +6032,7 @@ Scribbled notes on image making:
 XMM SAS style pipeline to do this, probably easiest way to mosaic both
 0087940201 and 0551000201 (vs. ESAS procedure).
 
-## Just XMM SAS
+## Notes on XMM SAS imaging procedure
 
 First, looking at Castro+ 2011 (G296.1-0.5 study), Daniel uses the tools:
 evselect, merge, eexpmap, emosaic to create his image of G296.1-0.5 from three
@@ -6025,15 +6051,9 @@ Comment: process of creating image mosaic should be distinguished from
 operation of EPIC in mosaic mode.  This mode improves efficiency of planned
 mosaicking observations by not recomputing CCD offset maps for each pointing.
 
+## Quick and dirty attempt to make images using SAS tools only
 
-## ESAS approach
-
-http://xmm.esac.esa.int/sas/current/documentation/threads/esasmosaic_thread.shtml
-
-## ACTUAL ATTEMPT....
-MESS TO CLEAN UP.
-
-Based on fitting, background dominates below ~0.8 keV and above ~3 keV.
+In integrated spectrum fits, background dominates < ~0.8 keV and > ~3 keV.
 
 Therefore create:
 1. broad band image from 0.8 to 3.3 keV
@@ -6041,8 +6061,8 @@ Therefore create:
    - 0.8 to 1.4 keV
    - 1.75 to 2.3 keV (Si He alpha/beta)
    - 2.3 to 3.3 keV (S He alpha/beta + muck)
-The region 1.4-1.75 keV is omitted to avoid strong MOS instrumental lines
 
+The region 1.4-1.75 keV is omitted to avoid strong MOS instrumental lines
 We won't get information on nonthermal continuum, unfortunately.
 Maybe check the Chandra observation...
 
@@ -6061,7 +6081,6 @@ Working with SAS tools: see the script `quick_image.sh`
 I'm not sure how ESAS selects its {x,y}image{size,min,max} values.
 Need to delve back into scripts.
 
-
 Trial three-band image parameters:
     Bands: 0.8-1.4, 1.75-2.3, 2.3-3.3 keV 
     Net exposure time is ~(25.3 + 25.9 + 21.0 + 22.0 + 22.5) ks
@@ -6077,6 +6096,9 @@ Trial three-band image parameters:
         2e-6 to 2.5e-5 (blue)
 
     Aggressive colormap parameters to hide background signal
+
+OK.  Image looks really nice, even though I haven't checked all parameter
+settings.  For qualitative analysis it's probably OK.
 
 
 Thursday 2016 February 4 -- spectra from smaller regions
@@ -6107,7 +6129,7 @@ Then set up spectrum run, starting ~1900.
 
 Finished around 2130 (0551000201) and 2320 (0087940201) -- this is quite slow.
 But not unreasonable for extraction of four spectrum regions.
-Please note counts
+
 
 Friday 2016 February 5 -- clean up (taking advantage of nice snow day)
 ======================================================================
@@ -6141,26 +6163,117 @@ Ignoring cosmic X-ray background here, on assumption that its contribution is
 small -- although, looking at previous combined fits, the XRB makes a
 significant contribution around 0.3 to 1 keV
 
-
 TODOs:
 * remove some temporary files/spectra
 * clean up XSPEC dump parsing script (split_xs_out.pl, xs_bkg_plotter.py)
 * refactor spectrum fitting code -- either go back to PyXSPEC, write some
   templating code, or whatever is necessary...
 
+End goal is to fit all sub-region spectra
+
+Cleanup
+-------
+Move merged images, spectrum fit outputs (`*.dat` files) into folders
+`results_img` and `results_spec`.
+
+Refactored specbackgrp code into single, much more succinct bash script.
+(caught/removed subtle, though unimportant, logging error in the process)
+
+COMMENT: cflim parameter to mos-spectra is actually ignored.  Revolution number
+for 0551000201 is 1692 < 2382, which is when the bad edge actually appeared on
+MOS1 due to loss of MOS1 CCD3 (which is obviously still in our data).  Woops.
+
+QUESTION: line 581 of mos-spectra, why is elow set to cflim?...
+    rot-im-det-sky mode=4, mode=5 are NOT documented on ESAS cookbook
+    Similarly passing mode=4,5 to rot-det-sky is not documented either.
+
+    Anyways should ask...
+
+Tested specbackgrp by commenting out commands (`*-spectra, *_back, grppha`) to
+ensure everything resolves correctly.  Just a manual check, but should be
+enough for our needs.
+
+Awesome: test out by running entire script pipeline
+
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0087940201' >& 20160205_all_spec_rerun_0087940201.log &
+    [1] 4336
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0551000201' >& 20160205_all_spec_rerun_0551000201.log &
+    [1] 24700
+
+Started around 16:19p, finished 20:18p (0551000201) and 22:58 (0087940201).
+Six region extractions in total requires ~7hrs.
+
+
+Monday 2016 February 08 -- more cleanup, snr&bkg combined fit tweaks
+====================================================================
+
+## Adjustment and added caveat for SNR and bkg combined fit
+
+Previously, BACKSCAL ratios accounted for geometric area being sampled in
+different spectra; this was used to compare XRB across background and source
+region fits.  This actually needs to be adjusted -- region sizes also vary a
+comparable amount between exposures of same region too, due to different CCD
+setups and slightly different pointings / alignments.
+
+Is this correct?
+- model is already folded through ARF, but ARF merely accounts for detector
+  efficiency.
+- if I fit XRB to a region in background, the norm result increases
+  based on the area being sampled.
+- therefore, XRB needs to have pre-factors for ALL data groups to account for
+  differing extraction region sizes.
+
+Modify script `bkg2src_norm` to handle this, and adjust fits accordingly...
+
+In fact, because the source region is slightly different between observations
+(missing chips etc) different exposures are sampling __slightly__ different
+parts of the remnant!  This is hard to avoid/address for combined fits of SNR.
+Ignore for now; source regions are more consistent in area than background,
+being closer to optical axis.  This discrepancy is relatively small and only
+occurs at edges of source region.
+
+This could be important for small sub-regions within source.
+
+Standing TODOs
+* Look over XMM ESAS scripts and see if I'm missing anything in procedures.
+* clean up XSPEC dump parsing script (split_xs_out.pl, xs_bkg_plotter.py)
+* refactor spectrum fitting code -- either go back to PyXSPEC, write some
+  templating code, or whatever is necessary...
+
+Standing questions:
+* Castro+2011, why use evselect,merge,eexpmap,emosaic?  Seems like merge is not
+  needed.
+* Why did exposure maps for PN generate so fast, relative to MOS maps???
+* Why did exposure maps for 0551000201 MOS exposures issue warning
+  about "NoExpoExt" (no exposure extension found)???
+* Image binning/sizes -- how chosen by ESAS
+  how should we choose
+* QUESTION: line 581 of mos-spectra, why is elow set to cflim?...
+    rot-im-det-sky mode=4, mode=5 are NOT documented on ESAS cookbook
+    Similarly passing mode=4,5 to rot-det-sky is not documented either.
+
+    Anyways should ask...
+
+Reminders (caveats and loose threads):
+* source region differs slightly between exposures; therefore combined fit is
+  not completely "true" due to uneven sampling.
+  Expect small effect for the integrated spectrum.
+  May affect spectra small sub-regions of source (might require discarding 1-2
+  exposures or adjusting sub-region selection)
+* background region also differs slightly between exposures.
+  XRB prefactors accounts for this, assuming uniform XRB.
+  Free norms for instrumental lines and SP power laws accounts for the rest.
+  Expect power law indices to differ slightly for MOS1/2, but they should not
+  be far apart, so it simplifies fit to tie values together.
 
 
 Standing TO-DOs
 ===============
 vim -R xmmsas_20141104_1833/packages/esas/src/proton_mod.f90 
 
-FIT results to prepare:
-* Background modeling
-  - allow instrumental line ratios to float; see how fit differs if at all
-  - freeze SP power laws to bkg fit values
-
 PENDING QUESTIONS
 * PN - perform fit with and without detmapped RMF
+  (why is it not detmapped in ESAS?)
 
 REMINDER TO SELF:
 * PNS003 filterwheel fit does NOT include OOT correction!
@@ -6211,10 +6324,6 @@ don't know whether this is whats desired but OK.  Worried it would let events
 with 0x800 + OTHER flags through.
 
 
-Working on this..
-7. add mosaicking step.
-8. check on SWPC emission (be sure to updateexposure when making time cuts, and
-   check flare GTIs)
 
 
 
