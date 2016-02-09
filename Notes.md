@@ -6234,6 +6234,30 @@ occurs at edges of source region.
 
 This could be important for small sub-regions within source.
 
+## Bug catch in specbackgrp
+
+Accidentally grouped non-OOT-subtracted spectra for PN exposure
+(forgot to put `${os}` in grppha infile parameter)
+Manually re-run correct command with short shell script:
+
+    #!/bin/bash
+
+    exp="pnS003"
+    RSTEMS="src bkg src_north_clump src_SW_lobe src_E_lobe src_SE_dark"
+    for RSTEM in $RSTEMS; do
+      # Bin and set keywords for observation object spectra
+      os="-os"
+      grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}-grp50.pi" \
+          comm="chkey BACKFILE ${exp}-${RSTEM}-qpb.pi & \
+                chkey RESPFILE ${exp}-${RSTEM}.rmf & \
+                chkey ANCRFILE ${exp}-${RSTEM}.arf & \
+                group min 50 & exit" \
+          chatter=10 \
+        >& "grppha_${exp}-${RSTEM}${os}.log"
+    done
+
+OK.
+
 Standing TODOs
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures.
 * clean up XSPEC dump parsing script (split_xs_out.pl, xs_bkg_plotter.py)

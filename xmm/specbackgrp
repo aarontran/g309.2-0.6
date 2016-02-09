@@ -21,7 +21,7 @@ if [[ "$#" -ne 2 ]]; then
     exit 1
 fi
 
-## TODO take required options using named parameters
+## TODO (low priority) take required options using named parameters
 
 OBSID=$1
 RSTEM=$2  # region label (src, bkg, etc)
@@ -34,9 +34,6 @@ fi
 RDIR="${XMM_PATH}/regs/${OBSID}"
 CALDB="${XMM_PATH}/caldb"
 
-# Exposure/instrument identifiers (mos1S001, mos2S002, pnS003)
-# are currently hardcoded.  Could refactor, but hard to justify for n=3.
-
 # ------------------------
 # ESAS spectrum extraction
 # ------------------------
@@ -48,9 +45,6 @@ cd "${XMM_PATH}/${OBSID}/odf/repro"
 mask="1"
 elow="300"
 ehigh="1250"
-
-##### WARNING: spectrum extraction commands taken from 0087940201
-##### need to write appropriate conditionals for different obsids etc.
 
 if [[ "$OBSID" == "0087940201" ]]; then
 
@@ -78,10 +72,19 @@ echo "Extracting spectra and QPB for $OBSID, region ${RSTEM}"
 
 for ((i=0;i<${#exps[@]};++i)); do
 
+  # Setup
+  # -----
+
   exp="${exps[$i]}"     # mos1S001
   exp_n="${exps_n[$i]}" # 1S001
   ccd_str="${ccd_strs[$i]}" # "ccd1=1 ccd2=1 ... ccd7=1"
   # Do not quote ${ccd_str} in command invocations!
+
+  # Handle exposure exclusions (QPB cannot be generated for 0551000201 PN)
+  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
+    echo "  Skipping extraction for $OBSID $exp (no observation corner data)"
+    continue
+  fi
 
   f_region="${RDIR}/reg_${exp}_${RSTEM}.txt"
 
@@ -96,6 +99,8 @@ for ((i=0;i<${#exps[@]};++i)); do
     exit 1
   fi
 
+  # Extraction
+  # ----------
 
   echo "  Running ${exe_spec} prefix=${exp_n}..."
   ${exe_spec} prefix=${exp_n} region="${f_region}" caldb="${CALDB}" \
@@ -103,18 +108,14 @@ for ((i=0;i<${#exps[@]};++i)); do
     >& "${exe_spec}_${exp}_${RSTEM}.log"
   mv command.csh "${exe_spec}_${exp}_${RSTEM}_cmd.csh"
 
-  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
-    echo "  Skipping ${exe_qpb} for $OBSID $exp (no observation corner data)"
-  else
-    echo "  Running ${exe_qpb} prefix=${exp_n}..."
-    ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
-        elow=${elow} ehigh=${ehigh} ${ccd_str} \
-      >& "${exe_qpb}_${exp}_${RSTEM}.log"
-    # diag=2 creates more diagnostic output files (.qdp plots)
-  fi
+  echo "  Running ${exe_qpb} prefix=${exp_n}..."
+  ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
+      elow=${elow} ehigh=${ehigh} ${ccd_str} \
+    >& "${exe_qpb}_${exp}_${RSTEM}.log"
+  # diag=2 creates more diagnostic output files (.qdp plots)
 
   echo "  Renaming output spectra (map ${exp} to ${exp}-${RSTEM})"
-  # Currently, just spectra + soft proton image for proton-scale
+
   mv "${exp}-obj.pi"  "${exp}-${RSTEM}.pi"
   mv "${exp}-back.pi" "${exp}-${RSTEM}-qpb.pi"
   mv "${exp}.rmf"     "${exp}-${RSTEM}.rmf"
@@ -124,10 +125,8 @@ for ((i=0;i<${#exps[@]};++i)); do
     mv "${exp}-obj-oot.pi" "${exp}-${RSTEM}-oot.pi"
     mv "${exp}-obj-os.pi"  "${exp}-${RSTEM}-os.pi"
   fi
-
-  # Outputs from "-mod" versions of ESAS scripts:
-  # FWC object spectra for line norm extraction
-  # and detmapped RMF for pnS003-obj.pi (not for FWC data!
+  # Outputs from "-mod" versions of ESAS scripts: FWC object spectra for line
+  # norm extraction and detmapped RMF for pnS003-obj.pi (not for FWC data!)
   mv "${exp}-obj-ff.pi" "${exp}-${RSTEM}-ff.pi"
   mv "${exp}-ff.rmf"    "${exp}-${RSTEM}-ff.rmf"
   mv "${exp}-ff.arf"    "${exp}-${RSTEM}-ff.arf"
@@ -146,28 +145,23 @@ for ((i=0;i<${#exps[@]};++i)); do
           chkey ANCRFILE ${exp}-${RSTEM}-ff.arf & \
           exit"
 
-  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
-    echo "  Skipping grppha for $OBSID $exp (no observation corner data)"
-  else
-
-    # Bin OOT-subtracted spectrum for PN only
-    os=""
-    if [[ "$exp" =~ "pn" ]]; then
-      os="-os"
-    fi
-
-    grppha infile="${exp}-${RSTEM}.pi" outfile="!${exp}-${RSTEM}${os}-grp50.pi" \
-        comm="chkey BACKFILE ${exp}-${RSTEM}-qpb.pi & \
-              chkey RESPFILE ${exp}-${RSTEM}.rmf & \
-              chkey ANCRFILE ${exp}-${RSTEM}.arf & \
-              group min 50 & exit" \
-        chatter=10 \
-      >& "grppha_${exp}-${RSTEM}${os}.log"
+  # Bin and set keywords for observation object spectra
+  os=""
+  if [[ "$exp" =~ "pn" ]]; then
+    # Use OOT-subtracted spectrum for PN
+    os="-os"
   fi
+  grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}-grp50.pi" \
+      comm="chkey BACKFILE ${exp}-${RSTEM}-qpb.pi & \
+            chkey RESPFILE ${exp}-${RSTEM}.rmf & \
+            chkey ANCRFILE ${exp}-${RSTEM}.arf & \
+            group min 50 & exit" \
+      chatter=10 \
+    >& "grppha_${exp}-${RSTEM}${os}.log"
 
 done
 
 
-
 echo "Finished extracting all spectra for ${OBSID} region ${RSTEM}!"
 echo ""
+
