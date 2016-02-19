@@ -26,6 +26,7 @@ open(my $fh_out, ">", $f_out) or die "Cannot open $f_out to write: $!";
 open(my $fh_in, "<", $opt_in) or die "Cannot open $opt_in to read: $!";
 
 while (<$fh_in>) {
+
     # Separator between datasets
     if ($_ =~ /^(NO\s*)+/) {
 	$f_out = sprintf $f_out_fmt, $i++;
@@ -37,6 +38,7 @@ while (<$fh_in>) {
     }
 
     next if ($_ !~ /^[\d.]/);
+    print $fh_out $_;
 }
 close($fh_in);
 close($fh_out);

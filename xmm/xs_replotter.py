@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Make nicer plots to see what's going on
 """
@@ -37,20 +38,27 @@ def main():
 
         plot_err(x, a[:,2], x_err, a[:,3], ax=ax, capsize=0, ls='none', elinewidth=1)
         plot_step(x, x_err, a[:,4], ax=ax, color='k')  # Summed model
+
         if (reg == "bkg"):
+
             plot_step(x, x_err, a[:,5], ax=ax, color='r')  # X-ray background
             plot_step(x, x_err, a[:,6], ax=ax, color='y')  # Instrumental lines
             plot_step(x, x_err, a[:,7], ax=ax, color='c')  # SP power law
+
+            ax.set_ylim(1e-4, 1.0)
+
         elif (reg == "snr"):
+
             plot_step(x, x_err, a[:,5], ax=ax, color='r')  # X-ray background
             plot_step(x, x_err, a[:,6], ax=ax, color='y')  # Instrumental lines
             plot_step(x, x_err, a[:,7], ax=ax, color='g')  # SNR model
             plot_step(x, x_err, a[:,8], ax=ax, color='c')  # SP power law
 
+            ax.set_ylim(1e-3, 10.0)  # Appropriate for source
+
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_xlim(0.3, 11.0)
-        ax.set_ylim(1e-4, 1.0)
 
     plt.tight_layout()
 

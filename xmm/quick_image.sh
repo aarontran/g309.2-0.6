@@ -2,6 +2,9 @@
 
 # MUST RUN FROM REPRO DIRECTORY
 
+# TODO: interesting error messages for 0551000201
+# and PN exposure maps are computed much faster than MOS maps
+
 #exposures="mos1S001 mos2S002 pnS003"
 exposures="mos1S001 mos2S002"
 

@@ -6262,14 +6262,140 @@ OK.  Executed for 0087940201 PN exposures (6 spectrum files + 6 logs affected).
 
 Need to integrate a few things that are currently being done by hand:
 * FWC data fit to get instrumental line ratios (`ff_pn.xcm, ff_mos.xcm`)
+  (scripted in pyxspec -- data interchange tbd)
 * backscal value extraction (`bkg2src_norm`)
+  (updated bash script behavior to output useful values)
 * import the FWC instrument lines and backscal values.  for each region + bkg
   fit with 10 data groups, import 13 (bkg) + 13 (src) line norm values + 10
   backscal ratios = 36 constant terms
 * after fit, script data dump (to .dat files) and plotting (`split_xs_out.pl`
   and `xs_replotter.py`)
 
+Removed old `back_*.xcm` fitting scripts, superseded by `back_all.xcm` and
+`snr_and_back.xcm`.
+
+Must move to pyXspec for fitting, as previously started from 2016 Jan 15.
+Although time-consuming, better than copy-pasting 36 x 5 = 180 constant terms
+in individual XSPEC xcm files for different regions.
+
 Possible, but cumbersome, to continue extracting and copying numbers by hand
+
+
+Tuesday 2016 February 09 -- plots and tagup discussion, plots, 
+====================================================================
+
+## Plots
+
+See images in `results_interm/`:
+
+    20160202_quick_image_all_rgb.png
+    20160202_quick_image_red_0.8-1.4kev.png
+    20160202_quick_image_green_1.75-2.3kev.png
+    20160202_quick_image_blue_2.3-3.3kev.png
+    20160202_quick_image_all_rgb_withradio.png
+
+    20160209_subsrc_and_src_spec.png
+    20160209_subsrc_regs_and_mosaic.png
+    20160209_xsreplot_snr.png
+    20160209_xsreplot_snr_delch.png
+
+The two images `20160209_subsrc_*.png` I printed out and annotated.
+On the spectrum plot: cyan = integrated source, black = north clump,
+red = SW lobe, green = E lobe, blue = SE dark.
+(also, need to compare to background)
+
+Spectra are not scaled to extraction area, so just represent counts.
+Plots are as usual scaled to highlight faint features etc.
+
+## Meeting discussion
+
+Morphological features of interest:
+* arcing ridge of emission in 0.8-1.4 keV image (appears to extend farther out than in 2.3-3.3 hard image)
+* X-ray dark SE radio limb
+
+SNRs to look at:
+* MSH 11-61A = G290.1-0.8 (ASCA study by Pat; recent paper by Katie Auchettl)
+* CTB109 (Castro+ 2011)
+
+Suggestions for resolved spectroscopy:
+* try fixing absorption nH values based on integrated fit.
+  if fits w/ fixed nH don't work out, it might indicate variation in foreground
+  x-ray absorption along different lines of sight.
+* yes, do fix XRB values to those inferred from integrated fit.
+  (of course, up to normalization scaling -- tack on a constant too to be sure)
+  (still need to deal with FWC data)
+* try extracting spectrum from annular regions, specifically to probe the arc
+  of emission
+  I think one of the G290.1-0.8 papers did this systematically
+  (I don't know how we're doing on counts, if we have enough to do this..).
+
+Additional misc. discussion on CXO target distribution on sky,
+quantifying impact to thermal budgets; thermal modeling.
+
+
+Friday 2016 February 19
+=======================
+
+Back-burnered by MP stuff, plasma, water pipe burst.  Back to this.
+Some paper reading, partially done in intervening time.
+
+## Misc. comments on CTB 109 (G109.1-1.0) and MSH 11-61A (G290.1-0.8)
+ 
+In elapsed time: some paper reading.
+Other remnants with radio shells and center-filled X-ray emission
+
+CTB 109 (G109.1-1.0)
+* Discovered 1980 w/ Einstein
+* contains magnetar = highly magnetized neutron stars
+  1E 2259+586 (T = 6.98s)
+* Castro+ 2011, Fermi-LAT and archived XMM-Newton analysis
+  - Semi-circular shell in X-ray and radio apparent
+  - GMC to west of remnant; X-ray/radio remnant is darker there.
+  - XMM-Newton data: ~28-29ks of MOS exposure (remnant is quite bright, appears
+  to have ~10 cts/s at 1 keV)
+  Model: `tbabs*sedov` with parameters
+    nH = 0.67e22
+    kT_shock = 0.38 keV
+    kT_electron = 0.18 keV
+    n_e * t = 1.27e12
+    F_abs = 6.7e-11 erg / (cm^2 s^1)    (average absorbed flux from 0.5-5 keV)
+    F_unabs = 7.9e-10
+
+MSH 11-61A (G290.1-0.8)
+* Auchettl+ 2015 (HI, CO, archived Suzaku, Fermi-LAT data)
+  - MM SNRs: thermal interior, ISM composition; limb bright radio profiles
+    1. "cloudlets" unaffected by shock, slowly evaporate
+       (mechanism to concentrate and heat ISM material behind shock)
+    2. thermal conduction?? transfers heat/material to remnant center
+  - MSH 11-61A: shell SNR with ear-like features, identified in radio
+    angular size 19' x 11' (elongated)
+  - recombining plasma claimed in Suzaku analysis...
+  - estimates of ejecta masses based on measured abundances,
+    and assuming all ejecta have been shocked
+* Slane+ 2002 (ASCA GIS data)
+  - Figure 1 - morphologically very similar!  limb ridge (very brightened)
+    and ears.  ears not as dramatically bright as in G309.2-0.6.
+  - filled center.  ASCA + MOST data look very similar in morphology,
+  - They disfavor ejecta based on lack of abundance variation w.r.t. radius.
+    I'm not sure how they can discern this with fuzzy data.
+* Garcia+ 2012 (Chandra, XMM)
+  - funky morphology -- ears are x-ray bright.
+
+Both papers toss in a broadband modeling component.
+
+My questions:
+* why would ramming a giant molecular cloud cause x-ray emission to turn off?
+* how do we understand SNR morphological classes?  look over reviews.
+* why does the reverse shock occur as an "isolated" event?
+  during adiabatic expansion (M_swept ~ M_ejecta)
+  if the equations are self-similar then there is no "preferred" time
+  where this discontinuity should occur.
+
+## Spectral fitting work
+
+OK, where did I leave off?
+
+
 
 Standing TODOs
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures.
