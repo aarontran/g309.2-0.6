@@ -1,0 +1,139 @@
+
+Sketch of a writeup, and my own notes
+
+\subsection{SNR stuff}
+
+MMSNRs (Rho and Petre, 1998)
+
+Tilley+ (2006) - model anisotropic thermal conduction in remnants in regular
+ISM vs. dense medium
+
+
+Can we confirm that this constitutes a mixed morphology SNR?
+(Note, gaensler's quite thorough paper on this remnant came out in like...
+1998?
+Rakowski did not label as such but noted ejecta dominated nature
+
+what would be interesting is a comparative study.
+
+
+
+\subsection{Instrumental and Astrophysical Background}
+
+\subsubsection{Instrumental Background}
+
+We follow the ESAS approach (Kuntz and Snowden, 2008).
+
+We augment ESAS by extracting instrumental line ratios from FWC closed data.
+
+We model the following lines...
+Mos: 1.49 Al, 1.75 Si
+PN lines: 1.49 Al, 7.49 Ni?, 8.05 Cu?, 8.62 Zn?, 8.90 Cu Kbeta?
+    (inquire about where 7.11 came from...)
+
+\subsubsection{Astrophysical Background}
+
+Elemental abundances by Wilms et al. (2000) implemented as "tbabs" in XSPEC
+(Arnaud 1996).
+
+Will be useful to provide physical units for background emission, and compare
+to other measurements.
+
+\subsubsubsection{Soft proton contamination}
+
+Loads of it, everywhere.
+
+\subsubsubsection{Local bubble and galactic halo emission}
+
+Hard to say what variability is like, I think, given sparse data
+
+* Henley and Shelton (2013), XMM-Newton observations of galactic halo emission.
+  over 110 sightlines
+    T ~ 2.2 x 10^6 K
+    surface brightness ~ 0.5-7 x 10^{-12} erg cm^{-2} s^{-1} deg^{-2}
+* Henley and Shelton (2015), XMM and Suzaku observations of shadowing clouds
+  to separate foreground (local) and background (halo) emission.
+
+Back of the envelope calculation for our data:
+background is ~ 0.1 ct/s at 1 keV, in source region.
+Effective area of MOS is ~400 cm^2...
+\[
+    0.1/400 ct/(s keV cm^2) ~ 2.5e-3 erg / (s erg cm^2)
+\]
+Angular size of sky region is ~ 10' x 10' ~ 0.027 deg^2, so we get:
+\[
+    1.6e-11 erg cm^{-2} s^{-1} deg^{-2}
+\]
+Given that this background estimate is modeled as a blend of:
+local bubble + absorbed hot galactic halo emission + extragalactic power law
+(we ignore the "cool" component of galactic halo, likely absorbed since
+this remnant is right on galactic plane)
+this seems about reasonable.  We should fall right in the range of expected
+surface brightness.
+
+
+Over what lengthscales does the background vary?  Or, how good is our
+assumption of a uniform background, in the XMM-Newton FOV?
+
+NOTE: there are 28 clustered observations well out of the galactic plane
+that they analyze (sightlines 103.1 to 103.27; 103.8 is two observations)
+SZE SurF project to complement SPT,APEX,ACT study.
+
+    Spread in halo T is ~10-20\%.  Column density variation is around 10\%.
+    Angular separation between pointings is of order 0.5 degrees ~ 30 arcmin..
+
+    For this study I'm interested in (concerned with?)
+    angular variations on slightly shorter scales, of ~10-20 arcmin.  I.e.,
+    within a half-degree.
+
+    But I think we are close enough -- "only" factor 2x smaller -- that this
+    data might constitute decent probe!
+
+
+
+Please also note dispute w.r.t. local bubble: Welsh and Shelton (2009,
+Astrophys. and Space Sci.).
+
+Local leo cold cloud -> constraints on local bubble emission
+Snowden et al., 2015ApJ...806..119S
+
+Some other interesting reading:
+Henley, Shelton, Kwak, Hill, Mac Low (2015) 2015ApJ...800..102H
+- modeling gas flow from disk to halo
+Peters et al. (2015) 2015ApJ...813L..27P
+- more complex modeling works out; plasma for halo emission can be sourced from
+  stellar feedback
+
+\subsubsubsection{Solar wind charge exchange}
+
+Solar wind charge exchange -- based on short time cut (give plots in
+supplemental material) and analysis by Carter et al. (2008, 2011),
+data from 0087940201 are likely unaffected.
+
+\subsubsubsection{Extragalactic background}
+
+ESAS (Snowden/Kuntz) recommends alpha = 1.46 but gives no source.
+
+Chen, Fabien, Gendreau (1997)
+  ASCA/ROSAT observations of QSF3 field (RA ~ 55 deg., del ~ -44. deg.; falls
+  between LMC and fornax cluster, well out of galactic plane.
+
+  Result: photon index ~ 1.40 to 1.50, depending on how you fit it.
+  Single power law fit:
+    ROSAT(1-2keV) + ASCA(1-7keV) -> gamma = 1.48 +/- 0.07
+    ROSAT(1-2keV) + ASCA(1-3keV) -> gamma = 1.39 +/- 0.11
+  Powerlaw + raymond-smith plasma model,
+    ROSAT(0.5-2keV) + ASCA(0.4-7keV) -> gamma = 1.46 +/- 0.06
+
+Kuntz, Snowden (200)
+    ROSAT - need to skim this
+
+Hickox, Markevitch (2006ApJ...645...95H)
+    CDF-N and CDF-S (total 3 Megasec)
+    [interestingly, enabled by stowed ACIS calibration observations]
+    Required careful background subtraction!
+      For such deep Chandra observations, unresolved sky bkg is faint compared
+      to quiescent detector background.
+
+
+

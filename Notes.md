@@ -6391,15 +6391,30 @@ My questions:
   if the equations are self-similar then there is no "preferred" time
   where this discontinuity should occur.
 
+## Reading on background emission
+
+Quick query: how uniform is the X-ray background?
+Answer: hard to say.  In brightness, certainly variable.  But, over what
+lengthscales?
+
+See start of notes in text.tex.
+
 ## Spectral fitting work
 
 OK, where did I leave off?
+Need to fit sub-region spectra -- build scripts for this.
+
+
+(!) new version of XMM SAS released...
+(v15.0.0, build identifier 20160201_1833)
+I wonder if this could be related to Pat's mysterious problem.
 
 
 
 Standing TODOs
+* clean up snr-and-bkg fit -- some of my fit tweaking (to deal with unphysical
+  values) is commented out at bottom of .xcm file.
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures.
-* clean up XSPEC dump parsing script (split_xs_out.pl, xs_bkg_plotter.py)
 * refactor spectrum fitting code -- either go back to PyXSPEC, write some
   templating code, or whatever is necessary...
 
