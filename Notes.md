@@ -6225,9 +6225,9 @@ Is this correct?
 
 Modify script `bkg2src_norm` to handle this, and adjust fits accordingly...
 
-In fact, because the source region is slightly different between observations
-(missing chips etc) different exposures are sampling __slightly__ different
-parts of the remnant!  This is hard to avoid/address for combined fits of SNR.
+Since the source region is slightly different between observations (missing
+chips etc.), different exposures are sampling __slightly__ different parts of
+the remnant!  This is hard to avoid/address for combined fits of SNR.
 Ignore for now; source regions are more consistent in area than background,
 being closer to optical axis.  This discrepancy is relatively small and only
 occurs at edges of source region.
@@ -6333,11 +6333,8 @@ Additional misc. discussion on CXO target distribution on sky,
 quantifying impact to thermal budgets; thermal modeling.
 
 
-Friday 2016 February 19
-=======================
-
-Back-burnered by MP stuff, plasma, water pipe burst.  Back to this.
-Some paper reading, partially done in intervening time.
+Friday 2016 February 19 -- Sunday 2016 February 21
+==================================================
 
 ## Misc. comments on CTB 109 (G109.1-1.0) and MSH 11-61A (G290.1-0.8)
  
@@ -6395,28 +6392,690 @@ My questions:
 
 Quick query: how uniform is the X-ray background?
 Answer: hard to say.  In brightness, certainly variable.  But, over what
-lengthscales?
-
-See start of notes in text.tex.
+lengthscales?  See start of notes in text.tex.
 
 ## Spectral fitting work
 
-OK, where did I leave off?
-Need to fit sub-region spectra -- build scripts for this.
+Where did I leave off?
 
+* bkg2scal -- took a look at backscal ratio values (per my notes on Feb 08).
+  By eye, estimated the bkscale values to be correct -- MOS2 CCD5 exclusion
+  does not touch source, but affects bkg area.  OK.
+
+    To remind myself: XSPEC fits model * rmf * arf to counts/sec data.
+    UNLESS we explicitly include in model, we have no information about
+    geometric sky area.  This makes sense, e.g., for point sources -- as long
+    as the region encloses the entire PSF, we should NOT incorporate
+    information about region size; this only matters for extended sources.
+
+  I updated the prefixed constant terms in the XRB model for the combined snr
+  and bkg fit.  This is a 10-20% effect, strongest effect for 0551000201 region
+  fits.  So fit results will change; we will need to re-run error commands and
+  re-assess chi-squared space behavior.
+
+* sub-region fitting procedure (continuing to modify pipeline)
+  - Bayesian fitting analysis?, to characterize uncertainty in parameters
+    and parameter propagation (and, integrate out the nuisance parameters)
+    Likely more robust than error command.
+  - for now, freeze bkg parameters to those inferred from fit...
+    extra floating SP powerlaw in subsrc-region-fit should pick up any
+    discrepancy caused by varying SP powerlaw(s) in main fit.
+
+## Revised combined snr+bkg fit
+
+After making backscal value changes, the fit parameter space changes, and the
+fit "path" also changes. Here I retrace the main steps:
+
+1. initial fit (norms, SP indices free)
+
+   SP indices go nuts
+     0087940201 PNS003 src -> 0.6
+     0087940201 PNS003 bkg -> -1.82
+     0551000201 MOS1S001/MOS2S002 bkg -> ~0
+
+     chisqr/dof = 17678/3775 = 4.683
+
+2. thaw snr:1,2,16 ; fit
+
+   Converges on MUCH saner values of SP index.
+   0087940201 PNS003 bkg ~ 0 at this point
+   All other SP indices floating between 0.3 to 0.45, seems reasonable.
+
+   Fit for SNR model is funky (nH ~ 4, tau ~ 7e10, kT ~ 0.7), but that's OK.
+   Si signal is evident in residuals; but in fact I cannot say S is present
+   with any conviction.
+
+    chisqr/dof = 6830.3/3772 = 1.811
+
+3. thaw snr:10 ; fit
+
+   Zooming in (iplot ; rescale X 2 3 ; rescale Y 0.01 2),
+   there is definitely a Sulfur line present.  Continue.
+
+    chisqr/dof = 5405/3771 = 1.433
+
+4. thaw snr:11 ; fit
+
+   Fit looks pretty good.  Vague bump around 0.5-1keV in residuals.
+   But I have not thawed XRB parameters yet.
+   SP index for PN S003 bkg is still at ~0.
+
+    chisqr/dof = 4803/3770 = 1.274
+
+5. thaw xrb:2,6,9; fit
+
+   Fit looks to be running amok a bit.  XRB converged to weird values:
+     unabs kT ~0.095
+     abs kT ~0.29
+     abs nH ~0.19
+   SP power law indices strayed farther away:
+     PNS003 bkg -> -0.31
+     PNS003 src -> 0.025
+
+   overall indices became harder.  Qualitatively this makes sense:
+   decreased absorption means thermal plasmas contribute more to soft
+   emission; for fixed contribution to high-energy tail, SP power law can be
+   less steep.
+
+    chisqr/dof = 4460/3767 = 1.184
+
+6. newpar xrb:6 1 ; freeze xrb:6 ; fit ; thaw xrb:6 ; fit
+
+    chisqr/dof = 4489.6/3768 = 1.19 after fit w/ frozen xrb nH
+
+   Fit became seemingly rigid: "converged" to 4489.6/3767 = 1.191
+   SP indices returned to larger (softer SP spectrum) values, which
+   makes sense.
+   SNR fit as follows:
+    SNR nH ~ 2.25
+    SNR kT ~ 1.39
+    SNR Si ~ 4.24
+    SNR S  ~ 3.81
+    SNR Tau~ 2.8e10
+    SNR norm 5.85e-3
+   OK...  slightly different than fit results before (w/ wrong backscal values
+   for XRB).  SNR fit values are not unreasonable; cannot be rejected out of
+   hand.  But would be nice to understand variation in XRB fit parameters,
+   especially with SP indices free to float.
+   Make sure SNR fits don't jump like crazy.
+
+7. steppar xrb:6 0.7 1.2
+
+    XSPEC12>steppar xrb:6 0.7 1.2
+
+         Chi-Squared    Delta           xrb:nH
+                     Chi-Squared             6
+
+              4498.9      9.3802    0         0.7
+              4493.6      4.0743    1        0.75
+              4489.5   -0.060003    2         0.8
+              4486.8     -2.7976    3        0.85
+              4485.7     -3.8049    4         0.9
+              4486.7     -2.8965    5        0.95
+              4489.6   0.0023685    6           1
+              4494.5      4.9652    7        1.05
+              4490.1     0.57781    8         1.1
+              4491.9      2.3351    9        1.15
+              4494.7      5.2008   10         1.2
+
+    A new best fit was found during steppar.
+    Parameters have been updated to the new best fit values.
+
+8. steppar xrb:6 1.5 2.0
+
+At this line-of-sight we expect galactic nH to be somewhat higher...
+But the fit disfavors this (why?)
+
+    XSPEC12>steppar xrb:6 1.5 2.0 
+
+         Chi-Squared    Delta           xrb:nH
+                     Chi-Squared             6
+
+              4532.5      46.782    0         1.5
+              4541.6      55.901    1        1.55
+              4551.7      65.961    2         1.6
+              4562.9      77.116    3        1.65
+              4574.4      88.629    4         1.7
+              4586.5      100.75    5        1.75
+              4598.9      113.13    6         1.8
+              4611.6      125.83    7        1.85
+              4624.4      138.64    8         1.9
+              4637.1      151.39    9        1.95
+              4650.3      164.55   10           2
+
+9. error xrb:2,6,9 ; error snr:1,2,10,11,16
+
+Working off of best fit with nH = 0.9...
+
+    XSPEC12>error xrb:2,6,9 ; error snr:1,2,10,11,16 ;
+     Parameter   Confidence Range (2.706)
+         2     0.196017     0.213212    (-0.00846654,0.00872889)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 0.9, 1.06377
+    and delta stat 0, 3.94511
+    but latest trial 1.01623 gives 5.1584
+    Suggest that you check this result using the steppar command.
+         6     0.815447     0.981884    (-0.0845527,0.081884)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 0.325315, 0.325314
+    and delta stat 2.48915, 2.7233
+    but latest trial 0.325314 gives 2.72336
+    Suggest that you check this result using the steppar command.
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 0.363392, 0.379575
+    and delta stat 0.692145, 2.95434
+    but latest trial 0.378223 gives 3.14001
+    Suggest that you check this result using the steppar command.
+         9     0.325314     0.371484    (-0.0253839,0.0207853)
+
+     Parameter   Confidence Range (2.706)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 2.39412, 2.39741
+    and delta stat 2.52063, 2.74404
+    but latest trial 2.39686 gives 2.74571
+    Suggest that you check this result using the steppar command.
+         1      2.17868      2.39577    (-0.118616,0.0984694)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 1.1536, 1.14912
+    and delta stat 2.45146, 3.13336
+    but latest trial 1.1521 gives 2.42621
+    Suggest that you check this result using the steppar command.
+         2      1.15136      1.52398    (-0.123406,0.249218)
+    ***Warning: Identical values of the parameter give different values of the statistic.
+    Please check your result for the high end of the confidence range.
+        10      4.00354      4.44167    (-0.214732,0.223393)
+        11      3.51487      4.11332    (-0.292924,0.305522)
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 2.58031e+10, 2.52502e+10
+    and delta stat 2.061, 2.7316
+    but latest trial 2.52757e+10 gives 3.22046
+    Suggest that you check this result using the steppar command.
+    Apparent non-monotonicity in statistic space detected.
+    Current bracket values 3.61511e+10, 3.67984e+10
+    and delta stat 2.6795, 3.18055
+    but latest trial 3.61858e+10 gives 2.66074
+    Suggest that you check this result using the steppar command.
+        16  2.55267e+10  3.64747e+10    (-4.99535e+09,5.95274e+09)
+    XSPEC12>
+
+10. steppar log xrb:6 0.01 0.2
+
+    XSPEC12>steppar log xrb:6 0.01 0.2
+
+         Chi-Squared    Delta           xrb:nH
+                     Chi-Squared             6
+
+                4468     -17.784    0        0.01
+                4460     -25.778    1    0.013493
+              4454.3     -31.431    2    0.018206
+              4448.3     -37.473    3    0.024565
+              4442.5     -43.246    4    0.033145
+              4438.3     -47.453    5    0.044721
+              4436.3     -49.415    6    0.060342
+                4438     -47.721    7    0.081418
+              4443.7     -42.048    8     0.10986
+              4453.1     -32.689    9     0.14823
+              4464.7      -21.06   10         0.2
+
+    A new best fit was found during steppar.
+    Parameters have been updated to the new best fit values.
+
+We find a local minimum at nH ~ 0.06.  chisqr 4436/3767 = 1.178 is the best fit
+I've seen so far (compare chisqr/dof = 4460/3767 = 1.184 with nH=0.19).
+
+Converges to best fit with absorbed kT ~ 0.77...
+SNR parameters seem somewhat robust w.r.t. this.
+
+As a preliminary quick-look, try fitting 0087940201 MOS1S001 "src_north_clump"
+region.  Review what data inputs are needed, and how fit turns out based on
+fixed background assumption.
+
+Usual procedure:
+1. set up all parameters
+2. fit with norms and SP index free
+3. fit with snr:1,2,16 free (nH, kT, Tau)
+4. free snr:10,11 and refit, in succession (visually verifying line residuals)
+
+Saved some files:
+
+    20160222_stuff_for_northclump_fit.txt
+    20160222_northclump_fit_0087940201_mos1S001_bkg-nH-0.9.png
+    20160222_northclump_fit.log
+
+where bkg-nH-0.9 indicates that I used x-ray background values fixed based on
+best fit to total SNR and background that had nH ~ 0.9 (although not the global
+best fit, it was the best fit I got with a "reasonable" value for nH for this
+galactic line of sight).
+
+"Standard" procedure fit:
+
+    ==========================================================================================
+     Variances and Principal Axes
+               instr:1    snr:1    snr:2   snr:10   snr:11   snr:16   snr:18     sp:1     sp:2  
+     2.2014E-08| -0.0004   0.0029  -0.0210  -0.0006  -0.0002  -0.0000  -0.9936   0.0009  -0.1106  
+     1.4161E-07|  0.0000  -0.0001   0.0003   0.0003   0.0000  -0.0000   0.1106   0.0178  -0.9937  
+     7.9203E-04| -0.0250   0.2867   0.9559  -0.0119   0.0484   0.0000  -0.0192  -0.0232  -0.0023  
+     2.0126E-03|  0.0185  -0.1151   0.0585  -0.0345   0.0024   0.0000  -0.0026   0.9907   0.0175  
+     1.3462E-02| -0.9484   0.2641  -0.1006   0.1309  -0.0050  -0.0000   0.0031   0.0589   0.0014  
+     1.9459E-02|  0.3122   0.8583  -0.2372   0.2904  -0.1055  -0.0000   0.0070   0.1183   0.0028  
+     9.5088E-01| -0.0440   0.1050   0.0019  -0.5582  -0.8219   0.0000   0.0008  -0.0046  -0.0002  
+     1.6681E-01| -0.0121   0.2951  -0.1262  -0.7653   0.5577  -0.0000   0.0039   0.0140   0.0004  
+     2.4653E+15| -0.0000   0.0000   0.0000  -0.0000  -0.0000  -1.0000  -0.0000  -0.0000  -0.0000  
+    ------------------------------------------------------------------------------------------
+
+    ============================================================================================================
+      Covariance Matrix
+            1           2           3           4           5           6           7           8           9   
+       2.415e-02  -7.371e-03   7.244e-03   1.269e-02   8.681e-03  -6.483e+09  -1.853e-04  -2.604e-04  -8.376e-06
+      -7.371e-03   4.252e-02  -1.382e-02  -8.181e-02  -4.414e-02   3.303e+09   4.699e-04   2.400e-03   5.870e-05
+       7.244e-03  -1.382e-02   1.096e-02   2.809e-03  -3.368e-02  -5.671e+09  -2.599e-04  -1.203e-03  -3.550e-05
+       1.269e-02  -8.181e-02   2.809e-03   4.140e-01   4.000e-01   9.612e+09  -6.578e-04   1.973e-03   6.664e-05
+       8.681e-03  -4.414e-02  -3.368e-02   4.000e-01   7.637e-01   1.876e+10   1.401e-04   5.857e-03   1.910e-04
+      -6.483e+09   3.303e+09  -5.671e+09   9.612e+09   1.876e+10   5.076e+21   1.152e+08   3.343e+08   1.108e+07
+      -1.853e-04   4.699e-04  -2.599e-04  -6.578e-04   1.401e-04   1.152e+08   7.136e-06   2.690e-05   7.624e-07
+      -2.604e-04   2.400e-03  -1.203e-03   1.973e-03   5.857e-03   3.343e+08   2.690e-05   2.369e-03   4.478e-05
+      -8.376e-06   5.870e-05  -3.550e-05   6.664e-05   1.910e-04   1.108e+07   7.624e-07   4.478e-05   1.011e-06
+    ------------------------------------------------------------------------------------------------------------
+
+    ========================================================================
+    Model instr:constant<1>(gaussian<2> + gaussian<3>) Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   constant   factor              0.930634     +/-  0.155396     
+       2    2   gaussian   LineE      keV      1.49000      frozen
+       3    2   gaussian   Sigma      keV      0.0          frozen
+       4    2   gaussian   norm                8.60299E-03  frozen
+       5    3   gaussian   LineE      keV      1.75000      frozen
+       6    3   gaussian   Sigma      keV      0.0          frozen
+       7    3   gaussian   norm                3.87235E-03  frozen
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model snr:TBabs<1>*vnei<2> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   TBabs      nH         10^22    3.04943      +/-  0.206202     
+       2    2   vnei       kT         keV      0.684728     +/-  0.104673     
+       3    2   vnei       H                   1.00000      frozen
+       4    2   vnei       He                  1.00000      frozen
+       5    2   vnei       C                   1.00000      frozen
+       6    2   vnei       N                   1.00000      frozen
+       7    2   vnei       O                   1.00000      frozen
+       8    2   vnei       Ne                  1.00000      frozen
+       9    2   vnei       Mg                  1.00000      frozen
+      10    2   vnei       Si                  5.74772      +/-  0.643453     
+      11    2   vnei       S                   5.87761      +/-  0.873918     
+      12    2   vnei       Ar                  1.00000      frozen
+      13    2   vnei       Ca                  1.00000      frozen
+      14    2   vnei       Fe                  1.00000      frozen
+      15    2   vnei       Ni                  1.00000      frozen
+      16    2   vnei       Tau        s/cm^3   1.27150E+11  +/-  7.12445E+10  
+      17    2   vnei       Redshift            0.0          frozen
+      18    2   vnei       norm                7.06385E-03  +/-  2.67124E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model sp:powerlaw<1>*constant<2> Source No.: 4   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   powerlaw   PhoIndex            0.312233     +/-  4.86717E-02  
+       2    1   powerlaw   norm                1.07603E-02  +/-  1.00525E-03  
+       3    2   constant   factor              1.00000      frozen
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model xrb:constant<1>(apec<2> + TBabs<3>(powerlaw<4> + apec<5>)) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   constant   factor              0.215000     frozen
+       2    2   apec       kT         keV      0.204483     frozen
+       3    2   apec       Abundanc            1.00000      frozen
+       4    2   apec       Redshift            0.0          frozen
+       5    2   apec       norm                3.06343E-04  frozen
+       6    3   TBabs      nH         10^22    0.900000     frozen
+       7    4   powerlaw   PhoIndex            1.40000      frozen
+       8    4   powerlaw   norm                3.68136E-04  frozen
+       9    5   apec       kT         keV      0.350698     frozen
+      10    5   apec       Abundanc            1.00000      frozen
+      11    5   apec       Redshift            0.0          frozen
+      12    5   apec       norm                2.83742E-03  frozen
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =         115.33 using 129 PHA bins.
+
+    Test statistic : Chi-Squared =         115.33 using 129 PHA bins.
+     Reduced chi-squared =        0.96108 for    120 degrees of freedom 
+     Null hypothesis probability =   6.034602e-01
+
+
+
+Highly speculative fit (instrumental line freed; Mg freed):
+
+    ==========================================================================================
+     Variances and Principal Axes
+               instr:1  instr:2    snr:1    snr:2    snr:9   snr:10   snr:11   snr:16   snr:18     sp:1     sp:2  
+     4.7011E-09| -0.0002   0.0001   0.0013  -0.0071  -0.0002  -0.0002  -0.0001   0.0000  -0.9990   0.0003  -0.0442  
+     1.4276E-07|  0.0000   0.0003  -0.0001   0.0014   0.0000  -0.0001   0.0000   0.0000  -0.0442  -0.0179   0.9989  
+     4.3505E-05| -0.0067  -0.9993  -0.0050   0.0361   0.0046  -0.0006  -0.0001   0.0000  -0.0004  -0.0008   0.0003  
+     8.8169E-04|  0.0041   0.0327   0.2830   0.9550  -0.0736  -0.0036   0.0309   0.0000  -0.0063  -0.0168  -0.0019  
+     1.9657E-03| -0.0210  -0.0018   0.1291  -0.0565  -0.0139   0.0209  -0.0004  -0.0000   0.0010  -0.9893  -0.0176  
+     1.0977E-02|  0.7616   0.0054  -0.5370   0.1757   0.2817  -0.1033  -0.0155   0.0000  -0.0021  -0.1024  -0.0023  
+     1.9696E-02| -0.6118   0.0160  -0.7435   0.2209   0.0237  -0.1110   0.0341   0.0000  -0.0024  -0.0993  -0.0023  
+     6.8720E-02|  0.1999  -0.0043  -0.2360   0.0038  -0.9035   0.2755  -0.1082   0.0000  -0.0002  -0.0167  -0.0003  
+     2.9092E-01| -0.0726   0.0038  -0.0426   0.0594   0.2762   0.6441  -0.7059   0.0000  -0.0006   0.0026   0.0000  
+     6.0946E+00|  0.0041   0.0010  -0.0677   0.0115   0.1475   0.6970   0.6984  -0.0000  -0.0004   0.0028   0.0001  
+     1.5463E+17|  0.0000   0.0000  -0.0000   0.0000   0.0000   0.0000   0.0000   1.0000  -0.0000   0.0000   0.0000  
+    ------------------------------------------------------------------------------------------
+
+    ====================================================================================================================================
+      Covariance Matrix
+            1           2           3           4           5           6           7           8           9          10          11   
+       2.641e-02  -5.256e-04  -6.354e-03   8.902e-03  -1.830e-02   1.075e-02  -1.708e-02  -8.386e+09  -7.868e-05  -2.725e-04  -7.667e-06
+      -5.256e-04   6.912e-05  -4.140e-04  -1.125e-04   1.638e-03   4.567e-03   4.851e-03   2.666e+08  -1.036e-06   4.039e-06   1.947e-07
+      -6.354e-03  -4.140e-04   5.198e-02  -1.858e-02  -4.689e-02  -2.999e-01  -2.392e-01   6.853e+09   2.893e-04   1.240e-03   2.476e-05
+       8.902e-03  -1.125e-04  -1.858e-02   1.855e-02   7.708e-03   6.276e-02  -2.623e-02  -1.113e+10  -1.755e-04  -8.804e-04  -2.716e-05
+      -1.830e-02   1.638e-03  -4.689e-02   7.708e-03   2.160e-01   6.592e-01   6.115e-01   5.916e+09  -3.248e-04   3.755e-03   9.802e-05
+       1.075e-02   4.567e-03  -2.999e-01   6.276e-02   6.592e-01   3.088e+00   2.818e+00  -2.561e+09  -1.781e-03   1.229e-02   3.513e-04
+      -1.708e-02   4.851e-03  -2.392e-01  -2.623e-02   6.115e-01   2.818e+00   3.391e+00   4.812e+10  -1.013e-03   1.405e-02   4.309e-04
+      -8.386e+09   2.666e+08   6.853e+09  -1.113e+10   5.916e+09  -2.561e+09   4.812e+10   8.488e+21   9.020e+07   4.457e+08   1.463e+07
+      -7.868e-05  -1.036e-06   2.893e-04  -1.755e-04  -3.248e-04  -1.781e-03  -1.013e-03   9.020e+07   2.178e-06   2.933e-06   8.924e-08
+      -2.725e-04   4.039e-06   1.240e-03  -8.804e-04   3.755e-03   1.229e-02   1.405e-02   4.457e+08   2.933e-06   2.326e-03   4.392e-05
+      -7.667e-06   1.947e-07   2.476e-05  -2.716e-05   9.802e-05   3.513e-04   4.309e-04   1.463e+07   8.924e-08   4.392e-05   9.913e-07
+    ------------------------------------------------------------------------------------------------------------------------------------
+
+    ========================================================================
+    Model instr:constant<1>(gaussian<2> + gaussian<3>) Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   constant   factor              0.855599     +/-  0.162502     
+       2    2   gaussian   LineE      keV      1.51005      +/-  8.31361E-03  
+       3    2   gaussian   Sigma      keV      0.0          frozen
+       4    2   gaussian   norm                8.60299E-03  frozen
+       5    3   gaussian   LineE      keV      1.75000      frozen
+       6    3   gaussian   Sigma      keV      0.0          frozen
+       7    3   gaussian   norm                3.87235E-03  frozen
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model snr:TBabs<1>*vnei<2> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   TBabs      nH         10^22    2.63116      +/-  0.227983     
+       2    2   vnei       kT         keV      0.784386     +/-  0.136207     
+       3    2   vnei       H                   1.00000      frozen
+       4    2   vnei       He                  1.00000      frozen
+       5    2   vnei       C                   1.00000      frozen
+       6    2   vnei       N                   1.00000      frozen
+       7    2   vnei       O                   1.00000      frozen
+       8    2   vnei       Ne                  1.00000      frozen
+       9    2   vnei       Mg                  1.94200      +/-  0.464721     
+      10    2   vnei       Si                  8.85972      +/-  1.75721      
+      11    2   vnei       S                   8.36059      +/-  1.84144      
+      12    2   vnei       Ar                  1.00000      frozen
+      13    2   vnei       Ca                  1.00000      frozen
+      14    2   vnei       Fe                  1.00000      frozen
+      15    2   vnei       Ni                  1.00000      frozen
+      16    2   vnei       Tau        s/cm^3   1.66994E+11  +/-  9.21319E+10  
+      17    2   vnei       Redshift            0.0          frozen
+      18    2   vnei       norm                3.27565E-03  +/-  1.47575E-03  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model sp:powerlaw<1>*constant<2> Source No.: 4   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   powerlaw   PhoIndex            0.317588     +/-  4.82322E-02  
+       2    1   powerlaw   norm                1.08761E-02  +/-  9.95620E-04  
+       3    2   constant   factor              1.00000      frozen
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model xrb:constant<1>(apec<2> + TBabs<3>(powerlaw<4> + apec<5>)) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+       1    1   constant   factor              0.215000     frozen
+       2    2   apec       kT         keV      0.204483     frozen
+       3    2   apec       Abundanc            1.00000      frozen
+       4    2   apec       Redshift            0.0          frozen
+       5    2   apec       norm                3.06343E-04  frozen
+       6    3   TBabs      nH         10^22    0.900000     frozen
+       7    4   powerlaw   PhoIndex            1.40000      frozen
+       8    4   powerlaw   norm                3.68136E-04  frozen
+       9    5   apec       kT         keV      0.350698     frozen
+      10    5   apec       Abundanc            1.00000      frozen
+      11    5   apec       Redshift            0.0          frozen
+      12    5   apec       norm                2.83742E-03  frozen
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =         104.82 using 129 PHA bins.
+
+    Test statistic : Chi-Squared =         104.82 using 129 PHA bins.
+     Reduced chi-squared =        0.88832 for    118 degrees of freedom 
+     Null hypothesis probability =   8.018346e-01
+
+
+
+Tuesday 2016 February 23 - sub-source fitting with all exposures
+================================================================
+
+* Modified `ff_fit.py` to start spewing out line normalizations
+  (few more edits and it's almost done)
+* Setup (read: mostly copy pasted) XSPEC commands to fit individual sub-regions
+  (`snr_northclump.xcm` -- currently only set up for north clump region
+   because instrumental line values, backscal ratios are copy-pasted by hand.)
+  Must refactor this.  Almost tempted to just do a templating script instead
+  of using PyXSPEC.  It is nice to have the interactive XSPEC environment.
+
+  Weird blend of pipeline and interactive work.  I think the approach should be
+  1. have a script handle the initial XSPEC setup.
+  2. have some manual (interactive) commands take care of fitting
+     and record notes on fitting process
+
+Fit for north-clump with only Si/S free.  Usual assignments for data groups
+(0087940201 mos1,mos2,pn;0551000201 mos1,mos2).
+NOTE: PNS003 4.0-6.0 keV excised because of unmodeled instrumental lines in FWC
+data.
+
+    ========================================================================
+    Model instr:constant<1>(gaussian<2> + gaussian<3> + gaussian<4> + gaussian<5> + gaussian<6> + gaussian<7>) Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   constant   factor              0.945084     +/-  0.117919     
+                               Data group: 2
+      20    1   constant   factor              1.04559      +/-  0.121054     
+                               Data group: 3
+      39    1   constant   factor              0.603920     +/-  0.120828     
+                               Data group: 4
+      58    1   constant   factor              1.70397      +/-  0.151947     
+                               Data group: 5
+      77    1   constant   factor              1.73333      +/-  0.143367     
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model snr:TBabs<1>*vnei<2> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   TBabs      nH         10^22    2.93431      +/-  8.17693E-02  
+       2    2   vnei       kT         keV      0.800561     +/-  5.78135E-02  
+       3    2   vnei       H                   1.00000      frozen
+       4    2   vnei       He                  1.00000      frozen
+       5    2   vnei       C                   1.00000      frozen
+       6    2   vnei       N                   1.00000      frozen
+       7    2   vnei       O                   1.00000      frozen
+       8    2   vnei       Ne                  1.00000      frozen
+       9    2   vnei       Mg                  1.00000      frozen
+      10    2   vnei       Si                  4.78401      +/-  0.212749     
+      11    2   vnei       S                   4.68643      +/-  0.269218     
+      12    2   vnei       Ar                  1.00000      frozen
+      13    2   vnei       Ca                  1.00000      frozen
+      14    2   vnei       Fe                  1.00000      frozen
+      15    2   vnei       Ni                  1.00000      frozen
+      16    2   vnei       Tau        s/cm^3   7.32953E+10  +/-  1.40958E+10  
+      17    2   vnei       Redshift            0.0          frozen
+      18    2   vnei       norm                5.66898E-03  +/-  8.93280E-04  
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model sp:powerlaw<1>*constant<2> Source No.: 4   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   powerlaw   PhoIndex            0.329019     +/-  3.22172E-02  
+       2    1   powerlaw   norm                5.02867E-02  +/-  3.25140E-03  
+       3    2   constant   factor              0.214617     frozen
+                               Data group: 2
+       4    1   powerlaw   PhoIndex            0.329019     = sp:p1
+       5    1   powerlaw   norm                5.25933E-02  +/-  3.41547E-03  
+       6    2   constant   factor              0.207497     frozen
+                               Data group: 3
+       7    1   powerlaw   PhoIndex            -0.192741    +/-  0.151261     
+       8    1   powerlaw   norm                3.02888E-02  +/-  9.66795E-03  
+       9    2   constant   factor              0.201593     frozen
+                               Data group: 4
+      10    1   powerlaw   PhoIndex            0.320899     +/-  4.42407E-02  
+      11    1   powerlaw   norm                4.97075E-02  +/-  4.12063E-03  
+      12    2   constant   factor              0.203098     frozen
+                               Data group: 5
+      13    1   powerlaw   PhoIndex            0.320899     = sp:p10
+      14    1   powerlaw   norm                1.37258E-02  +/-  2.03895E-03  
+      15    2   constant   factor              0.205135     frozen
+    ________________________________________________________________________
+
+
+    ========================================================================
+    Model xrb:constant<1>(apec<2> + TBabs<3>(powerlaw<4> + apec<5>)) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   constant   factor              0.214617     frozen
+       2    2   apec       kT         keV      0.204483     frozen
+       3    2   apec       Abundanc            1.00000      frozen
+       4    2   apec       Redshift            0.0          frozen
+       5    2   apec       norm                3.06343E-04  frozen
+       6    3   TBabs      nH         10^22    0.900000     frozen
+       7    4   powerlaw   PhoIndex            1.40000      frozen
+       8    4   powerlaw   norm                3.68136E-04  frozen
+       9    5   apec       kT         keV      0.350698     frozen
+      10    5   apec       Abundanc            1.00000      frozen
+      11    5   apec       Redshift            0.0          frozen
+      12    5   apec       norm                2.83742E-03  frozen
+                               Data group: 2
+      13    1   constant   factor              0.207497     frozen
+                               Data group: 3
+      25    1   constant   factor              0.201593     frozen
+                               Data group: 4
+      37    1   constant   factor              0.203098     frozen
+                               Data group: 5
+      49    1   constant   factor              0.205135     frozen
+    ________________________________________________________________________
+
+
+    Fit statistic : Chi-Squared =         847.38 using 686 PHA bins.
+
+    Test statistic : Chi-Squared =         847.38 using 686 PHA bins.
+     Reduced chi-squared =         1.2704 for    667 degrees of freedom 
+     Null hypothesis probability =   2.432245e-06
+
+
+Fit looks very acceptable.  Comparing to the integrated fit, this clump fit
+gives us:
+
+            clump fit       integrated fit
+    nH      2.93            2.30
+    kT      0.80            1.27
+    Si      4.78            4.22
+    S       4.69            3.81
+    Tau     7.33e+10        3.05e+10
+    norm    5.67e-3         6.51e-3
+
+Interesting.  Why the trade-off between nH,kT,Tau?
+
+Plot: clear Si/S He-beta lines (well, ok, S He-beta is more tenuous).
+Magnesium emission, both He-alpha and He-beta, is clear.
+  Forcing Mg abundance to 0.1 significantly worsens fit.
+    chisqr/dof = 1136.25/667 = 1.704
+  Therefore, we can extract a meaningful bound on Mg abundance wrt Si/S.
+
+SP power law indices differ slightly from combined fit.
+SP power law index for PNS003 has gone bonkers.
+
+How do we interpret this?
+
+
+Tuesday 2016 February 23 - discussion
+=====================================
+
+Meeting notes:
+* constraining Mg abundance... maybe worthwhile, maybe not.
+* Bayesian formalism - maybe. Certainly useful to learn, but likely not
+  immediately useful for this project.
+* Run fits with values for absorption fixed (and step different values).
+* Think about interpretation - distance. HI measurements,
+  discussed rotation curve and HI spectra.
+  Obtained copy of `gal_rot` code; reviewed and cleaned up code slightly
+  (including finding relevant source + rederiving equations)
+  day after meeting (Weds Feb 24).
+
+Main question: given expected remnant distance (~>5kpc) and angular size, we
+don't expect the remnant spectrum to be ejecta-dominated.  So, why is this?
+
+
+Tuesday 2016 March 1
+====================
+
+Cleaned up notes.  Commit recent changes.
+
+
+
+
+
+
+
+
+Standing TODOs
 
 (!) new version of XMM SAS released...
 (v15.0.0, build identifier 20160201_1833)
 I wonder if this could be related to Pat's mysterious problem.
 
+(try fitting bkg alone? and see if plausible.
+ unabsorbed (local bub) kT ~ 0.1 instead of ~0.2
+ absorped kT ~ 0.3 instead of 0.37
+ nH ~ 0.29 instead of 1.1.  These values all seem reasonable.
+ no reason to disfavor.
+)
 
 
-Standing TODOs
 * clean up snr-and-bkg fit -- some of my fit tweaking (to deal with unphysical
   values) is commented out at bottom of .xcm file.
-* Look over XMM ESAS scripts and see if I'm missing anything in procedures.
+
+  Set up a "procedure" for systematically exploring the space of XRB, SP, and
+  SNR fit parameters.
+
+* Look over XMM ESAS scripts and see if I'm missing anything in procedures
+  for image scripts.
 * refactor spectrum fitting code -- either go back to PyXSPEC, write some
   templating code, or whatever is necessary...
+* Image making -- did I remember to remove corner events?  images will look a
+  bit nicer, histograms will be more useful.
+
+* Try fitting with larger GTIs for 0551000201 -- might help constrain soft
+  proton contamination.  Same deal with PN for 0087940201.
+  Would be a kinda small effect though...
+  It's unavoidable, might as well take some more counts, especially at high
+  energy.
 
 Standing questions:
 * Castro+2011, why use evselect,merge,eexpmap,emosaic?  Seems like merge is not
@@ -6429,8 +7088,6 @@ Standing questions:
 * QUESTION: line 581 of mos-spectra, why is elow set to cflim?...
     rot-im-det-sky mode=4, mode=5 are NOT documented on ESAS cookbook
     Similarly passing mode=4,5 to rot-det-sky is not documented either.
-
-    Anyways should ask...
 * Why does ESAS cookbook recommend PN line at 7.11 keV?
   I haven't seen any evidence for this particular line
   If anything, we should be modeling another line at around 5.3 keV (Cr line?)

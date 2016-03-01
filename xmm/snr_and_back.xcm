@@ -181,23 +181,31 @@ model  1:xrb constant*(apec + tbabs(powerlaw + apec))
     0
     1e-4
 
-# Apply background AREASCAL ratios to get XRB normalizations right
-newpar xrb:1 0.983
-newpar xrb:13 0.945
-newpar xrb:25 0.978
-newpar xrb:37 0.769
-newpar xrb:49 0.779
-
-# background constants tied to 1
-newpar xrb:61 1
-newpar xrb:73 1
-newpar xrb:85 1
-newpar xrb:97 1
-newpar xrb:109 1
+# Scale BACKSCAL values to 0087940201 MOS1S001 src region
+# to get XRB normalizations right, across regions AND exposures
+# src region exposures
+newpar xrb:1  1
+newpar xrb:13 0.990
+newpar xrb:25 0.935
+newpar xrb:37 0.885
+newpar xrb:49 0.982
+# bkg region exposures
+newpar xrb:61  1.017
+newpar xrb:73  1.043
+newpar xrb:85  0.956
+newpar xrb:97  1.151
+newpar xrb:109 1.261
+# Note: this effect could also affect src region fits.
+# BUT, due to spatial structure of SNR + smaller variation between src regions
+# between exposures (vs. sky expected to be ~constant everywhere),
+# we neglect this discrepancy.  Most strongly affects 0087940201 PNS003 (large
+# column exclusions) and 0551000201 MOS1S001 (one missing CCD).
+# 0551000201 MOS2S002 has CCD5 removed, but this only affects the background
+# region; src is totally unscathed.
 
 freeze xrb:1,13,25,37,49, 61,73,85,97,109
 
-# Freeze key physical parameters to reasonable values:
+# Freeze key physical parameters to reasonable starting values:
 # unabsorped apec kT (local hot bubble / heliospheric stuff), absorption nH,
 # power-law index, and absorbed apec kT
 freeze xrb:2,6,7,9
@@ -226,7 +234,8 @@ model  2:instr con*(gauss + gauss + gauss + gauss + gauss + gauss)
     0
     0
 
-# Set MOS1 line normalizations (mos1 src, ff)
+# Set MOS1 line constant, normalizations (mos1 src, ff)
+newpar instr:1 1
 newpar instr:4 4.146e-2
 newpar instr:7 1.285e-2
 # Set MOS2 line constant, normalizations (mos2 src, ff)
@@ -348,39 +357,24 @@ newpar sp:23 1e-2
 newpar sp:26 1e-2
 newpar sp:29 1e-2
 
-# Apply background AREASCAL ratios to get normalizations right, in case we do
-# fit with MOS/PN normalizations fixed from bkg region.
-# In any case allows easier comparison of norm values as well
-newpar sp:3 0.983
-newpar sp:6 0.945
-newpar sp:9 0.978
-newpar sp:12 0.769
-newpar sp:15 0.779
-newpar sp:18 1
-newpar sp:21 1
-newpar sp:24 1
-newpar sp:27 1
-newpar sp:30 1
+# Apply BACKSCAL ratios w.r.t. 0087940201 MOS1 src region to allow
+# easier comparison of normalizations. expect slightly larger in src region
+# due to sharp vignetting peak; note we do not use a detector ARF, as
+# effects accounted for by ARF are irrelevant.
+# src region exposures
+newpar sp:3 1
+newpar sp:6 0.990
+newpar sp:9 0.935
+newpar sp:12 0.885
+newpar sp:15 0.982
+# bkg region exposures
+newpar sp:18 1.017
+newpar sp:21 1.043
+newpar sp:24 0.956
+newpar sp:27 1.151
+newpar sp:30 1.261
 # constants should never be freed
 freeze sp:3,6,9,12,15, 18,21,24,27,30
-
-# TEST TODO TRIAL ERROR WARNING
-# Try fixing PN power law normalizations based on background fits.
-#newpar spm1:1 0.425
-#newpar spm1:2 6.060e-2
-#newpar spm2:1 0.421
-#newpar spm2:2 6.446e-2
-#newpar sppn:1 0.379
-#newpar sppn:2 7.828e-2
-#newpar spm1motch:1 0.534
-#newpar spm1motch:2 2.976e-2
-#newpar spm2motch:1 1.045
-#newpar spm2motch:2 1.505e-2
-#freeze spm1:*
-#freeze spm2:*
-#freeze sppn:*
-#freeze spm1motch:*
-#freeze spm2motch:*
 
 
 # Prepare to fit
@@ -405,24 +399,112 @@ newpar sp:13=sp:10
 newpar sp:19=sp:16
 newpar sp:28=sp:25
 # PN background index tends to blow up-- freeze to 0.2
-newpar sp:22 0.2
-freeze sp:22
-fit
-# chi-squared/dof after SP fit = 17762 / 3775 = 4.71
-
-# Note: at this point, SP PN for background has an index that's going nuts
-
-thaw snr:1,2,16
-fit
-# chi-squared/dof after fit with kT,nH,Tau free = 6924 / 3772 = 1.84
-thaw snr:10,11
-fit
-# chi-squared/dof after fit with kT,nH,Tau,Si,S free = 4881 / 3770 = 1.29
-
-thaw xrb:2,6,9
-fit
+##########newpar sp:22 0.2
+##########freeze sp:22
+##########fit
+########### chi-squared/dof after SP fit = 17762 / 3775 = 4.71
+##########
+########### Note: at this point, SP PN for background has an index that's going nuts
+##########
+##########thaw snr:1,2,16
+##########fit
+########### chi-squared/dof after fit with kT,nH,Tau free = 6924 / 3772 = 1.84
+##########thaw snr:10,11
+##########fit
+########### chi-squared/dof after fit with kT,nH,Tau,Si,S free = 4881 / 3770 = 1.29
+##########
+##########thaw xrb:2,6,9
+##########fit
 # chi-squared/dof after fit with xrb free = 4630 / 3768 = 1.29
 # (note, here I tied PN SP index)
+
+# =========================================================================
+# Current fit, after straight up run on evening Feb 19 -- disagrees with my
+# comments somewhat.  Trying to replicate previous fit.
+#    Test statistic : Chi-Squared =        4632.02 using 3805 PHA bins.
+#     Reduced chi-squared =        1.22930 for   3768 degrees of freedom 
+#     Null hypothesis probability =   7.886484e-21
+# XRB values are a little funky: nH kind of small
+# (but, we don't have sense of physical constraint on this anyways)
+# and unabsorbed (local) kT ~ 0.1 instead of ~0.2
+# absorbed kT 0.3 instead of 0.37; nH ~ 0.29 instead of 1.1
+# OK: values are not unreasonable.  But nH is rather small for sightline of galactic halo
+# through galactic plane...
+#   1    1   constant   factor              0.983000     frozen
+#   2    2   apec       kT         keV      0.102175     +/-  5.76049E-03  
+#   3    2   apec       Abundanc            1.00000      frozen
+#   4    2   apec       Redshift            0.0          frozen
+#   5    2   apec       norm                6.64589E-04  +/-  1.19434E-04  
+#   6    3   TBabs      nH         10^22    0.286894     +/-  3.95274E-02  
+#   7    4   powerlaw   PhoIndex            1.40000      frozen
+#   8    4   powerlaw   norm                3.34324E-04  +/-  1.02644E-05  
+#   9    5   apec       kT         keV      0.292553     +/-  7.29825E-03  
+#  10    5   apec       Abundanc            1.00000      frozen
+#  11    5   apec       Redshift            0.0          frozen
+#  12    5   apec       norm                7.19190E-04  +/-  1.37734E-04 
+#
+# As I noted before, PN soft proton index for src region has gone nuts.
+# So go ahead and freeze / refit.
+#
+# newpar sp:7 0.2 ; freeze sp:7 ; fit
+# #### chisqr/dof = 4644/3769 = 1.232
+#
+# newpar xrb:2 0.2 ; freeze xrb:2; fit
+# #### chisqr/dof = 4605/3770 = 1.222  (marginal improvement!)
+# thaw xrb:2 ; fit
+# #### chisqr/dof = 4600/3769 = 1.220
+#
+# OK, fit has absorbed kT blowing up to 0.77 keV like previously observed
+# So...
+#
+# newpar xrb:6 1 ; newpar xrb:9 0.35 ; fit
+# #### chisqr/dof = 4607/3769 = 1.222
+#
+# RESULT: unabsorbed kT ~ 0.24, absorbed kT ~ 0.50; nH ~ 1.1
+# somewhat unusual but OK, I think acceptable; fit result matches
+# result from last time, except kT was smaller...
+# Sanity check, last time (Jan 26), fits gave:
+#    unabs kT = 0.23 (range 0.215, 0.246)
+#    abs kT = 0.37 (range 0.347, 0.424)
+#    nH = 1.07 (range 0.992, 1.195)
+#   0087940201 PN SP index was thawed for src region, but was basically 0.2
+#   kind of locked into that.
+#
+# One extra step -- of course obvious risk of putting too much faith in
+# old values when there's no meaning.  But want to understand _why_ fit is
+# converging on new values; confirm that we haven't just missed the local
+# minimum from before.
+#
+# newpar xrb:9 0.35 ; freeze xrb:9 ; fit
+# #### chisqr/dof = 4611/3770 = 1.223
+#
+# thaw xrb:9 ; fit
+# #### chisqr/dof = 4608.4/3769 = 1.22272
+#
+#  "FINAL" result:
+#   2    2   apec       kT         keV      0.230699     +/-  6.42091E-03  
+#   5    2   apec       norm                3.01010E-04  +/-  1.00281E-05  
+#   6    3   TBabs      nH         10^22    1.08571      +/-  7.11689E-02  
+#   7    4   powerlaw   PhoIndex            1.40000      frozen
+#   9    5   apec       kT         keV      0.368469     +/-  1.86426E-02  
+#  12    5   apec       norm                3.51294E-03  +/-  6.47144E-04 
+#
+# This fit is almost identical to the January 26 fit.
+# SP indices agree to 3 decimal places.
+# SNR model about the same (norm within 1%, nH within 1%), abundances agree to
+#   2 decimal places (order ~0.1% discrepancy)
+# Not looking closely but I think same applies to linse.
+# OK.  main takeaway -- lots of settings work.
+# the ERROR command is DEFINITELY underestimating the range of pssible fits.
+# Since, e.g., I know that 
+#    unabs kT ~ 0.25
+#    abs kT ~ 0.50
+#    nH ~ 1.1
+# gives an equally good (in chi-squared, insignificantly better) fit.
+# But, unabs kT 0.25 and abs kT 0.50 fall OUTSIDE the error range!
+# As warned we do need to check results w/ steppar command.
+# 
+# =========================================================================
 
 # Now mucking around manually to improve the fit
 # 1. newpar xrb:2 0.2 ; freeze xrb:2; fit; thaw xrb:2

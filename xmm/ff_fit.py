@@ -16,14 +16,17 @@ import xspec as xs
 #stem, reg = args.stem, args.reg
 #stem = args.stem
 
-obsid = "0087940201"
-exp = "pnS003"
-reg = "src_SE_dark"
+obsid = "0551000201"
+exp = "mos1S001"
+reg = "src_north_clump"
 
 instr_id = exp.split('S')[0]  # one of: mos1, mos2, pn
 
 # "Global" settings
+xs.Xset.chatter = 0  # TODO shut up temporarily.  leave chatter on in final version (!)
 xs.Xset.abund = "wilm"
+xs.Fit.query = "yes"
+# final version of script...
 
 # Set up spectrum
 # ---------------
@@ -91,17 +94,27 @@ xs.Plot.device = "/xw"
 xs.Plot.xAxis = "keV"
 xs.Plot.xLog = True
 xs.Plot.yLog = True
-
-xs.Plot("ldata resid delchi")
+xs.Plot("ldata resid delchi")  # TODO temporarily commented out
+# final version needs to iterate over all plots
 
 # iplot to show stuff.
-# xs.Plot.iPlot("ldata resid delchi")
+# xs.Plot.iplot("ldata resid delchi")
 # PLT> co ?
 # PLT> co 2 on 2
 # PLT> rescale y 1e-3 1
 # PLT> pl
 # PLT> exit
 
-# spit out resulting line normalizations
-# TBD, data interchange pending
-# instr.gaussian.norm.values[0]
+# TODO Use matplotlib to do this in a nice way -- avoid interactive input
+
+
+# PRINT OUT NUMBERS WE CARE ABOUT
+# -------------------------------
+
+print "{:s} {:s} {:s} FWC instrumental line norms:".format(obsid, exp, reg)
+for cname in instr.componentNames:
+    # cnames are gaussian, gaussian_2, ..., gaussian_6
+    # correctly ordered (although I don't know if that's guaranteed)
+    comp = eval('instr.'+cname)
+    print "  {:.2f} line norm: {:g}".format(comp.LineE.values[0], comp.norm.values[0])
+
