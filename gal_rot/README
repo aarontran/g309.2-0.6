@@ -1,0 +1,102 @@
+gal_rot
+=======
+
+2016 February 23 - code copied and cleaned up from Pat Slane, in turn
+copied/modified from Bryan Gaensler.  Original files (modification times
+omitted) were:
+
+    atran@treble:/data/slane/research/snr/code/gal_rot$ ls -lthr
+    total 152K
+    -rw-r--r-- 1 slane mp  516 rot_inv.desc
+    -rw-r--r-- 1 slane mp  494 findends.f
+    -rwxr-xr-x 1 slane mp  21K rot_inv.linux
+    -rw-r--r-- 1 slane mp 1.8K findends.o
+    -rw-r--r-- 1 slane mp 5.3K pgplot.gif
+    -rw-r--r-- 1 slane mp  109 Makefile.linux
+    -rw------- 1 slane mp 7.8K gal_rot.c
+    -rw-r--r-- 1 slane mp  220 note
+    -rw-r--r-- 1 slane mp  247 Makefile.orig
+    -rwxr-xr-x 1 slane mp  21K rot_inv.old
+    -rw-r--r-- 1 slane mp  109 Makefile
+    -rw-r--r-- 1 slane mp 1.1K rot_inv.f
+    -rw-r--r-- 1 slane mp  10K stuff.tar
+    -rw-r--r-- 1 slane mp 5.2K rot_inv.o
+    -rwxr-xr-x 1 slane mp  21K rot_inv
+
+Main output is executable   `rot_inv` which, given galactic lat/lon, plots
+the line-of-sight velocity, relative to local standard of rest, as a function
+of distance.
+
+Because the math/derivation is pretty simple, and the fit published by
+Fich/Blitz/Stark a long time ago, shouldn't be an issue to add to this repo...
+If I use this much at all I'll probably port it over to Python at some point
+(all of this stuff can easily fit into one script, no need for compilation).
+
+
+Manifest
+--------
+Current files are:
+    README
+    Makefile
+    findends.f
+    rot_inv.f
+
+Compiled object files
+    findends.o
+    rot_inv.o
+
+Compiled executable (rot_inv.linux, rot_inv appear to work on linux machines)
+(`source /data/slane/research/snr/code/miriad/MIRRC.linux` before executing)
+By modification time, `rot_inv` is newest; `rot_inv.linux` is oldest.
+I add .exe extensions to simplify gitignore behavior.
+    rot_inv.linux.exe
+    rot_inv.old.exe
+    rot_inv.exe
+
+Code and executables depend on MIRIAD libraries in Pat Slane's folders.
+
+
+
+Older files on usage
+--------------------
+
+Both files now deleted.
+
+
+`rot_inv.desc`
+
+> >Do you have code for calculating distance given velocity and galactic
+> >longitude? Tom Dame gave me some code to do this long ago, but I was never able
+> >to get it to compile. At the moment, I'm trying to figure out what velocity
+> >corresponds 1 kpc in the direction of G347.3-0.5, but I would also like to have
+> >code to be able to address this sort of question in general...
+>
+> Here's what I use. It might not be the best thing to use for particular
+> lines of sight, but uses the standard general rotation curve.
+>
+> Bryan
+
+
+`note`
+
+Editorial remarks:
+1. ignore the first source command (points to one of Bryan's directories, no
+longer exists)
+2. mirdef exists in /home/slane
+
+> to compile:
+> 
+> source /data/gilly1/miriad/bin/MIRRC
+> source /data/slane/research/snr/code/miriad/MIRRC.linux
+> setenv MIRDEF ~/mirdef
+> set path = (. $MIRBIN $path)
+> make
+> 
+> 
+> 
+> 
+> To run:
+> 
+> source ../miriad/MIRRC.linux
+> 
+> rot_inv.linux
