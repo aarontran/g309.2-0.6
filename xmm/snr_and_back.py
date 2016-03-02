@@ -21,110 +21,113 @@ import xspec as xs
 #stem, reg = args.stem, args.reg
 #stem = args.stem
 
+# "Global" settings
 xs.Xset.abund = "wilm"
+xs.Fit.query = "yes"
 
-# Set up spectra
-# --------------
+xmmpath = os.environ['XMM_PATH']
 
-xmmpath = os.environ['XMM_PATH'] + "/"
+# Define spectra to use (set keywords for iterating, file names, etc)
+spec = {
+        1: {'obsid': "0087940201", 'exp': "mos1S001", 'reg': "src"},
+        2: {'obsid': "0087940201", 'exp': "mos2S002", 'reg': "src"},
+        3: {'obsid': "0087940201", 'exp': "pnS003", 'reg': "src"},
+        4: {'obsid': "0551000201", 'exp': "mos1S001", 'reg': "src"},
+        5: {'obsid': "0551000201", 'exp': "mos2S002", 'reg': "src"},
+        6: {'obsid': "0087940201", 'exp': "mos1S001", 'reg': "bkg"},
+        7: {'obsid': "0087940201", 'exp': "mos2S002", 'reg': "bkg"},
+        8: {'obsid': "0087940201", 'exp': "pnS003", 'reg': "bkg"},
+        9: {'obsid': "0551000201", 'exp': "mos1S001", 'reg': "bkg"},
+       10: {'obsid': "0551000201", 'exp': "mos2S002", 'reg': "bkg"}
+    }
 
-# Must chdir so XSPEC can resolve rmf/arf/background files
-# (if cannot resolve, XSPEC prompt will block script execution...)
-os.chdir(xmmpath + "0087940201/odf/repro")
-xs.AllData("1:1 " + xmmpath + "0087940201/odf/repro/mos1S001-bkg-grp50.pi")
-xs.AllData("2:2 " + xmmpath + "0087940201/odf/repro/mos2S002-bkg-grp50.pi")
-xs.AllData("3:3 " + xmmpath + "0087940201/odf/repro/pnS003-bkg-os-grp50.pi")
-os.chdir(xmmpath + "0551000201/odf/repro")
-xs.AllData("4:4 " + xmmpath + "0551000201/odf/repro/mos1S001-bkg-grp50.pi")
-xs.AllData("5:5 " + xmmpath + "0551000201/odf/repro/mos2S002-bkg-grp50.pi")
+for i in spec.keys():
+    spec[i]['instr'] = spec[i]['exp'].split('S')[0]  # mos1, mos2, pn
 
-reg = "src"  # TODO temporary
 
-os.chdir(xmmpath + "0087940201/odf/repro")
-xs.AllData("6:6 " + xmmpath + "0087940201/odf/repro/mos1S001-{}-grp50.pi".format(reg))
-xs.AllData("7:7 " + xmmpath + "0087940201/odf/repro/mos2S002-{}-grp50.pi".format(reg))
-xs.AllData("8:8 " + xmmpath + "0087940201/odf/repro/pnS003-{}-os-grp50.pi".format(reg))
-os.chdir(xmmpath + "0551000201/odf/repro")
-xs.AllData("9:9 " + xmmpath + "0551000201/odf/repro/mos1S001-{}-grp50.pi".format(Reg))
-xs.AllData("10:10 " + xmmpath + "0551000201/odf/repro/mos2S002-{}-grp50.pi".format(reg))
-
-os.chdir(xmmpath)  # Reset back to "main" directory to set rmfs/arfs/etc
-
-m1jph_bkg = xs.AllData(6)
-m2jph_bkg = xs.AllData(7)
-pnjph_bkg = xs.AllData(8)
-m1cm_bkg  = xs.AllData(9)
-m2cm_bkg  = xs.AllData(10)
-
-m1jph_bkg.background = "0087940201/odf/repro/mos1S001-bkg-qpb.pi"
-m2jph_bkg.background = "0087940201/odf/repro/mos2S002-bkg-qpb.pi"
-pnjph_bkg.background = "0087940201/odf/repro/pnS003-bkg-qpb.pi"
-m1cm_bkg.background = "0551000201/odf/repro/mos1S001-bkg-qpb.pi"
-m2cm_bkg.background = "0551000201/odf/repro/mos2S002-bkg-qpb.pi"
-
+# Load spectra and supporting files (background,RMF,ARF) for each model
+# ---------------------------------------------------------------------
 # 0: x-ray background
 # 1: instrumental lines
 # 2: SNR plama model
 # 3: soft proton background
 
-m1jph_bkg.multiresponse[0]     = "0087940201/odf/repro/mos1S001-bkg.rmf"
-m1jph_bkg.multiresponse[0].arf = "0087940201/odf/repro/mos1S001-bkg.arf"
-m1jph_bkg.multiresponse[1]     = "0087940201/odf/repro/mos1S001-bkg.rmf"
-m1jph_bkg.multiresponse[1].arf = "0087940201/odf/repro/mos1S001-bkg-ff.arf"
-m1jph_bkg.multiresponse[3]     = "caldb/mos1-diag.rsp"
-m1jph_bkg.multiresponse[3].arf = "none"
-print "loaded m1jph_bkg"
+for i in sorted(spec.keys()):
+    obsid = spec[i]['obsid']
+    exp = spec[i]['exp']
+    reg = spec[i]['reg']
+    instr = spec[i]['instr']
 
-m2jph_bkg.multiresponse[0]     = "0087940201/odf/repro/mos2S002-bkg.rmf"
-m2jph_bkg.multiresponse[0].arf = "0087940201/odf/repro/mos2S002-bkg.arf"
-m2jph_bkg.multiresponse[1]     = "0087940201/odf/repro/mos2S002-bkg.rmf"
-m2jph_bkg.multiresponse[1].arf = "0087940201/odf/repro/mos2S002-bkg-ff.arf"
-m2jph_bkg.multiresponse[3]     = "caldb/mos2-diag.rsp"
-m2jph_bkg.multiresponse[3].arf = "none"
-print "loaded m2jph_bkg"
+    repro_dir = xmmpath + "/{obs}/odf/repro".format(obs=obsid)
 
-pnjph_bkg.multiresponse[0]     = "0087940201/odf/repro/pnS003-bkg.rmf"
-pnjph_bkg.multiresponse[0].arf = "0087940201/odf/repro/pnS003-bkg.arf"
-pnjph_bkg.multiresponse[1]     = "0087940201/odf/repro/pnS003-bkg.rmf"
-pnjph_bkg.multiresponse[1].arf = "0087940201/odf/repro/pnS003-bkg-ff.arf"
-pnjph_bkg.multiresponse[3]     = "caldb/pn-diag.rsp"
-pnjph_bkg.multiresponse[3].arf = "none"
-print "loaded pnjph_bkg"
-# Note: pn-diag.rsp raises RMF TELESCOPE/INSTRUMENT keyword errors
-# this is OK; keywords are set to none in file header for whatever reason
+    # Load spectrum
+    f_spec = repro_dir + "/{exp}-{reg}-grp50.pi".format(exp=exp, reg=reg)
+    if exp[:2] == "pn":
+        # Use OOT substracted spectrum for PN
+        f_spec = repro_dir + "/{exp}-{reg}-os-grp50.pi".format(exp=exp, reg=reg)
+    if os.getcwd() != repro_dir:
+        # must chdir to resolve rmf/arf/background files listed in FITS header
+        # (if files not found, XSPEC prompt blocks script execution)
+        os.chdir(repro_dir)
+    xs.AllData("{n}:{n} {path}".format(n=i, path=f_spec))
 
-m1cm_bkg.multiresponse[0]     = "0551000201/odf/repro/mos1S001-bkg.rmf"
-m1cm_bkg.multiresponse[0].arf = "0551000201/odf/repro/mos1S001-bkg.arf"
-m1cm_bkg.multiresponse[1]     = "0551000201/odf/repro/mos1S001-bkg.rmf"
-m1cm_bkg.multiresponse[1].arf = "0551000201/odf/repro/mos1S001-bkg-ff.arf"
-m1cm_bkg.multiresponse[5]     = "caldb/mos1-diag.rsp"
-m1cm_bkg.multiresponse[5].arf = "none"
-print "loaded m1cm_bkg"
+    asdf = xs.AllData(i)  # TODO temporary, pending better naming scheme.
 
-m2cm_bkg.multiresponse[0]     = "0551000201/odf/repro/mos2S002-bkg.rmf"
-m2cm_bkg.multiresponse[0].arf = "0551000201/odf/repro/mos2S002-bkg.arf"
-m2cm_bkg.multiresponse[1]     = "0551000201/odf/repro/mos2S002-bkg.rmf"
-m2cm_bkg.multiresponse[1].arf = "0551000201/odf/repro/mos2S002-bkg-ff.arf"
-m2cm_bkg.multiresponse[3]     = "caldb/mos2-diag.rsp"
-m2cm_bkg.multiresponse[3].arf = "none"
-print "loaded m2cm_bkg"
+    # Load QPB background
+    f_qpb = repro_dir + "/{exp}-{reg}-qpb.pi".format(exp=exp, reg=reg)
+    asdf.background = f_qpb
+
+    # Load RMF/ARF files for each source model
+    asdf.multiresponse[0]     = repro_dir + "/{exp}-{reg}.rmf".format(exp=exp, reg=reg)
+    asdf.multiresponse[0].arf = repro_dir + "/{exp}-{reg}.arf".format(exp=exp, reg=reg)
+    asdf.multiresponse[1]     = repro_dir + "/{exp}-{reg}.rmf".format(exp=exp, reg=reg)
+    asdf.multiresponse[1].arf = repro_dir + "/{exp}-{reg}-ff.arf".format(exp=exp, reg=reg)
+
+    if reg == "src":
+        asdf.multiresponse[2]     = repro_dir + "/{exp}-{reg}.rmf".format(exp=exp, reg=reg)
+        asdf.multiresponse[2].arf = repro_dir + "/{exp}-{reg}.arf".format(exp=exp, reg=reg)
+
+    asdf.multiresponse[3]     = xmmpath + "/caldb/{}-diag.rsp".format(instr)
+    asdf.multiresponse[3].arf = "none"
+    # Note: pn-diag.rsp raises RMF TELESCOPE/INSTRUMENT keyword errors
+    # this is OK; keywords are set to none in file header for whatever reason
+
+    if instr == "mos1" or instr == "mos2":
+        asdf.ignore("**-0.3, 11.0-**")
+    elif instr == "pn":
+        asdf.ignore("**-0.4, 11.0-**")
+
+
+# Dump any outputs in xmmpath, not in random repro_dir
+os.chdir(xmmpath)
+
+
+# Model parameter set-up
+# ======================
 
 # Note: model variables are those of data group 1 only
-# But, XSPEC automatically creates copies of each model as declared
+# i.e., xrb only refers to model for XRB 1.
+# But, XSPEC automatically creates copies of each model as declared...
 
 # Sky X-ray background
 # --------------------
-xrb = xs.Model("apec + TBabs * (powerlaw + apec)", "xrb", 1)
+xrb = xs.Model("constant * (apec + TBabs*(powerlaw + apec))", "xrb", 1)
 
+xrb.constant.factor = 1
 xrb.apec.kT = 0.1
 xrb.TBabs.nH = 1
 xrb.powerlaw.PhoIndex = 1.4
-xrb.apec_4.kT = 0.25
+xrb.apec_5.kT = 0.25
 
+xrb.constant.factor.frozen = True
 xrb.apec.kT.frozen = True
 xrb.TBabs.nH.frozen = True
 xrb.powerlaw.PhoIndex.frozen = True
-xrb.apec_4.kT.frozen = True
+xrb.apec_5.kT.frozen = True
+
+# TODO read in XRB backscal ratios
+
+kkk
 
 # XMM EPIC instrumental lines
 # ---------------------------
@@ -139,6 +142,9 @@ for cname, en in zip(instr.componentNames[1:], lines):
     comp.Sigma = 0
     comp.LineE.frozen = True
     comp.Sigma.frozen = True
+
+    # TODO how to iterate over different spectra,
+    # and read in different line values?
 
 
 

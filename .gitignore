@@ -2,6 +2,9 @@
 
 results-interm
 
+ms/aastex
+ms/refs-snr.bib
+
 most/G309.2-0.6.fits
 most/G309.2-0.6.jpg
 most/G309.2-0.6.ps
@@ -99,6 +102,37 @@ chandra/*/00README
 Session.vim
 .netrwhist
 *~
+
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+
+## Intermediate documents:
+*.dvi
+*-converted-to.*
+
+## Bibliography auxiliary files (bibtex/biblatex/biber):
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.brf
+*.run.xml
+
+## Build tool auxiliary files:
+*.fdb_latexmk
+*.synctex
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
 
 # C++/Fortran gitignore:
 ## Compiled Object files

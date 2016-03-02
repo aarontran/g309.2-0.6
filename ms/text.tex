@@ -1,0 +1,262 @@
+\documentclass[manuscript]{aastex6}  % one-column, double-spaced GENERATE BIB
+%\documentclass[iop, apj, numberedappendix]{emulateapj}
+
+% Customize figures/sizing for 2 column vs. manuscript printout
+% TODO - not in HEAD latex install?
+%%\usepackage{etoolbox}
+%%\newtoggle{manuscript}
+%%\toggletrue{manuscript}  % Set TRUE if using manuscript / 1-col layout
+%%%\togglefalse{manuscript}  % Set FALSE if using 2-col layout
+
+\shorttitle{Stuff (\today)}  % <~ 44 char
+\shortauthors{Draft (\today)}  % Max three
+\slugcomment{Draft, \today}
+
+% Packages and commands
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\newcommand*{\mt}{\mathrm}
+\newcommand*{\unit}[1]{\;\mt{#1}}  % vemod.net/typesetting-units-in-latex
+\newcommand*{\abt}{\mathord{\sim}} % tex.stackexchange.com/q/55701
+\newcommand*{\ptl}{\partial}
+\newcommand*{\del}{\nabla}
+\newcommand*\mean[1]{\bar{#1}}
+\renewcommand{\vec}[1]{\mathbf{#1}}  % Bold vectors
+\newcommand*{\tsup}{\textsuperscript}
+
+% Revision packages and commands
+%\usepackage{color}
+%\usepackage{soul}
+%\newcommand*{\revadd}[1]{\textbf{\color{blue}#1}}
+%\newcommand*{\revcut}[1]{\textbf{\color{red}\st{#1}}}
+
+% Paper-specific commands
+\defcitealias{rakowski2001}{RHS01}
+\defcitealias{gaensler1998}{GGM98}
+
+\begin{document}
+
+\title{Blagh}
+
+\author{
+Blah Blah\altaffilmark{1}
+Blagh Blagh\altaffilmark{2,3}
+}
+
+\affil{
+\tsup{1}Blah, BLAH/BLAH MS-Blah, Blah, ME 00000, USA \\
+\tsup{2}Blagh, BLAH/BLAH MS-Blagh, Blagh, CA 00000, USA
+}
+
+\altaffiltext{3}{Blagh blagh alt affil}
+
+
+\begin{abstract}
+Sketch of a writeup, and my own scribbled notes.
+\end{abstract}
+
+% (!) no longer used as of late February, 2016
+\keywords{acceleration of particles ---
+    ISM: supernova remnants ---
+    ISM: individual objects (SNR G309.2-0.6) ---
+    X-rays: ISM
+%    ISM: magnetic fields ---
+%    shock waves
+}
+
+\section{Introduction} \label{sec:intro}
+
+\subsection{SNR stuff}
+
+MMSNRs (Rho and Petre, 1998)
+
+Tilley+ (2006) - model anisotropic thermal conduction in remnants in regular
+ISM vs. dense medium
+
+
+Can we confirm that this constitutes a mixed morphology SNR?
+(Note, GGM98 came out around the same year as rho/petre)
+Rakowski did not label as such but noted ejecta dominated nature
+
+what would be interesting is a comparative study.
+
+G352.7-0.1 (Pannuti+ 2014, XMM/Chandra) exhibits similar features...
+
+G298.6-0.0 (Bamba+ 2015, SuzakuRelevant reference: Kesteven and Caswell (1987)
+
+Plotted with 0.843 GHz radio contours from the Molonglo Observatory Synthesis
+Telescope (MOST) supernova remnant catalogue, with resolution $\abt 43\arcsec$
+and sensitivity $2$ mJy/beam \\citep{whiteoak1996}.
+
+MOST table 2:
+    RA 13h46m40s dec -62 deg. 54 arcmin.
+    $S_0.843 = 6.0 Jy$
+    $Extent_0.843 = 15\arcmin \times 12\arcmin$
+    Surface brightness? (0.843 GHz)? = $5.4e-21 W m^{-2} Hz^{-1} sr^{-1}$
+    Relevant reference: Kesteven and Caswell (1987)
+
+%\begin{figure*}[]
+%    \plotone{fig_spec_01.pdf} \\
+%    \plotone{fig_spec_16.pdf}
+%    \caption{Caption goes here}
+%    \label{fig:spec}
+%\end{figure*}
+
+
+\section{Observations}
+
+\subsection{Instrumental and Astrophysical Background}
+
+\subsubsection{Instrumental Background}
+
+We follow the ESAS approach (Kuntz and Snowden, 2008).
+
+We augment ESAS by extracting instrumental line ratios from FWC closed data.
+
+We model the following lines...
+Mos: 1.49 Al, 1.75 Si
+PN lines: 1.49 Al, 7.49 Ni?, 8.05 Cu?, 8.62 Zn?, 8.90 Cu Kbeta?
+    (inquire about where 7.11 came from...)
+
+\subsubsection{Astrophysical Background}
+
+Elemental abundances by Wilms et al. (2000) implemented as "tbabs" in XSPEC
+(Arnaud 1996).
+
+Will be useful to provide physical units for background emission, and compare
+to other measurements.
+
+\paragraph{Soft proton contamination}
+
+Loads of it, everywhere.
+
+\paragraph{Local bubble and galactic halo emission}
+
+Hard to say what variability is like, I think, given sparse data
+
+* Henley and Shelton (2013), XMM-Newton observations of galactic halo emission.
+  over 110 sightlines
+    $T ~ 2.2 x 10^6 K$
+    surface brightness $\abt 0.5-7 \times 10^{-12} \unit{erg cm^{-2} s^{-1} deg^{-2}}$
+* Henley and Shelton (2015), XMM and Suzaku observations of shadowing clouds
+  to separate foreground (local) and background (halo) emission.
+
+Back of the envelope calculation for our data:
+background is $\abt0.1 \unit{ct/s}$ at $1 \unit{keV}$, in source region.
+Effective area of MOS is $\abt400 \unit{cm^2}$...
+\[
+    0.1/400 ct/(s keV cm^2) ~ 2.5e-3 erg / (s erg cm^2)
+\]
+Angular size of sky region is $\abt 10\arcmin \times 10\arcmin \sim 0.027 \unit{deg^2}$, so we get:
+\[
+    1.6e-11 erg cm^{-2} s^{-1} deg^{-2}
+\]
+Given that this background estimate is modeled as a blend of:
+local bubble + absorbed hot galactic halo emission + extragalactic power law
+(we ignore the "cool" component of galactic halo, likely absorbed since
+this remnant is right on galactic plane)
+this seems about reasonable.  We should fall right in the range of expected
+surface brightness.
+
+
+Over what lengthscales does the background vary?  Or, how good is our
+assumption of a uniform background, in the XMM-Newton FOV?
+
+NOTE: there are 28 clustered observations well out of the galactic plane
+that they analyze (sightlines 103.1 to 103.27; 103.8 is two observations)
+SZE SurF project to complement SPT,APEX,ACT study.
+
+    Spread in halo T is $\abt10-20\%$.  Column density variation is around 10\%.
+    Angular separation between pointings is of order 0.5 degrees $\sim$ 30 arcmin..
+
+    For this study I'm interested in (concerned with?)
+    angular variations on slightly shorter scales, of ~10-20 arcmin.  I.e.,
+    within a half-degree.
+
+    But I think we are close enough -- "only" factor 2x smaller -- that this
+    data might constitute decent probe!
+
+
+
+Please also note dispute w.r.t. local bubble: Welsh and Shelton (2009,
+Astrophys. and Space Sci.).
+
+Local leo cold cloud -> constraints on local bubble emission
+Snowden et al., 2015ApJ...806..119S
+
+Some other interesting reading:
+Henley, Shelton, Kwak, Hill, Mac Low (2015) 2015ApJ...800..102H
+- modeling gas flow from disk to halo
+Peters et al. (2015) 2015ApJ...813L..27P
+- more complex modeling works out; plasma for halo emission can be sourced from
+  stellar feedback
+
+\paragraph{Solar wind charge exchange}
+
+Solar wind charge exchange -- based on short time cut (give plots in
+supplemental material) and analysis by Carter et al. (2008, 2011),
+data from 0087940201 are likely unaffected.
+
+\paragraph{Extragalactic background}
+
+ESAS (Snowden/Kuntz) recommends alpha = 1.46 but gives no source.
+
+Chen, Fabien, Gendreau (1997)
+  ASCA/ROSAT observations of QSF3 field (RA ~ 55 deg., del ~ -44. deg.; falls
+  between LMC and fornax cluster, well out of galactic plane.
+
+  Result: photon index ~ 1.40 to 1.50, depending on how you fit it.
+  Single power law fit:
+    ROSAT(1-2keV) + ASCA(1-7keV) -> gamma = 1.48 +/- 0.07
+    ROSAT(1-2keV) + ASCA(1-3keV) -> gamma = 1.39 +/- 0.11
+  Powerlaw + raymond-smith plasma model,
+    ROSAT(0.5-2keV) + ASCA(0.4-7keV) -> gamma = 1.46 +/- 0.06
+
+Kuntz, Snowden (200)
+    ROSAT - need to skim this
+
+Hickox, Markevitch (2006ApJ...645...95H)
+    CDF-N and CDF-S (total 3 Megasec)
+    [interestingly, enabled by stowed ACIS calibration observations]
+    Required careful background subtraction!
+      For such deep Chandra observations, unresolved sky bkg is faint compared
+      to quiescent detector background.
+
+
+\acknowledgments
+
+Blah blah blah.
+This research is based on observations obtained with XMM-Newton, an ESA science
+mission with instruments and contributions directly funded by ESA Member States
+and NASA.
+This research has made use of NASA's Astrophysics Data System.
+%This research made use of Astropy, a community-developed core Python package
+%for Astronomy (Astropy Collaboration, 2013).
+%This research also made use of APLpy, an open-source plotting package for
+%Python hosted at \href{http://aplpy.github.com}{http://aplpy.github.com}.
+
+{\it Facilities:} \facility{XMM (EPIC)}, \facility{Molonglo Observatory}
+
+%\software{Astropy, ...}
+
+% ==========
+% References
+% ==========
+\bibliographystyle{apj}
+\bibliography{refs-snr}
+
+% ========
+% Appendix
+% ========
+%\clearpage
+%\newpage
+%\appendix
+%
+%\setcounter{table}{0}
+%\renewcommand{\thetable}{A\arabic{table}}
+%\setcounter{figure}{0}
+%\renewcommand{\thefigure}{A\arabic{figure}}
+
+\end{document}

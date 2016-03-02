@@ -7035,9 +7035,9 @@ don't expect the remnant spectrum to be ejecta-dominated.  So, why is this?
 Tuesday 2016 March 1
 ====================
 
-Cleaned up notes.  Commit recent changes.
+Cleaned up notes, commit recent changes.
 
-
+PyXSPEC port of fitting code, working on NOW.
 
 
 
