@@ -9,23 +9,37 @@
 
 set obsid = $1
 if ($obsid == "") then
-    echo "Error: obsid required!"
-    exit 1
+  echo "Error: obsid required!"
+  exit 1
 endif
 
 source sasinit $obsid
+echo ""
+
 if ($? != 0) then
-    echo "Invalid obsid (could not sasinit)"
-    exit 1
+  echo "Invalid obsid (could not sasinit)"
+  exit 1
 endif
 
 make_xmmregions ${obsid}
 
-echo ""
+set regions = "src bkg src_north_clump src_SW_lobe src_E_lobe src_SE_dark"
+foreach reg ($regions)
 
-specbackgrp ${obsid} src
-specbackgrp ${obsid} bkg
-specbackgrp ${obsid} src_north_clump
-specbackgrp ${obsid} src_SW_lobe
-specbackgrp ${obsid} src_E_lobe
-specbackgrp ${obsid} src_SE_dark
+  specbackgrp ${obsid} src_SE_dark
+  echo ""
+
+  echo "Fitting FWC spectrum lines for $reg mos1S001..."
+  ff_fit.py --obsid=${obsid} --reg=${reg} --exp=mos1S001
+  echo "Fitting FWC spectrum lines for $reg mos2S002..."
+  ff_fit.py --obsid=${obsid} --reg=${reg} --exp=mos2S002
+  if ($obsid != "0551000201") then
+    echo "Fitting FWC spectrum lines for $reg pnS003..."
+    ff_fit.py --obsid=${obsid} --reg=${reg} --exp=pnS003
+  else
+    echo "Skipping FWC spectrum fit for ${obsid} pnS003"
+  endif
+
+  echo ""
+
+end

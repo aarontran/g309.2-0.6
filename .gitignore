@@ -38,6 +38,7 @@ xmm/*/odf/**/*/*cmd.csh
 
 # Generally, data files
 *.dat
+*.json
 
 # Chandra files
 chandra/*/00README
@@ -63,7 +64,7 @@ chandra/*/00README
 *.pdf
 *.PDF
 
-# Generally, ignore log files (add exceptions if need be)
+# Log files
 *.log
 *.LOG
 

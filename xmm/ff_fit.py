@@ -1,75 +1,75 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
+
+# For portability, use /usr/bin/env python for shebang
+# /usr/bin/env python points to a really old version on my computer
+# and I'm too lazy to fix right now
 
 """
-Attempt to script FWC fits for multiple exposures and regions...
+Fit instrumental lines in XMM EPIC FWC data for an individual exposure and
+region, handling either PN or MOS
 """
 
-#import argparse
+import argparse
+import json
 import os
+from subprocess import call
 
 import xspec as xs
 
-#parser = argparse.ArgumentParser(description="Make nice separated plots")
-#parser.add_argument('--stem', default='snr', help="prefix stem for 5 dat files")
-#parser.add_argument('--reg', default='snr', help="region (bkg or snr) to set plotting behavior")
-#args = parser.parse_args()
-#stem, reg = args.stem, args.reg
-#stem = args.stem
+from xspec_utils import dump_fit_log, dump_fit_dict
 
-obsid = "0551000201"
-exp = "mos1S001"
-reg = "src_north_clump"
+# Set up paths, XSPEC params
+# --------------------------
+
+parser = argparse.ArgumentParser(description="Fit FWC instrumental lines for region")
+parser.add_argument('--obsid', default='0087940201', help="XMM obsid")
+parser.add_argument('--exp', default='mos1S001', help="Exposure ID (mos1S001, pnS003, or similar)")
+parser.add_argument('--reg', default='src', help="Region identifier")
+args = parser.parse_args()
+
+obsid = args.obsid
+exp = args.exp
+reg = args.reg
 
 instr_id = exp.split('S')[0]  # one of: mos1, mos2, pn
 
 # "Global" settings
-xs.Xset.chatter = 0  # TODO shut up temporarily.  leave chatter on in final version (!)
+xs.Xset.chatter = 0
 xs.Xset.abund = "wilm"
 xs.Fit.query = "yes"
-# final version of script...
 
-# Set up spectrum
-# ---------------
+# inputs
+xmm_path = os.environ['XMM_PATH']
+spec_dir = xmm_path + "/{obsid}/odf/repro".format(obsid=obsid)
+f_spec = "{exp}-{reg}-ff-key.pi".format(exp=exp, reg=reg)
 
-xmmpath = os.environ['XMM_PATH']
-specdir = "{xmmpath}/{obsid}/odf/repro".format(xmmpath=xmmpath, obsid=obsid)
-fspec = "{exp}-{reg}-ff-key.pi".format(exp=exp, reg=reg)
-
-# Must chdir so XSPEC can resolve rmf/arf/background files (otherwise, XSPEC
-# prompt will block script execution...)
-os.chdir(specdir)
-spec = xs.Spectrum(fspec)
-
-spec.multiresponse[1] = xmmpath + "/caldb/{instr}-diag.rsp".format(instr=instr_id)
-spec.multiresponse[1].arf = "none"  # Not needed, just to be explicit
+# outputs
+f_plot = "{exp}-{reg}-ff-key-fit".format(exp=exp, reg=reg)
+f_log = "{exp}-{reg}-ff-key-fit.log".format(exp=exp, reg=reg)
+f_fit = "{exp}-{reg}-ff-key-fit.json".format(exp=exp, reg=reg)
 
 
 # Set up FWC models
 # -----------------
 
+os.chdir(spec_dir)  # chdir for xspec to resolve rmf/arf/bkg files
+spec = xs.Spectrum(f_spec)
+spec.multiresponse[1] = xmm_path + "/caldb/{instr}-diag.rsp".format(instr=instr_id)
+spec.multiresponse[1].arf = "none"  # Not needed, just to be explicit
+
 if instr_id == "mos1" or instr_id == "mos2":  # MOS
-
     spec.ignore("**-0.5, 5.0-**")
-
     instr = xs.Model("gauss + gauss", "instr", 1)
     lines = [1.49, 1.75]
-
-    conti = xs.Model("bknpower", "conti", 2)
-    conti.bknpower.PhoIndx1 = 1.5
-    conti.bknpower.BreakE = 1
-    conti.bknpower.PhoIndx2 = 0.2
-
 else:  # PN
-
     spec.ignore("**-1.0,12.0-**")
-
     instr = xs.Model("gauss + gauss + gauss + gauss + gauss", "instr", 1)
     lines = [1.49, 7.49, 8.05, 8.62, 8.90]
 
-    conti = xs.Model("bknpower", "conti", 2)
-    conti.bknpower.PhoIndx1 = 1.5
-    conti.bknpower.BreakE = 5
-    conti.bknpower.PhoIndx2 = 0.2
+conti = xs.Model("bknpower", "conti", 2)
+conti.bknpower.PhoIndx1 = 1.5
+conti.bknpower.BreakE = 2
+conti.bknpower.PhoIndx2 = 0.2
 
 # Set and freeze instrumental line energies,widths
 for cname, en in zip(instr.componentNames, lines):
@@ -80,41 +80,25 @@ for cname, en in zip(instr.componentNames, lines):
     comp.LineE.frozen = True
     comp.Sigma.frozen = True
 
-# Fit data and output fitted norms
-# --------------------------------
+# Fit and dump fit information/plot
+# ---------------------------------
 
-# set query yes
-# call fit
 xs.Fit.renorm()
 xs.Fit.perform()
 
-# Plot to verify quality of fit
-
-xs.Plot.device = "/xw"
 xs.Plot.xAxis = "keV"
 xs.Plot.xLog = True
 xs.Plot.yLog = True
-xs.Plot("ldata resid delchi")  # TODO temporarily commented out
-# final version needs to iterate over all plots
+xs.Plot.addCommand("co 2 on 2")
+xs.Plot.addCommand("rescale y 1e-3 1")
+xs.Plot.device = f_plot + "/cps"
+xs.Plot("ldata resid delchi")
 
-# iplot to show stuff.
-# xs.Plot.iplot("ldata resid delchi")
-# PLT> co ?
-# PLT> co 2 on 2
-# PLT> rescale y 1e-3 1
-# PLT> pl
-# PLT> exit
+call(["ps2pdf", f_plot, f_plot + ".pdf"])
+call(["rm", f_plot])
 
-# TODO Use matplotlib to do this in a nice way -- avoid interactive input
+dump_fit_dict(f_fit, instr)
+dump_fit_log(f_log)
 
 
-# PRINT OUT NUMBERS WE CARE ABOUT
-# -------------------------------
-
-print "{:s} {:s} {:s} FWC instrumental line norms:".format(obsid, exp, reg)
-for cname in instr.componentNames:
-    # cnames are gaussian, gaussian_2, ..., gaussian_6
-    # correctly ordered (although I don't know if that's guaranteed)
-    comp = eval('instr.'+cname)
-    print "  {:.2f} line norm: {:g}".format(comp.LineE.values[0], comp.norm.values[0])
 
