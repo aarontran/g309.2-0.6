@@ -7032,12 +7032,152 @@ Main question: given expected remnant distance (~>5kpc) and angular size, we
 don't expect the remnant spectrum to be ejecta-dominated.  So, why is this?
 
 
-Tuesday 2016 March 1
-====================
+Tuesday-Wednesday 2016 March 1-2
+================================
 
 Cleaned up notes, commit recent changes.
 
 PyXSPEC port of fitting code, working on NOW.
+
+Finalized `ff_fit.py` (start refactoring PyXSPEC utilities, dump diagnostic
+outputs).  Ran script for all current obsids/regions/exposures to generate slew
+of outputs.
+
+
+PN instrumental Ti/V/Cr line analysis
+-------------------------------------
+Two unmodeled lines, ~4.5 and 5.5 keV, are present in 0087940201 PNS003 FWC
+spectra. Qualitatively, the lines appear strongest in `src` and
+`src_north_clump` regions, weaker in `SE_dark` and `SW_lobe` subregions.
+
+XMM user's guide section 3.3.7.2 plots suggest that the lines could be
+attributed to 4.4-4.6 keV Ti K-alpha and ~5.5 (5.2-5.7) keV, Cr K-alpha.
+There's a faint bump around 5.0 keV that can be attributed to Vanadium as well
+(~4.85-5.05 keV).  Normally Ti/Cr lines are not bright, but our source regions
+are right on the Ti/Cr bright spot (Fig. 36 of user's guide)
+
+Here I try to add either 2 or 3 lines (Ti/Cr, or Ti/V/Cr) to FWC data fits
+for the regions where the Ti/Cr lines are strongest: {0087940201,0551000201}
+{`src`, `src_north_clump`}.  I first fit with frozen line energies (4.5, 5,
+5.5), then thaw and refit.  As usual, all widths (sigma) are frozen to 0.
+Temporary new commands in `ff_fit.py` are:
+
+    # Ti,Cr lines
+    instr.gaussian_2.LineE.frozen=False
+    instr.gaussian_3.LineE.frozen=False
+    xs.Xset.chatter=10
+    xs.Fit.perform()
+    xs.Plot("ldata resid delchi")
+
+    # Vanadium line
+    instr.gaussian_4.LineE.frozen=False
+    xs.Fit.perform()
+    xs.Plot("ldata resid delchi")
+
+    # Throwaway output formatting commands not shown
+
+Fit results are summarized in:
+`results-interm/20160302_PN_ti-cr-v-line_fits.xlsx` and
+`results-interm/20160302_PN_ti-cr-v-line_fits.csv`
+
+And the summary statistics are as follows:
+(for 8 fits; 4 with V line, 4 without; fits are to spectra for:
+
+                    Ti LineE    V LineE     Cr LineE    Ti/Cr ratio
+    AVG (no V)      4.5355                  5.436       0.8343
+    STDEV (no V)    0.0071                  0.0055
+    AVG (V)         4.5395      4.923       5.438       0.8347
+    STDEV (V)       0.0079      0.017       0.0057
+
+Ti/Cr line energies agree to within uncertainty.
+
+Fits are not fully independent since `src_north_clump` is contained in `src`.
+Net effect is to artificially decrease std-dev within group of either no V or
+V fits, which would actually make it more difficult for Ti/Cr line energies to
+agree.  Therefore this should not affect conclusion.
+
+Outcome: model Ti and Cr lines with zero-width Gaussians at 4.54 and 5.44 keV.
+No obvious need to model V line.  Actual observation data are FAR noisier, it's
+doubtful that Ti/Cr lines will make much difference.  But, since they are
+evident in FWC data, to assist FWC fit we should model these.
+(e.g., could add constant shift to normalizations, which would otherwise
+introduce systematics in our instrumental line modeling)
+
+Comment: if we were to fit Vanadium line, it seems that we should also fit the
+Zn/Au complex around 9.6 keV to be consistent.
+
+
+Does freeing PN instr line energies (Al, Cu) matter?
+----------------------------------------------------
+I fit FWC data with Al xor Cu line energy free for PNS003 exposures of
+0087940201/0551000201, using all six current regions (src, bkg, 4 subregions).
+Did not consider MOS here.
+
+If Al line energy floats:
+* LineE range is 1.477-1.497 keV (average 1.488 keV)
+* Largest % improvement in reduced chi-squared, -6.7%, occurs for the
+  0087940201 src region (redchisqr 3976/2192=1.81 --> 3711/2191=1.69).
+  0087940201 src_SW_lobe showed similar -6.2% decrease.
+
+If Cu K-alpha line energy (~8.05 keV) floats:
+* LineE range is 8.033-8.051 (average 8.044 keV)
+* Largest % improvement in reduced chi-squared is 17% (!)
+  for 0087940201 bkg.
+  For that particular case, fit is pretty poor to start with
+  (reduced chi-squared ~ 3)
+  and the fit plot (data, residuals) suggests that the Cu K-alpha line width
+  needs to be non-zero.
+  Line norm changes for this region's FWC spectrum are ~few %, except for
+  large shift in Cu K-beta normalization (17%).  Odd.
+
+Comment: really should get acquainted with pandas for these one-off exploratory
+analyses.
+
+Outcome: don't try twiddling energies.  Exploratory analysis did not show clear
+improvement for all regions/fits (which would suggest a good systematic to
+model out).
+
+Spreadsheet of analysis saved to:
+* `g309/results-interm/20160302_PN_freelineE.xlsx`
+* `g309/results-interm/20160302_PN_freelineE.zip`
+(zip file contains HTML version)
+
+
+
+Current FWC line modeling
+-------------------------
+Currently fitting the following fluorescent K-alpha lines:
+
+MOS
+* Al 1.49 keV
+* Si 1.75 keV
+
+PN
+* Al 1.49 keV (strong)
+* Ti 4.54 keV (faint, most evident in `src_north_clump`)
+* Cr 5.44 keV (faint, most evident in `src_north_clump`)
+* Ni 7.49 keV (medium-strong)
+* Cu 8.05 keV (strong)
+* Zn 8.62 keV (medium)
+* Cu 8.90 keV, K-beta (medium)
+
+In MOS, 3-4 additional lines we could be modeling:
+* Cr ~ 5.5 keV
+* Mn ~ 6 keV
+* Fe ~ 6.5 keV
+* Au ~ 9.7 keV (Ly-Alpha)
+
+In PN, we could further be modeling
+* Au ~ 9.7 keV (Ly-Alpha)
+
+MOS Fe line in particular could explain bumps at high energy.  It may be worth
+including the extra lines to help constrain high-energy counts, since we are
+relying heavily on high energy noise to constrain soft proton power law
+contamination.  Similar argument applies for PN Au line.
+
+Later, maybe revisit this process.  Write code to be independent of exact
+set-up of FWC line fits, so I can easily go back, edit FWC fitting process, and
+verify that fit outputs are NOT affected.
 
 
 

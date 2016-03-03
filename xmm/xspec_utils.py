@@ -17,7 +17,7 @@ def load_fit_dict(f_in):
 def dump_fit_dict(f_out, *args, **kwargs):
     """Dump fit info to filename f_out; see fit_dict for *args, **kwargs"""
     with open(f_out, 'w') as fh:
-        ret = json.dump(fit_dict(*args), fh)
+        ret = json.dump(fit_dict(*args), fh, indent=2)
     return ret
 
 

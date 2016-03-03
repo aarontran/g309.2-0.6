@@ -57,14 +57,18 @@ spec = xs.Spectrum(f_spec)
 spec.multiresponse[1] = xmm_path + "/caldb/{instr}-diag.rsp".format(instr=instr_id)
 spec.multiresponse[1].arf = "none"  # Not needed, just to be explicit
 
+# ===== FITTED INSTRUMENTAL LINES SET HERE =====
+
 if instr_id == "mos1" or instr_id == "mos2":  # MOS
     spec.ignore("**-0.5, 5.0-**")
     instr = xs.Model("gauss + gauss", "instr", 1)
     lines = [1.49, 1.75]
 else:  # PN
     spec.ignore("**-1.0,12.0-**")
-    instr = xs.Model("gauss + gauss + gauss + gauss + gauss", "instr", 1)
-    lines = [1.49, 7.49, 8.05, 8.62, 8.90]
+    instr = xs.Model("gauss + gauss + gauss + gauss + gauss + gauss + gauss", "instr", 1)
+    lines = [1.49, 4.54, 5.44, 7.49, 8.05, 8.62, 8.90]
+
+# ===== FITTED INSTRUMENTAL LINES SET HERE =====
 
 conti = xs.Model("bknpower", "conti", 2)
 conti.bknpower.PhoIndx1 = 1.5
@@ -91,14 +95,12 @@ xs.Plot.xLog = True
 xs.Plot.yLog = True
 xs.Plot.addCommand("co 2 on 2")
 xs.Plot.addCommand("rescale y 1e-3 1")
+
 xs.Plot.device = f_plot + "/cps"
 xs.Plot("ldata resid delchi")
-
 call(["ps2pdf", f_plot, f_plot + ".pdf"])
 call(["rm", f_plot])
 
 dump_fit_dict(f_fit, instr)
 dump_fit_log(f_log)
-
-
 

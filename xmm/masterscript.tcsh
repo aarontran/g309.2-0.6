@@ -26,19 +26,15 @@ make_xmmregions ${obsid}
 set regions = "src bkg src_north_clump src_SW_lobe src_E_lobe src_SE_dark"
 foreach reg ($regions)
 
-  specbackgrp ${obsid} src_SE_dark
+  specbackgrp ${obsid} ${reg}
   echo ""
 
   echo "Fitting FWC spectrum lines for $reg mos1S001..."
   ff_fit.py --obsid=${obsid} --reg=${reg} --exp=mos1S001
   echo "Fitting FWC spectrum lines for $reg mos2S002..."
   ff_fit.py --obsid=${obsid} --reg=${reg} --exp=mos2S002
-  if ($obsid != "0551000201") then
-    echo "Fitting FWC spectrum lines for $reg pnS003..."
-    ff_fit.py --obsid=${obsid} --reg=${reg} --exp=pnS003
-  else
-    echo "Skipping FWC spectrum fit for ${obsid} pnS003"
-  endif
+  echo "Fitting FWC spectrum lines for $reg pnS003..."
+  ff_fit.py --obsid=${obsid} --reg=${reg} --exp=pnS003
 
   echo ""
 
