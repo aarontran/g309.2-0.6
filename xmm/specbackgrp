@@ -70,6 +70,8 @@ fi
 
 echo "Extracting spectra and QPB for $OBSID, region ${RSTEM}"
 
+# PLEASE NOTE: loop "continues" prematurely for 0551000201 PNS003
+# code is not spaghetti yet, but starting to look like udon...
 for ((i=0;i<${#exps[@]};++i)); do
 
   # Setup
@@ -79,12 +81,6 @@ for ((i=0;i<${#exps[@]};++i)); do
   exp_n="${exps_n[$i]}" # 1S001
   ccd_str="${ccd_strs[$i]}" # "ccd1=1 ccd2=1 ... ccd7=1"
   # Do not quote ${ccd_str} in command invocations!
-
-  # Handle exposure exclusions (QPB cannot be generated for 0551000201 PN)
-  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
-    echo "  Skipping extraction for $OBSID $exp (no observation corner data)"
-    continue
-  fi
 
   f_region="${RDIR}/reg_${exp}_${RSTEM}.txt"
 
@@ -108,13 +104,20 @@ for ((i=0;i<${#exps[@]};++i)); do
     >& "${exe_spec}_${exp}_${RSTEM}.log"
   mv command.csh "${exe_spec}_${exp}_${RSTEM}_cmd.csh"
 
-  echo "  Running ${exe_qpb} prefix=${exp_n}..."
-  ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
-      elow=${elow} ehigh=${ehigh} ${ccd_str} \
-    >& "${exe_qpb}_${exp}_${RSTEM}.log"
-  # diag=2 creates more diagnostic output files (.qdp plots)
+  # Handle exposure exclusions (QPB cannot be generated for 0551000201 PN)
+  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
+    echo "  Skipping extraction for $OBSID $exp (no observation corner data)"
+    # mv commands for -back.pi and -obj-os.pi will fail, this is OK
+    # preferable to littering code with conditionals.
+  else
+    echo "  Running ${exe_qpb} prefix=${exp_n}..."
+    ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
+        elow=${elow} ehigh=${ehigh} ${ccd_str} \
+      >& "${exe_qpb}_${exp}_${RSTEM}.log"
+    # diag=2 creates more diagnostic output files (.qdp plots)
+  fi
 
-  echo "  Renaming output spectra (map ${exp} to ${exp}-${RSTEM})"
+  echo "  Rename, bin, and keyword spectra (map ${exp} to ${exp}-${RSTEM})"
 
   mv "${exp}-obj.pi"  "${exp}-${RSTEM}.pi"
   mv "${exp}-back.pi" "${exp}-${RSTEM}-qpb.pi"
@@ -125,6 +128,7 @@ for ((i=0;i<${#exps[@]};++i)); do
     mv "${exp}-obj-oot.pi" "${exp}-${RSTEM}-oot.pi"
     mv "${exp}-obj-os.pi"  "${exp}-${RSTEM}-os.pi"
   fi
+
   # Outputs from "-mod" versions of ESAS scripts: FWC object spectra for line
   # norm extraction and detmapped RMF for pnS003-obj.pi (not for FWC data!)
   mv "${exp}-obj-ff.pi" "${exp}-${RSTEM}-ff.pi"
@@ -135,8 +139,6 @@ for ((i=0;i<${#exps[@]};++i)); do
     mv "${exp}-dmap.rmf"      "${exp}-${RSTEM}-dmap.rmf"
   fi
 
-  echo "  Bin output spectra and assign {BACK,RESP,ANCR}FILE keywords"
-
   # Set keywords for FWC object spectra
   # NOTE that we are not using OOT-subtracted spectra for PN
   grppha infile="${exp}-${RSTEM}-ff.pi" outfile="!${exp}-${RSTEM}-ff-key.pi" \
@@ -144,6 +146,11 @@ for ((i=0;i<${#exps[@]};++i)); do
           chkey RESPFILE ${exp}-${RSTEM}-ff.rmf & \
           chkey ANCRFILE ${exp}-${RSTEM}-ff.arf & \
           exit"
+
+  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
+    echo "  Skipping grppha for 0551000201 pnS003 (no observation corner data)"
+    continue
+  fi
 
   # Bin and set keywords for observation object spectra
   os=""
