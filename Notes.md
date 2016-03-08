@@ -7035,9 +7035,8 @@ don't expect the remnant spectrum to be ejecta-dominated.  So, why is this?
 Tuesday-Wednesday 2016 March 1-2
 ================================
 
-Cleaned up notes, commit recent changes.
-
-PyXSPEC port of fitting code, working on NOW.
+Cleaned up notes, commit recent changes.  Continue work on PyXSPEC port of
+fitting code.
 
 Finalized `ff_fit.py` (start refactoring PyXSPEC utilities, dump diagnostic
 outputs).  Ran script for all current obsids/regions/exposures to generate slew
@@ -7143,7 +7142,6 @@ Spreadsheet of analysis saved to:
 (zip file contains HTML version)
 
 
-
 Current FWC line modeling
 -------------------------
 Currently fitting the following fluorescent K-alpha lines:
@@ -7179,43 +7177,140 @@ Later, maybe revisit this process.  Write code to be independent of exact
 set-up of FWC line fits, so I can easily go back, edit FWC fitting process, and
 verify that fit outputs are NOT affected.
 
+At that time, by MANUAL inspection of FWC data, determine which line
+energies/widths could be adjusted -- bearing in mind that uncertainties are
+often ~1-10% already, and that this is a very small part of the fit process.
+
+SNR and background fit, PyXSPEC port
+------------------------------------
+In works, fit seems to run acceptably.
+
+Anyways commit here, after tidying up snr_and_back.py a little bit.
+running: xs.Fit.steppar("xrb:6 0.1 1.0")
+now
 
 
+Monday 2016 March 7 -- annulus region spectra
+=============================================
 
+Create five annulus regions:
+* `ann_000_100.reg`
+* `ann_100_200.reg`
+* `ann_200_300.reg`
+* `ann_300_400.reg`
+* `ann_400_500.reg`
+centered on the remnant (RA,dec = 13:46:35.381,-62:54:01.44), at the same point
+as the larger src and bkg regions. Annuli are 100 arcsec wide, from 0 to 100
+arcsec., 100 to 200 arcsec.. etc.  For comparison, current src region is 400"
+radius (6.7'), bkg region is 510-700" radius (8.5-11.7').
+
+Run spectrum extraction for 5 annuli (0-100", 100-200", ..., 400-500").
+Ran into two errors (readily rectified):
+1. needed to re-run cifbuild (new XMM SAS), so added sasrepro commands to
+   masterscript.tcsh
+2. mos-spectra-mod run failed for 0087940201 mos1S001 on `ann_000_100`
+   for some reason.  Re-ran without change and it works, must have been a
+   transient bug/error...
+Result: ran the following scripts via `masterscript.tcsh`:
+    sasinit
+    sasrepro
+    make_xmmregions
+    specbackgrp
+    ff_fit.py
+
+Running scripts on morning of March 8:
+
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0551000201' >& 20160308_annuli_0551000201.log &
+    [1] 21082
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0087940201' >& 20160308_annuli_0087940201.log &
+    [1] 809
+
+
+Tuesday 2016 March 8 -- wrangling fit script into a usable tool
+===============================================================
+
+Set up arguments to specify fit parameters, regions, etc.
+
+Now I can ask to fit a specific region, and the fit scripts will automatically:
+- load the correct response/arf files
+- compute the right BACKSCAL values for x-ray background normalization
+- get FWC instrumental fits
+- (optional) run a sensible starting sequence of fit commands
+- drop user into an interactive environment
+
+North clump fit, best fits so far:
+
+Best fit:
+
+    Looks pretty acceptable, slight waviness.
+    Some line-like excess in PN around 6-7 keV, not sure if iron or unmodeled
+    instrumental line.  Don't really expect instrumental lines in PN at 6-7
+    keV, but 7-8 keV is likely a stronger-than-expected Ni line.
+
+    chisqr = 890.11/689 = 1.2919
+
+       1    1   TBabs      nH         10^22    3.06647      +/-  0.108745     
+       2    2   vnei       kT         keV      0.788549     +/-  6.51541E-02  
+      10    2   vnei       Si                  4.47241      +/-  0.238252     
+      11    2   vnei       S                   4.29368      +/-  0.322800     
+      16    2   vnei       Tau        s/cm^3   7.53138E+10  +/-  1.50978E+10
+
+nH = 2:
+
+    Not a great fit.  A lot of systematics in residuals.
+
+    chisqr = 1001.37/690 = 1.451
+
+       1    1   TBabs      nH         10^22    2.00000      frozen
+       2    2   vnei       kT         keV      2.27900      +/-  0.410824     
+      10    2   vnei       Si                  5.40900      +/-  0.434779     
+      11    2   vnei       S                   5.03653      +/-  0.495144     
+      16    2   vnei       Tau        s/cm^3   2.05675E+10  +/-  1.39453E+09  
+
+    Could thawing Mg help?  Residuals could be partially explained by
+    understimate of Mg He alpha/beta lines.  Iffy, but let's try.
+
+
+    chisqr = 933.24/689 = 1.355
+
+       1    1   TBabs      nH         10^22    2.00000      frozen
+       2    2   vnei       kT         keV      2.25803      +/-  0.364344     
+       9    2   vnei       Mg                  1.75638      +/-  0.128561     
+      10    2   vnei       Si                  7.25580      +/-  0.648529     
+      11    2   vnei       S                   6.87366      +/-  0.639959     
+      16    2   vnei       Tau        s/cm^3   2.05116E+10  +/-  2.58717E+09  
+
+    No, not much difference.
+
+nH = 1.5:
+
+    Not a great fit.
+    Screenshot saved to `results-interm/`.
+
+    chisqr = 1235.09/690 = 1.790
+
+       1    1   TBabs      nH         10^22    1.50000      frozen
+       2    2   vnei       kT         keV      2.90894      +/-  0.682185     
+      10    2   vnei       Si                  8.41276      +/-  0.719420     
+      11    2   vnei       S                   8.41992      +/-  0.754492     
+      16    2   vnei       Tau        s/cm^3   1.94471E+10  +/-  1.43835E+09  
+      18    2   vnei       norm                6.72452E-04  +/-  1.62007E-05
+
+Comments:
+* high nH and low kT results in stronger Si, S lines, while suppressing soft
+  signal.  Hum.
+* if we force nH low, kT rises (and abundances rise) to compensate.
+  this suppresses low energy emission, decreases norm of SNR model
 
 
 Standing TODOs
 
-(!) new version of XMM SAS released...
-(v15.0.0, build identifier 20160201_1833)
-I wonder if this could be related to Pat's mysterious problem.
-
-(try fitting bkg alone? and see if plausible.
- unabsorbed (local bub) kT ~ 0.1 instead of ~0.2
- absorped kT ~ 0.3 instead of 0.37
- nH ~ 0.29 instead of 1.1.  These values all seem reasonable.
- no reason to disfavor.
-)
-
-
-* clean up snr-and-bkg fit -- some of my fit tweaking (to deal with unphysical
-  values) is commented out at bottom of .xcm file.
-
-  Set up a "procedure" for systematically exploring the space of XRB, SP, and
-  SNR fit parameters.
+* Re-run everything from a clean slate to ensure your pipeline is good.
 
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures
   for image scripts.
-* refactor spectrum fitting code -- either go back to PyXSPEC, write some
-  templating code, or whatever is necessary...
 * Image making -- did I remember to remove corner events?  images will look a
   bit nicer, histograms will be more useful.
-
-* Try fitting with larger GTIs for 0551000201 -- might help constrain soft
-  proton contamination.  Same deal with PN for 0087940201.
-  Would be a kinda small effect though...
-  It's unavoidable, might as well take some more counts, especially at high
-  energy.
 
 Standing questions:
 * Castro+2011, why use evselect,merge,eexpmap,emosaic?  Seems like merge is not
