@@ -21,9 +21,12 @@ if ($? != 0) then
   exit 1
 endif
 
+cd $XMM_PATH
+source sasrepro $obsid
+
 make_xmmregions ${obsid}
 
-set regions = "src bkg src_north_clump src_SW_lobe src_E_lobe src_SE_dark"
+set regions = "ann_000_100 ann_100_200 ann_200_300 ann_300_400 ann_400_500"
 foreach reg ($regions)
 
   specbackgrp ${obsid} ${reg}
