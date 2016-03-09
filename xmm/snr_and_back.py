@@ -65,18 +65,16 @@ def init_snr_model(n):
     Output: XSPEC model object"""
 
     if SNR_MODEL == 'vnei':
-
         m = xs.Model("TBabs * vnei", 'snr', n)
-
         m.TBabs.nH = 1
         m.vnei.kT = 1
         m.vnei.Tau = 1e11
-
         m.TBabs.nH.frozen = True
         m.vnei.kT.frozen = True
         m.vnei.Tau.frozen = True
 
     return m
+
 
 def init_xrb_values(xrb):
     """Set starting XRB values"""
@@ -91,6 +89,14 @@ def init_xrb_values(xrb):
         xrb.TBabs.nH = 1.06
         xrb.apec_5.kT = 0.368
 
+        xrb.apec.norm = 2.90e-4
+        xrb.powerlaw.norm = 3.10e-4
+        xrb.apec_5.norm = 3.29e-3
+
+        xrb.apec.norm.frozen = True
+        xrb.powerlaw.norm.frozen = True
+        xrb.apec_5.norm.frozen = True
+
 
 def execute_fit():
     """Fitting procedure to run after loading all models/spectra
@@ -98,6 +104,11 @@ def execute_fit():
     """
 
     if REG == 'src' and SNR_MODEL == 'vnei':
+
+        # Force background SP power law to index 0.2
+        if WITH_BKG: # Note: hardcoded model number
+            xs.AllModels(8, 'sp').powerlaw.PhoIndex = 0.2
+            xs.AllModels(8, 'sp').powerlaw.PhoIndex.frozen = True
 
         xs.Fit.renorm()
         xs.Fit.perform()
@@ -131,7 +142,7 @@ def execute_fit():
 
     if REG == 'src_north_clump' and SNR_MODEL == 'vnei':
 
-        # PN SP power law not well-constrained at first
+        # PN SP power law not well-constrained at all
         xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
         xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
         xs.Fit.renorm()
@@ -145,11 +156,43 @@ def execute_fit():
         snr.vnei.Si.frozen=False
         xs.Fit.perform()  # This fit takes a little while to converge
 
-        # Release PN SP power law
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = False
-        xs.Fit.perform()
+        # Release PN SP power law (don't do this, just goes to wonky values)
+        #xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = False
+        #xs.Fit.perform()
 
 
+def print_fit():
+    """More succinct output of fit parameters"""
+
+    def f(par):
+        """just to save typing..."""
+        return par.values[0], par.sigma
+
+    print "reduced chi-squared = {:.2f}/{:d} = {:.3f}".format(xs.Fit.statistic,
+                xs.Fit.dof, xs.Fit.statistic/xs.Fit.dof)
+
+    print "snr model: {}".format(snr.expression)
+    if SNR_MODEL == 'vnei':
+        print "  nH (10^22)    {:.3f} +/- {:.3f}".format(*f(snr.TBabs.nH))
+        print "  kT   (keV)    {:.3f} +/- {:.3f}".format(*f(snr.vnei.kT))
+        print "  Si            {:.2f}  +/- {:.2f}".format(*f(snr.vnei.Si))
+        print "  S             {:.2f}  +/- {:.2f}".format(*f(snr.vnei.S))
+        print "  Tau (s/cm^3)  {:.2e} +/- {:.2e}".format(*f(snr.vnei.Tau))
+        print "  norm          {:.2e} +/- {:.2e}".format(*f(snr.vnei.norm))
+    print ""
+
+    print "soft proton power laws"
+    for i in sorted(spec.keys()):
+        m = xs.AllModels(i, 'sp')
+        print "  Data group {}, n     {:.2f} +/- {:.2f}".format(i, *f(m.powerlaw.PhoIndex))
+        print "                norm  {:.2e} +/- {:.2e}".format(*f(m.powerlaw.norm))
+    print ""
+
+    print "instrumental lines"
+    for i in sorted(spec.keys()):
+        m = xs.AllModels(i, 'instr')
+        print "  Data group {}, instr const  {:.2f} +/- {:.2f}".format(i, *f(m.constant.factor))
+    print ""
 
 
 
@@ -333,7 +376,6 @@ for i in sorted(spec.keys()):
         raise Exception("Got unexpected FWC lines for data group {}".format(i))
 
 
-
 # SUPERNOVA REMNANT
 # -----------------
 snr = init_snr_model(n=3)
@@ -358,11 +400,11 @@ for i in sorted(spec.keys()):
 
 # Tie MOS1/MOS2 indices together
 # Brute-force approach to hacking this up...
-
 for i in sorted(spec.keys()):
 
     if spec[i]['instr'] == 'mos1':
 
+        # Found a mos1 spectrum.
         sp_mos1 = xs.AllModels(i, 'sp')
         sp_mos2 = None
 
@@ -375,22 +417,16 @@ for i in sorted(spec.keys()):
             if spec[j]['reg'] != spec[i]['reg']:
                 continue
             if sp_mos2:
-                raise Exception("Extra mos2 spectrum! Data group {}".format(j))
+                raise Exception("Got extra mos2 spectrum! Data group {}".format(j))
             # Found match, and sp_mos2 not already defined
             sp_mos2 = xs.AllModels(j, 'sp')
 
-        # Continue gracefully if no match found
         if not sp_mos2:
-            continue
+            raise Exception("Got mos1 without mos2; Data group {}".format(j))
 
         # Form link, getting parameter index in convoluted way
         par_idx = sp_mos1.startParIndex - 1 + sp_mos1.powerlaw.PhoIndex.index
         sp_mos2.powerlaw.PhoIndex.link = "sp:{:d}".format(par_idx)
-
-# Force background SP power law to index 0.2
-if WITH_BKG: # Note: hardcoded model number
-    xs.AllModels(8, 'sp').powerlaw.PhoIndex = 0.2
-    xs.AllModels(8, 'sp').powerlaw.PhoIndex.frozen = True
 
 
 # Start fit process

@@ -7181,13 +7181,92 @@ At that time, by MANUAL inspection of FWC data, determine which line
 energies/widths could be adjusted -- bearing in mind that uncertainties are
 often ~1-10% already, and that this is a very small part of the fit process.
 
+
 SNR and background fit, PyXSPEC port
 ------------------------------------
 In works, fit seems to run acceptably.
 
-Anyways commit here, after tidying up snr_and_back.py a little bit.
-running: xs.Fit.steppar("xrb:6 0.1 1.0")
-now
+"Best" fit so far of combined remnant and background, after running:
+
+    xs.AllModels(8,'sp').powerlaw.PhoIndex = 0.2
+    xs.AllModels(8,'sp').powerlaw.PhoIndex.frozen = True
+    xs.Fit.perform()
+    xs.Fit.steppar("xrb:6 0.1 1.0")
+    xs.Fit.steppar("xrb:6 1.1 3.1")
+    xs.Fit.steppar("xrb:6 0.8 1.3")
+    xs.Fit.steppar("xrb:6 1.0 1.2")
+
+Parameters:
+
+    ========================================================================
+    Model instr:constant<1>(gaussian<2> + gaussian<3> + gaussian<4> + gaussian<5> + gaussian<6> + gaussian<7> + gaussian<8>) Source No.: 2   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1-5
+       1    1   constant   factor              0.951530     +/-  4.70074E-02
+      23    1   constant   factor              0.879181     +/-  4.32999E-02
+      45    1   constant   factor              0.602430     +/-  2.49881E-02
+      67    1   constant   factor              1.67503      +/-  6.40679E-02
+      89    1   constant   factor              1.81964      +/-  5.85563E-02
+                               Data group: 6-10
+     111    1   constant   factor              0.684556     +/-  3.40007E-02
+     133    1   constant   factor              0.646738     +/-  3.16809E-02
+     155    1   constant   factor              0.662818     +/-  1.98071E-02
+     177    1   constant   factor              1.47118      +/-  4.24053E-02
+     199    1   constant   factor              1.49487      +/-  3.97307E-02
+
+    ========================================================================
+    Model snr:TBabs<1>*vnei<2> Source No.: 3   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   TBabs      nH         10^22    2.18510      +/-  4.61000E-02  
+       2    2   vnei       kT         keV      1.56191      +/-  0.102379     
+      10    2   vnei       Si                  4.18992      +/-  0.124351     
+      11    2   vnei       S                   3.73041      +/-  0.165336     
+      16    2   vnei       Tau        s/cm^3   2.55486E+10  +/-  1.94064E+09  
+      18    2   vnei       norm                5.26245E-03  +/-  3.97747E-04  
+
+    ========================================================================
+    Model sp:powerlaw<1>*constant<2> Source No.: 4   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1-5
+       1    1   powerlaw   PhoIndex            0.387345     +/-  1.30585E-02  
+       4    1   powerlaw   PhoIndex            0.387345     = sp:p1
+       7    1   powerlaw   PhoIndex            0.340018     +/-  3.60713E-02  
+      10    1   powerlaw   PhoIndex            0.334435     +/-  2.48019E-02  
+      13    1   powerlaw   PhoIndex            0.334435     = sp:p10
+                               Data group: 6-10
+      16    1   powerlaw   PhoIndex            0.336369     +/-  1.36514E-02  
+      19    1   powerlaw   PhoIndex            0.336369     = sp:p16
+      22    1   powerlaw   PhoIndex            0.200000     frozen
+      25    1   powerlaw   PhoIndex            0.499906     +/-  3.32571E-02  
+      28    1   powerlaw   PhoIndex            0.499906     = sp:p25
+
+    ========================================================================
+    Model xrb:constant<1>(apec<2> + TBabs<3>(powerlaw<4> + apec<5>)) Source No.: 1   Active/On
+    Model Model Component  Parameter  Unit     Value
+     par  comp
+                               Data group: 1
+       1    1   constant   factor              1.00000      frozen
+       2    2   apec       kT         keV      0.228217     +/-  6.47199E-03  
+       3    2   apec       Abundanc            1.00000      frozen
+       4    2   apec       Redshift            0.0          frozen
+       5    2   apec       norm                2.89804E-04  +/-  1.06025E-05  
+       6    3   TBabs      nH         10^22    1.06000      +/-  6.88249E-02  
+       7    4   powerlaw   PhoIndex            1.40000      frozen
+       8    4   powerlaw   norm                3.09916E-04  +/-  1.28723E-05  
+       9    5   apec       kT         keV      0.367863     +/-  1.78543E-02  
+      10    5   apec       Abundanc            1.00000      frozen
+      11    5   apec       Redshift            0.0          frozen
+      12    5   apec       norm                3.28805E-03  +/-  5.81986E-04  
+
+    Fit statistic : Chi-Squared =        4526.94 using 3805 PHA bins.
+    Test statistic : Chi-Squared =        4526.94 using 3805 PHA bins.
+     Reduced chi-squared =        1.20142 for   3768 degrees of freedom 
+     Null hypothesis probability =   9.865386e-17
+
 
 
 Monday 2016 March 7 -- annulus region spectra
@@ -7231,76 +7310,200 @@ Tuesday 2016 March 8 -- wrangling fit script into a usable tool
 
 Set up arguments to specify fit parameters, regions, etc.
 
-Now I can ask to fit a specific region, and the fit scripts will automatically:
+Now I can ask to fit a specific region, and the fit script will automatically:
 - load the correct response/arf files
 - compute the right BACKSCAL values for x-ray background normalization
 - get FWC instrumental fits
 - (optional) run a sensible starting sequence of fit commands
 - drop user into an interactive environment
 
-North clump fit, best fits so far:
+OK.  So I think the procedure is mostly set now.
+
+Test usage -- how does the north clump spectrum fit depend on absorption?
+Procedure:
+1. `%run snr_and_back.py src_north_clump`
+2. `snr.TBabs.nH.frozen = True`
+3. `snr.TBabs.nH = 2.0 ; xs.Fit.perform() ; xs.Plot("ldata delch") ; print_fit()`
 
 Best fit:
 
-    Looks pretty acceptable, slight waviness.
+    Looks pretty acceptable.  Definite waviness around 1 keV.
     Some line-like excess in PN around 6-7 keV, not sure if iron or unmodeled
     instrumental line.  Don't really expect instrumental lines in PN at 6-7
     keV, but 7-8 keV is likely a stronger-than-expected Ni line.
 
-    chisqr = 890.11/689 = 1.2919
+    reduced chi-squared = 898.06/692 = 1.298
 
-       1    1   TBabs      nH         10^22    3.06647      +/-  0.108745     
-       2    2   vnei       kT         keV      0.788549     +/-  6.51541E-02  
-      10    2   vnei       Si                  4.47241      +/-  0.238252     
-      11    2   vnei       S                   4.29368      +/-  0.322800     
-      16    2   vnei       Tau        s/cm^3   7.53138E+10  +/-  1.50978E+10
+    snr model: TBabs*vnei
+      nH (10^22)    2.917 +/- 0.080
+      kT   (keV)    0.814 +/- 0.059
+      Si            4.78  +/- 0.21
+      S             4.62  +/- 0.26
+      Tau (s/cm^3)  7.31e+10 +/- 1.40e+10
+      norm          5.49e-03 +/- 8.58e-04
+
+    soft proton power laws
+      Data group 1, n     0.37 +/- 0.03
+      Data group 2, n     0.37 +/- 0.00
+      Data group 3, n     0.20 +/- 0.00
+      Data group 4, n     0.37 +/- 0.04
+      Data group 5, n     0.37 +/- 0.00
 
 nH = 2:
 
-    Not a great fit.  A lot of systematics in residuals.
+    Not a good fit.  A lot of structure in residuals, especially around 1-2
+    keV.  SP power laws hardened a bit (index 0.37 to 0.30 for all four MOS
+    exposures), decreasing contribution in soft X-ray; this seems to be in
+    response to decreased nH, which increases soft SNR emission.
+    SNR norm also decreased (factor of 5 (!!)), with abundances jumping a lot
+    to compensate.
 
-    chisqr = 1001.37/690 = 1.451
+    reduced chi-squared = 1069.54/693 = 1.543
 
-       1    1   TBabs      nH         10^22    2.00000      frozen
-       2    2   vnei       kT         keV      2.27900      +/-  0.410824     
-      10    2   vnei       Si                  5.40900      +/-  0.434779     
-      11    2   vnei       S                   5.03653      +/-  0.495144     
-      16    2   vnei       Tau        s/cm^3   2.05675E+10  +/-  1.39453E+09  
+    snr model: TBabs*vnei
+      nH (10^22)    2.000 +/- 0.080
+      kT   (keV)    1.721 +/- 0.105
+      Si            7.51  +/- 0.25
+      S             6.70  +/- 0.31
+      Tau (s/cm^3)  2.83e+10 +/- 2.17e+09
+      norm          1.16e-03 +/- 4.25e-05
 
-    Could thawing Mg help?  Residuals could be partially explained by
-    understimate of Mg He alpha/beta lines.  Iffy, but let's try.
-
-
-    chisqr = 933.24/689 = 1.355
-
-       1    1   TBabs      nH         10^22    2.00000      frozen
-       2    2   vnei       kT         keV      2.25803      +/-  0.364344     
-       9    2   vnei       Mg                  1.75638      +/-  0.128561     
-      10    2   vnei       Si                  7.25580      +/-  0.648529     
-      11    2   vnei       S                   6.87366      +/-  0.639959     
-      16    2   vnei       Tau        s/cm^3   2.05116E+10  +/-  2.58717E+09  
-
-    No, not much difference.
+    soft proton power laws
+      Data group 1, n     0.31 +/- 0.03
+      Data group 2, n     0.31 +/- 0.00
+      Data group 3, n     0.20 +/- 0.00
+      Data group 4, n     0.30 +/- 0.05
+      Data group 5, n     0.30 +/- 0.00
 
 nH = 1.5:
 
     Not a great fit.
-    Screenshot saved to `results-interm/`.
 
-    chisqr = 1235.09/690 = 1.790
+    reduced chi-squared = 1369.12/693 = 1.976
 
-       1    1   TBabs      nH         10^22    1.50000      frozen
-       2    2   vnei       kT         keV      2.90894      +/-  0.682185     
-      10    2   vnei       Si                  8.41276      +/-  0.719420     
-      11    2   vnei       S                   8.41992      +/-  0.754492     
-      16    2   vnei       Tau        s/cm^3   1.94471E+10  +/-  1.43835E+09  
-      18    2   vnei       norm                6.72452E-04  +/-  1.62007E-05
+    snr model: TBabs*vnei
+      nH (10^22)    1.500 +/- 0.080
+      kT   (keV)    4.345 +/- 0.549
+      Si            10.52  +/- 0.41
+      S             10.08  +/- 0.46
+      Tau (s/cm^3)  1.87e+10 +/- 5.27e+08
+      norm          4.74e-04 +/- 1.18e-05
 
-Comments:
-* high nH and low kT results in stronger Si, S lines, while suppressing soft
-  signal.  Hum.
-* if we force nH low, kT rises (and abundances rise) to compensate.
-  this suppresses low energy emission, decreases norm of SNR model
+    soft proton power laws
+      Data group 1, n     0.30 +/- 0.04
+      Data group 2, n     0.30 +/- 0.00
+      Data group 3, n     0.20 +/- 0.00
+      Data group 4, n     0.27 +/- 0.05
+      Data group 5, n     0.27 +/- 0.00
+
+
+nH = 1.0:
+
+    Completely unphysical, fit looks terrible.  continuing trend, though,
+    of raising kT and ramping up Si/S like crazy.
+
+    reduced chi-squared = 1855.79/693 = 2.678
+
+    snr model: TBabs*vnei
+      nH (10^22)    1.000 +/- 0.080
+      kT   (keV)    8.509 +/- 1.671
+      Si            21.82  +/- 1.34
+      S             21.93  +/- 1.29
+      Tau (s/cm^3)  1.98e+10 +/- 3.99e+08
+      norm          1.87e-04 +/- 7.82e-06
+
+
+The driver on fits is relatively low soft emission, which XSPEC tries to
+explain by ramping nH up to 3e22.  Forcing lower nH drives up soft emission,
+which is countered by fits converging to higher kT and higher Si/S abundances
+(which become unreasonably high for fits with nH <~ 1.5).
+
+What if we freed O, Ne, Mg, Fe?
+
+nH = 1.5; O,Ne,Mg,Fe free
+
+    This is actually COMPARABLE to the very best fit.
+    Indeed, the residuals don't look too bad.
+
+    reduced chi-squared = 905.73/689 = 1.315
+
+    snr model: TBabs*vnei
+      nH (10^22)    1.500 +/- 0.080
+      kT   (keV)    1.310 +/- 0.101
+      Si            4.30  +/- 0.30
+      S             5.53  +/- 0.38
+      Tau (s/cm^3)  2.52e+10 +/- 2.41e+09
+      norm          2.08e-03 +/- 2.72e-04
+
+      O             1.66E-12  +/-  0.141
+      Ne            0.125     +/-  0.067
+      Mg            0.52      +/-  0.075
+      Si            4.30      +/-  0.30
+      S             5.53      +/-  0.38
+      Fe            4.74E-02  +/-  0.056
+
+nH = 2.0; O,Ne,Mg,Fe free
+
+    reduced chi-squared = 889.91/689 = 1.292
+
+    snr model: TBabs*vnei
+      nH (10^22)    2.000 +/- 0.080
+      kT   (keV)    1.061 +/- 0.081
+      Si            4.00  +/- 0.32
+      S             4.71  +/- 0.35
+      Tau (s/cm^3)  3.44e+10 +/- 5.53e+09
+      norm          3.31e-03 +/- 5.17e-04
+
+      O             1.94E-05  +/-  0.35
+      Ne            0.36      +/-  0.12
+      Mg            0.59      +/-  0.090
+      Fe            0.119     +/-  0.092
+
+nH free (converges to nH = 2.6)
+
+    Fit really does not look bad.  Obviously better than original fit,
+    albeit not by a lot.  These fits with O/Ne/Mg/Fe free are relatively
+    insensitive to actual value of nH, because fit has lots of knobs to
+    twiddle.
+
+    reduced chi-squared = 880.37/688 = 1.280
+
+    snr model: TBabs*vnei
+      nH (10^22)    2.605 +/- 0.179
+      kT   (keV)    0.879 +/- 0.054
+      Si            4.07  +/- 0.58
+      S             4.33  +/- 0.64
+      Tau (s/cm^3)  5.25e+10 +/- 7.60e+09
+      norm          5.11e-03 +/- 8.52e-04
+
+      O             0.27     +/-  1.23
+      Ne            1.01     +/-  0.42
+      Mg            0.77     +/-  0.16
+      Fe            0.20     +/-  0.16
+
+Basically: if nH is low, we can still get reasonable kT and Si/S abundances
+by driving down O,Ne,Fe emission.
+
+
+Wednesday 2016 March 9
+======================
+
+Recall assumptions on vnei model...
+- fully ionized H/He, time-dependent state for other ions
+- https://ned.ipac.caltech.edu/level5/Sept08/Kaastra/Kaastra4.html
+
+Now begin checking:
+- fits to other regions
+- varying SNR models (vrnei
+- varying absorption
+- varying fixed PN power law (results should be pretty insensitive...)
+
+What are the densities of this region?
+Nearby interstellar clouds?
+What's going on?
+
+
+
 
 
 Standing TODOs
