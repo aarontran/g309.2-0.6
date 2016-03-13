@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# As currently coded, MUST run from XMMPATH
+# One-off check script
+
+if [[ "$#" -ne 1 ]]; then
+    echo "ERROR: one argument (region label) required"
+    exit 1
+fi
+
+RSTEM=$1
+OBSID="0087940201"
+EXP="mos2S002"
+# TODO iterate over EXP
+
+regfile="regs/${OBSID}/reg_${EXP}_${RSTEM}.txt"
+out="regcheck_${EXP}_${RSTEM}.fits"
+
+if [[ -e $out ]]; then
+  echo "Output file ${out} exists, please remove!"
+  exit 255
+fi
+
+if [[ ! -e $regfile ]]; then
+  echo "No region file $regfile found, did you run make_xmmregions?"
+  exit 254
+fi
+
+regexpr="$(cat ${regfile})"
+
+# Output images are kinda funky -- not sure why
+# So I just make event lists, simpler.
+evselect table="${OBSID}/odf/repro/${EXP}-clean.fits:EVENTS" \
+  filteredset="${out}" filtertype=expression expression="(PATTERN<=12)&&(FLAG == 0)$regexpr" \
+  withfilteredset=yes keepfilteroutput=yes updateexposure=yes filterexposure=yes
+
+#evselect table="${OBSID}/odf/repro/${EXP}-clean.fits:EVENTS" \
+#  withfilteredset=yes ignorelegallimits=yes \
+#  filtertype=expression expression="(PATTERN<=12)&&(FLAG == 0)$regexpr" \
+#  imageset="${out}" squarepixels=yes updateexposure=yes filterexposure=yes \
+#  xcolumn='X' ximagebinsize=8 \
+#  ycolumn='Y' yimagebinsize=8

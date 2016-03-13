@@ -7502,11 +7502,287 @@ What are the densities of this region?
 Nearby interstellar clouds?
 What's going on?
 
+Run a fit to SE dark region
+Surprisingly, I'm able to get a good fit with a substantial SNR component.
+
+## src\_SE\_dark region fit
+
+Example with all solar abundances: norm seems quite high, for the small area.
+
+    reduced chi-squared = 262.04/224 = 1.170
+    snr model: TBabs*vnei
+      nH (10^22)    3.112 +/- 0.215
+      kT   (keV)    0.684 +/- 0.151
+      Si            1.00  +/- 0.33
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  7.21e+10 +/- 5.59e+10
+      norm          2.13e-03 +/- 1.01e-03
+
+    soft proton power laws
+      Data group 1, n  0.31 +/- 0.04,  norm  4.63e-02 +/- 3.64e-03
+      Data group 2, n  0.31 +/- 0.00,  norm  4.47e-02 +/- 3.64e-03
+      Data group 3, n  0.20 +/- 0.13,  norm  6.29e-02 +/- 3.97e-03
+      Data group 4, n  0.20 +/- 0.07,  norm  4.26e-02 +/- 5.73e-03
+      Data group 5, n  0.20 +/- 0.00,  norm  6.89e-03 +/- 2.02e-03
+
+    instrumental lines
+      Data group 1, instr const  0.57 +/- 0.11
+      Data group 2, instr const  0.51 +/- 0.11
+      Data group 3, instr const  0.64 +/- 0.05
+      Data group 4, instr const  1.72 +/- 0.18
+      Data group 5, instr const  1.62 +/- 0.16
+
+Example with Si free:
+
+    reduced chi-squared = 224.17/223 = 1.005
+    snr model: TBabs*vnei
+      nH (10^22)    2.537 +/- 0.224
+      kT   (keV)    0.752 +/- 0.185
+      Si            2.48  +/- 0.36
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  8.22e+10 +/- 7.89e+10
+      norm          9.96e-04 +/- 5.06e-04
+
+    soft proton power laws
+      Data group 1, n     0.31 +/- 0.04
+                    norm  4.67e-02 +/- 3.64e-03
+      Data group 2, n     0.31 +/- 0.00
+                    norm  4.51e-02 +/- 3.64e-03
+      Data group 3, n     0.20 +/- 0.13
+                    norm  6.37e-02 +/- 3.96e-03
+      Data group 4, n     0.21 +/- 0.07
+                    norm  4.38e-02 +/- 5.74e-03
+      Data group 5, n     0.21 +/- 0.00
+                    norm  7.48e-03 +/- 2.06e-03
+
+    instrumental lines
+      Data group 1, instr const  0.61 +/- 0.11
+      Data group 2, instr const  0.56 +/- 0.11
+      Data group 3, instr const  0.65 +/- 0.05
+      Data group 4, instr const  1.78 +/- 0.18
+      Data group 5, instr const  1.69 +/- 0.17
+
+Example with NO SNR component (norm frozen to zero):
+(started new fit with default parameters, set SNR norm to zero, then fit, to
+avoid fit being stuck / influenced by previous fit with SNR model)
+
+    reduced chi-squared = 800.69/228 = 3.512
+
+    soft proton power laws
+      Data group 1, n  0.45 +/- 0.03,  norm  6.38e-02 +/- 3.48e-03
+      Data group 2, n  0.45 +/- 0.00,  norm  6.34e-02 +/- 3.55e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  8.01e-02 +/- 3.76e-03
+      Data group 4, n  0.48 +/- 0.04,  norm  7.52e-02 +/- 5.10e-03
+      Data group 5, n  0.48 +/- 0.00,  norm  2.12e-02 +/- 2.86e-03
+
+    instrumental lines
+      Data group 1, instr const  0.86 +/- 0.11
+      Data group 2, instr const  0.88 +/- 0.11
+      Data group 3, instr const  0.64 +/- 0.05
+      Data group 4, instr const  2.43 +/- 0.17
+      Data group 5, instr const  2.31 +/- 0.15
+
+For sanity let's also try thawing the PN power law and see what comes out.
+
+    reduced chi-squared = 774.44/227 = 3.412
+
+    soft proton power laws
+      Data group 1, n  0.45 +/- 0.03,  norm  6.38e-02 +/- 3.48e-03
+      Data group 2, n  0.45 +/- 0.00,  norm  6.34e-02 +/- 3.55e-03
+      Data group 3, n  0.52 +/- 0.05,  norm  1.29e-01 +/- 1.05e-02
+      Data group 4, n  0.48 +/- 0.04,  norm  7.52e-02 +/- 5.10e-03
+      Data group 5, n  0.48 +/- 0.00,  norm  2.12e-02 +/- 2.86e-03
+
+    instrumental lines
+      Data group 1, instr const  0.86 +/- 0.11
+      Data group 2, instr const  0.88 +/- 0.11
+      Data group 3, instr const  0.67 +/- 0.05
+      Data group 4, instr const  2.43 +/- 0.17
+      Data group 5, instr const  2.31 +/- 0.15
+
+OK.  Looking at the region, this is really not surprising -- the region does
+overlap with some limited extent of SNR emission.  Therefore, we may need
+better regions for resolved analysis.
+
+But, it is interesting that:
+1. solar Si/S abundances give an acceptable fit (albeit better with Si free)
+2. fitted abundance is lower
+3. fitted ionization timescale is higher
 
 
+## src\_E\_lobe region fit
+
+First fit, solar abundances vnei; PN SP power law thawed
+
+    reduced chi-squared = 301.25/208 = 1.448
+    snr model: TBabs*vnei
+      nH (10^22)    5.219 +/- 0.220
+      kT   (keV)    0.544 +/- 0.043
+      Si            1.00  +/- 0.00
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  8.60e+10 +/- 5.00e+10
+      norm          1.33e-02 +/- 3.29e-03
+
+    soft proton power laws
+      Data group 1, n  0.23 +/- 0.05,  norm  4.26e-02 +/- 4.32e-03
+      Data group 2, n  0.23 +/- 0.00,  norm  4.09e-02 +/- 4.17e-03
+      Data group 3, n  -0.04 +/- 0.15,  norm  4.05e-02 +/- 1.17e-02
+      Data group 4, n  0.35 +/- 0.08,  norm  4.86e-02 +/- 6.73e-03
+      Data group 5, n  0.35 +/- 0.00,  norm  5.21e-03 +/- 2.58e-03
+
+    instrumental lines
+      Data group 1, instr const  0.74 +/- 0.15
+      Data group 2, instr const  0.59 +/- 0.14
+      Data group 3, instr const  0.44 +/- 0.16
+      Data group 4, instr const  1.13 +/- 0.20
+      Data group 5, instr const  1.52 +/- 0.19
+
+Fit with Si free, PN SP power law thawed.
+
+    reduced chi-squared = 213.72/207 = 1.032
+    snr model: TBabs*vnei
+      nH (10^22)    4.008 +/- 0.305
+      kT   (keV)    0.801 +/- 0.156
+      Si            2.61  +/- 0.31
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  6.95e+10 +/- 5.22e+10
+      norm          2.46e-03 +/- 1.16e-03
+
+    soft proton power laws
+      Data group 1, n  0.24 +/- 0.05,  norm  4.34e-02 +/- 4.36e-03
+      Data group 2, n  0.24 +/- 0.00,  norm  4.16e-02 +/- 4.21e-03
+      Data group 3, n  -0.01 +/- 0.15,  norm  4.23e-02 +/- 1.21e-02
+      Data group 4, n  0.35 +/- 0.08,  norm  4.86e-02 +/- 6.79e-03
+      Data group 5, n  0.35 +/- 0.00,  norm  5.21e-03 +/- 2.62e-03
+
+    instrumental lines
+      Data group 1, instr const  0.82 +/- 0.15
+      Data group 2, instr const  0.68 +/- 0.14
+      Data group 3, instr const  0.51 +/- 0.17
+      Data group 4, instr const  1.27 +/- 0.20
+      Data group 5, instr const  1.66 +/- 0.19
+
+These absorption values look way too high.
+Redo this with PN SP power law frozen, for consistency.
+
+First fit, solar abundances, PN power law frozen.
+
+    reduced chi-squared = 304.34/209 = 1.456
+    snr model: TBabs*vnei
+      nH (10^22)    5.265 +/- 0.241
+      kT   (keV)    0.543 +/- 0.076
+      Si            1.00  +/- 0.00
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  7.62e+10 +/- 6.21e+10
+      norm          1.36e-02 +/- 5.07e-03
+
+    soft proton power laws
+      Data group 1, n  0.24 +/- 0.05,  norm  4.34e-02 +/- 4.27e-03
+      Data group 2, n  0.24 +/- 0.00,  norm  4.16e-02 +/- 4.12e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  6.13e-02 +/- 4.69e-03
+      Data group 4, n  0.35 +/- 0.08,  norm  4.96e-02 +/- 6.64e-03
+      Data group 5, n  0.35 +/- 0.00,  norm  5.53e-03 +/- 2.59e-03
+
+    instrumental lines
+      Data group 1, instr const  0.75 +/- 0.15
+      Data group 2, instr const  0.61 +/- 0.14
+      Data group 3, instr const  0.46 +/- 0.16
+      Data group 4, instr const  1.16 +/- 0.20
+      Data group 5, instr const  1.54 +/- 0.19
+
+Second fit, Si free (clear line residual, so justified).
+
+    reduced chi-squared = 216.24/208 = 1.040
+    snr model: TBabs*vnei
+      nH (10^22)    4.094 +/- 0.306
+      kT   (keV)    0.760 +/- 0.127
+      Si            2.64  +/- 0.33
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  8.00e+10 +/- 5.29e+10
+      norm          2.72e-03 +/- 1.19e-03
+
+    soft proton power laws
+      Data group 1, n  0.25 +/- 0.05,  norm  4.44e-02 +/- 4.32e-03
+      Data group 2, n  0.25 +/- 0.00,  norm  4.25e-02 +/- 4.17e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  6.12e-02 +/- 4.75e-03
+      Data group 4, n  0.36 +/- 0.08,  norm  5.01e-02 +/- 6.71e-03
+      Data group 5, n  0.36 +/- 0.00,  norm  5.72e-03 +/- 2.66e-03
+
+    instrumental lines
+      Data group 1, instr const  0.83 +/- 0.15
+      Data group 2, instr const  0.69 +/- 0.14
+      Data group 3, instr const  0.51 +/- 0.16
+      Data group 4, instr const  1.28 +/- 0.20
+      Data group 5, instr const  1.67 +/- 0.19
+
+Very reasonable fit, but, again, nH is way too high.
+What if I force nH = 2?  Perform that fit.
+
+    reduced chi-squared = 291.89/209 = 1.397
+    snr model: TBabs*vnei
+      nH (10^22)    2.000 +/- 0.306
+      kT   (keV)    4.285 +/- 1.171
+      Si            6.19  +/- 0.59
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  2.11e+10 +/- 1.74e+09
+      norm          1.72e-04 +/- 1.30e-05
+
+    soft proton power laws
+      Data group 1, n  0.22 +/- 0.06,  norm  4.03e-02 +/- 4.43e-03
+      Data group 2, n  0.22 +/- 0.00,  norm  3.81e-02 +/- 4.26e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  5.48e-02 +/- 5.19e-03
+      Data group 4, n  0.32 +/- 0.09,  norm  4.29e-02 +/- 6.90e-03
+      Data group 5, n  0.32 +/- 0.00,  norm  2.41e-03 +/- 2.54e-03
+
+    instrumental lines
+      Data group 1, instr const  0.96 +/- 0.15
+      Data group 2, instr const  0.83 +/- 0.14
+      Data group 3, instr const  0.60 +/- 0.16
+      Data group 4, instr const  1.52 +/- 0.19
+      Data group 5, instr const  1.86 +/- 0.18
+
+OK -- we start to see similar behavior as before.
+kT ramps up, Si ramps up, norm ramps down (in this case Tau ramps down).
+
+That suggests to me:
+1. either x-ray absorption really is thick here, and there is a lot of local
+   variability (not implausible!)
+2. we're over-estimating the X-ray background
+   (implies pretty-small scale variation, though)
+3. something else is wrong??
+
+
+## src\_SW\_lobe region fit
+
+
+Create new region to sample bright rim,
+create new region to truly sample dark part of remnant.
+
+Modify `reg2xmmdets.pl` to deal with ellipses, boxes.
+- tested with new/old regions. Ran to completion.
+- old regions (circles, annuli) unchanged, checked by diff.
+- new regions look correct for XMM, but to be tested...
+
+Determined that I needed to compute the angle conversion from sky to detector
+coordinates.  I could specify selections using X/Y coordinates, but ESAS
+recommends DETX/DETY (I am too lazy to look into what exactly breaks if I use
+X/Y...)
+
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0087940201' >& 20160313_ridges_0087940201.log &
+    [1] 20567
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0551000201' >& 20160313_ridges_0551000201.log &
+    [1] 12414
+
+General comment: X-ray background dominates at low energies, maybe a partial
+driver for the high absorption values...
 
 
 Standing TODOs
+
+Also, maybe images should attempt to subtract at least soft proton flares,
+because the sharp vignetting could contaminate soft emission near the aimpoint,
+which might look like SNR emission...  (partially helped by my choice of energy
+bands for imaging, though).
 
 * Re-run everything from a clean slate to ensure your pipeline is good.
 
