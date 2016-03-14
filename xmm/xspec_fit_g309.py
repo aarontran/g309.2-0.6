@@ -18,6 +18,7 @@ from astropy.io import fits
 import xspec as xs
 
 from xspec_utils import load_fit_dict
+from nice_tables import LatexTable
 
 parser = argparse.ArgumentParser(description="Execute interactive G309 region fits in XSPEC")
 parser.add_argument('reg', default='src',
@@ -25,7 +26,7 @@ parser.add_argument('reg', default='src',
 parser.add_argument('--snr_model', default='vnei',
     help="Choose SNR model")
 parser.add_argument('--no_fit', action='store_true',
-    help="Don't run fit steps; drop user straight into interactive mode")
+    help="Don't start any fits; drop user straight into interactive mode")
 parser.add_argument('--with_bkg', action='store_true',
     help=("Load bkg spectra for simultaneous fitting instead of using"
           " canned values from integrated SNR/bkg fit"))
@@ -72,6 +73,17 @@ def init_snr_model(n):
         m.TBabs.nH.frozen = True
         m.vnei.kT.frozen = True
         m.vnei.Tau.frozen = True
+    elif SNR_MODEL == 'vpshock':
+        m = xs.Model("TBabs * vpshock", 'snr', n)
+        m.TBabs.nH = 1
+        m.vpshock.kT = 1
+        #m.vpshock.tau_low = 1e10
+        #m.vpshock.tau_high = 1e11
+    elif SNR_MODEL == 'vsedov':
+        m = xs.Model("TBabs * vsedov", 'snr', n)
+        m.TBabs.nH = 1
+        #m.vsedov.kT = 2
+        #m.vsedov.kT_i = 1
 
     return m
 
@@ -96,6 +108,10 @@ def init_xrb_values(xrb):
         xrb.apec.norm.frozen = True
         xrb.powerlaw.norm.frozen = True
         xrb.apec_5.norm.frozen = True
+
+    xrb.apec.kT.frozen = True
+    xrb.TBabs.nH.frozen = True
+    xrb.apec_5.kT.frozen = True
 
 
 def execute_fit():
@@ -140,6 +156,8 @@ def execute_fit():
             xrb.TBabs.nH = 1.06
             xs.Fit.perform()
 
+    ## Basic VNEI fits for first four subsample regions
+
     if REG == 'src_north_clump' and SNR_MODEL == 'vnei':
 
         # PN SP power law not well-constrained at all
@@ -159,6 +177,93 @@ def execute_fit():
         # Release PN SP power law (don't do this, just goes to wonky values)
         #xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = False
         #xs.Fit.perform()
+
+    if REG == 'src_SE_dark' and SNR_MODEL == 'vnei':
+
+        # PN SP power law not well-constrained at all
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
+        xs.Fit.renorm()
+        xs.Fit.perform()
+
+        # Vary SNR
+        snr.TBabs.nH.frozen=False
+        snr.vnei.kT.frozen=False
+        snr.vnei.Tau.frozen=False
+        xs.Fit.perform()
+
+        # Let Si float (solar abund S still gives acceptable fit)
+        snr.vnei.Si.frozen=False
+        xs.Fit.perform()
+
+    if REG == 'src_E_lobe' and SNR_MODEL == 'vnei':
+
+        # PN SP power law tends towards index 0
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
+        xs.Fit.renorm()
+        xs.Fit.perform()
+
+        xs.Plot("ldata delch")
+
+        # Vary SNR
+        snr.TBabs.nH.frozen=False
+        snr.vnei.kT.frozen=False
+        snr.vnei.Tau.frozen=False
+        xs.Fit.perform()
+
+    if REG == 'src_SW_lobe' and SNR_MODEL == 'vnei':
+
+        # PN SP power law tends towards index 0
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
+        xs.Fit.renorm()
+        xs.Fit.perform()
+
+        xs.Plot("ldata delch")
+
+        # Vary SNR
+        snr.TBabs.nH.frozen=False
+        snr.vnei.kT.frozen=False
+        snr.vnei.Tau.frozen=False
+        xs.Fit.perform()
+
+    if REG == 'src_ridge' and SNR_MODEL == 'vnei':
+
+        # PN SP power law tends towards index 0
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
+        xs.Fit.renorm()
+        xs.Fit.perform()
+
+        xs.Plot("ldata delch")
+
+        # Vary SNR, incl. Si/S simultaneously
+        snr.TBabs.nH.frozen=False
+        snr.vnei.kT.frozen=False
+        snr.vnei.Tau.frozen=False
+        snr.vnei.Si.frozen=False
+        snr.vnei.S.frozen=False
+        xs.Fit.perform()
+
+    if REG == 'src_SE_ridge_dark' and SNR_MODEL == 'vnei':
+
+        # PN SP power law tends towards index 0
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
+        xs.Fit.renorm()
+        xs.Fit.perform()
+
+        xs.Plot("ldata delch")
+
+        # Vary SNR, incl. Si/S simultaneously
+        #snr.TBabs.nH.frozen=False
+        #snr.vnei.kT.frozen=False
+        #snr.vnei.Tau.frozen=False
+        #snr.vnei.Si.frozen=False
+        #snr.vnei.S.frozen=False
+        #xs.Fit.perform()
+
 
 
 def print_fit():
@@ -184,8 +289,9 @@ def print_fit():
     print "soft proton power laws"
     for i in sorted(spec.keys()):
         m = xs.AllModels(i, 'sp')
-        print "  Data group {}, n     {:.2f} +/- {:.2f}".format(i, *f(m.powerlaw.PhoIndex))
-        print "                norm  {:.2e} +/- {:.2e}".format(*f(m.powerlaw.norm))
+        pstr = "  Data group {}, n  {:.2f} +/- {:.2f}".format(i, *f(m.powerlaw.PhoIndex))
+        pstr = pstr + ",  norm  {:.2e} +/- {:.2e}".format(*f(m.powerlaw.norm))
+        print pstr
     print ""
 
     print "instrumental lines"
@@ -193,6 +299,49 @@ def print_fit():
         m = xs.AllModels(i, 'instr')
         print "  Data group {}, instr const  {:.2f} +/- {:.2f}".format(i, *f(m.constant.factor))
     print ""
+
+
+def print_fit_latex():
+    """Print SNR fit parameters to nice LaTeX table"""
+
+    # TODO have option to make row of units
+    # underneath column names
+    # figure out title style -- using caption vs. two rules may
+    # make more sense. depends on context.
+    # no need to get too specific, anyways
+    latex_hdr = ['Region',
+                 r'$n_\mathrm{H}$ ($10^{22} \unit{cm^{-2}}$)',
+                 r'$kT$ (keV)',
+                 r'$\tau$ ($\unit{s\;cm^{-3}}$)',
+                 'Si (-)', 'S (-)',
+                 r'$\chi^2_{\mathrm{red}} (\mathrm{dof}$)']
+
+    """
+    units = ['',
+             r'($10^{22} \unit{cm^{-2}}$)',
+             r'(keV)',
+             r'($\unit{s\;cm^{-3}}$)',
+             '(-)', '(-)',
+             '']
+     """
+
+    latex_cols = ['{:s}', '{:0.2f}', '{:0.2f}', '{:0.2e}',
+                  '{:0.2f}', '{:0.2f}', '{:s}'] # TODO temporary, need to add errors
+
+    # TODO prec is currently only relevant for fmt types 1,2
+    # should be relevant for type 0 too.
+    ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 region fits", prec=1)
+
+    ltr = [REG,  # For obvious reasons, hand-edit this in the actual output
+           snr.TBabs.nH.values[0],
+           snr.vnei.kT.values[0],
+           snr.vnei.Tau.values[0],
+           snr.vnei.Si.values[0],
+           snr.vnei.S.values[0],
+           "{:0.3f} ({:d})".format(xs.Fit.statistic/xs.Fit.dof, xs.Fit.dof)]
+    ltab.add_row(*ltr)
+
+    print(ltab)
 
 
 
@@ -302,10 +451,7 @@ xrb.powerlaw.PhoIndex = 1.4  # Extragalactic background (unresolved AGN)
 init_xrb_values(xrb)
 
 xrb.constant.factor.frozen = True
-xrb.apec.kT.frozen = True
-xrb.TBabs.nH.frozen = True
 xrb.powerlaw.PhoIndex.frozen = True
-xrb.apec_5.kT.frozen = True
 
 # Scale BACKSCAL values to fiducial value (0087940201 MOS1S001 src BACKSCAL)
 # to get XRB normalizations right across regions AND exposures
@@ -434,4 +580,6 @@ for i in sorted(spec.keys()):
 
 if not NO_FIT:
     execute_fit()
+
+
 

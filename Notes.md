@@ -7485,22 +7485,8 @@ Basically: if nH is low, we can still get reasonable kT and Si/S abundances
 by driving down O,Ne,Fe emission.
 
 
-Wednesday 2016 March 9
-======================
-
-Recall assumptions on vnei model...
-- fully ionized H/He, time-dependent state for other ions
-- https://ned.ipac.caltech.edu/level5/Sept08/Kaastra/Kaastra4.html
-
-Now begin checking:
-- fits to other regions
-- varying SNR models (vrnei
-- varying absorption
-- varying fixed PN power law (results should be pretty insensitive...)
-
-What are the densities of this region?
-Nearby interstellar clouds?
-What's going on?
+Wednesday 2016 March 9 -- manually run and inspect sub-source region fits
+=========================================================================
 
 Run a fit to SE dark region
 Surprisingly, I'm able to get a good fit with a substantial SNR component.
@@ -7751,33 +7737,306 @@ That suggests to me:
    (implies pretty-small scale variation, though)
 3. something else is wrong??
 
+General comment: X-ray background dominates at low energies, maybe a partial
+driver for the high absorption values...
 
-## src\_SW\_lobe region fit
 
+Weds-Sun 2016 March 9-13 - setup new regions, conversion
+========================================================
 
-Create new region to sample bright rim,
-create new region to truly sample dark part of remnant.
+Fiddling for this was done on Weds,Sat,Sun (Weds night, Thurs, Fri dominated by
+MP work).
+
+Create new region to sample bright rim (`src_ridge`)
+create new region to truly sample dark part of remnant (`src_SE_ridge_dark`).
+Regions match -- sample opposite radio ridges.
 
 Modify `reg2xmmdets.pl` to deal with ellipses, boxes.
 - tested with new/old regions. Ran to completion.
 - old regions (circles, annuli) unchanged, checked by diff.
-- new regions look correct for XMM, but to be tested...
+- new regions were not correct -- rotation was funky
 
-Determined that I needed to compute the angle conversion from sky to detector
-coordinates.  I could specify selections using X/Y coordinates, but ESAS
-recommends DETX/DETY (I am too lazy to look into what exactly breaks if I use
-X/Y...)
+Must compute the angle conversion from sky to detector coordinates.  I could
+specify selections using X/Y coordinates, but ESAS recommends DETX/DETY (I am
+too lazy to look into what exactly breaks if I use X/Y...) Added relevant
+conversions to reg2xmmdets.pl, added a one-off script that makes XMM event
+lists for checking that regions are created correctly.
+
+Run specbackgrp on new regions.  Checked error logs, no issues.
 
     atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0087940201' >& 20160313_ridges_0087940201.log &
     [1] 20567
     atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0551000201' >& 20160313_ridges_0551000201.log &
     [1] 12414
 
-General comment: X-ray background dominates at low energies, maybe a partial
-driver for the high absorption values...
+
+Monday 2016 March 14 - continue sub-source region fits
+======================================================
+
+
+## src\_ridge region fit
+
+Fit with nH free, Si free -- the chi-squared is unusually high,
+and the residuals look pretty poor.  I'm not convinced this is a good
+description of the spectrum.  High ionization age.
+
+    reduced chi-squared = 339.66/226 = 1.503
+    snr model: TBabs*vnei
+      nH (10^22)    2.939 +/- 0.108
+      kT   (keV)    0.711 +/- 0.052
+      Si            1.98  +/- 0.14
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  9.41e+10 +/- 3.79e+10
+      norm          3.44e-03 +/- 6.45e-04
+
+    soft proton power laws
+      Data group 1, n  0.43 +/- 0.05,  norm  5.93e-02 +/- 5.39e-03
+      Data group 2, n  0.43 +/- 0.00,  norm  6.77e-02 +/- 6.07e-03
+      Data group 3, n  0.20 +/- 0.30,  norm  5.97e-02 +/- 5.43e-03
+      Data group 4, n  0.51 +/- 0.07,  norm  7.15e-02 +/- 8.40e-03
+      Data group 5, n  0.51 +/- 0.00,  norm  2.07e-02 +/- 4.61e-03
+
+    instrumental lines
+      Data group 1, instr const  0.92 +/- 0.22
+      Data group 2, instr const  1.03 +/- 0.20
+      Data group 3, instr const  0.55 +/- 0.08
+      Data group 4, instr const  1.20 +/- 0.26
+      Data group 5, instr const  1.57 +/- 0.23
+
+The Si line in PN is, curiously, somewhat offset from the VNEI line -- actual
+data look as though the line has lower-energy (from eyeballing, ~0.05keV
+shift?).
+IF this is a real effect, shift would be ~0.05/1.80 -> z ~ 0.03 ~ (9000km/s) / c
+which is too high given the remnant age/size (unless it's closer than we think,
+very unexpected).  More likely, it's just chance that we got more counts on the
+low-energy side of the line than on the high side, or some kind of calibration
+error, or whatever.
+
+One more fit with Si/S both free.  Not obvious that we have abundant S in this
+ridge, but the fit improves slightly w/ S -- smooths out residuals a bit.
+
+    reduced chi-squared = 318.51/225 = 1.416
+    snr model: TBabs*vnei
+      nH (10^22)    2.884 +/- 0.104
+      kT   (keV)    0.624 +/- 0.069
+      Si            2.28  +/- 0.18
+      S             2.06  +/- 0.30
+      Tau (s/cm^3)  1.30e+11 +/- 7.24e+10
+      norm          3.92e-03 +/- 9.80e-04
+
+    soft proton power laws
+      Data group 1, n  0.44 +/- 0.05,  norm  6.02e-02 +/- 5.35e-03
+      Data group 2, n  0.44 +/- 0.00,  norm  6.87e-02 +/- 6.04e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  6.16e-02 +/- 5.33e-03
+      Data group 4, n  0.51 +/- 0.07,  norm  7.21e-02 +/- 8.35e-03
+      Data group 5, n  0.51 +/- 0.00,  norm  2.15e-02 +/- 4.58e-03
+
+    instrumental lines
+      Data group 1, instr const  0.97 +/- 0.22
+      Data group 2, instr const  1.08 +/- 0.20
+      Data group 3, instr const  0.55 +/- 0.08
+      Data group 4, instr const  1.26 +/- 0.26
+      Data group 5, instr const  1.62 +/- 0.23
+
+## src\_SE\_ridge\_dark region fit
+
+First, try fitting with NO SNR model.
+PN power law set to 0.2 for consistency.  I'd say this is an acceptable fit, though
+the residuals definitely show systematic structure.
+
+    reduced chi-squared = 153.85/108 = 1.425
+    snr model: TBabs*vnei
+      norm          0.00e+00 +/- 5.89e-06
+
+    soft proton power laws
+      Data group 1, n  0.41 +/- 0.05,  norm  5.91e-02 +/- 5.14e-03
+      Data group 2, n  0.41 +/- 0.00,  norm  5.76e-02 +/- 5.10e-03
+      Data group 3, n  0.20 +/- 0.13,  norm  6.68e-02 +/- 4.74e-03
+      Data group 4, n  0.26 +/- 0.09,  norm  5.00e-02 +/- 7.63e-03
+      Data group 5, n  0.26 +/- 0.00,  norm  1.05e-02 +/- 2.93e-03
+
+    instrumental lines
+      Data group 1, instr const  0.72 +/- 0.12
+      Data group 2, instr const  0.78 +/- 0.14
+      Data group 3, instr const  0.69 +/- 0.07
+      Data group 4, instr const  1.76 +/- 0.20
+      Data group 5, instr const  1.82 +/- 0.19
+
+I see two approaches.
+1. What happens if we allow some SNR component?
+2. What happens if we let x-ray background parameters float?
+
+Allowing SNR component improves fit slightly, favors very high nH.
+
+    reduced chi-squared = 121.46/104 = 1.168
+    snr model: TBabs*vnei
+      nH (10^22)    4.123 +/- 1.127
+      kT   (keV)    0.528 +/- 0.833
+      Si            1.00  +/- 0.00
+      S             1.00  +/- 0.00
+      Tau (s/cm^3)  5.01e+10 +/- 5.47e+11
+      norm          1.24e-03 +/- 4.04e-03
+
+    soft proton power laws
+      Data group 1, n  0.34 +/- 0.06,  norm  5.10e-02 +/- 5.38e-03
+      Data group 2, n  0.34 +/- 0.00,  norm  4.91e-02 +/- 5.33e-03
+      Data group 3, n  0.20 +/- 0.13,  norm  6.10e-02 +/- 5.01e-03
+      Data group 4, n  0.10 +/- 0.12,  norm  3.72e-02 +/- 8.19e-03
+      Data group 5, n  0.10 +/- 0.00,  norm  6.18e-03 +/- 2.57e-03
+
+    instrumental lines
+      Data group 1, instr const  0.66 +/- 0.13
+      Data group 2, instr const  0.68 +/- 0.14
+      Data group 3, instr const  0.69 +/- 0.07
+      Data group 4, instr const  1.48 +/- 0.21
+      Data group 5, instr const  1.54 +/- 0.20
+
+With Si free, fit runs away to really high Si values, which appears
+almost degenerate wrt kT and Tau.  I don't show result here.
+
+What happens if I let XRB normalizations float?
+Didn't record exact fit results, but fit doesn't improve significantly.
+Chi-squared is 147.38/105 = 1.404
+
+So it can be argued that there is an SNR component here.  In the best fit,
+SNR normalization is comparable to rest of remnant, just the statistics are
+poor and the line emission is not pronounced.
+
+
+
+## src\_SW\_lobe region fit
+
+Finally, finish sub-source region fit that we didn't complete last time.
+As usual, PN power law index forced to 0.2.
+
+"Standard" fit with SNR Si/S free:
+
+    reduced chi-squared = 592.32/438 = 1.352
+    snr model: TBabs*vnei
+      nH (10^22)    1.916 +/- 0.076
+      kT   (keV)    2.403 +/- 0.376
+      Si            3.90  +/- 0.22
+      S             4.79  +/- 0.70
+      Tau (s/cm^3)  1.35e+10 +/- 1.16e+09
+      norm          6.72e-04 +/- 8.28e-05
+
+    soft proton power laws
+      Data group 1, n  0.41 +/- 0.03,  norm  5.72e-02 +/- 3.23e-03
+      Data group 2, n  0.41 +/- 0.00,  norm  6.13e-02 +/- 3.49e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  7.08e-02 +/- 3.76e-03
+      Data group 4, n  0.42 +/- 0.05,  norm  5.89e-02 +/- 5.19e-03
+      Data group 5, n  0.42 +/- 0.00,  norm  1.17e-02 +/- 2.52e-03
+
+    instrumental lines
+      Data group 1, instr const  0.94 +/- 0.11
+      Data group 2, instr const  0.87 +/- 0.10
+      Data group 3, instr const  0.52 +/- 0.04
+      Data group 4, instr const  1.74 +/- 0.15
+      Data group 5, instr const  1.87 +/- 0.14
+
+
+(!!) similar to `src_ridge fit`, the PN lines appears oddly offset.
+Not clear that this is the case for MOS1/2 spectra.
+Offset is apparent in both Si and S line.
+Weird.
+Fit otherwise looks good.  There is a fair bit of soft excess, looks like it
+could easily be offset by letting XRB normalization float.
+
+For reference, here are original "default" normalizations:
+
+       2    2   apec       kT         keV      0.228000     frozen
+       5    2   apec       norm                2.90000E-04  frozen
+       6    3   TBabs      nH         10^22    1.06000      frozen
+       7    4   powerlaw   PhoIndex            1.40000      frozen
+       8    4   powerlaw   norm                3.10000E-04  frozen
+       9    5   apec       kT         keV      0.368000     frozen
+      12    5   apec       norm                3.29000E-03  frozen
+
+Here are final normalizations.  It looks like a doubling of the harder apec
+and the powerlaw contribution helps significantly.
+
+   5    2   apec       norm                3.03355E-04  +/-  2.60276E-05  
+   8    4   powerlaw   norm                5.72240E-04  +/-  6.69836E-05  
+  12    5   apec       norm                6.35793E-03  +/-  4.65595E-04
+
+Fit parameters w/XRB floating -- fit improves slightly but moves to an obscene
+amount of S emission... which doesn't make sense.
+
+    reduced chi-squared = 569.48/435 = 1.309
+    snr model: TBabs*vnei
+      nH (10^22)    3.077 +/- 0.295
+      kT   (keV)    0.843 +/- 0.245
+      Si            5.17  +/- 0.93
+      S             15.65  +/- 7.98
+      Tau (s/cm^3)  1.36e+10 +/- 2.85e+09
+      norm          2.82e-03 +/- 1.60e-03
+
+    soft proton power laws
+      Data group 1, n  0.39 +/- 0.03,  norm  5.26e-02 +/- 3.66e-03
+      Data group 2, n  0.39 +/- 0.00,  norm  5.62e-02 +/- 3.95e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  6.60e-02 +/- 4.11e-03
+      Data group 4, n  0.36 +/- 0.06,  norm  5.12e-02 +/- 6.30e-03
+      Data group 5, n  0.36 +/- 0.00,  norm  7.72e-03 +/- 2.63e-03
+
+    instrumental lines
+      Data group 1, instr const  0.88 +/- 0.11
+      Data group 2, instr const  0.82 +/- 0.10
+      Data group 3, instr const  0.51 +/- 0.04
+      Data group 4, instr const  1.60 +/- 0.15
+      Data group 5, instr const  1.72 +/- 0.14
+
+## Why do we see line energy shifts?!
+
+This would suggest weird calibration, incorrect RMF, or similar.
+E.g., could the fact that we have not used a detector-mapped RMF explain the difference?
+
+Looking at residuals for `src_SW_lobe`, it could be present in MOS1/2 spectra
+as well -- shifted the opposite way.  But, hard to tell without disentangling
+spectra (code not really well set-up for that yet).
+
+I note that pn-spectra has not changed from `xmmsas_20141104_1833` to
+`xmmsas_20160201_1833`.
+
+As a sanity check, I re-run the fits for the integrated remnant (`src`)
+and for the bright `src_north_clump`.
+If the lines look good in PN, then it's a region dependent error/effect.
+RESULT: lines look fine in `src_north_clump`.
+
+So, something is up.
+
+
+
+
+
+COMMENT: by nature, the fit to the `src_north_clump` will be better than other
+sub-source regions because integrated spectrum fit, which was used to derived
+background for all fits, ASSUMED that vnei was a good fit for the integrated
+spectrum -- i.e., the brightest part of remnant.
+We cannot take it as meaningful that the brightest part of the remnant gets a
+good fit to VNEI in this manner.
+
+Recall assumptions on vnei model...
+- fully ionized H/He, time-dependent state for other ions
+- https://ned.ipac.caltech.edu/level5/Sept08/Kaastra/Kaastra4.html
+
+Now begin checking:
+- fits to other regions
+- varying SNR models (vrnei
+- varying absorption
+- varying fixed PN power law (results should be pretty insensitive...)
+
+What are the densities of this region?
+Nearby interstellar clouds?
+What's going on?
+
+
 
 
 Standing TODOs
+
+(TODO SANITY CHECK: are PN/MOS1/MOS2 all really 90 deg. offset?  I think this
+is an OK assumption, and <1 deg. error will not affect results much.  More than
+1 deg. error and I'd worry about ESA's subcontractors.)
 
 Also, maybe images should attempt to subtract at least soft proton flares,
 because the sharp vignetting could contaminate soft emission near the aimpoint,
