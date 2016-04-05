@@ -7773,7 +7773,6 @@ Run specbackgrp on new regions.  Checked error logs, no issues.
 Monday 2016 March 14 - continue sub-source region fits
 ======================================================
 
-
 ## src\_ridge region fit
 
 Fit with nH free, Si free -- the chi-squared is unusually high,
@@ -8005,65 +8004,735 @@ RESULT: lines look fine in `src_north_clump`.
 So, something is up.
 
 
+## vpshock model for integrated remnant
+
+First, consider vpshock model fit to src region with Si,S free.
+
+### vpshock with bkg fixed from snr/bkg vnei fit
+
+WITHOUT Si,S free yet:
+
+    reduced chi-squared = 5025.36/2222 = 2.262
+    snr model: TBabs*vpshock
+      nH (10^22)      3.960 +/- 0.042
+      kT   (keV)      0.687 +/- 0.017
+      Si              1.00               (frozen)
+      S               1.00               (frozen)
+      Tau_l (s/cm^3)  8.19e+10 +/- 1.2e+12   (huge uncertainty!)
+      Tau_u (s/cm^3)  7.91e+10 +/- 1.3e+12   (huge uncertainty!)
+      norm            6.06e-2 +/- 3.55e-3
+
+    soft proton power laws
+      Data group 1, n  0.41 +/- 0.01,  norm  6.05e-02 +/- 1.34e-03
+      Data group 2, n  0.41 +/- 0.00,  norm  6.35e-02 +/- 1.41e-03
+      Data group 3, n  0.44 +/- 0.03,  norm  1.07e-01 +/- 4.87e-03
+      Data group 4, n  0.38 +/- 0.02,  norm  5.46e-02 +/- 1.94e-03
+      Data group 5, n  0.38 +/- 0.00,  norm  1.40e-02 +/- 9.68e-04
+
+    instrumental lines
+      Data group 1, instr const  0.71 +/- 0.05
+      Data group 2, instr const  0.66 +/- 0.05
+      Data group 3, instr const  0.56 +/- 0.03
+      Data group 4, instr const  1.31 +/- 0.07
+      Data group 5, instr const  1.50 +/- 0.06
+
+With Si/S free.  tau_l/tau_u badly constrained in fitting process
+
+    reduced chi-squared = 2658.22/2220 = 1.197
+    snr model: TBabs*vpshock
+      nH (10^22)      2.197 +/- 0.040
+      kT   (keV)      1.439 +/- 0.087
+      Si              4.58 +/- 0.18
+      S               4.47 +/- 0.27
+      Tau_l (s/cm^3)  5.03e+10 +/- 3.9e+09
+      Tau_u (s/cm^3)  1.00e+08 +/- 9.1e+09      (hit limit!)
+      norm            5.99e-03 +/- 5.8e-04
+
+    soft proton power laws
+      Data group 1, n  0.39 +/- 0.01,  norm  5.78e-02 +/- 1.38e-03
+      Data group 2, n  0.39 +/- 0.00,  norm  6.05e-02 +/- 1.45e-03
+      Data group 3, n  0.34 +/- 0.03,  norm  8.73e-02 +/- 5.06e-03
+      Data group 4, n  0.34 +/- 0.02,  norm  4.96e-02 +/- 2.04e-03
+      Data group 5, n  0.34 +/- 0.00,  norm  1.20e-02 +/- 9.48e-04
+
+    instrumental lines
+      Data group 1, instr const  0.93 +/- 0.05
+      Data group 2, instr const  0.86 +/- 0.04
+      Data group 3, instr const  0.60 +/- 0.03
+      Data group 4, instr const  1.64 +/- 0.07
+      Data group 5, instr const  1.79 +/- 0.06
+
+The fit looks pretty good, but with `Tau_u` at basically zero (I will make the
+unproven assumption that `Tau_l` and `Tau_u` are symmetric -- but it looks like
+the parameter bounds are quite different, so maybe not, and the fit should be
+optimized by swapping the two values).
+
+This is basically a vnei fit.  Parameters not quite the same as previous
+integrated remnant vnei fit (of note, `Tau_l` is 2x larger), but kT and nH are
+about consistent with what I saw before.
 
 
+### vpshock with bkg free
+
+Now, the above fit is __expected__ to force one of `Tau_l` or `Tau_u` towards
+zero, simply because the fixed background "pigeonholes" the vpshock fit towards
+the vnei model.  I.e., by fixing the background, the remaining part of the
+signal is already optimized to look like a vnei model with Si/S free.
+
+Therefore, to deduce anything useful we need to fit with background free.
+Same applies to the attempted Sedov fit below.
+
+First fit, as follows:
+1. renorm and fit normalizations only
+2. fit, simultaneously allow both ionization times, kT, nH, Si/S to float
+3. fit, allow XRB temperatures/absorption to float
+
+this particular fit looks excellent, I'm surprised that the parameters
+are somewhat different w.r.t. simple VNEI fit...
+check possible XRB values.
+
+    reduced chi-squared = 4509.23/3768 = 1.197
+    snr model: TBabs*vpshock
+      nH (10^22)    2.048 +/- 0.044
+      kT   (keV)    1.510 +/- 0.085
+      Si            4.82  +/- 0.14
+      S             4.85  +/- 0.22
+      Tau_u (keV)    50961009423.873 +/- 3663433560.047  == 5.096e+10 +/- 3.66e+09
+      Tau_l (keV)    0.000 +/- 9613613.450
+      norm          5.47e-03 +/- 3.72e-04
+
+    soft proton power laws
+      Data group 1, n  0.34 +/- 0.01,  norm  5.22e-02 +/- 1.54e-03
+      Data group 2, n  0.34 +/- 0.00,  norm  5.44e-02 +/- 1.61e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  6.53e-02 +/- 1.68e-03
+      Data group 4, n  0.24 +/- 0.03,  norm  4.04e-02 +/- 2.41e-03
+      Data group 5, n  0.24 +/- 0.00,  norm  8.45e-03 +/- 9.00e-04
+      Data group 6, n  0.31 +/- 0.01,  norm  4.38e-02 +/- 1.29e-03
+      Data group 7, n  0.31 +/- 0.00,  norm  4.58e-02 +/- 1.32e-03
+      Data group 8, n  0.20 +/- 0.00,  norm  4.70e-02 +/- 1.45e-03
+      Data group 9, n  0.43 +/- 0.04,  norm  2.29e-02 +/- 1.56e-03
+      Data group 10, n  0.43 +/- 0.00,  norm  5.08e-03 +/- 8.23e-04
+
+    instrumental lines
+      Data group 1, instr const  0.88 +/- 0.05
+      Data group 2, instr const  0.82 +/- 0.04
+      Data group 3, instr const  0.59 +/- 0.02
+      Data group 4, instr const  1.57 +/- 0.07
+      Data group 5, instr const  1.71 +/- 0.06
+      Data group 6, instr const  0.66 +/- 0.03
+      Data group 7, instr const  0.62 +/- 0.03
+      Data group 8, instr const  0.66 +/- 0.02
+      Data group 9, instr const  1.45 +/- 0.04
+      Data group 10, instr const  1.47 +/- 0.04
+
+    X-ray background (!)
+
+       1    1   constant   factor              1.00000      frozen
+       2    2   apec       kT         keV      0.100734     +/-  5.18487E-03  
+       3    2   apec       Abundanc            1.00000      frozen
+       4    2   apec       Redshift            0.0          frozen
+       5    2   apec       norm                6.29399E-04  +/-  1.02179E-04  
+       6    3   TBabs      nH         10^22    0.256918     +/-  3.61750E-02  
+       7    4   powerlaw   PhoIndex            1.40000      frozen
+       8    4   powerlaw   norm                3.32290E-04  +/-  9.59905E-06  
+       9    5   apec       kT         keV      0.294247     +/-  7.31701E-03  
+      10    5   apec       Abundanc            1.00000      frozen
+      11    5   apec       Redshift            0.0          frozen
+      12    5   apec       norm                5.92547E-04  +/-  1.09444E-04 
+
+
+## sedov model for integrated remnant
+
+Next, consider sedov model fit to src region with Si,S free
+and allow bkg fit.
+
+### sedov with bkg fixed from snr/bkg vnei fit
+
+FIRST RUN: start 19:48:53p EST, finish 22:23:00p EST (2hr 40min)
+Allow fit to free nH, `kT_a`, `kT_b`, Tau, Si, S immediately.
+Running in vnc session treble:1
+
+Fit is running away (`kT_a` exploding)
+XSPEC froze Si/S at very beginning of fit -- will have to revisit this.
+
+    reduced chi-squared = 4390.09/2221 = 1.977
+    snr model: TBabs*vsedov
+      nH (10^22)    4.181 +/- 0.047
+      kT_a (keV)    1.11 +/- 0.11
+      kT_b (keV)    0.01 +/- 0.085          (fit hit limit value)
+      Si            1.00                    (fit pegged to 1)
+      S             1.00                    (fit pegged to 1)
+      Tau (s/cm^3)  2.61e+11 +/- 2.70e+10
+      norm          8.76e-2 +/- 6.48e-3
+
+    soft proton power laws
+      Data group 1, n  0.41 +/- 0.01,  norm  6.02e-02 +/- 1.33e-03
+      Data group 2, n  0.41 +/- 0.00,  norm  6.31e-02 +/- 1.41e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  7.03e-02 +/- 1.56e-03
+      Data group 4, n  0.38 +/- 0.02,  norm  5.39e-02 +/- 1.94e-03
+      Data group 5, n  0.38 +/- 0.00,  norm  1.34e-02 +/- 9.60e-04
+
+    instrumental lines
+      Data group 1, instr const  0.79 +/- 0.05
+      Data group 2, instr const  0.72 +/- 0.04
+      Data group 3, instr const  0.55 +/- 0.03
+      Data group 4, instr const  1.41 +/- 0.07
+      Data group 5, instr const  1.60 +/- 0.06
+
+Ouch.  Fit is ok, but there are clear residuals.  Certainly a clear Si line,
+but not clear that S line is present (above solar).  Try again, nudging
+parameters as follows:
+
+    snr.TBabs.nH = 3
+    snr.vsedov.Si = 2.5
+    snr.vsedov.Tau = 1e11
+    snr.vsedov.kT_a = 0.8
+    snr.vsedov.S = 1.2
+
+Now, repeat fit -- starting 00:48:14a EST (Tue Mar 15).
+Finished 02:14:45a EST.
+
+Wow, nothing worked.  Still see clear S residual.  Fit reconverged to almost
+same parameters (within ~5-10%).  Let's try again with background free.
+
+### sedov with bkg free
+
+First, fit with "default" x-ray background parameters (norms free)
+and let all vsedov parameters (Tau, Si, S, kT_a, kT_b, nH) vary freely.
+See what happens.
+Started around 11:08a EST
+finished at 14:06p EST (3 hrs)
+
+OK, still funky.  Si/S abundances refuse to budge from 1.
+Fit doesn't look bad.  Thaw XRB parameters and let it fit again.
+
+start at: 10:22:05a EST, 2016 Mar 16
+finish: 10:52:06a EST, surprisingly
+
+    reduced chi-squared = 6012.92/3768 = 1.596
+    snr model: TBabs*vsedov
+      nH (10^22)    4.341 +/- 0.054
+      kT_a (keV)    1.088 +/- 0.126
+      kT_b (keV)    0.010 +/- 0.087
+      Si            1.00  +/- -1.00
+      S             1.00  +/- -1.00
+      Tau (s/cm^3)  2.55e+11 +/- 2.70e+10
+      norm          9.91e-02 +/- 8.34e-03
+
+    soft proton power laws
+      Data group 1, n  0.39 +/- 0.01,  norm  5.78e-02 +/- 1.52e-03
+      Data group 2, n  0.39 +/- 0.00,  norm  6.05e-02 +/- 1.60e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  7.06e-02 +/- 1.66e-03
+      Data group 4, n  0.34 +/- 0.02,  norm  5.03e-02 +/- 2.35e-03
+      Data group 5, n  0.34 +/- 0.00,  norm  1.24e-02 +/- 1.05e-03
+      Data group 6, n  0.31 +/- 0.01,  norm  4.51e-02 +/- 1.30e-03
+      Data group 7, n  0.31 +/- 0.00,  norm  4.71e-02 +/- 1.32e-03
+      Data group 8, n  0.20 +/- 0.00,  norm  5.03e-02 +/- 1.49e-03
+      Data group 9, n  0.44 +/- 0.04,  norm  2.45e-02 +/- 1.56e-03
+      Data group 10, n  0.44 +/- 0.00,  norm  6.57e-03 +/- 8.69e-04
+
+    instrumental lines
+      Data group 1, instr const  0.81 +/- 0.05
+      Data group 2, instr const  0.75 +/- 0.04
+      Data group 3, instr const  0.56 +/- 0.03
+      Data group 4, instr const  1.44 +/- 0.07
+      Data group 5, instr const  1.62 +/- 0.06
+      Data group 6, instr const  0.70 +/- 0.03
+      Data group 7, instr const  0.66 +/- 0.03
+      Data group 8, instr const  0.66 +/- 0.02
+      Data group 9, instr const  1.48 +/- 0.04
+      Data group 10, instr const  1.50 +/- 0.04
+
+Si/S won't budge?!  Definite structure in residuals still present.
+
+
+Tuesday-Tuesday 2016 March 15-22 - assemble, interpret sub-source region fits
+=============================================================================
+
+## Why do fits of Safi-Harb+ and Rakowski favor NH ~ 0.6e22?
+
+Integrated source fit without background model (unlikely to do this)
+yields:
+
+        reduced chi-squared = 4478.93/2222 = 2.016
+          nH (10^22)    1.554 +/- 0.019
+          kT   (keV)    3.265 +/- 0.180
+          Si            4.05  +/- 0.08
+          S             4.25  +/- 0.15
+          Tau (s/cm^3)  1.65e+10 +/- 4.58e+08
+          norm          3.06e-03 +/- 9.70e-05
+
+Integrated source fit with abundances above N free (i.e., thaw O, Ne, Mg, ...,
+Ar, Ca, Fe, Ni) yields:
+
+        reduced chi-squared = 2724.29/2215 = 1.230
+        snr model: TBabs*vnei
+          nH (10^22)    0.680 +/- 0.021
+          kT   (keV)    2.602 +/- 0.129
+          Si            2.04  +/- 0.05
+          S             2.96  +/- 0.14
+          Tau (s/cm^3)  1.56e+10 +/- 5.15e+08
+          norm          4.57e-03 +/- 1.87e-04
+
+          O             7.46164E-02  +/-  1.01773E-02
+          Ne            5.62290E-02  +/-  1.29935E-02
+          Mg            0.260458     +/-  1.47095E-02
+          Ar            3.31201      +/-  0.494184
+          Ca            14.4239      +/-  1.96441
+          Fe            5.46430E-02  +/-  6.34211E-03
+          Ni            0.556611     +/-  0.126530
+
+Ramping down O/Ne/Mg/Fe lets us decrease nH.  Fit residuals do not look bad.
+Abundances are wonky.  Ar/Ca lines are very ill-constrained, difficult to tease
+out through high energy noise + not strong to begin with.
+
+Run integrated source fit with background FREE, and O,Ne,Mg,Ca,Fe FREE
+
+        reduced chi-squared = 4369.27/3762 = 1.161
+        snr model: TBabs*vnei
+          nH (10^22)    2.023 +/- 0.137
+          kT   (keV)    1.008 +/- 0.089
+          Si            3.72  +/- 0.38
+          S             5.14  +/- 0.65
+          Tau (s/cm^3)  2.61e+10 +/- 2.59e+09
+          norm          8.90e-03 +/- 9.87e-04
+
+          O             2.87211      +/-  1.31759
+          Ne            1.02379      +/-  0.371537
+          Mg            0.600475     +/-  8.85837E-02
+          Ar            12.2653      +/-  2.98179
+          Ca            77.1689      +/-  28.1898
+          Fe            1.06280E-10  +/-  0.113155
+          Ni            2.64724      +/-  0.933963
+
+If I freeze Ar/Ca back to one, makes very little difference (fit parameters
+shift slightly, reduced chi-squared increases slightly).  I do not reproduce
+the numbers here.
+
+## Sub-source fit scripting, first attempt
+
+The tables of fit results in these notes are becoming a pain.
+Makes it very difficult to organize my thoughts.
+
+Present "standard" fit with:
+* XRB parameters fixed from integrated-source fit
+* integrated source fit, all free (nH, kT, Si, S, Tau)
+* sub-source region fits (blobs + annuli), all free (nH, kT, Si, S, Tau)
+* integrated source fit, nH tied to (1, 1.5, 2, 2.5)
+* sub-source region fit, nH tied to (1, 1.5, 2, 2.5) -- parameters free depending on what was decided from earlier (Si/S)
+
+and links to plots for each
+
+List of assumptions to test.  How do the (KEY) fits above change if I:
+* run vpshock/vsedov for integrated source or subregion (partially done)
+* truncate the low/high energy ranges (cut MOS/PN off at 1keV, 7keV)
+  (do separately to illustrate effects)
+* change x-ray background fit parameters
+* use x-ray background fit parameters from fitting XRB alone?
+
+First: SRC 
+
+    atran@statler:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0087940201' >& 20160321_pre_ridge_specbackgrp.log &
+    [1] 31353
+    atran@cooper:~/rsch/g309/xmm$ nohup /bin/tcsh -c './masterscript.tcsh 0551000201' >& 20160321_pre_ridge_specbackgrp_0551000201.log &
+    [1] 2571
+
+Start using a shell script to save all the fits being run.
+
+    nohup ./fitter.tcsh > & 20160321_fitter.log &
+
+Started run around 3:10pm on Mon Mar 21.
+Finished ~4:50pm.  So one set of fits requires ~1hr 40min (!).
+
+## Innermost annulus [circle] fit is failing terribly
+
+`ann_000_100` fit blew up, a few others went haywire.
+Errors tied to weird high energy data in "blue" spectrum.
+Solution: ignore >10 keV data in 05510002010 MOS1 alone.
+
+Further note: must free PN power law in this region ALONE -- unclear why.
+I speculate that, near aimpoint, SP contamination spectrum could be different
+due to quite sharp vignetting function.
+
+Saved a hand-coaxed fit to "ann_000_100_manual".  Fit is unusually poor -- a
+lot of variation in soft/hard X-rays, strange.
+(editorial note, 2016 April 5 -- probably deleted this...)
+
+1. Tried thawing Fe alone, no dice (chi-squared barely budged, 1029.8->1028.5 ish)
+   (but, settled towards Fe ~ 0.87... so OK, reassuring)
+2. Try thawing O,Ne,Mg (refroze Fe=1 again)
+
+   Thawing O,Ne,Mg made a big difference (chi-squared plummets to ~542, almost cut in half!)
+   but, the SP power law parameters are pretty funky.
+   Extremely low ionization age.
+   Unusually low nH required by fit (larger nH would only drive up O
+   abundance, and it's already atypically large?!)
+
+   0551000201 MOS1/2 power laws have gone berserk.
+
+   At such low Tau (~ 1e10 s /cm-cubed) could timescales of years be
+   relevant?
+   1 year = 3e7 seconds
+   observations taken ~8 yrs apart = 2.5e8 seconds
+   for densities n~10 (really high), ionization age would have changed by
+   delta tau ~ 2.5e9 in the interim.
+   For a fit value 1.7e10, that's a change 1.4 to 1.7e10.
+   OK, probably not.
+
+    Attempt to remedy weird power law with:
+    xs.AllModels(4,"sp").powerlaw.PhoIndex = 0.2
+
+Saved to `ann_000_100_ONeMg`.  Imperfect, but quite intriguing...
+
+## Sub-source fit scripting, second/third attempt (troubleshooting)
+
+Re-run fitter.tcsh with multiple nH values.
+
+    atran@treble:/data/mpofls/atran/research/g309/xmm$ nohup ./fitter.tcsh > & 20160321_fitter_multinH.log &
+    [1] 19126
+
+Failed because I can't spell (Python choked on "Fase" typo).
+The fits with nH fixed had gotten stuck anyways.
+Make some modifications to perform fits more consistently.
+Thaw Si/S for all fits except the darkest regions.
+
+    atran@treble:/data/mpofls/atran/research/g309/xmm$ nohup ./fitter.tcsh >& 20160322_fitter_multinH_rerun.log &
+    [1] 7668
+
+    atran@treble:/data/mpofls/atran/research/g309/xmm$ nohup ./fitter.tcsh > & 20160322_fitter_multinH_rerun_pt2.log &
+    [1] 12643
+
+OK, looks ok... I have to clean this all up and git commit at this natural
+checkpoint.  (editorial note April 5 2016: tidying up / commit took place much
+later)
+
+Fits are FAR from collisional equilibrium -- vpshock and vsedov disfavored.
+Tau is very small.  So we should forget about recombining plasmas / adiabatic
+cooling.  Material was heated very recently.
+
+## Where else can we go?
+
+Possibility: more systematic exploration of structure
+* Scott Randall's approach to temperature mapping
+  See Randall+ 2015 -> Randall+2008 [M86], which presents two maps:
+  1. systematically fit temperature for a given pixel from a circular region
+     with 1000 net counts (a massive averaging), up to a maximum radius.
+  2. build a Voronoi-like tessellation of ~1000 counts/region to
+     obtain non-overlapping estimates of temperature
+  See also Li, Decourchelle et al. 2015 (SN 1006), which cites Randall 2008!
+* Lopez+ (2015, 2013) approach to Tycho, W49B
+  - Use grid of boxes overlaid on the remnant to perform spectra fits
+
+Distance constraints
+* See my notes regarding absorption and X-ray spectrum fits, and possibly
+  constraining foreground column this way
+* HI absorption -- Gaensler argues 5-14 kpc, likely 5-9kpc.
+  I definitely believe >5kpc.
+  Looking at his plots -- because the SNR-sampled spectra
+  also show minimal absorption in the vLSR -20 to 0 km/s range,
+  whereas the three background sources slope down smoothly,
+  I could believe the source to be < 9 kpc.
+
+(editorial note 2016 April 5: at least some SNRs have HI distance estimates
+conflicting strongly with distances from other methods... so be cautious)
+
+Based on: `https://upload.wikimedia.org/wikipedia/commons/a/a7/Milky_Way_Arms_ssc2008-10.svg`
+(from `http://www.spitzer.caltech.edu/images/1923-ssc2008-10a-A-Roadmap-to-the-Milky-Way`)
+our sight line crosses
+* ~1-3 kpc, Carina-Sgr arm (likely location of foreground cluster NGC 5281 ??)
+  => -20 to -40 km/s vLSR
+* ~5-9 kpc, long sample of Scutum-Cen/Scutum-Crux arm
+  => span -50 to 0 km/s vLSR roughly
+* 14-15 kpc, hit Carina-Sgr arm again, far end of spiral.
+  => +40 km/s vLSR spike
+
+The key point is, like the annulus fits, to remove human bias in region
+selection so that spatial variation in spectral fits __reveals__ information
+about remnant, rather than being determined by our eyeball picks of
+morphologically interesting regions.  These should be complementary tools.
+
+Question: x-ray emission from foreground cluster?
+almost certainly negligible (seems like only the biggest brightest clusters should be an issue)
+but worth thinking about for a few hours at most?...
+
+Question: how do we get meaningful results from these spectrum fits?
+
+Extremely unclear to me that how/whether anything is meaningful.
+Especially given uncertainty over:
+- what elements should be thawed/frozen (may partially account for high
+  absorption columns we're obtaining in fits)
+- uncertainty about small scale (<~10 arcmin) variation in X-ray background,
+  foreground absorption column
+- uncertainty about absolute distance
+
+Region selections are arbitrary.
+Applying annuli is not necessarily better, given that we have clear evidence
+that the emission is asymmetric (whether due to foreground column or intrinsic
+to the remnant, doesn't matter).
+
+It seems the solution, for now, is to run fits and probe all possible (and
+feasible) options.  Then wait for X-ray surveyor to come out,
+or ask for a whole bunch of Chandra time...
+
+First, reviewing distance estimates by GGM98, RHS01, S+07 papers...
+1. not sure I trust spectrum fits to SNR by RHS01 and S+07.
+   S+ in particular gives few details.
+2. nH values are WAY smaller.
+   in my fits, dominated by x-ray background and sp power law.
+
+COMMENT: is it possible that SNR morphology is affected by the presence of
+absorbing interstellar clouds?
+Yes, but cannot probe directly (unless we want to start looking for an X-ray
+halo of HD 119682)
 
 COMMENT: by nature, the fit to the `src_north_clump` will be better than other
-sub-source regions because integrated spectrum fit, which was used to derived
+sub-source regions because integrated spectrum fit, which was used to derive
 background for all fits, ASSUMED that vnei was a good fit for the integrated
 spectrum -- i.e., the brightest part of remnant.
-We cannot take it as meaningful that the brightest part of the remnant gets a
-good fit to VNEI in this manner.
-
-Recall assumptions on vnei model...
-- fully ionized H/He, time-dependent state for other ions
-- https://ned.ipac.caltech.edu/level5/Sept08/Kaastra/Kaastra4.html
-
-Now begin checking:
-- fits to other regions
-- varying SNR models (vrnei
-- varying absorption
-- varying fixed PN power law (results should be pretty insensitive...)
-
-What are the densities of this region?
-Nearby interstellar clouds?
-What's going on?
 
 
 
+Thursday 2016 March 24 - meeting
+================================
 
-Standing TODOs
+List of things to go over:
+1. odd shift in lines (esp. in PN?)  <- did not address this
+2. absorbing column -- how to constrain?
+   Discrepancy wrt old papers.
+   Can we check out a point source in the field, fit it, and set an upper bound
+   for the X-RAY "fit" column density?
+   Make the assumption that this linearly scales wrt radio HI density...
+3. discrepancy between X-ray spectrum fit / HI survey data (not unexpected)
+4. Tables of fits
 
-(TODO SANITY CHECK: are PN/MOS1/MOS2 all really 90 deg. offset?  I think this
-is an OK assumption, and <1 deg. error will not affect results much.  More than
-1 deg. error and I'd worry about ESA's subcontractors.)
+Mentioned:
+* HI absorption discrepancy
+* vpshock/vsedov fits not so helpful, odd vsedov bug
+* x-rays from stellar clusters?  yes, definitely some very bright clusters
+  but unclear that that's relevant here.
 
-Also, maybe images should attempt to subtract at least soft proton flares,
-because the sharp vignetting could contaminate soft emission near the aimpoint,
-which might look like SNR emission...  (partially helped by my choice of energy
-bands for imaging, though).
+Few takeaways...
+* tie nH in fits for all annuli.  Idea being that annuli should average out
+  column variation (maybe excepting small regions) since you're integrating
+  over azimuth at a large-ish radius
+* the extragalactic background normalization is known, you should use it.
 
+
+
+Friday-Tuesday 2016 April 05 - clean up, continue work
+======================================================
+
+Work placed on back-burner due to MP code work etc.
+Take time to clean up and organize notes and thoughts.
+
+## Misc tasks
+
+Re-created "quick image" (exposure corrected mosaic) with PNS003 data from
+0551000201, which increases counts ~10% in bright north blob of SNR.
+
+## Extragalactic background normalization
+
+Compare the fitted extragalactic power law norm to the expected norm from deep
+and wide X-ray fields at high galactic latitude (see external notes).
+
+The 0087940201 MOS1 "src" region is a circle of radius 400 arcseconds, yielding
+region area = `5.03e5 arcsec^2`.  BACKSCAL for this spectrum is 191927484 (from
+`mos1S001-src.pi`), which has units of detector pixels (0.05 x 0.05 arcsec).
+This converts to region area = `4.80e5 arcsec^2`, about 10% smaller.  Use the
+BACKSCAL value in calculations.
+
+IF I use the Hickox and Markevitch value of 
+`10.9 photons cm^-2 s^-1 sr^-1 keV^-1`, or
+`9.2e-7 photons cm^2 s^-1 arcmin^-2 keV^-1` (at 1 keV), then expect fit norm
+`1.2e-4 photons keV^-1 cm^-2 s^-1` for 0087940201 MOS1 src region.
+
+In my fit, the current extragalactic power law norm is
+`3.10e-4 photons keV^-1 cm^-2 s^-1` at 1 keV, for 0087940201 MOS1 src region,
+based on the combined source/background fit.
+The scaled normalization from our fit is for comparison
+`2.3e-6 photons keV^-1 cm^-2 s^-1 arcmin^-2`.
+
+Our fit value is 2-3x larger than expected!  This is a game changer.
+
+## Fit with XRB normalization fixed causes some residual in soft X-ray emission
+
+Initial attempt.  First run "usual" fit (in `xspec_fit_g309.py`), then
+try stepping over nH (0.1 to 2.5, 25 steps).  Only marginally better,
+chi-squared dropped by 10, parameter values largely the same.
+I also tried stepping over absorbed kT, but fit just ran to the limit (0.8
+keV), which is already hotter than expected for galactic halo background.
+
+See the `20160405_*.png` plots of X-ray background.
+Of note, I highlight that the background subtraction doesn't appear to change
+the errors, where maybe the subtracted errors should be bigger than they are.
+
+    reduced chi-squared = 4614.13/3770 = 1.224
+
+    xrb:constant(apec + TBabs(powerlaw + apec))
+      apec       kT         keV      0.259490     +/-  3.49084E-03  
+      apec       norm                3.22541E-04  +/-  7.10725E-06  
+      TBabs      nH         10^22    1.38236      +/-  4.08415E-02  
+      powerlaw   PhoIndex            1.40000      frozen
+      powerlaw   norm                1.20000E-04  frozen
+      apec       kT         keV      0.753715     +/-  2.07931E-02  
+      apec       norm                2.36253E-03  +/-  1.59583E-04
+
+    snr model: TBabs*vnei
+      nH (10^22)    2.108 +/- 0.041
+      kT   (keV)    2.583 +/- 0.162
+      Tau (s/cm^3)  1.75e+10 +/- 5.68e+08
+      Si            3.66  +/- 0.09
+      S             3.40  +/- 0.15
+      norm          4.15e-03 +/- 2.40e-04
+
+    soft proton power laws
+      Data group 1, n  0.38 +/- 0.01,  norm  5.77e-02 +/- 1.46e-03
+      Data group 2, n  0.38 +/- 0.00,  norm  6.03e-02 +/- 1.54e-03
+      Data group 3, n  0.20 +/- 0.00,  norm  7.05e-02 +/- 1.73e-03
+      Data group 4, n  0.32 +/- 0.02,  norm  4.86e-02 +/- 2.23e-03
+      Data group 5, n  0.32 +/- 0.00,  norm  1.22e-02 +/- 1.02e-03
+      Data group 6, n  0.35 +/- 0.01,  norm  5.09e-02 +/- 1.19e-03
+      Data group 7, n  0.35 +/- 0.00,  norm  5.30e-02 +/- 1.20e-03
+      Data group 8, n  0.20 +/- 0.00,  norm  5.78e-02 +/- 1.29e-03
+      Data group 9, n  0.50 +/- 0.03,  norm  3.00e-02 +/- 1.39e-03
+      Data group 10, n  0.50 +/- 0.00,  norm  1.07e-02 +/- 8.54e-04
+
+    instrumental lines
+      Data group 1, instr const  0.90 +/- 0.05
+      Data group 2, instr const  0.83 +/- 0.04
+      Data group 3, instr const  0.59 +/- 0.02
+      Data group 4, instr const  1.61 +/- 0.06
+      Data group 5, instr const  1.76 +/- 0.06
+      Data group 6, instr const  0.65 +/- 0.03
+      Data group 7, instr const  0.62 +/- 0.03
+      Data group 8, instr const  0.64 +/- 0.02
+      Data group 9, instr const  1.45 +/- 0.04
+      Data group 10, instr const  1.47 +/- 0.04
+
+One pitfall -- now that XRB power law is fixed, it's not obvious that we must
+tie the PN power law.  Try freeing this.
+Result -- very small difference.
+
+    reduced chi-squared = 4606.86/3768 = 1.223
+
+    xrb:constant(apec + TBabs(powerlaw + apec))
+      apec       kT         keV      0.255595     +/-  3.98956E-03
+      apec       norm                2.95927E-04  +/-  9.09787E-06
+      TBabs      nH         10^22    1.36452      +/-  4.20174E-02
+      powerlaw   PhoIndex            1.40000      frozen
+      powerlaw   norm                1.20000E-04  frozen
+      apec       kT         keV      0.647595     +/-  1.87526E-02
+      apec       norm                2.67565E-03  +/-  1.89549E-04
+
+    snr model: TBabs*vnei
+      nH (10^22)    2.108 +/- 0.041
+      kT   (keV)    2.497 +/- 0.159
+      Tau (s/cm^3)  1.84e+10 +/- 6.73e+08
+      Si            3.80  +/- 0.10
+      S             3.40  +/- 0.15
+      norm          4.09e-03 +/- 2.31e-04
+
+    soft proton power laws
+      Data group 1, n  0.40 +/- 0.01,  norm  6.04e-02 +/- 1.58e-03
+      Data group 2, n  0.40 +/- 0.00,  norm  6.33e-02 +/- 1.67e-03
+      Data group 3, n  0.38 +/- 0.03,  norm  9.88e-02 +/- 6.13e-03
+      Data group 4, n  0.37 +/- 0.02,  norm  5.33e-02 +/- 2.42e-03
+      Data group 5, n  0.37 +/- 0.00,  norm  1.43e-02 +/- 1.17e-03
+      Data group 6, n  0.36 +/- 0.01,  norm  5.24e-02 +/- 1.25e-03
+      Data group 7, n  0.36 +/- 0.00,  norm  5.46e-02 +/- 1.27e-03
+      Data group 8, n  0.21 +/- 0.04,  norm  5.97e-02 +/- 3.90e-03
+      Data group 9, n  0.53 +/- 0.03,  norm  3.17e-02 +/- 1.46e-03
+      Data group 10, n  0.53 +/- 0.00,  norm  1.18e-02 +/- 9.20e-04
+
+    instrumental lines
+      Data group 1, instr const  0.92 +/- 0.05
+      Data group 2, instr const  0.85 +/- 0.04
+      Data group 3, instr const  0.60 +/- 0.02
+      Data group 4, instr const  1.63 +/- 0.06
+      Data group 5, instr const  1.79 +/- 0.06
+      Data group 6, instr const  0.66 +/- 0.03
+      Data group 7, instr const  0.63 +/- 0.03
+      Data group 8, instr const  0.64 +/- 0.02
+      Data group 9, instr const  1.45 +/- 0.04
+      Data group 10, instr const  1.48 +/- 0.04
+
+JUST for my reference, check how fixing extragalactic norm changed our combined
+fit.
+
+    unabsorbed kT 0.23 -> 0.26
+    absorbed kT 0.37 -> 0.65 (as high as ~0.75... pending error run)
+    unabsorbed apec norm ~ 2.9e-4 -> 2.96e-4 (about the same)
+    absorbed apec norm 3.3e-3 -> 2.7e-3
+
+    snr kT 1.56 -> 2.5
+    snr tau 2.5e+10 -> 1.8e10
+    snr Si, S lowered (4.2, 3.7 -> 3.8, 3.4) (more background contrib, different Tau/kT affected emission, ??)
+    snr nH 2.19 -> 2.11
+
+OK, so the changes aren't super dramatic.  The excess soft emission could be
+explained by freeing the PN power law
+
+
+Main observation is that kT, Tau remain quite consistent with a hot, recently
+shocked plasma.  This continues to remain a robust result, even as we tweak our
+background assumptions, etc.
+
+
+
+
+RESEARCH:
+* use proton to extrapolate power law indices based on energy-/space- dependent vignetting?
+    (yes, do try this -- may reduce backgrounds in image. but your data are so noisy anyways that it may not have much effect).
+
+In general: understanding of mixed morphology remnants
+and discrepancy between x-ray and radio features,
+with general eye towards other remnants and broader conclusions or predictions.
+kepler similariy -- but in fact radio of kepler is brightest in the north (putative CSM interaction); ears are dominated by X-ray synchrotron emission.
+I'm still curious as to whether there could be ties to a jet driven explosion.
+when do jets appear in Ia models?
+
+
+
+List of assumptions to test.  How do the (KEY) fits above change if I:
+* run vpshock/vsedov for integrated source or subregion (partially done)
+* truncate the low/high energy ranges (cut MOS/PN off at 1keV, 7keV)
+  (do separately to illustrate effects)
+* change x-ray background fit parameters
+* use x-ray background fit parameters from fitting XRB alone?
+
+
+Standing TODOs:
 * Re-run everything from a clean slate to ensure your pipeline is good.
-
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures
   for image scripts.
-* Image making -- did I remember to remove corner events?  images will look a
-  bit nicer, histograms will be more useful.
+* Image making -- remove corner events
+* Images -- subtract soft proton contamination a la ESAS?  The sharp vignetting
+  could contaminate soft emission near the aimpoint, which might look like SNR
+  emission...  (partially helped by choice of energy bands for imaging,
+  though, as at least it should not confuse sharp features).
+* check the filtering threshold of de Luca and Molendi on the corner data.
+  (see sec. 3.3 of de luca/molendi 2003) as a sanity check -- was our GTI
+  filtering sufficient?
 
 Standing questions:
-* Castro+2011, why use evselect,merge,eexpmap,emosaic?  Seems like merge is not
-  needed.
 * Why did exposure maps for PN generate so fast, relative to MOS maps???
 * Why did exposure maps for 0551000201 MOS exposures issue warning
   about "NoExpoExt" (no exposure extension found)???
-* Image binning/sizes -- how chosen by ESAS
-  how should we choose
+
+Standing ESAS questions:
 * QUESTION: line 581 of mos-spectra, why is elow set to cflim?...
     rot-im-det-sky mode=4, mode=5 are NOT documented on ESAS cookbook
     Similarly passing mode=4,5 to rot-det-sky is not documented either.
 * Why does ESAS cookbook recommend PN line at 7.11 keV?
   I haven't seen any evidence for this particular line
   If anything, we should be modeling another line at around 5.3 keV (Cr line?)
+
+Standing low priority questions:
+* Castro+2011, why use evselect,merge,eexpmap,emosaic?
+  Seems like merge is not needed.
+* for region conversion, are PN/MOS1/MOS2 all offset exactly 90 degrees?
+  Seems like an OK assumption, <1 degree error will not affect results much.
+  More than 1 degree error and I'd worry about shoddy build quality.
 
 Reminders (caveats and loose threads):
 * source region differs slightly between exposures; therefore combined fit is

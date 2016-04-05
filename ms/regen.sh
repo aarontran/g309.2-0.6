@@ -17,9 +17,9 @@ if [ "$#" -eq 2 ]
 then
     pdflatex "${arg}.tex" 
     bibtex $arg
-    pdflatex "${arg}.tex" 
-    pdflatex "${arg}.tex" 
 fi
 
 pdflatex "${arg}.tex"
-#open "${arg}.pdf"
+pdflatex "${arg}.tex"
+firefox "${arg}.pdf"
+cp "${arg}.pdf" /data/wdocs/atran/g309/.

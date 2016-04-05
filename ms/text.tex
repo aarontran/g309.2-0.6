@@ -1,5 +1,5 @@
-\documentclass[manuscript]{aastex6}  % one-column, double-spaced GENERATE BIB
-%\documentclass[iop, apj, numberedappendix]{emulateapj}
+\documentclass[twocolumn,tighten,trackchanges]{aastex6}
+%\documentclass[iop, apj, numberedappendix]{emulateapj} % Still more compact than aastex
 
 % Customize figures/sizing for 2 column vs. manuscript printout
 % TODO - not in HEAD latex install?
@@ -13,10 +13,11 @@
 \slugcomment{Draft, \today}
 
 % Packages and commands
-\usepackage{amsmath}
+%\usepackage{amsmath}  % Included in aastex
 \usepackage{booktabs}
 \usepackage{hyperref}
 
+% My "standard" TeX aliases
 \newcommand*{\mt}{\mathrm}
 \newcommand*{\unit}[1]{\;\mt{#1}}  % vemod.net/typesetting-units-in-latex
 \newcommand*{\abt}{\mathord{\sim}} % tex.stackexchange.com/q/55701
@@ -26,38 +27,38 @@
 \renewcommand{\vec}[1]{\mathbf{#1}}  % Bold vectors
 \newcommand*{\tsup}{\textsuperscript}
 
-% Revision packages and commands
-%\usepackage{color}
-%\usepackage{soul}
-%\newcommand*{\revadd}[1]{\textbf{\color{blue}#1}}
-%\newcommand*{\revcut}[1]{\textbf{\color{red}\st{#1}}}
-
 % Paper-specific commands
+\newcommand*{\nH}{n_{\mathrm{H}}}
 \defcitealias{rakowski2001}{RHS01}
 \defcitealias{gaensler1998}{GGM98}
 
 \begin{document}
 
-\title{Blagh}
+\title{Fuzzy blobs in G309.2-0.6}
 
+% Not quite in line with recommended aastex style
 \author{
-Blah Blah\altaffilmark{1}
-Blagh Blagh\altaffilmark{2,3}
+Joe Bob\altaffilmark{1},
+Joe Smith\altaffilmark{2,3}
 }
 
 \affil{
-\tsup{1}Blah, BLAH/BLAH MS-Blah, Blah, ME 00000, USA \\
-\tsup{2}Blagh, BLAH/BLAH MS-Blagh, Blagh, CA 00000, USA
+\tsup{1}Smithsonian Astrophysical Observatory, 60 Garden Street MS-70, Cambridge, MA 02138, USA \\
+\tsup{2}Department of Basket Weaving, Belafonte Hall, Univ. Calumny, Belabored, CA 00000, USA
 }
 
-\altaffiltext{3}{Blagh blagh alt affil}
+\altaffiltext{3}{Bananagram crackers}
+
+%\received{receipt date}
+%\revised{\today}
+%\accepted{acceptance date}
 
 
 \begin{abstract}
-Sketch of a writeup, and my own scribbled notes.
+Sketch of a writeup, and a lot of scribbled notes.
 \end{abstract}
 
-% (!) no longer used as of late February, 2016
+% (!) no longer used by AAS as of late February, 2016
 \keywords{acceleration of particles ---
     ISM: supernova remnants ---
     ISM: individual objects (SNR G309.2-0.6) ---
@@ -68,34 +69,232 @@ Sketch of a writeup, and my own scribbled notes.
 
 \section{Introduction} \label{sec:intro}
 
+Motivations:
+(1) typing remnants by ejecta,
+(2) resolve ejecta spatial structure (layering, mixing),
+(3) resolve interaction with surrounding medium
+
+Individual object study to build information for more ambitious global studies
+of remnant properties and interaction with the ISM -- not undertaken here.
+Just one piece of a puzzle.
+
+Here we present the first ``modern'' high-resolution x-ray image of this
+remnant (as far as the authors are aware) based on two archival XMM-Newton
+observations.
+
+Young, ejecta-dominated mixed-morphology remnant?
+Seems like a contradiction in terms.
+
 \subsection{SNR stuff}
 
-MMSNRs (Rho and Petre, 1998)
-
-Tilley+ (2006) - model anisotropic thermal conduction in remnants in regular
-ISM vs. dense medium
-
-
-Can we confirm that this constitutes a mixed morphology SNR?
+MMSNRs (Rho and Petre, 1998).  Tilley+ (2006) - model anisotropic thermal
+conduction in remnants in regular ISM vs. dense medium.
+Is this a mixed morphology SNR?
+Answer: not quite.  What other remnants look similar to this one?
 (Note, GGM98 came out around the same year as rho/petre)
-Rakowski did not label as such but noted ejecta dominated nature
+Rakowski did not label as such but noted ejecta dominated nature.
 
-what would be interesting is a comparative study.
+Possible for MM to have some mixture of ejecta -- how have definitions /
+classifications evolved?
 
+MC interaction: what are the most common proxies and
+claims?
+Kilpatrick, Bieging, Rieke (2016) give a very lucid ALMA study of CO(2-1)
+broadening: http://iopscience.iop.org/article/10.3847/0004-637X/816/1/1/pdf
+
+On barrel morphology and magnetic field orientation: Kesteven and Caswell (1987),
+Gaensler (1998), West et al. (2016),
+
+General question: how can we safely infer that the ISM is solar in abundance,
+outside of our area?
+
+A comparative study may be interesting.
 G352.7-0.1 (Pannuti+ 2014, XMM/Chandra) exhibits similar features...
+G298.6-0.0 (Bamba+ 2015, Suzaku)
 
-G298.6-0.0 (Bamba+ 2015, SuzakuRelevant reference: Kesteven and Caswell (1987)
+
+\subsection{G309.2-0.6 morphology and environment}
+
+% What are the most salient features of this remnant?
+% Using SIMBAD coordinates, in agreement (1 arcsec off, doesn't matter) with Green's catalog...
+G309.2-0.6 (RA 13 46 30, dec -62 54 00) was discovered in XXX radio
+survey \citep{someone} as a circular shell with two bright lobes to the NE and
+SW (hereafter referred to as ``ears'');
+the angular extent is about $15\arcmin$ by $12\arcmin$, and the radio flux at
+$843 \unit{MHz}$ is $\abt 6 \unit{Jy}$ for a surface brightness of
+$5.4\times10^{-21} \unit{W \; m^{-2} \; Hz^{-1} \; sr^{-1}}$
+(CITATION... Kesteven and Caswell 1987? what survey to use.)
+% TODO (I think this data is from MOST survey)
+The X-ray remnant sits within the radio shell and is brightest towards the
+north (Figure \ref{fig:snr}).
+A faint X-ray arc on the remnant's northeast limb coincides with the radio
+shell's limb, interior to the bright SE ear; the arc is most visible in our
+$0.8$--$1.4 \unit{keV}$ band image.
+The X-ray emission appears anti-correlated with radio emission.
+Both radio ears are X-ray dark.
+In the circular shell, the SE limb outshines the NE limb; the opposite is true
+in X-rays.  %% TODO show this with spectra
+
+% More about this remnant
+The remnant distance is estimated to be within $5$--$14 \unit{kpc}$ by
+\citet{gaensler98} (hereafter, \citet{GGM98}) based on HI absorption features
+out to $v_{\mt{LSR}} \sim -50 \unit{km/s}$ at the galactic rotation curve's
+tangent point, and a lack of absorption at $v_{\mt{LSR}} \sim +40 \unit{km/s}$.
+\citet{GGM98} state the lower distance bound as $5.4 \pm 1.6 \unit{kpc}$, which
+is more strongly established than the upper bound due to relatively clear
+absorption at negative velocities.
+
+
+and \citet{rakowski01}
+(hereafter, \citet{RHS01}) present comprehensive radio (ATCA) and X-ray (ASCA)
+studies respectively.
+the most HI absorption.
+Distance 5-10kpc or whatever, compare to x-ray brightness.
+
+% marco09 == 2009AdSpR..44..348M
+% torrejon13 == 2013ApJ...765...13T
+
+% Introduce bright source
+A bright ROSAT source (1WGA J1346.5--6255) within G309.2-0.6 is the foreground
+Be star HD 119682.  Previous studies, including \citet{GGM98} and
+\citet{RHS01}, sought a potential connection between the source and the
+remnant as the X-ray morphology is similar to the jet-driven remnant W50.
+However, Chandra and optical astrometry, hard thermal X-ray spectrum fits, and
+proper motion established that HD 119682 is most likely a member of the open
+cluster NGC 5281 at a distance $\abt 1.4 \unit{kpc}$
+\citep{rakowski06, safiharb07}.
+Three distinct studies using XMM, Chandra ACIS-S imaging, and Chandra HETGS
+fit the X-ray spectrum of HD 119682 and agreed on an absorption column
+$\nH \sim 0.2 \times 10^{22} \unit{cm^{-2}}$, consistent with the inferred
+distance to HD 119682 \citep{rakowski06, safiharb07, torrejon13}.
+
+% I don't see that stellar classification work (e.g., Marco 2009)
+% necessarily says anything about distance to the star.
+% But it provides circumstantial evidence if such blue stragglers are
+% preferentially associated with globular clusters -- I have no idea if that's true.
+
+% Absorption -> distance provides a strong constraint.
+% absorping column through the bright -60km/s feature
+% (Cen/Scutum/something-or-other milky way arm) is probably about 1e22.
+% given that nH calculators are spitting out absorptions of ~ 1-2e22.
+
+% I don't understand how stellar distances are calculated
+% (my best guess right now is that, e.g., Kharchenko+ 2005 is placing
+% cluster stars on an isochrone after making an extinction correction,
+% then converting apparent to absolute magnitudes -> distance modulus
+% which is basically distance.
+% distance to cluster: kharchenko et al. 2005A&A...438.1163K
+% they get distance = 1.108 kpc, i don't know how?!
+% Kharchenko+ use E(B-V) = 0.27 mag. vs. Lotkin+'s value 0.225 mag.
+% partial answer -- interstellar extinction and isochrones...
+
+% BUT, that's OK because absorption and the converging stellar classification
+% as a gamma cas analog / blue straggler, strongly favor that this is a
+% foreground star.
+
+% NON-condensed version
+%\citet{rakowski06} state O9e stellar classification from
+%    Magellan H-alpha (<$0.75\arcsec$), Chandra ACIS-S; Chandra/XMM CCD spectrum fits
+%    Sanner 2001:
+%        cluster distance 1.58 +/- 0.15 kpc,
+%        HD 119682 membership probability ~ 0.78 from proper motion
+%    Levenhagen and Leister 2006:
+%        spectroscopic parameters of HD 119682
+%
+%    Rakowski+ state O9.7 classification based on T 31910 +/- 550 K from
+%        Levenhagen/Leister and "updated determinations of O star effective
+%        temperatures that account for line blanketing (Martins+ 2002)"
+%
+%    Basically - positional overlap -- ruling out neighboring stars to 0.006 pc
+%    (1240 AU)... assuming bright enough i guess (magnitude limited?... i don't
+%    know anything about stars yet).  Better than 1 arcsec agreement.
+%
+%    How did people determine luminosity??????
+%    Doesn't that assume a distance?...
+%    - what is an isochrone
+%    - what "are" blue stragglers
+%    - what is a bolometric luminosity
+%    - how do you distinguish late O vs. early B star, does it even matter
+%    - how did levenhagen/leister deduce a mass?... stellar evolutionary tracks...
+%
+%\citet{safi-harb07} state Be classification...
+
+
+% TODO: check out ATCA J134649--625235, mentioned in Gaensler
+
+% Nearby Gum region, possible interaction...
 
 Plotted with 0.843 GHz radio contours from the Molonglo Observatory Synthesis
 Telescope (MOST) supernova remnant catalogue, with resolution $\abt 43\arcsec$
-and sensitivity $2$ mJy/beam \\citep{whiteoak1996}.
+and sensitivity $2$ mJy/beam \citep{whiteoak1996}.
 
-MOST table 2:
-    RA 13h46m40s dec -62 deg. 54 arcmin.
-    $S_0.843 = 6.0 Jy$
-    $Extent_0.843 = 15\arcmin \times 12\arcmin$
-    Surface brightness? (0.843 GHz)? = $5.4e-21 W m^{-2} Hz^{-1} sr^{-1}$
-    Relevant reference: Kesteven and Caswell (1987)
+Let's do the usual review of observations.
+
+Green (1974, Fig. 12) -- really fuzzy blob like thing, possibly corresponds to
+the two bright lobes.  In the paper, labeled as number 22. This paper also
+lists three accompanying references concerning this remnant (numbered 8,9,16).
+    8 = Clark, Caswell, Green (1973; Nature 246, 28)
+    9 = Clark, Caswell, Green (1974; Austr. J. Phys. in prep.)
+    16 = Green (1972; PhD thesis, Sydney Univ., unpublished)
+The table lists alternate name RCW80 but may be due to confusion with nearby HII
+region -- clarify this w/ more recent papers.
+
+Green's catalog: http://www.mrao.cam.ac.uk/surveys/snrs/snrs.G309.2-0.6.html
+
+
+There is ALSO a recent study of the foreground OB association kinematics:
+2009MNRAS.400..518M
+
+ASCA data (1999 April) were presented by Rakowski+
+favored high kT, Ar/Ne/Mg about solar relative to S/Si, far-subsolar Fe/Ca
+(I would argue that ASCA, like XMM, doesn't have the SNR to probe this
+well -- but would need to show with simulation / counting statistics)
+
+Environs: Karr, Manoj, Ohashi (2009) -- study of Gum 48d, evolved HII region to
+north.  H-alpha, GLIMPSE 8 micron (PAH), MIPSGAL 24 micron (dust grains)
+http://iopscience.iop.org/article/10.1088/0004-637X/697/1/133/pdf
+
+Note multiple radio data sets:
+MOST 843 MHz
+ATCA 1344 MHz, 1420 MHz (HI); 20 arcsec resolution (best available that I know of)
+Southern Gal. Plane Survey 1420 MHz beam 1 arcmin. (1.5x larger than MOST)
+Parkes 2417 MHz survey data?..
+Spitzer data: http://sha.ipac.caltech.edu/applications/Spitzer/SHA/
+
+Just by eye we are shooting along Carina-Sagittarius arm,
+based on Fig. 3 of Momany et al. (2008 A\&A), which in turn is based on COBE
+dust data from Fig. 19 of Drimmel and Spergel (2001, ApJ 556 181)
+
+A useful tactic gleaned from Dubner+ 2013 (http://arxiv.org/pdf/1305.1275v1.pdf): see if
+we can get an nH map for this part of the sky.
+It will be pretty low resolution, but that's OK.
+
+%
+%Safi-Harb report:
+%* vnei fit with supersolar Si/S, subsolar O/Ne/Mg/Ca/Fe.
+%  kT = 2 +/- 0.6 keV,
+%  nH = 0.65 (+0.45/-0.25) x 10^22 cm^{-2}
+%
+%  This is extremely odd to me -- does not match my results at ALL.
+%
+%  Suggest mismatch with Rakowski et al. due to confusion w/ bright star
+%  main effect is to add a fair amount of broad soft emission
+%
+%* multiple arguments for distance to HD119682
+%  spectrum fit -> nH ~ 0.2 x 10^22 cm^{-2}
+%  based on both Chandra and XMM-Newton fits
+%
+%Rakowski 2001
+%    kT ~ 2 keV,
+%    nH = 2 x 10^22
+%    Tau ~ 4.6e3 cm^{-3} year = 1.45e11 cm^{-3} s
+%
+%Safi-Harb don't discuss how background modeling is done, nor instrumental lines
+%etc -- which I imagine would affect results...
+%Rakowski+ does thoroughly explain their model for modeling out point source
+%contamination.
+%
+%Safi-Harb region is basically the "north clump"
 
 %\begin{figure*}[]
 %    \plotone{fig_spec_01.pdf} \\
@@ -105,25 +304,109 @@ MOST table 2:
 %\end{figure*}
 
 
-\section{Observations}
+\section{Observations and Data Reduction} \label{sec:obs}
 
-\subsection{Instrumental and Astrophysical Background}
+%% High-level summary of our usable data
 
-\subsubsection{Instrumental Background}
+XMM-Newton's European Photon Imaging Camera (EPIC) observed G309.2-0.6 for a
+total of $97.73 \unit{ks}$ in two pointings on 2001 August 28 and 2009 March
+6--7.  The first pointing (obsid 0087940201; PI John P. Hughes) was $40.46
+\unit{ks}$ with MOS1/2 in Full Frame mode, PN in Extended Full Frame mode, and
+XMM's ``thick'' optical filter, as part of a study of ejecta-dominated galactic
+remnants.
+The second pointing (obsid 0551000201; PI Christian Motch) was $57.27
+\unit{ks}$  with MOS1/2 in Full Frame mode, PN in Large Window mode, and XMM's
+``medium'' optical filter.  The proposal targeted the X-ray bright foreground
+Be star HD 119682, but as a byproduct captured the remnant G309.2-0.6.  The NE
+edge of the remnant is cut-off by the disabled MOS1 CCD3 and the PN Large
+Window mode boundary, but a majority of the remnant's area and its brightest
+emission are captured on the central CCDs of all three detectors.
 
-We follow the ESAS approach (Kuntz and Snowden, 2008).
+\begin{table*}
+    \centering
+    \caption{XMM Observations of G309.2-0.6}
+    %% TODO use AASTEX table environment -- allow column hiding etc...
+    \begin{tabular}{@{}lrrrrrrr@{}}
+        \toprule
+        Obs. ID & Dur. & Good dur. & Obs. date & XMM rev. & Pos. ang. & Filter & PI \\
+                & (ks)     & (ks)                &      &          & (deg.)    &        &    \\
+        \midrule
+        0087940201 & $40.46$ & $\abt25$ & 2001 August 28 & 315 & 311.... & Thick & J. P. Hughes \\
+        0551000201 & $57.27$ & $\abt15$ & 2009 March 6--7 & 1692 & 138.5... & Medium & C. Motch \\
+        \bottomrule
+    \end{tabular}
+    %% TODO this is kinda a bad comment -- clean this table, if it is used in
+    %% final product
+    \tablecomments{Good duration is the sum of good time intervals after
+    standard flare filtering; see text}
+\end{table*}
 
-We augment ESAS by extracting instrumental line ratios from FWC closed data.
+%% TODO I have not thought at all about the effects of optical loading
+%% on these observations...
 
-We model the following lines...
-Mos: 1.49 Al, 1.75 Si
-PN lines: 1.49 Al, 7.49 Ni?, 8.05 Cu?, 8.62 Zn?, 8.90 Cu Kbeta?
-    (inquire about where 7.11 came from...)
+We reprocess the data with XMM Science Analysis System (SAS) v15.0.0, released
+on 2016 February 4, using standard tasks: cifbuild, emchain, epchain,
+including an execution of epchain for out-of-time events.
 
-\subsubsection{Astrophysical Background}
+Point source removal -- in particular, the excision region for the bright
+foreground star HD 119682 is \textbf{XXX}
+star
 
-Elemental abundances by Wilms et al. (2000) implemented as "tbabs" in XSPEC
-(Arnaud 1996).
+After SAS/ESAS processing as detailed below, we obtain X and Y good times
+(Table 1) with a total of XXX counts and XXX counts
+
+The data are ??? affected by soft proton flares.
+
+Two CCDs in the Motch dataset were unusable -- MOS1 CCD6 after the ~2005
+
+%% Omission of 0551000201 PN
+Because no corner counts were recorded by the PN in 0551000201,
+and the SP contamination is even more severe than for MOS1/MOS2 in 0551000201
+(our basic filtering criterion yielded X amount of good time, interspersed with
+x)
+we excluded that exposure from our analysis.  This is a $\abt 10\%$ loss of
+exposure time.
+
+\subsection{Data filtering}
+
+%% ESAS -- flare filtering, SAS flagging, QPB generation
+We use the Extended SAS software (Kuntz and Snowden, 2008)
+to prepare the data, filter out soft proton flare intervals (as identified by X
+criterion by SAS task?),
+apply SAS event criterion flags (PATTERN, FLAG)
+
+\subsection{Instrumental Background}
+
+(briefly explain FWC data and XMM instrumental lines in a short paragraph)
+
+%% ESAS
+We use ESAS tasks ? and ? to model the MOS and PN quiescent particle background
+(QPB).
+The QPB represents continuum detector emission from XMM FWC closed data,
+specifically selected where the FWC corner spectra have spectral hardness
+similar to that of the current observation (Kuntz and Snowden, 2008, Sec. ??).
+In the regions where fluorescent instrumental lines are strong, ESAS
+interpolates the continuum.  We subtract the QPB directly from observation
+spectra.
+
+%% FWC instrumental line fits
+To model instrumental lines, we fit FWC spectra with zero-width, fixed-energy
+gaussians and assume that the relative line strengths (i.e., line ratios) are
+the same between FWC and observation spectra.
+For MOS exposures, we fit FWC spectra to a broken power-law continuum with two
+Gaussian lines at $1.49$ (Al) and $1.75 \unit{keV}$ (Si).
+For PN, we fit seven Gaussian lines at $1.49$ (Al), $4.54$ (Ti), $5.44$ (Cr),
+$7.49$ (Ni), $8.05$ (Cu), $8.62$ (Zn), and $8.90 \unit{keV}$ (Cu K-beta).
+The PN Ti and Cr lines are not obvious in observation spectra, but
+appear clearly in FWC spectra.
+To fit instrumental lines in observation spectra, we import and fix line
+normalizations from FWC fits, then vary a constant prefactor for all
+instrumental lines in a given exposure.
+
+\subsection{Astrophysical Background}
+
+Elemental abundances by Wilms et al. (2000)
+and the "tbabs" model in XSPEC (Arnaud 1996).
 
 Will be useful to provide physical units for background emission, and compare
 to other measurements.
@@ -131,6 +414,9 @@ to other measurements.
 \paragraph{Soft proton contamination}
 
 Loads of it, everywhere.
+ESAS approach: qpb includes only highly energetic CR penetration.
+http://heasarc.gsfc.nasa.gov/docs/xmm/esas/cookbook/xmm-esas.html#foot986
+the "contamination" essentially captures slowly varying part of SP background.
 
 \paragraph{Local bubble and galactic halo emission}
 
@@ -214,6 +500,9 @@ Chen, Fabien, Gendreau (1997)
   Powerlaw + raymond-smith plasma model,
     ROSAT(0.5-2keV) + ASCA(0.4-7keV) -> gamma = 1.46 +/- 0.06
 
+Similar analysis:
+Kushino et al. 2002 (PASJ), another ASCA study.
+
 Kuntz, Snowden (200)
     ROSAT - need to skim this
 
@@ -224,10 +513,241 @@ Hickox, Markevitch (2006ApJ...645...95H)
       For such deep Chandra observations, unresolved sky bkg is faint compared
       to quiescent detector background.
 
+\section{Integrated and spatially resolved spectral fits} \label{sec:spec}
+
+Quick discussion of vpshock, vsedov fit results.
+Discuss assumptions and arguments laid out by Borkowski, Lyerly, Reynolds
+(2001, ApJ 548:820).
+For a young-ish shock, ejecta-dominated, hot, we do expect vnei to be a good
+approximation (immediate post-shock electron temperature ~ 1/2000th proton
+temperature, Tau initial -> 0).
+Therefore forget overly detailed modeling.
+
+Question:
+what happens if I assumed fixed (well-mixed) plasma state and attempt to infer
+absorption variation?
+What happens if I fix absorption and attempt to probe plasma state?
+
+Be sure to give \textbf{qualitative} explanation of why we do not obtain high
+ionization timescales -- sure, XSPEC may favor low Tau, but must what portion
+of our spectrum disfavors high ionization age. (provides a stable footing from
+which to make further predictions, or give a clear way to falsify our claims)
+
+\section{Morphology}
+
+This remnant is relatively understudied, so no previous work has actually
+probed the remnant's X-ray morphology with the available archival XMM data.
+
+Rakowski et al. found an unresolved blob blended with the bright O star.
+
+We resolve the bulk of SNR emission to a bright blob towards the north of the
+remnant (assuming that the remnant may be delineated by the MOST contours),
+part of a slightly dimmer ridge arcing towards the northwest.
+The south is relatively dark.
+
+\section{Spatially resolved spectral fits}
+
+Describe individual fits, annulus fits, etc.
+
+We find X regions to be consistent with background (no obvious emission)
+
+Note: for now some numbers are entered in by hand...
+
+Main observation: nH values are generally quite high (2-3e22).
+
+If nH is low, we can still get reasonable kT and Si/S abundances
+by driving down O,Ne,Fe emission. (based on north clump fits)
+IF we force solar O/Ne/Fe, lower nH (below 2) quickly starts to look
+unphysical.
+
+north clump fit is ok not amazing.
+SE dark gives OK fit with both Si/S solar...
+
+Fits with: PN power law frozen, generally Si or both Si/S thawed
+
+
+Figure 6 of http://arxiv.org/pdf/1412.1169v1.pdf (Hughes white paper)
+where does this come from? fit of lines with approaching/receding redshifts...
+strongest signal expect in center of remnant.
+
+----> maybe could explain our spectra
+
+Lack of H-alpha emission from Gaensler (should verify yourself).
+Balmer shocks taken as evidence for progenitor NOT photo-ionizing too much
+stuff.  So Balmer shocks at small radii can be taken as evidence that the
+progenitor cannot have ionized "too much" stuff.
+But, the absence of Balmer shocks doesn't tell us as much.
+The shock could be weak, the density could be low, the material could be fully
+ionized.
+
+
+
+% TODO TODO full remnant fit could use an update, and systematic script to dump fits
+\begin{table*}
+    \centering
+    \caption{G309.2-0.6 -- sub-source region fits}
+    \begin{tabular}{@{}lrrrrrr@{}}
+        \toprule
+        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($\unit{s\;cm^{-3}}$) & (-) & (-) &  \\
+        \midrule
+        full remnant  & 2.19 & 1.56 & 2.55e+10 &  4.19 & 3.73 & 1.201 (3768) \\
+        \midrule
+        north clump & 2.92 & 0.81 & 7.28e+10 & 4.78 & 4.62 & 1.298 (692) \\  % File src_north_clump_row.tex
+        E lobe & 3.67 & 0.80 & 6.01e+10 & 3.37 & 2.43 & 0.958 (207) \\  % File src_E_lobe_row.tex
+        SW lobe & 1.91 & 2.41 & 1.35e+10 & 3.91 & 4.80 & 1.352 (438) \\  % File src_SW_lobe_row.tex
+        SE dark & 2.49 & 0.67 & 9.24e+10 & 2.82 & 2.33 & 0.988 (222) \\  % File src_SE_dark_row.tex
+        \midrule
+        ridge & 2.89 & 0.62 & 1.30e+11 & 2.28 & 2.06 & 1.416 (225) \\  % File src_ridge_row.tex
+        SE dark ridge & 4.56 & 0.43 & 7.64e+10 & 1(fr) & 1(fr) & 1.159 (104) \\  % File src_SE_ridge_dark_row.tex
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+\begin{table*}
+    \centering
+    \caption{G309.2-0.6 -- sub-source region fits, $n_H=2.5$ fixed}
+    \begin{tabular}{@{}lrrrrrr@{}}
+        \toprule
+        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($\unit{s\;cm^{-3}}$) & (-) & (-) &  \\
+        \midrule
+        north clump & 2.50 & 1.07 & 4.79e+10 & 5.73 & 5.22 & 1.339 (693) \\  % File src_north_clump_nH-2.5_row.tex
+        E lobe & 2.50 & 1.74 & 2.71e+10 & 5.47 & 3.69 & 1.016 (208) \\  % File src_E_lobe_nH-2.5_row.tex
+        SW lobe & 2.50 & 1.27 & 1.37e+10 & 3.46 & 5.78 & 1.429 (439) \\  % File src_SW_lobe_nH-2.5_row.tex
+        SE dark & 2.50 & 0.68 & 8.80e+10 & 2.79 & 2.30 & 0.983 (223) \\  % File src_SE_dark_nH-2.5_row.tex
+        \midrule
+        ridge & 2.50 & 0.81 & 8.69e+10 & 2.63 & 2.10 & 1.467 (226) \\  % File src_ridge_nH-2.5_row.tex
+        SE dark ridge & 2.50 & 0.78 & 2.51e+11 & 1(fr) & 1(fr) & 1.232 (105) \\  % File src_SE_ridge_dark_nH-2.5_row.tex
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+\begin{table*}
+    \centering
+    \caption{G309.2-0.6 -- annulus fits}
+    \begin{tabular}{@{}lrrrrrr@{}}
+        \toprule
+        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($\unit{s\;cm^{-3}}$) & (-) & (-) &  \\
+        \midrule
+        $0$--$100\arcsec$ & 1.59 & 9.52 & 1.68e+10 & 2.34 & 2.01 & 1.893 (356) \\  % File ann_000_100_row.tex
+        $100$--$200\arcsec$ & 2.17 & 1.68 & 2.24e+10 & 5.96 & 5.56 & 1.189 (559) \\  % File ann_100_200_row.tex
+        $200$--$300\arcsec$ & 2.86 & 0.82 & 7.33e+10 & 3.31 & 3.21 & 1.268 (792) \\  % File ann_200_300_row.tex
+        $300$--$400\arcsec$ & 2.59 & 0.73 & 1.03e+11 & 4.01 & 3.76 & 1.276 (799) \\  % File ann_300_400_row.tex
+        $400$--$500\arcsec$ & 4.77 & 0.40 & 8.90e+10 & 4.34 & 10.99 & 1.186 (822) \\  % File ann_400_500_row.tex
+        \midrule
+        $0$--$100\arcsec$ (ONeMg) & 1.59 & 6.22 & 1.72e+10 & 1.97 & 1.42 & 1.543 (353) \\  % File ann_000_100_ONeMg_row.tex
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+\begin{table*}
+    \centering
+    \caption{G309.2-0.6 -- annulus fits, $n_H=2.5$ fixed}
+    \begin{tabular}{@{}lrrrrrr@{}}
+        \toprule
+        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($\unit{s\;cm^{-3}}$) & (-) & (-) &  \\
+        \midrule
+        $0$--$100\arcsec$ & 2.50 & 2.33 & 1.58e+10 & 1.74 & 1.27 & 2.756 (357) \\  % File ann_000_100_nH-2.5_row.tex
+        $100$--$200\arcsec$ & 2.50 & 1.22 & 2.72e+10 & 5.29 & 5.04 & 1.210 (560) \\  % File ann_100_200_nH-2.5_row.tex
+        $200$--$300\arcsec$ & 2.50 & 1.07 & 4.51e+10 & 3.83 & 3.56 & 1.291 (793) \\  % File ann_200_300_nH-2.5_row.tex
+        $300$--$400\arcsec$ & 2.50 & 0.78 & 9.05e+10 & 4.11 & 3.74 & 1.275 (800) \\  % File ann_300_400_nH-2.5_row.tex
+        $400$--$500\arcsec$ & 2.50 & 0.99 & 3.99e+10 & 8.57 & 10.19 & 1.188 (823) \\  % File ann_400_500_nH-2.5_row.tex
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+Fits to regions, systematically varying nH.
+
+\begin{table*}
+    \centering
+    \caption{sub-region fits, varying $n_H$}
+    \begin{tabular}{@{}lrrrrrr@{}}
+        \toprule
+        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($\unit{s\;cm^{-3}}$) & (-) & (-) &  \\
+        \midrule
+        north clump & 1.50 & 42.92 & 2.10e+10 & 5.20 & 9.15 & 2.085 (693) \\  % File src_north_clump_nH-1.5_row.tex
+        north clump & 2.00 & 1.73 & 2.79e+10 & 7.51 & 6.71 & 1.543 (693) \\  % File src_north_clump_nH-2.0_row.tex
+        north clump & 2.50 & 1.07 & 4.79e+10 & 5.73 & 5.22 & 1.339 (693) \\  % File src_north_clump_nH-2.5_row.tex
+        north clump & 3.00 & 0.77 & 7.84e+10 & 4.64 & 4.56 & 1.297 (693) \\  % File src_north_clump_nH-3.0_row.tex
+        \midrule
+        E lobe & 1.50 & 54.24 & 2.20e+10 & 3.02 & 6.61 & 1.193 (208) \\  % File src_E_lobe_nH-1.5_row.tex
+        E lobe & 2.00 & 3.06 & 2.08e+10 & 7.37 & 5.24 & 1.114 (208) \\  % File src_E_lobe_nH-2.0_row.tex
+        E lobe & 2.50 & 1.74 & 2.71e+10 & 5.47 & 3.69 & 1.016 (208) \\  % File src_E_lobe_nH-2.5_row.tex
+        E lobe & 3.00 & 1.19 & 3.49e+10 & 4.35 & 2.96 & 0.970 (208) \\  % File src_E_lobe_nH-3.0_row.tex
+        \midrule
+        SW lobe & 1.50 & 5.62 & 1.38e+10 & 4.58 & 5.43 & 1.410 (439) \\  % File src_SW_lobe_nH-1.5_row.tex
+        SW lobe & 2.00 & 2.18 & 1.34e+10 & 3.78 & 4.76 & 1.352 (439) \\  % File src_SW_lobe_nH-2.0_row.tex
+        SW lobe & 2.50 & 1.27 & 1.37e+10 & 3.46 & 5.78 & 1.429 (439) \\  % File src_SW_lobe_nH-2.5_row.tex
+        SW lobe & 3.00 & 0.91 & 1.51e+10 & 3.21 & 7.07 & 1.553 (439) \\  % File src_SW_lobe_nH-3.0_row.tex
+        \midrule
+        SE dark & 1.50 & 1.73 & 2.92e+10 & 4.97 & 3.22 & 1.146 (223) \\  % File src_SE_dark_nH-1.5_row.tex
+        SE dark & 2.00 & 0.97 & 5.73e+10 & 3.51 & 2.45 & 1.019 (223) \\  % File src_SE_dark_nH-2.0_row.tex
+        SE dark & 2.50 & 0.68 & 8.80e+10 & 2.79 & 2.30 & 0.983 (223) \\  % File src_SE_dark_nH-2.5_row.tex
+        SE dark & 3.00 & 0.44 & 1.70e+11 & 2.83 & 3.54 & 1.002 (223) \\  % File src_SE_dark_nH-3.0_row.tex
+        \midrule
+        ridge & 1.50 & 2.39 & 2.55e+10 & 5.34 & 3.64 & 2.500 (226) \\  % File src_ridge_nH-1.5_row.tex
+        ridge & 2.00 & 1.35 & 3.61e+10 & 3.41 & 2.44 & 1.789 (226) \\  % File src_ridge_nH-2.0_row.tex
+        ridge & 2.50 & 0.81 & 8.69e+10 & 2.63 & 2.10 & 1.467 (226) \\  % File src_ridge_nH-2.5_row.tex
+        ridge & 3.00 & 0.58 & 1.51e+11 & 2.21 & 2.08 & 1.413 (226) \\  % File src_ridge_nH-3.0_row.tex
+        \midrule
+        SE dark ridge & 1.50 & 1.73 & 1.21e+11 & 1.00 & 1.00 & 1.344 (105) \\  % File src_SE_ridge_dark_nH-1.5_row.tex
+        SE dark ridge & 2.00 & 1.36 & 6.70e+10 & 1.00 & 1.00 & 1.284 (105) \\  % File src_SE_ridge_dark_nH-2.0_row.tex
+        SE dark ridge & 2.50 & 0.78 & 2.51e+11 & 1.00 & 1.00 & 1.232 (105) \\  % File src_SE_ridge_dark_nH-2.5_row.tex
+        SE dark ridge & 3.00 & 0.79 & 5.14e+10 & 1.00 & 1.00 & 1.196 (105) \\  % File src_SE_ridge_dark_nH-3.0_row.tex
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+\begin{table*}
+    \centering
+    \caption{annulus fits, varying $n_H$}
+    \begin{tabular}{@{}lrrrrrr@{}}
+        \toprule
+        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($\unit{s\;cm^{-3}}$) & (-) & (-) &  \\
+        \midrule
+        000--100$\arcsec$ & 1.50 & 9.79 & 1.71e+10 & 2.50 & 2.19 & 1.917 (357) \\  % File ann_000_100_nH-1.5_row.tex
+        000--100$\arcsec$ & 2.00 & 4.08 & 1.57e+10 & 2.04 & 1.56 & 2.144 (357) \\  % File ann_000_100_nH-2.0_row.tex
+        000--100$\arcsec$ & 2.50 & 2.33 & 1.58e+10 & 1.74 & 1.27 & 2.756 (357) \\  % File ann_000_100_nH-2.5_row.tex
+        000--100$\arcsec$ & 3.00 & 1.54 & 1.79e+10 & 1.54 & 1.12 & 3.407 (357) \\  % File ann_000_100_nH-3.0_row.tex
+        \midrule
+        100--200$\arcsec$ & 1.50 & 4.84 & 1.68e+10 & 8.49 & 8.54 & 1.373 (560) \\  % File ann_100_200_nH-1.5_row.tex
+        100--200$\arcsec$ & 2.00 & 1.99 & 2.04e+10 & 6.51 & 6.10 & 1.199 (560) \\  % File ann_100_200_nH-2.0_row.tex
+        100--200$\arcsec$ & 2.50 & 1.22 & 2.72e+10 & 5.29 & 5.04 & 1.210 (560) \\  % File ann_100_200_nH-2.5_row.tex
+        100--200$\arcsec$ & 3.00 & 0.85 & 4.58e+10 & 4.48 & 4.40 & 1.307 (560) \\  % File ann_100_200_nH-3.0_row.tex
+        \midrule
+        200--300$\arcsec$ & 1.50 & 4.10 & 1.89e+10 & 7.00 & 6.63 & 1.777 (793) \\  % File ann_200_300_nH-1.5_row.tex
+        200--300$\arcsec$ & 2.00 & 1.72 & 2.76e+10 & 4.97 & 4.49 & 1.432 (793) \\  % File ann_200_300_nH-2.0_row.tex
+        200--300$\arcsec$ & 2.50 & 1.07 & 4.51e+10 & 3.83 & 3.56 & 1.291 (793) \\  % File ann_200_300_nH-2.5_row.tex
+        200--300$\arcsec$ & 3.00 & 0.75 & 8.71e+10 & 3.17 & 3.16 & 1.268 (793) \\  % File ann_200_300_nH-3.0_row.tex
+        \midrule
+        300--400$\arcsec$ & 1.50 & 43.16 & 2.06e+10 & 3.24 & 5.12 & 1.396 (800) \\  % File ann_300_400_nH-1.5_row.tex
+        300--400$\arcsec$ & 2.00 & 1.24 & 3.68e+10 & 5.05 & 4.31 & 1.295 (800) \\  % File ann_300_400_nH-2.0_row.tex
+        300--400$\arcsec$ & 2.50 & 0.78 & 9.05e+10 & 4.11 & 3.74 & 1.275 (800) \\  % File ann_300_400_nH-2.5_row.tex
+        300--400$\arcsec$ & 3.00 & 0.58 & 1.51e+11 & 3.59 & 3.73 & 1.282 (800) \\  % File ann_300_400_nH-3.0_row.tex
+        \midrule
+        400--500$\arcsec$ & 1.50 & 42.91 & 2.00e+10 & 5.80 & 13.09 & 1.187 (823) \\  % File ann_400_500_nH-1.5_row.tex
+        400--500$\arcsec$ & 2.00 & 43.10 & 1.75e+10 & 4.70 & 12.63 & 1.188 (823) \\  % File ann_400_500_nH-2.0_row.tex
+        400--500$\arcsec$ & 2.50 & 0.99 & 3.99e+10 & 8.57 & 10.19 & 1.188 (823) \\  % File ann_400_500_nH-2.5_row.tex
+        400--500$\arcsec$ & 3.00 & 0.78 & 4.22e+10 & 6.78 & 9.34 & 1.187 (823) \\  % File ann_400_500_nH-3.0_row.tex
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+
+
+
+NOTE: SW lobe and ridge both show weird shifts in PN spectral lines (Si, S)
+
 
 \acknowledgments
 
 Blah blah blah.
+X acknowledges support by contract ...
 This research is based on observations obtained with XMM-Newton, an ESA science
 mission with instruments and contributions directly funded by ESA Member States
 and NASA.
@@ -258,5 +778,7 @@ This research has made use of NASA's Astrophysics Data System.
 %\renewcommand{\thetable}{A\arabic{table}}
 %\setcounter{figure}{0}
 %\renewcommand{\thefigure}{A\arabic{figure}}
+
+\listofchanges
 
 \end{document}
