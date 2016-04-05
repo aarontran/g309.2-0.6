@@ -1,0 +1,19 @@
+4554 - 15ks ACIS-S observation (PI: Butt)
+
+8929  - 150ks HETGS observation (PI: Rakowski)
+10834
+10835
+10836
+
+Results summarized in Rakowski+ 2006, Safi-Harb 2007, Torrejon 2013(?)
+
+Reprocessed on 2016 April 1 with command:
+
+    chandra_repro 4554,8929,10834,10835,10836 outdir=
+
+Merged with:
+
+    merge_obs "*/repro/" out/
+
+Despite the grating, the zero-th order photon flux should be comparable to the
+short 15ks Butt observation

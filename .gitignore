@@ -28,6 +28,14 @@ MANIFEST.*
 *SUM.SAS
 ccf.cif
 
+# Chandra raw/repro data
+chandra/10834/
+chandra/10835/
+chandra/10836/
+chandra/4554/
+chandra/8929/
+chandra/out/
+
 # Logging output, etc
 xmm/*/odf/**/*gti*.txt
 xmm/*/odf/**/command.csh

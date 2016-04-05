@@ -6,7 +6,8 @@
 # and PN exposure maps are computed much faster than MOS maps
 
 #exposures="mos1S001 mos2S002 pnS003"
-exposures="mos1S001 mos2S002"
+#exposures="mos1S001 mos2S002"
+exposures="pnS003"
 
 for exp in $exposures; do
 
