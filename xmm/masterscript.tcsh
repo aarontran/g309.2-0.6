@@ -26,7 +26,7 @@ source sasrepro $obsid
 
 make_xmmregions ${obsid}
 
-set regions = "src_ridge src_SE_ridge_dark"
+set regions = "src_pre_ridge"
 foreach reg ($regions)
 
   specbackgrp ${obsid} ${reg}

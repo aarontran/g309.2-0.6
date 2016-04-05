@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ds9 -view layout vertical \
-    -fits "0087940201/pps/P0087940201EPX000OIMAGE8000.FTZ" \
+    -fits "results_img/merged-im-sky-0.8-3.3kev-test.fits" \
     -scale asinh -cmap cubehelix1 \
-    -scale limits 0 50 \
+    -scale limits 7e-6 0.0002 \
     -smooth yes -smooth function gaussian -smooth radius 3 \
     -regions load all "regs/src.reg" \
     -regions load all "regs/bkg.reg" \

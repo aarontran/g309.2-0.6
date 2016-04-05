@@ -9,15 +9,18 @@ Run in top-level namespace to enable subsequent interactive work
 from __future__ import division
 
 import argparse
+from datetime import datetime
 #import json
 #import matplotlib.pyplot as plt
 #import numpy as np
 import os
+import sys
+from subprocess import call
 
 from astropy.io import fits
 import xspec as xs
 
-from xspec_utils import load_fit_dict
+from xspec_utils import load_fit_dict, dump_fit_log
 from nice_tables import LatexTable
 
 parser = argparse.ArgumentParser(description="Execute interactive G309 region fits in XSPEC")
@@ -25,6 +28,8 @@ parser.add_argument('reg', default='src',
     help="Region to fit to SNR/plasma model")
 parser.add_argument('--snr_model', default='vnei',
     help="Choose SNR model")
+parser.add_argument('--n_H', type=float, default=None,
+    help="Fix SNR absorption nH in fits (units 10e22), else free to vary")
 parser.add_argument('--no_fit', action='store_true',
     help="Don't start any fits; drop user straight into interactive mode")
 parser.add_argument('--with_bkg', action='store_true',
@@ -34,8 +39,12 @@ parser.add_argument('--with_bkg', action='store_true',
 args = parser.parse_args()
 REG = args.reg
 SNR_MODEL = args.snr_model
+N_H = args.n_H
 WITH_BKG = args.with_bkg
 NO_FIT = args.no_fit
+
+if SNR_MODEL not in ['vnei', 'vpshock', 'vsedov', 'xrb']:
+    raise Exception("Invalid SNR model")
 
 # Configure fit process (spectra, models)
 # ---------------------------------------
@@ -64,7 +73,6 @@ def init_snr_model(n):
     """Initialize SNR model
     Input: n, model/source number for XSPEC
     Output: XSPEC model object"""
-
     if SNR_MODEL == 'vnei':
         m = xs.Model("TBabs * vnei", 'snr', n)
         m.TBabs.nH = 1
@@ -77,26 +85,30 @@ def init_snr_model(n):
         m = xs.Model("TBabs * vpshock", 'snr', n)
         m.TBabs.nH = 1
         m.vpshock.kT = 1
-        #m.vpshock.tau_low = 1e10
-        #m.vpshock.tau_high = 1e11
+        m.vpshock.Tau_l = 1e9
+        m.vpshock.Tau_u = 1e11
     elif SNR_MODEL == 'vsedov':
         m = xs.Model("TBabs * vsedov", 'snr', n)
         m.TBabs.nH = 1
         #m.vsedov.kT = 2
         #m.vsedov.kT_i = 1
+    elif SNR_MODEL == 'xrb':
+        m = None
 
     return m
 
 
 def init_xrb_values(xrb):
     """Set starting XRB values"""
-    if WITH_BKG:
+    if WITH_BKG or SNR_MODEL == 'xrb':
         # Generic starting values
         xrb.apec.kT = 0.1  # Unabsorped apec (local bubble)
         xrb.TBabs.nH = 1  # Galactic absorption
         xrb.apec_5.kT = 0.25  # Absorbed apec (galactic halo)
     else:
         # Best fit values from src/bkg combined fit, nH = 1.06
+        # WARNING: this is out-of-date, after realization that powerlaw norm
+        # is approx 2-3x larger than expected.
         xrb.apec.kT = 0.228
         xrb.TBabs.nH = 1.06
         xrb.apec_5.kT = 0.368
@@ -113,178 +125,135 @@ def init_xrb_values(xrb):
     xrb.TBabs.nH.frozen = True
     xrb.apec_5.kT.frozen = True
 
+def prep_fit():
+    """Set up fit (range ignores, PN power law setup, renorm)"""
+    # PN SP power law not well-constrained at all
+    xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
+    xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
+    if WITH_BKG:
+        xs.AllModels(8, 'sp').powerlaw.PhoIndex = 0.2
+        xs.AllModels(8, 'sp').powerlaw.PhoIndex.frozen = True
+
+    # TODO really weird bug -- try regenerating spectrum and see if it persists
+    # and/or explore the actual data..
+    if REG == 'ann_000_100':
+        # Data are messed up in 10-11 keV range for just this spectrum?!
+        xs.AllData(4).ignore("10.0-**")
+        # SP PN contamination shows much softer power-law index
+        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = False
+        # Surprisingly, 0551000201 MOS SP power law is poorly constrained
+        # (blows to negative).  This is extremely odd to me.  Something weird
+        # is going on... (contamination from HD 119682?
+        xs.AllModels(4, 'sp').powerlaw.PhoIndex = 0.2
+        xs.AllModels(4, 'sp').powerlaw.PhoIndex.frozen = True
+
+    if N_H:
+        snr.TBabs.nH = N_H
+
+    xs.Fit.renorm()
+
+
 
 def execute_fit():
     """Fitting procedure to run after loading all models/spectra
     Basically, a giant configuration method
     """
-
-    if REG == 'src' and SNR_MODEL == 'vnei':
-
-        # Force background SP power law to index 0.2
-        if WITH_BKG: # Note: hardcoded model number
-            xs.AllModels(8, 'sp').powerlaw.PhoIndex = 0.2
-            xs.AllModels(8, 'sp').powerlaw.PhoIndex.frozen = True
-
-        xs.Fit.renorm()
+    if SNR_MODEL != 'vsedov':
         xs.Fit.perform()
+        xs.Plot("ldata delch")
 
-        # Vary SNR
-        snr.TBabs.nH.frozen=False
+    if SNR_MODEL == 'vnei':
+        if N_H is None:
+            snr.TBabs.nH.frozen=False
         snr.vnei.kT.frozen=False
         snr.vnei.Tau.frozen=False
-        snr.vnei.S.frozen=False
-        snr.vnei.Si.frozen=False
         xs.Fit.perform()
+        xs.Plot("ldata delch")
 
-        # Vary XRB
-        if WITH_BKG:
-            xrb.apec.kT.frozen = False
-            xrb.TBabs.nH.frozen = False
-            #xrb.powerlaw.PhoIndex.frozen = True
-            xrb.apec_5.kT.frozen = False
+        if REG not in ['src_SE_ridge_dark']:
+            snr.vnei.Si.frozen=False
+            snr.vnei.S.frozen=False
             xs.Fit.perform()
+            xs.Plot("ldata delch")
 
-            # Run steppar on nH -- for which we do expect a "reasonable" value
-            # Find local chi-squared minima at nH ~ 0.91, 1.06
-            # xs.Fit.steppar("xrb:6 0.1 1.0")
-            # xs.Fit.steppar("xrb:6 1.1 3.1")
-            # xs.Fit.steppar("xrb:6 0.8 1.3")
-            # xs.Fit.steppar("xrb:6 1.0 1.2")
-
-            # Result (skip ahead)
-            xrb.TBabs.nH = 1.06
-            xs.Fit.perform()
-
-    ## Basic VNEI fits for first four subsample regions
-
-    if REG == 'src_north_clump' and SNR_MODEL == 'vnei':
-
-        # PN SP power law not well-constrained at all
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
-        xs.Fit.renorm()
+    if SNR_MODEL == 'vpshock':
+        if N_H is None:
+            snr.TBabs.nH.frozen=False
+        snr.vpshock.kT.frozen=False
+        snr.vpshock.Si.frozen=False
+        snr.vpshock.S.frozen=False
+        snr.vpshock.Tau_l.frozen=False
+        snr.vpshock.Tau_u.frozen=False
         xs.Fit.perform()
-
-        # Vary SNR
-        snr.TBabs.nH.frozen=False
-        snr.vnei.kT.frozen=False
-        snr.vnei.Tau.frozen=False
-        snr.vnei.S.frozen=False
-        snr.vnei.Si.frozen=False
-        xs.Fit.perform()  # This fit takes a little while to converge
-
-        # Release PN SP power law (don't do this, just goes to wonky values)
-        #xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = False
-        #xs.Fit.perform()
-
-    if REG == 'src_SE_dark' and SNR_MODEL == 'vnei':
-
-        # PN SP power law not well-constrained at all
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
-        xs.Fit.renorm()
-        xs.Fit.perform()
-
-        # Vary SNR
-        snr.TBabs.nH.frozen=False
-        snr.vnei.kT.frozen=False
-        snr.vnei.Tau.frozen=False
-        xs.Fit.perform()
-
-        # Let Si float (solar abund S still gives acceptable fit)
-        snr.vnei.Si.frozen=False
-        xs.Fit.perform()
-
-    if REG == 'src_E_lobe' and SNR_MODEL == 'vnei':
-
-        # PN SP power law tends towards index 0
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
-        xs.Fit.renorm()
-        xs.Fit.perform()
-
         xs.Plot("ldata delch")
 
-        # Vary SNR
-        snr.TBabs.nH.frozen=False
-        snr.vnei.kT.frozen=False
-        snr.vnei.Tau.frozen=False
+    if SNR_MODEL == 'vsedov':
+        if N_H is None:
+            snr.TBabs.nH.frozen=False
+        snr.vsedov.kT_a.frozen=False  # Mean shock temperature
+        snr.vsedov.kT_b.frozen=False  # e- temperature behind the shock
+        snr.vsedov.Tau.frozen=False
+        snr.vsedov.Si.frozen=False
+        snr.vsedov.S.frozen=False
         xs.Fit.perform()
 
-    if REG == 'src_SW_lobe' and SNR_MODEL == 'vnei':
-
-        # PN SP power law tends towards index 0
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
-        xs.Fit.renorm()
+    # Vary XRB
+    if WITH_BKG or SNR_MODEL == 'xrb':
+        xrb.apec.kT.frozen = False
+        xrb.TBabs.nH.frozen = False
+        xrb.apec_5.kT.frozen = False
         xs.Fit.perform()
-
-        xs.Plot("ldata delch")
-
-        # Vary SNR
-        snr.TBabs.nH.frozen=False
-        snr.vnei.kT.frozen=False
-        snr.vnei.Tau.frozen=False
-        xs.Fit.perform()
-
-    if REG == 'src_ridge' and SNR_MODEL == 'vnei':
-
-        # PN SP power law tends towards index 0
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
-        xs.Fit.renorm()
-        xs.Fit.perform()
-
-        xs.Plot("ldata delch")
-
-        # Vary SNR, incl. Si/S simultaneously
-        snr.TBabs.nH.frozen=False
-        snr.vnei.kT.frozen=False
-        snr.vnei.Tau.frozen=False
-        snr.vnei.Si.frozen=False
-        snr.vnei.S.frozen=False
-        xs.Fit.perform()
-
-    if REG == 'src_SE_ridge_dark' and SNR_MODEL == 'vnei':
-
-        # PN SP power law tends towards index 0
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex = 0.2
-        xs.AllModels(3, 'sp').powerlaw.PhoIndex.frozen = True
-        xs.Fit.renorm()
-        xs.Fit.perform()
-
-        xs.Plot("ldata delch")
-
-        # Vary SNR, incl. Si/S simultaneously
-        #snr.TBabs.nH.frozen=False
-        #snr.vnei.kT.frozen=False
-        #snr.vnei.Tau.frozen=False
-        #snr.vnei.Si.frozen=False
-        #snr.vnei.S.frozen=False
-        #xs.Fit.perform()
+        # After this, likely need to run steppar on nH
+        # and/or vary other XRB components to tweak fit
 
 
-
-def print_fit():
+def print_fit(f_out=None):
     """More succinct output of fit parameters"""
 
     def f(par):
         """just to save typing..."""
         return par.values[0], par.sigma
 
+    if f_out:
+        fh = open(f_out, 'w')
+        old_stdout = sys.stdout
+        sys.stdout = fh
+
     print "reduced chi-squared = {:.2f}/{:d} = {:.3f}".format(xs.Fit.statistic,
                 xs.Fit.dof, xs.Fit.statistic/xs.Fit.dof)
 
-    print "snr model: {}".format(snr.expression)
-    if SNR_MODEL == 'vnei':
+    if SNR_MODEL == 'xrb':
+        print "No SNR model in use"
+    else:
+        print "snr model: {}".format(snr.expression)
         print "  nH (10^22)    {:.3f} +/- {:.3f}".format(*f(snr.TBabs.nH))
-        print "  kT   (keV)    {:.3f} +/- {:.3f}".format(*f(snr.vnei.kT))
-        print "  Si            {:.2f}  +/- {:.2f}".format(*f(snr.vnei.Si))
-        print "  S             {:.2f}  +/- {:.2f}".format(*f(snr.vnei.S))
-        print "  Tau (s/cm^3)  {:.2e} +/- {:.2e}".format(*f(snr.vnei.Tau))
-        print "  norm          {:.2e} +/- {:.2e}".format(*f(snr.vnei.norm))
-    print ""
+        plasma = None
+        if SNR_MODEL == 'vnei':
+            plasma = snr.vnei
+            print "  kT   (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT))
+            print "  Tau (s/cm^3)  {:.2e} +/- {:.2e}".format(*f(plasma.Tau))
+        if SNR_MODEL == 'vpshock':
+            plasma = snr.vpshock
+            print "  kT   (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT))
+            print "  Tau_u (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.Tau_u))
+            print "  Tau_l (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.Tau_l))
+        if SNR_MODEL == 'vsedov':
+            plasma = snr.vsedov
+            print "  kT_a (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT_a))
+            print "  kT_b (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT_b))
+            print "  Tau (s/cm^3)  {:.2e} +/- {:.2e}".format(*f(plasma.Tau))
+
+        v_elements = ['H', 'He', 'C', 'N', 'O', 'Ne', 'Mg',
+                    'Si', 'S', 'Ar', 'Ca', 'Fe', 'Ni']  # for XSPEC v* models
+        for elem in v_elements:
+            comp = eval("plasma."+elem)
+            if comp.frozen:
+                continue
+            fmtstr = "  {:2s}            {:.2f}  +/- {:.2f}"
+            print fmtstr.format(comp.name, *f(comp))
+
+        print "  norm          {:.2e} +/- {:.2e}".format(*f(plasma.norm))
+        print ""
 
     print "soft proton power laws"
     for i in sorted(spec.keys()):
@@ -300,15 +269,13 @@ def print_fit():
         print "  Data group {}, instr const  {:.2f} +/- {:.2f}".format(i, *f(m.constant.factor))
     print ""
 
+    if f_out:
+        fh.close()  # Bad practice
+        sys.stdout = old_stdout
 
-def print_fit_latex():
+
+def make_table():
     """Print SNR fit parameters to nice LaTeX table"""
-
-    # TODO have option to make row of units
-    # underneath column names
-    # figure out title style -- using caption vs. two rules may
-    # make more sense. depends on context.
-    # no need to get too specific, anyways
     latex_hdr = ['Region',
                  r'$n_\mathrm{H}$ ($10^{22} \unit{cm^{-2}}$)',
                  r'$kT$ (keV)',
@@ -316,14 +283,11 @@ def print_fit_latex():
                  'Si (-)', 'S (-)',
                  r'$\chi^2_{\mathrm{red}} (\mathrm{dof}$)']
 
-    """
-    units = ['',
-             r'($10^{22} \unit{cm^{-2}}$)',
-             r'(keV)',
-             r'($\unit{s\;cm^{-3}}$)',
-             '(-)', '(-)',
-             '']
-     """
+    # TODO make row of units under column names
+    # figure out title styling in nice_tables.py
+    units = ['', r'($10^{22} \unit{cm^{-2}}$)',
+             r'(keV)', r'($\unit{s\;cm^{-3}}$)',
+             '(-)', '(-)', '']
 
     latex_cols = ['{:s}', '{:0.2f}', '{:0.2f}', '{:0.2e}',
                   '{:0.2f}', '{:0.2f}', '{:s}'] # TODO temporary, need to add errors
@@ -332,16 +296,58 @@ def print_fit_latex():
     # should be relevant for type 0 too.
     ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 region fits", prec=1)
 
-    ltr = [REG,  # For obvious reasons, hand-edit this in the actual output
-           snr.TBabs.nH.values[0],
-           snr.vnei.kT.values[0],
-           snr.vnei.Tau.values[0],
-           snr.vnei.Si.values[0],
-           snr.vnei.S.values[0],
-           "{:0.3f} ({:d})".format(xs.Fit.statistic/xs.Fit.dof, xs.Fit.dof)]
-    ltab.add_row(*ltr)
+    if SNR_MODEL == 'vnei':
 
-    print(ltab)
+        ltr = [REG,  # For obvious reasons, hand-edit this in the actual output
+               snr.TBabs.nH.values[0],
+               snr.vnei.kT.values[0],
+               snr.vnei.Tau.values[0],
+               snr.vnei.Si.values[0],
+               snr.vnei.S.values[0],
+               "{:0.3f} ({:d})".format(xs.Fit.statistic/xs.Fit.dof, xs.Fit.dof)]
+        ltab.add_row(*ltr)
+
+    return ltab
+
+
+def dump_plots_data(f_stem):
+    """Dump "standardized" fit reporting output.  User will get:
+    * XSPEC pdf of plot
+    * data points (data, model) dumped to QDP file
+    * XSPEC fit log, the usual "show" output
+    * more succinct fit log w/ most pertinent fit parameters
+      (good for quick perusal)
+    * LaTeX-formatted table row
+    Assumes acceptable global XSPEC settings"""
+
+    f_plot = f_stem
+
+    # Dump XSPEC plot
+    xs.Plot.device = f_plot + "/cps"
+    xs.Plot("ldata delchi")
+    call(["ps2pdf", f_plot, f_plot + ".pdf"])
+    call(["rm", f_plot])
+
+    # Dump data points
+    xs.Plot.addCommand("wdata {}".format(f_stem + ".qdp"))
+    xs.Plot.device = "/xw"
+    xs.Plot("ldata")
+    xs.Plot.delCommand(len(xs.Plot.commands))
+
+    # Dump XSPEC fit log
+    dump_fit_log(f_stem + ".log")
+
+    # Dump nice LaTeX table -- full table, + just row(s)
+    ltab = make_table()
+    with open(f_stem + ".tex", 'w') as f_tex:
+        f_tex.write(str(ltab))
+    with open(f_stem + "_row.tex", 'w') as f_tex:
+        f_tex.write('\n'.join(ltab.get_rows()))
+
+    # Dump succinct summary of fit parameters
+    print_fit(f_stem + ".txt")
+
+
 
 
 
@@ -356,7 +362,7 @@ xs.Plot.device = "/xw"
 xs.Plot.xAxis = "keV"
 xs.Plot.xLog = True
 xs.Plot.yLog = True
-xs.Plot.addCommand("rescale y 1e-5 3")
+xs.Plot.addCommand("rescale y 1e-5 3")  # TODO twiddle depending on SNR model
 
 xmmpath = os.environ['XMM_PATH']
 
@@ -447,11 +453,17 @@ xrb = xs.Model("constant * (apec + TBabs*(powerlaw + apec))", "xrb", 1)
 
 xrb.constant.factor = 1
 xrb.powerlaw.PhoIndex = 1.4  # Extragalactic background (unresolved AGN)
+xrb.powerlaw.norm = 1.2e-4  # 0087940201 MOS1 norm,
+# WARNING: DEPENDENT on current pt src exclusions, setup of norm.
+# assumes BACKSCAL = 191927484.
+# uses hickox/markevitch 2006 normalization of
+# 10.9 photons cm^-2 s^-1 sr^-1 keV^-1
 
 init_xrb_values(xrb)
 
 xrb.constant.factor.frozen = True
 xrb.powerlaw.PhoIndex.frozen = True
+xrb.powerlaw.norm.frozen = True
 
 # Scale BACKSCAL values to fiducial value (0087940201 MOS1S001 src BACKSCAL)
 # to get XRB normalizations right across regions AND exposures
@@ -578,8 +590,13 @@ for i in sorted(spec.keys()):
 # Start fit process
 # =================
 
+prep_fit()
+
 if not NO_FIT:
     execute_fit()
 
+ltab = make_table()
+
+print "Finished at:", datetime.now()
 
 
