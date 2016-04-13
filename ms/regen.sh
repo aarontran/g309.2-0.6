@@ -21,5 +21,5 @@ fi
 
 pdflatex "${arg}.tex"
 pdflatex "${arg}.tex"
-firefox "${arg}.pdf"
+#firefox "${arg}.pdf"
 cp "${arg}.pdf" /data/wdocs/atran/g309/.

@@ -1,8 +1,7 @@
-\documentclass[twocolumn,tighten,trackchanges]{aastex6}
-%\documentclass[iop, apj, numberedappendix]{emulateapj} % Still more compact than aastex
+\documentclass[preprint2,tighten,trackchanges]{aastex6}
+%\documentclass[iop, tighten, apj, numberedappendix]{emulateapj} % Still more compact than aastex
 
 % Customize figures/sizing for 2 column vs. manuscript printout
-% TODO - not in HEAD latex install?
 %%\usepackage{etoolbox}
 %%\newtoggle{manuscript}
 %%\toggletrue{manuscript}  % Set TRUE if using manuscript / 1-col layout
@@ -38,8 +37,7 @@
 
 % Not quite in line with recommended aastex style
 \author{
-Joe Bob\altaffilmark{1},
-Joe Smith\altaffilmark{2,3}
+Joe Bob\altaffilmark{1}, Joe Smith\altaffilmark{2}
 }
 
 \affil{
@@ -47,14 +45,16 @@ Joe Smith\altaffilmark{2,3}
 \tsup{2}Department of Basket Weaving, Belafonte Hall, Univ. Calumny, Belabored, CA 00000, USA
 }
 
-\altaffiltext{3}{Bananagram crackers}
-
 %\received{receipt date}
 %\revised{\today}
 %\accepted{acceptance date}
 
 
 \begin{abstract}
+We image and fit spectra of G309.2-0.6 from archival XMM-Newton data.
+The remnant is ejecta-dominated and hotter than expected for its HI-inferred
+distance and hence physical size.
+
 Sketch of a writeup, and a lot of scribbled notes.
 \end{abstract}
 
@@ -78,196 +78,210 @@ Individual object study to build information for more ambitious global studies
 of remnant properties and interaction with the ISM -- not undertaken here.
 Just one piece of a puzzle.
 
-Here we present the first ``modern'' high-resolution x-ray image of this
-remnant (as far as the authors are aware) based on two archival XMM-Newton
-observations.
+We present the first ``modern'' high-resolution X-ray image of G309.2-0.6 based
+on two archival XMM-Newton observations.  We fit the CCD spectra of
+morphologically distinct regions of the remnant to map the distribution of
+ejecta abundances, plasma temperature, and ionization states.
 
-Young, ejecta-dominated mixed-morphology remnant?
-Seems like a contradiction in terms.
+% TODO Interpretation TBD -- so throw out text for now
 
-\subsection{SNR stuff}
-
-MMSNRs (Rho and Petre, 1998).  Tilley+ (2006) - model anisotropic thermal
-conduction in remnants in regular ISM vs. dense medium.
-Is this a mixed morphology SNR?
-Answer: not quite.  What other remnants look similar to this one?
-(Note, GGM98 came out around the same year as rho/petre)
-Rakowski did not label as such but noted ejecta dominated nature.
-
-Possible for MM to have some mixture of ejecta -- how have definitions /
-classifications evolved?
-
-MC interaction: what are the most common proxies and
-claims?
-Kilpatrick, Bieging, Rieke (2016) give a very lucid ALMA study of CO(2-1)
-broadening: http://iopscience.iop.org/article/10.3847/0004-637X/816/1/1/pdf
-
-On barrel morphology and magnetic field orientation: Kesteven and Caswell (1987),
-Gaensler (1998), West et al. (2016),
-
-General question: how can we safely infer that the ISM is solar in abundance,
-outside of our area?
-
-A comparative study may be interesting.
-G352.7-0.1 (Pannuti+ 2014, XMM/Chandra) exhibits similar features...
-G298.6-0.0 (Bamba+ 2015, Suzaku)
+% \subsection{SNR stuff}
+%
+% MMSNRs (Rho and Petre, 1998).  Tilley+ (2006) - model anisotropic thermal
+% conduction in remnants in regular ISM vs. dense medium.
+% Is this a mixed morphology SNR?
+% Answer: not quite.  What other remnants look similar to this one?
+% Rakowski did not label as such but noted ejecta dominated nature.
+%
+% Possible for MM to have some mixture of ejecta -- how have definitions /
+% classifications evolved?
+%
+% MC interaction: what are the most common proxies and
+% claims?
+% Kilpatrick, Bieging, Rieke (2016) give a very lucid ALMA study of CO(2-1)
+% broadening: http://iopscience.iop.org/article/10.3847/0004-637X/816/1/1/pdf
+%
+% On barrel morphology and magnetic field orientation: Kesteven and Caswell (1987),
+% Gaensler (1998), West et al. (2016),
+%
+% General question: how can we safely infer that the ISM is solar in abundance,
+% outside of our area?
+%
+% A comparative study may be interesting.
+% G352.7-0.1 (Pannuti+ 2014, XMM/Chandra) exhibits similar features...
+% G298.6-0.0 (Bamba+ 2015, Suzaku)
 
 
-\subsection{G309.2-0.6 morphology and environment}
+\subsection{Previous observations of G309.2-0.6}
 
-% What are the most salient features of this remnant?
-% Using SIMBAD coordinates, in agreement (1 arcsec off, doesn't matter) with Green's catalog...
-G309.2-0.6 (RA 13 46 30, dec -62 54 00) was discovered in XXX radio
-survey \citep{someone} as a circular shell with two bright lobes to the NE and
-SW (hereafter referred to as ``ears'');
-the angular extent is about $15\arcmin$ by $12\arcmin$, and the radio flux at
-$843 \unit{MHz}$ is $\abt 6 \unit{Jy}$ for a surface brightness of
-$5.4\times10^{-21} \unit{W \; m^{-2} \; Hz^{-1} \; sr^{-1}}$
-(CITATION... Kesteven and Caswell 1987? what survey to use.)
-% TODO (I think this data is from MOST survey)
+% Radio remnant observations and morphology
+G309.2-0.6 (J2000 RA 13h46m30s, dec. $-62\arcdeg 54\arcmin 00\arcsec$) was
+discovered in Molonglo $408 \unit{MHz}$ and Parkes $5000 \unit{MHz}$ surveys
+\citep{clark1973, green1974, clark1975}, and has since been observed multiple
+times by southern radio telescopes \citep{caswell1981, kesteven1987,
+whiteoak1996, gaensler1998}.
+\citet{gaensler1998} (hereafter, \citetalias{gaensler1998}) provide the most
+comprehensive radio study to date based upon Australia Telescope Compact Array
+(ATCA) $1.344 \unit{GHz}$ continuum and $1.420 \unit{GHz}$ HI observations at
+angular resolution $24\arcsec$.
+The radio remnant is a circular shell with two bright lobes to the NE and SW,
+hereafter referred to as ``ears'' (Fig \ref{fig:snr}).
+Its flux density at $843 \unit{MHz}$ is $\abt 6 \unit{Jy}$, corresponding to a
+surface brightness $5.4\times10^{-21} \unit{W \; m^{-2} \; Hz^{-1} \; sr^{-1}}$
+\citep{whiteoak1996}.
+% Comment: Bryan's ATCA data are publically available, but no real motivation
+% to download and reduce at this time
+% TODO -- we could provide surface brightness for the bright ears alone
+
+% X-ray remnant observation(s) and morphology
+X-ray emission was discovered in an Advanced Satellite for Cosmology and
+Astrophysics (ASCA) survey of small remnants by \citet{rakowski2001}
+(hereafter, \citetalias{rakowski2001}).
 The X-ray remnant sits within the radio shell and is brightest towards the
 north (Figure \ref{fig:snr}).
 A faint X-ray arc on the remnant's northeast limb coincides with the radio
-shell's limb, interior to the bright SE ear; the arc is most visible in our
-$0.8$--$1.4 \unit{keV}$ band image.
-The X-ray emission appears anti-correlated with radio emission.
+shell's limb and is most apparent in our $0.8$--$1.4 \unit{keV}$ band image.
 Both radio ears are X-ray dark.
-In the circular shell, the SE limb outshines the NE limb; the opposite is true
-in X-rays.  %% TODO show this with spectra
 
-% More about this remnant
-The remnant distance is estimated to be within $5$--$14 \unit{kpc}$ by
-\citet{gaensler98} (hereafter, \citet{GGM98}) based on HI absorption features
-out to $v_{\mt{LSR}} \sim -50 \unit{km/s}$ at the galactic rotation curve's
-tangent point, and a lack of absorption at $v_{\mt{LSR}} \sim +40 \unit{km/s}$.
-\citet{GGM98} state the lower distance bound as $5.4 \pm 1.6 \unit{kpc}$, which
-is more strongly established than the upper bound due to relatively clear
-absorption at negative velocities.
+% Other wavelengths
+The field of G309.2-0.6 has been well-observed in galactic plane surveys in
+many wavelengths.
+No H$\alpha$ filaments are observed (\textbf{SOURCE}) % TODO
+% OH maser
+No $1720.5 \unit{MHz}$ OH maser emission is observed above $40 \unit{mJy}$
+\citep{green1997}.
+Infrared images (Spitzer IRAC 3.6,4.5,5.8,$8 \unit{{\mu}m}$, MIPSGAL, WISE)
+don't show any morphological features that, by eye, could be associated with
+the remnant.
+% Mopra CO survey - no public data yet, in works
 
+\paragraph{Properties}
 
-and \citet{rakowski01}
-(hereafter, \citet{RHS01}) present comprehensive radio (ATCA) and X-ray (ASCA)
-studies respectively.
-the most HI absorption.
-Distance 5-10kpc or whatever, compare to x-ray brightness.
+\textbf{These paragraphs could be each condensed into 1-2 sentences.}
 
-% marco09 == 2009AdSpR..44..348M
-% torrejon13 == 2013ApJ...765...13T
+% Galactic environment
+The sight line towards G309.2-0.6 crosses the tangent of the Centaurus Arm
+(variously Scu-Cen, Crux-Cen, Scu-Crux) and the near and far Carina arm at
+$\abt 1.5 \unit{kpc}$ and $\abt 14 \unit{kpc}$.  Molecular and HI emission is
+dominated by the Centaurus Arm at line-of-sight velocities $-70$ to
+$-20 \unit{km/s}$ \citep[e.g.,][Figure 4]{dame2011}, and a good number of
+molecular clouds can be identified \citep{rice2016}.  The field is well
+populated with unrelated but independently interesting features.
 
-% Introduce bright source
+% Remnant distance in HI
+The remnant distance is estimated to be within $5$--$14 \unit{kpc}$ based on HI
+absorption out to the galactic rotation curve's tangent point, $v_{\mt{LSR}}
+\sim -50 \unit{km/s}$, and a lack of absorption above $v_{\mt{LSR}} \sim +40
+\unit{km/s}$ \citepalias{gaensler1998}.  The galactic rotation curve is from
+\citet{fich1989} with galactic center distance $R_0 = 8.5 \unit{kpc}$ and local
+circular velocity $\Theta = 220 \unit{km/s}$.
+
+% sigma-D estimate of distance
+From the somewhat questionable $\Sigma$-$D$ relation, \citet{pavlovic2014}
+provide a distance estimate of $5.9 \unit{kpc}$.
+This is fraught with peril.
+At least the relation of \citet{pavlovic2014} is calibrated for shell-type
+radio remnants.
+See also \citet{huang1985} which presents a $\Sigma$-$D$ relation for
+shell-like remnants also interacting with clouds -- which helps constrain the
+expected brightness.
+The scatter looks like there's no correlation at all to my eye -- and this is
+already in log-log space, where one can fit a straight line to many things
+easily.
+I wonder if there's some way to adjust the results based on local density
+estimates, or just blindly regress against multiplicative combinations of other
+salient physical variables.
+Nevertheless, we'll present the result, since it is at least partially
+physically motivated.
+% Shklovskii 1960
+% Clark & Caswell 1976
+% Milne 1979
+
+\begin{figure*}[]
+    \plotone{fig/fig_snr.pdf}
+    %\caption{Broadband 0.8--3.3 keV image of SNR G309.2-0.6.}
+    % figcaption is an aastex alias -- cannot use with emulateapj
+    \figcaption{Broadband 0.8--3.3 keV image of SNR G309.2-0.6.}
+    \label{fig:snr}  % TODO this must follow figcaption, don't remember why
+%Plotted with 0.843 GHz radio contours from the  supernova remnant catalogue,
+%with resolution $\abt 43\arcsec$ and sensitivity $2$ mJy/beam
+%\citep{whiteoak1996}.
+\end{figure*}
+
+\paragraph{Environment}
+
+% HD 119682 - previous interest and subsequent disassociation
 A bright ROSAT source (1WGA J1346.5--6255) within G309.2-0.6 is the foreground
-Be star HD 119682.  Previous studies, including \citet{GGM98} and
-\citet{RHS01}, sought a potential connection between the source and the
-remnant as the X-ray morphology is similar to the jet-driven remnant W50.
-However, Chandra and optical astrometry, hard thermal X-ray spectrum fits, and
-proper motion established that HD 119682 is most likely a member of the open
-cluster NGC 5281 at a distance $\abt 1.4 \unit{kpc}$
-\citep{rakowski06, safiharb07}.
-Three distinct studies using XMM, Chandra ACIS-S imaging, and Chandra HETGS
-fit the X-ray spectrum of HD 119682 and agreed on an absorption column
-$\nH \sim 0.2 \times 10^{22} \unit{cm^{-2}}$, consistent with the inferred
-distance to HD 119682 \citep{rakowski06, safiharb07, torrejon13}.
+Be star HD 119682.
+The source's position within a bilobed radio remnant led
+\citetalias{gaensler1998} and \citetalias{rakowski2001} to suggest that
+G309.2-0.6 might be a jet- or outflow-driven remnant, similar to the SS 443 /
+W50 system.
+% bilobed beats bilobate on Google by 278 to 66 (cf. Google ngrams)
+But, HD 119682 is likely a member of the open cluster NGC 5281 at a distance
+$\abt 1.4 \unit{kpc}$, based on X-ray and optical astrometry, cluster proper
+motions, and X-ray spectrum fits \citep{rakowski2006, safi-harb2007,
+torrejon2013}.
+% The X-ray fitted absorption of $\nH \sim 0.2 \times 10^{22} \unit{cm^{-2}}$
+% is consistent with the inferred distance to HD 119682 \citep{rakowski2006,
+% safi-harb2007, torrejon2013}.
 
-% I don't see that stellar classification work (e.g., Marco 2009)
-% necessarily says anything about distance to the star.
-% But it provides circumstantial evidence if such blue stragglers are
-% preferentially associated with globular clusters -- I have no idea if that's true.
+% Gum 48d / RCW 80
+The H II region Gum 48d (RCW 80) lies to the north of G309.2-0.6.
+Gum 48d is well traced out in HI, polycyclic aromatic hydrocarbon (PAH)
+emission, and warm dust; assuming these emission features all correspond to the
+same H II region, the distance to Gum 48d is $\abt 3.5\unit{kpc}$, based on
+ionized gas emission velocities (H$\alpha$, HI) distance estimates to the
+central star system HR 5171 \citep{karr2009}.
+The distance estimate to Gum 48d, in conjunction with a lack of evidence for
+remnant-cloud interaction, suggest that Gum 48d is also a foreground feature
+unrelated to the remnant G309.2-0.6.  The practical consequence is that we will
+subsequently ignore a north-south wisp of radio emission that appears to
+connect the radio remnant and H II region.
 
-% Absorption -> distance provides a strong constraint.
-% absorping column through the bright -60km/s feature
-% (Cen/Scutum/something-or-other milky way arm) is probably about 1e22.
-% given that nH calculators are spitting out absorptions of ~ 1-2e22.
-
-% I don't understand how stellar distances are calculated
-% (my best guess right now is that, e.g., Kharchenko+ 2005 is placing
-% cluster stars on an isochrone after making an extinction correction,
-% then converting apparent to absolute magnitudes -> distance modulus
-% which is basically distance.
-% distance to cluster: kharchenko et al. 2005A&A...438.1163K
-% they get distance = 1.108 kpc, i don't know how?!
-% Kharchenko+ use E(B-V) = 0.27 mag. vs. Lotkin+'s value 0.225 mag.
-% partial answer -- interstellar extinction and isochrones...
-
-% BUT, that's OK because absorption and the converging stellar classification
-% as a gamma cas analog / blue straggler, strongly favor that this is a
-% foreground star.
-
-% NON-condensed version
-%\citet{rakowski06} state O9e stellar classification from
-%    Magellan H-alpha (<$0.75\arcsec$), Chandra ACIS-S; Chandra/XMM CCD spectrum fits
-%    Sanner 2001:
-%        cluster distance 1.58 +/- 0.15 kpc,
-%        HD 119682 membership probability ~ 0.78 from proper motion
-%    Levenhagen and Leister 2006:
-%        spectroscopic parameters of HD 119682
+% Centaurus CO cloud
+Given the remnant's rough radio and X-ray symmetry, we may be able to disfavor
+a location within the Centaurus arm.  \citet{saito2001} imaged
+an extensive molecular CO complex in ${}^{12}$CO, ${}^{13}$CO, and C${}^{18}$O
+J=(1-0) transitions at line-of-sight velocities $-64$ to $-36 \unit{km/s}$.
+\textbf{TODO} this would need some CO to ISM density conversion estimate so
+that we could estimate a density gradient across the remnant, if it were
+associated with this cloud (which we think it is not).
+For this see Bolatto, Wolfire and Leroy (2013).
+It is clear that remnants expanding into a density gradient need not look that
+asymmetric \citep{williams2013}, so \textbf{this is speculative and may be
+outright wrong}.
+But, I think we can start thinking about what kind of environments may be
+relevant for this remnant's evolution.
+% H II region = blob of natal stardust, shoved out and compressed by
+% young OB star's radiation pressure, interacting with ambient ISM, nearby
+% stars and clouds, etc...
 %
-%    Rakowski+ state O9.7 classification based on T 31910 +/- 550 K from
-%        Levenhagen/Leister and "updated determinations of O star effective
-%        temperatures that account for line blanketing (Martins+ 2002)"
-%
-%    Basically - positional overlap -- ruling out neighboring stars to 0.006 pc
-%    (1240 AU)... assuming bright enough i guess (magnitude limited?... i don't
-%    know anything about stars yet).  Better than 1 arcsec agreement.
-%
-%    How did people determine luminosity??????
-%    Doesn't that assume a distance?...
-%    - what is an isochrone
-%    - what "are" blue stragglers
-%    - what is a bolometric luminosity
-%    - how do you distinguish late O vs. early B star, does it even matter
-%    - how did levenhagen/leister deduce a mass?... stellar evolutionary tracks...
-%
-%\citet{safi-harb07} state Be classification...
+% Here's a lovely optical photograph, clearly showing the bright H II region and
+% the bluer star cluster NGC 5281 to the south:
+% https://it.wikipedia.org/wiki/File:RCW_80.jpg
 
+% Mopra CO J(1-0) survey, resolution 30 arcsec and 0.1 km/s, would be huge!
+% Looking at our crude rotation curve -- beyond tangent point, 100 km/s per 10kpc
+% is the approximate slope; 0.1 km/s means we have a distance resolution of order
+% 10 parsecs, comparable to or smaller than this remnant size.
+% Compare, Dame survey has beamwidth ~ 1/8 deg. = 7.5 arcmin = 450 arcsec
+
+% ATCA data -- cannot access at http://www.atnf.csiro.au/research/HI/sgps/queryForm.html
+% SGPS survey -- taken 1998-2000.
+% Emailed a feedback query on 2016 April 13... probably won't have much luck.
 
 % TODO: check out ATCA J134649--625235, mentioned in Gaensler
 
-% Nearby Gum region, possible interaction...
+% Summary / wrap-up
+\citetalias{gaensler1998} and \citetalias{rakowski2001} have given the most comprehensive radio and
+X-ray imaging studies of G309.2-0.6 to date.
+The remnant has received little attention since -- not unsurprising for its
+location in the southern sky, overlapping foreground objects, and non-detection
+of clearly associated emission outside of radio and X-ray wavelengths.
+Here, we provide the first spatially resolved X-ray study of this remnant based
+entirely on archived XMM-Newton observations.
 
-Plotted with 0.843 GHz radio contours from the Molonglo Observatory Synthesis
-Telescope (MOST) supernova remnant catalogue, with resolution $\abt 43\arcsec$
-and sensitivity $2$ mJy/beam \citep{whiteoak1996}.
-
-Let's do the usual review of observations.
-
-Green (1974, Fig. 12) -- really fuzzy blob like thing, possibly corresponds to
-the two bright lobes.  In the paper, labeled as number 22. This paper also
-lists three accompanying references concerning this remnant (numbered 8,9,16).
-    8 = Clark, Caswell, Green (1973; Nature 246, 28)
-    9 = Clark, Caswell, Green (1974; Austr. J. Phys. in prep.)
-    16 = Green (1972; PhD thesis, Sydney Univ., unpublished)
-The table lists alternate name RCW80 but may be due to confusion with nearby HII
-region -- clarify this w/ more recent papers.
-
-Green's catalog: http://www.mrao.cam.ac.uk/surveys/snrs/snrs.G309.2-0.6.html
-
-
-There is ALSO a recent study of the foreground OB association kinematics:
-2009MNRAS.400..518M
-
-ASCA data (1999 April) were presented by Rakowski+
-favored high kT, Ar/Ne/Mg about solar relative to S/Si, far-subsolar Fe/Ca
-(I would argue that ASCA, like XMM, doesn't have the SNR to probe this
-well -- but would need to show with simulation / counting statistics)
-
-Environs: Karr, Manoj, Ohashi (2009) -- study of Gum 48d, evolved HII region to
-north.  H-alpha, GLIMPSE 8 micron (PAH), MIPSGAL 24 micron (dust grains)
-http://iopscience.iop.org/article/10.1088/0004-637X/697/1/133/pdf
-
-Note multiple radio data sets:
-MOST 843 MHz
-ATCA 1344 MHz, 1420 MHz (HI); 20 arcsec resolution (best available that I know of)
-Southern Gal. Plane Survey 1420 MHz beam 1 arcmin. (1.5x larger than MOST)
-Parkes 2417 MHz survey data?..
-Spitzer data: http://sha.ipac.caltech.edu/applications/Spitzer/SHA/
-
-Just by eye we are shooting along Carina-Sagittarius arm,
-based on Fig. 3 of Momany et al. (2008 A\&A), which in turn is based on COBE
-dust data from Fig. 19 of Drimmel and Spergel (2001, ApJ 556 181)
-
-A useful tactic gleaned from Dubner+ 2013 (http://arxiv.org/pdf/1305.1275v1.pdf): see if
-we can get an nH map for this part of the sky.
-It will be pretty low resolution, but that's OK.
 
 %
 %Safi-Harb report:
@@ -296,13 +310,6 @@ It will be pretty low resolution, but that's OK.
 %
 %Safi-Harb region is basically the "north clump"
 
-%\begin{figure*}[]
-%    \plotone{fig_spec_01.pdf} \\
-%    \plotone{fig_spec_16.pdf}
-%    \caption{Caption goes here}
-%    \label{fig:spec}
-%\end{figure*}
-
 
 \section{Observations and Data Reduction} \label{sec:obs}
 
@@ -312,8 +319,7 @@ XMM-Newton's European Photon Imaging Camera (EPIC) observed G309.2-0.6 for a
 total of $97.73 \unit{ks}$ in two pointings on 2001 August 28 and 2009 March
 6--7.  The first pointing (obsid 0087940201; PI John P. Hughes) was $40.46
 \unit{ks}$ with MOS1/2 in Full Frame mode, PN in Extended Full Frame mode, and
-XMM's ``thick'' optical filter, as part of a study of ejecta-dominated galactic
-remnants.
+XMM's ``thick'' optical filter.
 The second pointing (obsid 0551000201; PI Christian Motch) was $57.27
 \unit{ks}$  with MOS1/2 in Full Frame mode, PN in Large Window mode, and XMM's
 ``medium'' optical filter.  The proposal targeted the X-ray bright foreground
@@ -349,8 +355,9 @@ on 2016 February 4, using standard tasks: cifbuild, emchain, epchain,
 including an execution of epchain for out-of-time events.
 
 Point source removal -- in particular, the excision region for the bright
-foreground star HD 119682 is \textbf{XXX}
-star
+foreground star HD 119682 is \textbf{XXX} in diameter... which should capture x
+amount.  Leave x amount of contamination, compared to X-ray surface brightness
+elsewhere.
 
 After SAS/ESAS processing as detailed below, we obtain X and Y good times
 (Table 1) with a total of XXX counts and XXX counts
@@ -415,7 +422,7 @@ to other measurements.
 
 Loads of it, everywhere.
 ESAS approach: qpb includes only highly energetic CR penetration.
-http://heasarc.gsfc.nasa.gov/docs/xmm/esas/cookbook/xmm-esas.html#foot986
+% http://heasarc.gsfc.nasa.gov/docs/xmm/esas/cookbook/xmm-esas.html#foot986
 the "contamination" essentially captures slowly varying part of SP background.
 
 \paragraph{Local bubble and galactic halo emission}
@@ -746,12 +753,16 @@ NOTE: SW lobe and ridge both show weird shifts in PN spectral lines (Si, S)
 
 \acknowledgments
 
-Blah blah blah.
 X acknowledges support by contract ...
+
 This research is based on observations obtained with XMM-Newton, an ESA science
 mission with instruments and contributions directly funded by ESA Member States
 and NASA.
-This research has made use of NASA's Astrophysics Data System.
+The MOST is operated by The University of Sydney with support from the
+Australian Research Council and the Science Foundation for Physics within The
+University of Sydney.
+
+This research has made extensive use of NASA's Astrophysics Data System.
 %This research made use of Astropy, a community-developed core Python package
 %for Astronomy (Astropy Collaboration, 2013).
 %This research also made use of APLpy, an open-source plotting package for
@@ -764,7 +775,7 @@ This research has made use of NASA's Astrophysics Data System.
 % ==========
 % References
 % ==========
-\bibliographystyle{apj}
+\bibliographystyle{aasjournal}
 \bibliography{refs-snr}
 
 % ========
@@ -779,6 +790,6 @@ This research has made use of NASA's Astrophysics Data System.
 %\setcounter{figure}{0}
 %\renewcommand{\thefigure}{A\arabic{figure}}
 
-\listofchanges
+%\listofchanges
 
 \end{document}
