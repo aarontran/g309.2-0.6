@@ -2,6 +2,7 @@ README for analysis of XMM obsids 0087940201, 0551000201
 ========================================================
 
 Uses SAS build version: xmmsas_20141104_1833
+Requires PyXSPEC version 1.1.0 (Parameter.index() function in particular)
 
 Setup and data reduction / fitting
 ----------------------------------

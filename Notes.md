@@ -8554,7 +8554,7 @@ The scaled normalization from our fit is for comparison
 
 Our fit value is 2-3x larger than expected!  This is a game changer.
 
-## Fit with XRB normalization fixed causes some residual in soft X-ray emission
+## Refit using Hickox/Markevitch XRB normalization
 
 Initial attempt.  First run "usual" fit (in `xspec_fit_g309.py`), then
 try stepping over nH (0.1 to 2.5, 25 steps).  Only marginally better,
@@ -8669,29 +8669,153 @@ fit.
     snr Si, S lowered (4.2, 3.7 -> 3.8, 3.4) (more background contrib, different Tau/kT affected emission, ??)
     snr nH 2.19 -> 2.11
 
-OK, so the changes aren't super dramatic.  The excess soft emission could be
-explained by freeing the PN power law
+    soft proton power law indices changed only a bit.  same for instrumental
+    lines.  didn't record powerlaw norms when I performed the combined fit.
+
+So the changes aren't super dramatic.  The excess soft emission could be
+explained by freeing the PN power law, and the combined fit looks fine.
+
+Steppar to ensure we have the best fit.
+
+    xs.Fit.steppar("log xrb:2 0.01 0.5 20")
+    xs.Fit.steppar("nolog xrb:6 0.1 2.0 19")
+
+Didn't really work -- fit seems unable to budge, or insensitive to unabsorbed
+kT.  I think it's gotten stuck.
+
+Main observation is that kT, Tau remain consistent with a hot, recently shocked
+plasma, even as we tweak our background parameters, assumptions, etc.
+
+    In [32]: xs.Fit.steppar("nolog xrb:6 0.1 2.0 19")
+
+         Chi-Squared    Delta           xrb:nH
+                     Chi-Squared             6
+
+              4825.4      218.57    0         0.1
+              4817.4      210.49    1         0.2
+              4809.5      202.67    2         0.3
+              4797.3      190.41    3         0.4
+              4779.6       172.7    4         0.5
+              4756.8      149.96    5         0.6
+              4730.5      123.62    6         0.7
+              4702.3      95.408    7         0.8
+              4673.9      66.998    8         0.9
+              4647.5      40.682    9           1
+              4625.5      18.659   10         1.1
+                4609      2.1437   11         1.2
+              4598.7     -8.2032   12         1.3
+              4596.9     -9.9116   13         1.4
+              4603.7     -3.1127   14         1.5
+              4618.5      11.632   15         1.6
+              4626.6      19.769   16         1.7
+              4649.1      42.232   17         1.8
+              4677.4      70.533   18         1.9
+              4710.2      103.32   19           2
+
+    A new best fit was found during steppar.
+    Parameters have been updated to the new best fit values.
+
+    reduced chi-squared = 4596.48/3768 = 1.220
+    snr model: TBabs*vnei
+      nH (10^22)    2.144 +/- 0.043
+      kT   (keV)    2.385 +/- 0.152
+      Tau (s/cm^3)  1.77e+10 +/- 6.49e+08
+      Si            3.73  +/- 0.10
+      S             3.48  +/- 0.16
+      norm          4.28e-03 +/- 2.43e-04
+
+    soft proton power laws
+      Data group 1, n  0.40 +/- 0.01,  norm  6.00e-02 +/- 1.58e-03
+      Data group 2, n  0.40 +/- 0.00,  norm  6.29e-02 +/- 1.67e-03
+      Data group 3, n  0.37 +/- 0.03,  norm  9.69e-02 +/- 6.12e-03
+      Data group 4, n  0.36 +/- 0.02,  norm  5.26e-02 +/- 2.42e-03
+      Data group 5, n  0.36 +/- 0.00,  norm  1.41e-02 +/- 1.16e-03
+      Data group 6, n  0.35 +/- 0.01,  norm  5.15e-02 +/- 1.25e-03
+      Data group 7, n  0.35 +/- 0.00,  norm  5.37e-02 +/- 1.27e-03
+      Data group 8, n  0.18 +/- 0.04,  norm  5.59e-02 +/- 3.85e-03
+      Data group 9, n  0.51 +/- 0.03,  norm  3.08e-02 +/- 1.47e-03
+      Data group 10, n  0.51 +/- 0.00,  norm  1.12e-02 +/- 9.10e-04
+
+    instrumental lines
+      Data group 1, instr const  0.91 +/- 0.05
+      Data group 2, instr const  0.84 +/- 0.04
+      Data group 3, instr const  0.60 +/- 0.02
+      Data group 4, instr const  1.62 +/- 0.06
+      Data group 5, instr const  1.77 +/- 0.06
+      Data group 6, instr const  0.65 +/- 0.03
+      Data group 7, instr const  0.62 +/- 0.03
+      Data group 8, instr const  0.64 +/- 0.02
+      Data group 9, instr const  1.45 +/- 0.04
+      Data group 10, instr const  1.47 +/- 0.04
+
+                               Data group: 1
+       1    1   constant   factor              1.00000      frozen
+       2    2   apec       kT         keV      0.261408     +/-  3.73185E-03  
+       3    2   apec       Abundanc            1.00000      frozen
+       4    2   apec       Redshift            0.0          frozen
+       5    2   apec       norm                3.06245E-04  +/-  8.96213E-06  
+       6    3   TBabs      nH         10^22    1.37153      +/-  4.13529E-02  
+       7    4   powerlaw   PhoIndex            1.40000      frozen
+       8    4   powerlaw   norm                1.20000E-04  frozen
+       9    5   apec       kT         keV      0.755205     +/-  2.08191E-02  
+      10    5   apec       Abundanc            1.00000      frozen
+      11    5   apec       Redshift            0.0          frozen
+      12    5   apec       norm                2.33128E-03  +/-  1.65696E-04 
 
 
-Main observation is that kT, Tau remain quite consistent with a hot, recently
-shocked plasma.  This continues to remain a robust result, even as we tweak our
-background assumptions, etc.
+Wednesday 2016 April 13 - clean up, continue work
+=================================================
+
+How do I get the fit to work with multiple annuli, fitted simultaneously?
+
+Rewrote code multiple times over Weds to Sat April 13-16.
+Completely overhauled code structure to emphasize separation between layers
+(XMM SAS/ESAS output data products, spectra loaded into XSPEC, model + source
+responses, customizations).  Far from perfect but getting towards a better
+system.
+
+Currently:
+* loading {spectra, responses, models} takes ~1.5 minutes for 5 regions
+* loading {stuff} for source + background regions takes ~4 minutes
+* loading {stuff} for five annuli takes ~6 minutes
+
+Sanity check -- does source + background combined fit get the same parameters
+as before?
+
+Answer (hand-recorded): yes
+    reduced chi-squared = 4593.62 / 3768 = 1.219
+    XRB converges to basically the same parameters
+        unabsorbed kT = 0.261, absorbed kT 0.754, nH = 1.364
+    soft proton power laws are OK freed, similar values to before
+        (src 0087940201 MOS ~ 0.39
+         src 0087940201 PN ~ 0.37
+         src 0551000201 MOS ~ 0.36
+         bkg 0087940201 MOS ~ 0.35
+         bkg 0087940201 PN ~ 0.17
+         bkg 0551000201 MOS ~ 0.51)
+    SNR has nH ~ 2.15, kT ~ 2.36, Si ~ 3.7, S ~ 3.5, Tau ~ 1.77e+10
+
+Good.  Now make a few more tweaks (bound parameters in intermediate fitting
+steps, apply BACKSCAL normalizations to SNR model)
 
 
+Misc. XSPEC has a "delayed gratification" option for levenberg-marquardt
+fitting
+http://mads.lanl.gov/presentations/Leif_LM_presentation_m.pdf
+http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/XSmethod.html
+Test this out...
 
 
-RESEARCH:
 * use proton to extrapolate power law indices based on energy-/space- dependent vignetting?
-    (yes, do try this -- may reduce backgrounds in image. but your data are so noisy anyways that it may not have much effect).
+  (do try this -- may reduce backgrounds in image. but your data are so noisy
+  anyways that it may not have much effect).
 
-In general: understanding of mixed morphology remnants
-and discrepancy between x-ray and radio features,
-with general eye towards other remnants and broader conclusions or predictions.
-kepler similariy -- but in fact radio of kepler is brightest in the north (putative CSM interaction); ears are dominated by X-ray synchrotron emission.
-I'm still curious as to whether there could be ties to a jet driven explosion.
-when do jets appear in Ia models?
+In general: understanding of mixed morphology remnants and discrepancy between
+x-ray and radio features, with general eye towards other remnants and broader
+conclusions or predictions.
 
-
+Is Gamma Cas introducing light curve noise?
+compute FOV lightcurve _without_ point sources.
 
 List of assumptions to test.  How do the (KEY) fits above change if I:
 * run vpshock/vsedov for integrated source or subregion (partially done)
@@ -8699,7 +8823,6 @@ List of assumptions to test.  How do the (KEY) fits above change if I:
   (do separately to illustrate effects)
 * change x-ray background fit parameters
 * use x-ray background fit parameters from fitting XRB alone?
-
 
 Standing TODOs:
 * Re-run everything from a clean slate to ensure your pipeline is good.

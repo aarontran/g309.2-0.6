@@ -2,7 +2,7 @@ Notes on X-ray background papers -- trying to figure out
 sources / pointings
 
 
-* de Luca and Molendi (2003) - XMM sample of various high |b| pointings, 5.5 sq. deg., 1.15 Msec
+* de Luca and Molendi (2004) - XMM sample of various high |b| pointings, 5.5 sq. deg., 1.15 Msec
     photon index 1.41 +/- 0.06, norm ~ 11.6 photon cm^-2 s^-1 sr^-1 keV^-1 at 1 keV.
     Nice introduction -- 
 

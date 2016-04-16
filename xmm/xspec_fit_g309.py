@@ -3,7 +3,6 @@
 PyXSPEC port of combined SNR and background fit...
 
 Run in top-level namespace to enable subsequent interactive work
-(e.g. in ipython shell)
 
 Using /usr/local/bin/python for HEAD network use
 """
@@ -12,9 +11,6 @@ from __future__ import division
 
 import argparse
 from datetime import datetime
-#import json
-#import matplotlib.pyplot as plt
-#import numpy as np
 from math import pi
 import os
 import sys
@@ -25,30 +21,33 @@ import xspec as xs
 
 import xspec_utils as xs_utils
 
-# In Python 2.x, *args must go after specific kwargs...
-# makes sense -- it becomes ambiguous whether first input arg is meant for
-# *args, or for first specified keyword arg...
+
 def load_data(*regs, **kwargs):
     """
-    Input config parameters and run hopefully reasonably customizable fit
-    with minimal abstraction leakage from prior data pipeline
+    Load G309.2-0.6 data and initialize responses and models.
 
-    Output: user is left with XSPEC session
-    having all spectra loaded for simultaneous fitting with:
-      cosmic x-ray background
-      source (except for 'bkg' region specially)
-      soft proton power laws
-      instrumental lines fixed from FWC data fits
-    and is ready for further customization or fitting
+    After successful load (~1-10 minutes), global XSPEC session has
+    5*len(regs) spectra loaded (for the five XMM exposures we're using)
+    and ready to be simultaneously fit to a model with sources:
+        cosmic x-ray background
+        source model (set by snr_model kwarg)
+        soft proton power laws
+        instrumental lines fixed from FWC data fits
+    The returned hash is used to manipulate individual spectra or models
+
+    Input: region stems for extracted XMM ESAS spectra; duplicates disallowed
+
+    Keyword arguments:
+      snr_model = vnei, vpshock None
+
+    Output: hash keying each region to 5 ExtractedSpectrum objects,
+        one per XMM exposure in use
     """
-
     if len(set(regs)) != len(regs):
         raise Exception("Duplicate regions not allowed")
-
     if not kwargs['snr_model']:
-        raise Exception("snr_model is a required kwarg to load_data(...)")
+        raise Exception("snr_model is a required kwarg")
 
-    # Assign in blocks of 5, currently
     # ExtractedSpectrum objects allow script to easily resolve pipeline outputs
     # regs sets the ordering for XSPEC datagroup assignment
     extrs_from = {}
@@ -64,17 +63,8 @@ def load_data(*regs, **kwargs):
     # a possibly nicer solution is a dataframe that allows quick filtering /
     # selection by region, obsid, etc
 
-    # NOTE: we may not need to assign datagroup numbers
-    # Just save the XSPEC spectrum object, which allows us to get the index?
-
     # Spectrum and response assignment
     # --------------------------------
-
-    # 0: x-ray background
-    # 1: instrumental lines
-    # 2: SNR plasma model
-    # 3: soft proton background
-    # (maps to 1,2,3,4 in PyXSPEC methods)
 
     old_wd = os.getcwd()
 
@@ -90,21 +80,21 @@ def load_data(*regs, **kwargs):
     os.chdir(old_wd)
 
     # Load models
+    # -----------
 
-    # Current approach -- keep ALL model-specific settings
-    # * choice of rmf/arf
-    # * global settings
-    # * "standard" parameter links, etc
-    # inside loader methods
-    #
-    # Loader methods require all_extrs = list of ExtractedSpectrum objects
-    # that ADDITIONALLY comes with a .spec attribute, pointing to the
-    # associated xs.Spectrum object......
-    #
-    # so maybe that should be part of the ExtractedSpectrum "spec"...
-
+    # Keep ALL model-specific settings -- rmf/arf assignment,
+    # globally fixed parameter values, "standard" parameter links, etc. inside
+    # loader methods.  Loader methods require all_extrs = list of
+    # ExtractedSpectrum objects that ADDITIONALLY comes with a .spec attribute,
+    # pointing to the associated xs.Spectrum object.
     for extr in all_extrs:
         extr.models = {}
+
+    # 0: x-ray background
+    # 1: instrumental lines
+    # 2: SNR plasma model
+    # 3: soft proton background
+    # (maps to 1,2,3,4 in PyXSPEC methods)
 
     load_cxrb(1, all_extrs)
 
@@ -126,7 +116,7 @@ def load_data(*regs, **kwargs):
 
 
 
-def load_instr(model_n, extr, model_name):
+def load_instr(model_n, extr, model_name=None):
     """Load instrumental lines.
 
     Import previously fitted gaussian instrumental lines.
@@ -140,6 +130,7 @@ def load_instr(model_n, extr, model_name):
     WARNING -- input argument is a single spectrum, not a list
 
     Input: ...
+        kwarg model_name is _required_
     """
     # Set responses of <xs.Spectrum> objects
     extr.spec.multiresponse[model_n - 1]     = extr.rmf()
@@ -191,7 +182,7 @@ def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
         #src = xs.Model("constant * TBabs * vsedov", model_name, model_n)
         #snr.vsedov.kT = 2
         #snr.vsedov.kT_i = 1
-    elif case == 'xrb':
+    elif case is None:
         src = None
     else:
         raise Exception("Invalid snr model: {} not recognized".format(case))
