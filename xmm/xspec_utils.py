@@ -6,6 +6,72 @@ import json
 
 import xspec as xs
 
+# -------------------------------------------------------
+# Methods for manipulating models, components, parameters
+# -------------------------------------------------------
+
+def freeze_model(model):
+    """Freeze all parameters in a given model"""
+    for cname in model.componentNames:
+        comp = eval("model." + cname)
+        freeze_component(comp)
+
+def freeze_component(comp):
+    """Freeze all parameters in a given component"""
+    for pname in comp.parameterNames:
+        par = eval("comp." + pname)
+        par.frozen=True
+
+
+# TODO WARNING
+# to set parameters.... only par.index matters
+# do NOT use startParIndex, or par_num as given by xs_utils.par_num
+def par_num(model, par):
+    """Stolen, with modification, from G. Schellenberger slides:
+    https://astro.uni-bonn.de/~yyzhang/seminar/pdf/Gerrit.pdf
+    """
+#    if comp.name not in model.componentNames:
+#        return -1
+#    if par.name not in comp.parameterNames:
+#        return -1
+    return model.startParIndex - 1 + par.index
+
+
+# TODO DOCUMENT AND EXPLAIN
+#
+# parameters have index, valid within indiv. model (xspec.Model object
+# comprised of EXPRESSION + SOURCE NUMBER + MODEL NAME created for a given
+# datagroup, that has a matching SOURCE NUMBER).
+#
+# For a given SOURCE NUMBER, this creates multiple models -- one for each
+# datagroup; in general these models are somehow tied together
+# because they physically represent the same SOURCE.
+# Parameters for linking are ordered then by
+# 1. spectrum (datagroup) number,
+# 2. within-model number
+#
+# Then, to link parameters, use MODEL_NAME : SOURCE_INDEX
+#
+# EXAMPLE: to tie mos1 and mos2 power law indices
+#
+#    sp_mos2.powerlaw.PhoIndex.link = link_name(sp_mos1, sp_mos1.powerlaw.PhoIndex)
+#
+# The repetition of "sp_mos1" is required because parameters have no knowledge
+# of their containing component or model, and parameter names are non-unique
+# within a model (e.g., model with two apec components)
+# Thus required to identify both component and parameter --
+# may as well just call out the parameter directly
+def link_name(model, par):
+    """WARNING: assumes par is actually a parameter within model
+    AND THAT THEY COME FROM THE SAME DATAGROUP!
+    """
+    src_index = (model.startParIndex - 1) + par.index
+    return "{:s}:{:d}".format(model.name, src_index)
+
+
+# ---------------------------------
+# Methods for saving / dumping fits
+# ---------------------------------
 
 def load_fit_dict(f_in):
     """Load fit info from filename f_in"""
