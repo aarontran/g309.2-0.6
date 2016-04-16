@@ -261,9 +261,9 @@ if __name__ == '__main__':
 
     # Let XRB parameters vary
     xrb = xs.AllModels(1, 'xrb')
-    xrb.setPars({xrb.apec.kT.index : 0.1},  # Unabsorped apec (local bubble)
+    xrb.setPars({xrb.apec.kT.index : "0.1,,0,0,1,2"},  # Unabsorped apec (local bubble)
                 {xrb.TBabs.nH.index : 1},  # Galactic absorption
-                {xrb.apec_5.kT.index : 0.25},  # Absorbed apec (galactic halo)
+                {xrb.apec_5.kT.index : "0.25,,0,0,2,5"},  # Absorbed apec (galactic halo)
                 {xrb.apec.norm.index : 1e-4},
                 {xrb.apec_5.norm.index : 1e-4} )
     xrb.apec.kT.frozen = False
@@ -288,6 +288,21 @@ if __name__ == '__main__':
 
     print "Started at:", started
     print "Finished at:", datetime.now()
+
+    #xs.AllData.clear()
+    #xs.AllModels.clear()
+
+    # Plain fit of source alone, no background (quick load for testing)
+    # -----------------------------------------------------------------
+
+#    started = datetime.now()
+#
+#    out = myxs.load_data("src", snr_model='vnei')
+#    set_energy_range(out['src'])
+#    xs.AllData.ignore("bad")
+#
+#    print "Started at:", started
+#    print "Finished at:", datetime.now()
 
     #xs.AllData.clear()
     #xs.AllModels.clear()
