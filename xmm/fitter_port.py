@@ -7,88 +7,36 @@ Exploiting the fact that xspec objects are global (AllData, AllModels, etc...)
 Must be run in a sasinit-sourced environment
 """
 
+from future import __division__
+
 from datetime import datetime
+from subprocess import call
+import sys
 
 import xspec as xs
 
 import xspec_fit_g309 as myxs
-import xspec_utils
+import xspec_utils as xs_utils
 from nice_tables import LatexTable
 
 
-# ##################################################
-# STUFF FOR FIT SETUP.... region specific hacks, etc
-# ##################################################
+############################################
+# Stuff for printing and displaying output #
+############################################
 
+def print_fit(snr, f_out=None):
+    """More succinct output of fit parameters
+    TODO not really in use, mostly used
+    to throw fit parameters into notes
 
-def set_energy_range(all_extrs):
-    """Set up fit (range ignores, PN power law setup, renorm)
-    These are specific ALWAYS-ON tweaks or fixes, typically determined after
-    running some fits...
+    Input: snr = XSPEC model object for a source of form
+            1. TBabs * vnei
+            2. TBabs * vpshock
+            3. TBabs * vsedov
+    Input (optional): f_out
+        file to print output to.  If None, print to stdout
+    Output: n/a.  As advertised, this prints stuff.
     """
-    for extr in all_extrs:
-        if extr.instr == "mos1" or extr.instr == "mos2":
-            extr.spec.ignore("**-0.3, 11.0-**")
-        if extr.instr == "pn":
-            extr.spec.ignore("**-0.4, 11.0-**")
-        # PN SP power law not well-constrained at all
-        # TODO may not need to fix, now that extragalactic xrb is pinned
-        #if extr.instr == 'pn':
-        #    extr.spec.models['sp'].powerlaw.PhoIndex = 0.2
-        #    extr.spec.models['sp'].powerlaw.PhoIndex.frozen = True
-
-
-def initial_fit(snr_model, N_H=None):
-    """This can be just tossed into main fitting setup
-    Cleanup TBD
-    """
-    if snr_model != 'vsedov':
-        xs.Fit.perform()
-        xs.Plot("ldata delch")
-
-    if snr_model == 'vnei':
-        if N_H is None:
-            snr.TBabs.nH.frozen=False
-        snr.vnei.kT.frozen=False
-        snr.vnei.Tau.frozen=False
-        xs.Fit.perform()
-        xs.Plot("ldata delch")
-
-        if REG not in ['src_SE_ridge_dark']:
-            snr.vnei.Si.frozen=False
-            snr.vnei.S.frozen=False
-            xs.Fit.perform()
-            xs.Plot("ldata delch")
-
-    elif snr_model == 'vpshock':
-        if N_H is None:
-            snr.TBabs.nH.frozen=False
-        snr.vpshock.kT.frozen=False
-        snr.vpshock.Si.frozen=False
-        snr.vpshock.S.frozen=False
-        snr.vpshock.Tau_l.frozen=False
-        snr.vpshock.Tau_u.frozen=False
-        xs.Fit.perform()
-        xs.Plot("ldata delch")
-
-    elif snr_model == 'vsedov':
-        if N_H is None:
-            snr.TBabs.nH.frozen=False
-        snr.vsedov.kT_a.frozen=False  # Mean shock temperature
-        snr.vsedov.kT_b.frozen=False  # e- temperature behind the shock
-        snr.vsedov.Tau.frozen=False
-        snr.vsedov.Si.frozen=False
-        snr.vsedov.S.frozen=False
-        xs.Fit.perform()
-
-
-#################################################
-# Stuff for printing and displaying output
-#################################################
-
-
-def print_fit(f_out=None):
-    """More succinct output of fit parameters"""
 
     def f(par):
         """just to save typing..."""
@@ -102,64 +50,66 @@ def print_fit(f_out=None):
     print "reduced chi-squared = {:.2f}/{:d} = {:.3f}".format(xs.Fit.statistic,
                 xs.Fit.dof, xs.Fit.statistic/xs.Fit.dof)
 
-    if snr_model == 'xrb':
-        print "No SNR model in use"
-    else:
-        print "snr model: {}".format(snr.expression)
-        print "  nH (10^22)    {:.3f} +/- {:.3f}".format(*f(snr.TBabs.nH))
-        plasma = None
-        if snr_model == 'vnei':
-            plasma = snr.vnei
-            print "  kT   (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT))
-            print "  Tau (s/cm^3)  {:.2e} +/- {:.2e}".format(*f(plasma.Tau))
-        if snr_model == 'vpshock':
-            plasma = snr.vpshock
-            print "  kT   (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT))
-            print "  Tau_u (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.Tau_u))
-            print "  Tau_l (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.Tau_l))
-        if snr_model == 'vsedov':
-            plasma = snr.vsedov
-            print "  kT_a (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT_a))
-            print "  kT_b (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT_b))
-            print "  Tau (s/cm^3)  {:.2e} +/- {:.2e}".format(*f(plasma.Tau))
+    print "snr model: {}".format(snr.expression)
+    print "  nH (10^22)    {:.3f} +/- {:.3f}".format(*f(snr.TBabs.nH))
+    if 'vnei' in snr.componentNames:
+        plasma = snr.vnei
+        print "  kT   (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT))
+        print "  Tau (s/cm^3)  {:.2e} +/- {:.2e}".format(*f(plasma.Tau))
+    elif 'vpshock' in snr.componentNames:
+        plasma = snr.vpshock
+        print "  kT    (keV)   {:.3f} +/- {:.3f}".format(*f(plasma.kT))
+        print "  Tau_u (keV)   {:.2e} +/- {:.2e}".format(*f(plasma.Tau_u))
+        print "  Tau_l (keV)   {:.2e} +/- {:.2e}".format(*f(plasma.Tau_l))
+    elif 'vsedov' in snr.componentNames:
+        plasma = snr.vsedov
+        print "  kT_a (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT_a))
+        print "  kT_b (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT_b))
+        print "  Tau (s/cm^3)  {:.2e} +/- {:.2e}".format(*f(plasma.Tau))
 
-        v_elements = ['H', 'He', 'C', 'N', 'O', 'Ne', 'Mg',
-                    'Si', 'S', 'Ar', 'Ca', 'Fe', 'Ni']  # for XSPEC v* models
-        for elem in v_elements:
-            comp = eval("plasma."+elem)
-            if comp.frozen:
-                continue
-            fmtstr = "  {:2s}            {:.2f}  +/- {:.2f}"
-            print fmtstr.format(comp.name, *f(comp))
+    v_elements = ['H', 'He', 'C', 'N', 'O', 'Ne', 'Mg',
+                  'Si', 'S', 'Ar', 'Ca', 'Fe', 'Ni']
+    for elem in v_elements:
+        comp = eval("plasma."+elem)
+        if comp.frozen:
+            continue
+        fmtstr = "  {:2s}            {:.2f}  +/- {:.2f}"
+        print fmtstr.format(comp.name, *f(comp))
 
-        print "  norm          {:.2e} +/- {:.2e}".format(*f(plasma.norm))
-        print ""
+    print "  norm          {:.2e} +/- {:.2e}".format(*f(plasma.norm))
+    print ""
+
+    # Cumbersome way to get these models but oh well
 
     print "soft proton power laws"
-    for i in sorted(cfgspec.keys()):
-        m = xs.AllModels(i, 'sp')
-        pstr = "  Data group {}, n  {:.2f} +/- {:.2f}".format(i, *f(m.powerlaw.PhoIndex))
+    for i in range(xs.AllData.nSpectra):
+        m = xs.AllModels(i+1, 'sp')
+        pstr = "  Data group {}, n  {:.2f} +/- {:.2f}".format(i+1, *f(m.powerlaw.PhoIndex))
         pstr = pstr + ",  norm  {:.2e} +/- {:.2e}".format(*f(m.powerlaw.norm))
         print pstr
     print ""
 
     print "instrumental lines"
-    for i in sorted(cfgspec.keys()):
-        m = xs.AllModels(i, 'instr')
-        print "  Data group {}, instr const  {:.2f} +/- {:.2f}".format(i, *f(m.constant.factor))
+    for i in range(xs.AllData.nSpectra):
+        m = xs.AllModels(i+1, "instr_{:d}".format(i+1))
+        print "  Data group {}, instr const  {:.2f} +/- {:.2f}".format(i+1, *f(m.constant.factor))
     print ""
 
     if f_out:
-        fh.close()  # Bad practice
+        fh.close()
         sys.stdout = old_stdout
 
 
-def make_table():
+def make_table(snr, region_name):
     """Print SNR fit parameters to nice LaTeX table"""
+
+    if 'vnei' not in snr.componentNames:
+        raise Exception('why are you printing this out')
+
     latex_hdr = ['Region',
                  r'$n_\mathrm{H}$ ($10^{22} \unit{cm^{-2}}$)',
                  r'$kT$ (keV)',
-                 r'$\tau$ ($\unit{s\;cm^{-3}}$)',
+                 r'$\tau$ ($10^{10} \unit{s\;cm^{-3}}$)',
                  'Si (-)', 'S (-)',
                  r'$\chi^2_{\mathrm{red}} (\mathrm{dof}$)']
 
@@ -170,28 +120,26 @@ def make_table():
              '(-)', '(-)', '']
 
     latex_cols = ['{:s}', '{:0.2f}', '{:0.2f}', '{:0.2e}',
-                  '{:0.2f}', '{:0.2f}', '{:s}'] # TODO temporary, need to add errors
+                  '{:0.2f}', '{:0.2f}', '{:s}'] # TODO temporary, need errors
 
     # TODO prec is currently only relevant for fmt types 1,2
     # should be relevant for type 0 too.
     ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 region fits", prec=1)
 
-    if SNR_MODEL == 'vnei':
-
-        ltr = [REG,  # For obvious reasons, hand-edit this in the actual output
-               snr.TBabs.nH.values[0],
-               snr.vnei.kT.values[0],
-               snr.vnei.Tau.values[0],
-               snr.vnei.Si.values[0],
-               snr.vnei.S.values[0],
-               "{:0.3f} ({:d})".format(xs.Fit.statistic/xs.Fit.dof, xs.Fit.dof)]
-        ltab.add_row(*ltr)
+    ltr = [region_name,  # For obvious reasons, hand-edit this in the actual output
+           snr.TBabs.nH.values[0],
+           snr.vnei.kT.values[0],
+           snr.vnei.Tau.values[0] / 1e10,
+           snr.vnei.Si.values[0],
+           snr.vnei.S.values[0],
+           "{:0.3f} ({:d})".format(xs.Fit.statistic/xs.Fit.dof, xs.Fit.dof)]
+    ltab.add_row(*ltr)
 
     return ltab
 
 
 
-def dump_plots_data(f_stem):
+def dump_plots_data(f_stem, snr, region_name):
     """Dump "standardized" fit reporting output.  User will get:
     * XSPEC pdf of plot
     * data points (data, model) dumped to QDP file
@@ -201,6 +149,8 @@ def dump_plots_data(f_stem):
     * LaTeX-formatted table row
     Assumes acceptable global XSPEC settings"""
 
+    # TODO the args odn't make sense
+
     f_plot = f_stem
 
     # Dump XSPEC plot
@@ -209,9 +159,10 @@ def dump_plots_data(f_stem):
     call(["ps2pdf", f_plot, f_plot + ".pdf"])
     call(["rm", f_plot])
 
-    # Dump data points
+    # Dump data points -- this can be done far more elegantly with PyXSPEC
+    # interface... but OK for now.
     xs.Plot.addCommand("wdata {}".format(f_stem + ".qdp"))
-    xs.Plot.device = "/xw"
+    #xs.Plot.device = "/xw"  # Not necessary
     xs.Plot("ldata")
     xs.Plot.delCommand(len(xs.Plot.commands))
 
@@ -219,209 +170,227 @@ def dump_plots_data(f_stem):
     xs_utils.dump_fit_log(f_stem + ".log")
 
     # Dump nice LaTeX table -- full table, + just row(s)
-    ltab = make_table()
+    ltab = make_table(snr, region_name)
     with open(f_stem + ".tex", 'w') as f_tex:
         f_tex.write(str(ltab))
     with open(f_stem + "_row.tex", 'w') as f_tex:
         f_tex.write('\n'.join(ltab.get_rows()))
 
     # Dump succinct summary of fit parameters
-    print_fit(f_stem + ".txt")
+    print_fit(snr, f_stem + ".txt")
 
 
-if __name__ == '__main__':
+#############################################
+# Specific fit setup and execution routines #
+#############################################
 
-    xs.Xset.abund = "wilm"
-    xs.Fit.query = "yes"
-    xs.Plot.device = "/xw"
-    xs.Plot.xAxis = "keV"
-    xs.Plot.xLog = True
-    xs.Plot.yLog = True
-    xs.Plot.addCommand("rescale y 1e-5 3")  # may need to twiddle
+def set_energy_range(all_extrs):
+    """Set up fit (range ignores, PN power law setup, renorm)
+    These are specific ALWAYS-ON tweaks or fixes, typically determined after
+    running some fits...
+    """
+    for extr in all_extrs:
+        if extr.instr == "mos1" or extr.instr == "mos2":
+            extr.spec.ignore("**-0.3, 11.0-**")
+        if extr.instr == "pn":
+            extr.spec.ignore("**-0.4, 11.0-**")
+        #if extr.instr == 'pn':  # May not need to fix by default
+        #    extr.spec.models['sp'].powerlaw.PhoIndex = 0.2
+        #    extr.spec.models['sp'].powerlaw.PhoIndex.frozen = True
 
-    # Standard joint fit of remnant + background
-    # ------------------------------------------
 
-    # Example use of load_data(...) hash
-    # out['bkg'][2].models['sp']  # SP model for 0087940201 PNS003 bkg spectrum
-
-    started = datetime.now()
+def joint_src_bkg_fit():
+    """Fit source + bkg regions, allowing XRB to float"""
 
     out = myxs.load_data("src", "bkg", snr_model='vnei')
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
     xs.AllData.ignore("bad")
 
-    # Addressing xrb, snr models directly because we know the first datagroup's
-    # model controls the global parameters
+    xs.AllModels(4,'snr_src').constant.factor = 0.95  # TODO manual hack...
 
-    # TODO set parameter bounds -- no, not interesting / helpful if parameters
-    # saturate, BUT it is useful to prevent blowup during intermediate fits,
-    # when we have not yet converged to desired fit value
-
-    # Let XRB parameters vary
+    # Set XRB parameters to "typical" values, but do NOT allow to vary
     xrb = xs.AllModels(1, 'xrb')
-    xrb.setPars({xrb.apec.kT.index : "0.1,,0,0,1,2"},  # Unabsorped apec (local bubble)
-                {xrb.TBabs.nH.index : 1},  # Galactic absorption
-                {xrb.apec_5.kT.index : "0.25,,0,0,2,5"},  # Absorbed apec (galactic halo)
-                {xrb.apec.norm.index : 1e-4},
-                {xrb.apec_5.norm.index : 1e-4} )
+    xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
+                {xrb.TBabs.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
+                {xrb.apec_5.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
+                {xrb.apec.norm.index : 1e-3},
+                {xrb.apec_5.norm.index : 1e-3} )
+    xrb.apec.kT.frozen = True
+    xrb.TBabs.nH.frozen = True
+    xrb.apec_5.kT.frozen = True
+    xrb.apec.norm.frozen = True
+    xrb.apec_5.norm.frozen = True
+
+    xs.Fit.renorm()
+
+    # Let SNR model vary
+    snr = xs.AllModels(1,'snr_src')
+    snr.TBabs.nH.frozen=False
+    snr.vnei.kT.frozen=False
+    snr.vnei.Tau.frozen=False
+    #xs.Fit.perform()
+    snr.vnei.Si.frozen=False
+    snr.vnei.S.frozen=False
+    xs.Fit.perform()
+
+    # XRB is not as well constrained as SNR, and fits w/ XRB free
+    # (and SNR at default vnei values) tend to run away
     xrb.apec.kT.frozen = False
     xrb.TBabs.nH.frozen = False
     xrb.apec_5.kT.frozen = False
     xrb.apec.norm.frozen = False
     xrb.apec_5.norm.frozen = False
+    xs.Fit.perform()
+
+
+def five_annulus_fit():
+    """Fit five annuli simultaneously... extremely hard to see what's going on,
+    so I don't make any fit adjustments.  That will have to be determined from
+    individual region fits"""
+
+    out = myxs.load_data("ann_000_100", "ann_100_200", "ann_200_300",
+                         "ann_300_400", "ann_400_500", snr_model='vnei')
+
+    set_energy_range(out['ann_000_100'])
+    set_energy_range(out['ann_100_200'])
+    set_energy_range(out['ann_200_300'])
+    set_energy_range(out['ann_300_400'])
+    set_energy_range(out['ann_400_500'])
+    xs.AllData.ignore("bad")
+
+    # TODO really weird bug -- regenerate spectrum and see if it persists
+    for extr in out['ann_000_100']:
+        extr.spec.ignore("10.0-**")  # 10-11 keV range messed up
+
+    # Link nH across annuli
+    rings = [out['ann_000_100'][0].models['snr_ann_000_100'],
+             out['ann_100_200'][0].models['snr_ann_100_200'],
+             out['ann_200_300'][0].models['snr_ann_200_300'],
+             out['ann_300_400'][0].models['snr_ann_300_400'],
+             out['ann_400_500'][0].models['snr_ann_400_500']]
+    for ring in rings[1:]:  # Exclude center
+        ring.TBabs.nH.link = xs_utils.link_name(rings[0], rings[0].TBabs.nH)
 
     xs.Fit.renorm()
     xs.Fit.perform()
 
-    # Let SNR model vary
-    snr = xs.AllModels(1,'snr_src')
-    snr.vnei.kT.frozen=False
-    snr.vnei.Tau.frozen=False
-    snr.TBabs.nH.frozen=False
+    for ring in rings:
+        ring.TBabs.nH.frozen = False
+        ring.vnei.kT.frozen = False
+        ring.vnei.Tau.frozen = False
+
     xs.Fit.perform()
 
-    snr.vnei.Si.frozen=False
-    snr.vnei.S.frozen=False
+    for ring in rings:
+        ring.vnei.Si.frozen = False
+        ring.vnei.S.frozen = False
+
     xs.Fit.perform()
 
-    print "Started at:", started
-    print "Finished at:", datetime.now()
+def prep_xs(with_xw=False):
+    """Apply standard XSPEC settings for G309"""
+    xs.Xset.abund = "wilm"
+    xs.Fit.query = "yes"
+    if with_xw:
+        xs.Plot.device = "/xw"  # Must disable if you are using dump_plots_data
+    xs.Plot.xAxis = "keV"
+    xs.Plot.xLog = True
+    xs.Plot.yLog = True
+    xs.Plot.addCommand("rescale y 1e-5 3")  # may need to twiddle
 
-    #xs.AllData.clear()
-    #xs.AllModels.clear()
+###########################
+# Actually run stuff here #
+###########################
 
-    # Plain fit of source alone, no background (quick load for testing)
-    # -----------------------------------------------------------------
+if __name__ == '__main__':
 
-#    started = datetime.now()
+    prep_xs(with_xs=False)
+
+    # Clock in
+    # --------
+    started = datetime.now()
+
+    joint_src_bkg_fit()
+    dump_plots_data('results_spec/20160421_src_and_bkg', xs.AllModels(1,'snr_src'), 'src')
+
+    # five_annulus_fit()
+    # dump_plots_data('fiveannfit_ann_000_100', xs.AllModels( 1, 'snr_ann_000_100'), 'ann_000_100')
+    # dump_plots_data('fiveannfit_ann_100_200', xs.AllModels( 6, 'snr_ann_100_200'), 'ann_100_200')
+    # dump_plots_data('fiveannfit_ann_200_300', xs.AllModels(11, 'snr_ann_200_300'), 'ann_200_300')
+    # dump_plots_data('fiveannfit_ann_300_400', xs.AllModels(16, 'snr_ann_300_400'), 'ann_300_400')
+    # dump_plots_data('fiveannfit_ann_400_500', xs.AllModels(21, 'snr_ann_400_500'), 'ann_400_500')
+
+
+    # Sub region fits with varying nH values
+    # --------------------------------------
+#    regs = ["src_north_clump", "src_E_lobe", "src_SW_lobe", "src_SE_dark",
+#            "src_ridge", "src_SE_ridge_dark", "src_pre_ridge",
+#            "ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400", "ann_400_500"]
+#    nH_vals = [None, 1.5, 2.0, 2.5, 3.0]
 #
-#    out = myxs.load_data("src", snr_model='vnei')
-#    set_energy_range(out['src'])
-#    xs.AllData.ignore("bad")
+#    times = []
 #
-#    print "Started at:", started
-#    print "Finished at:", datetime.now()
-
-    #xs.AllData.clear()
-    #xs.AllModels.clear()
-
-
-    # Fits with nH free
-    # -----------------
-
-    # regions should only have underscores in their names
-    regs = ["src_north_clump", "src_E_lobe", "src_SW_lobe", "src_SE_dark",
-            "src_ridge", "src_SE_ridge_dark", "src_pre_ridge",
-            "ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400", "ann_400_500"]
-
-    nH_vals = [1.5, 2.0, 2.5, 3.0]
-
-#    for reg in regs:
+#    for nH in nH_vals:
+#        for reg in regs:
 #
-#        myxs.load_data([reg], snr_model='vnei', fit_xrb=False)  # Sanity check
-#        myxs.prep_fit()
+#            indiv_started = datetime.now()
 #
-#        xs.Fit.perform()
+#            out = myxs.load_data(reg, snr_model='vnei')
+#            set_energy_range(out[reg])
+#            if reg == 'ann_000_100':
+#                for extr in out[reg]:
+#                    extr.spec.ignore("10.0-**")  # 10-11 keV range messed up
+#            xs.AllData.ignore("bad")
 #
-#        snr = xs.AllModels(1, 'snr')
-#        snr.vnei.kT.frozen=False
-#        snr.vnei.Tau.frozen=False
-#        snr.TBabs.nH.frozen=False
-#        xs.Fit.perform()
+#            # Initial fit to help get reasonable soft proton values
+#            xs.Fit.renorm()
+#            xs.Fit.perform()
 #
-#        if REG not in ['src_SE_ridge_dark']:
+#            # Thaw kT, Tau, nH (if desired)
+#            snr = out[reg][0].models['snr_'+reg]
+#            snr.vnei.kT.frozen=False
+#            snr.vnei.Tau.frozen=False
+#            if nH is not None:
+#                snr.TBabs.nH = nH
+#                snr.TBabs.nH.frozen=True
+#            else:
+#                snr.TBabs.nH.frozen=False
+#            xs.Fit.perform()
+#
+#            # Thaw Si, S
 #            snr.vnei.Si.frozen=False
 #            snr.vnei.S.frozen=False
 #            xs.Fit.perform()
 #
-#        print "Finished at:", datetime.now()
+#            # WARNING: this will fail if files already exist at dump_str.
+#            # Reason being, xspec /cps or /xw qdp dump stalls and waits for
+#            # user input -- obviously undesirable.  TODO fix or work around
+#            # WARNING 2: you CANNOT swap between /cps and /xw
+#            # or else XSPEC will prompt you for input, blocking your script.
+#            if nH is not None:
+#                dump_str = 'results_spec/20160420_{}_nH_{}'.format(reg,nH)
+#            else:
+#                dump_str = 'results_spec/20160420_{}_nH_free'.format(reg)
+#            dump_plots_data(dump_str, snr, reg)
+#
+#            xs.AllData.clear()
+#            xs.AllModels.clear()
+#
+#            indiv_finished = datetime.now()
+#
+#            times.append(["{}, nH {}".format(reg, nH), indiv_started, indiv_finished])
+#            print "   start", indiv_started
+#            print "  finish", indiv_finished
 
-    # Currently (Thurs april 14) takes ~6 minutes to load
-    # Fit five annuli with nH tied together
-    #out = myxs.load_data(["ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400", "ann_400_500"],
-    #               snr_model='vnei', fit_xrb=False)  # Sanity check
+    # Clock out
+    # ---------
+    print "Started at:", started
+    print "Finished at:", datetime.now()
 
-    # TODO really weird bug -- try regenerating spectrum and see if it persists
-    # and/or explore the actual data..
-    #for extr in out['ann_000_100']:
-    #    # 10-11 keV range messed up
-    #    xs.AllData(extr.spec.index).ignore("10.0-**")
-    #    # SP PN contamination shows much softer power-law index than usual
-    #    # TODO disabled pending further tests and exploration
-    #    #if extr.instr == 'pn':
-    #    #    extr.spec.models['sp'].powerlaw.PhoIndex.frozen = False
-    #    ## Surprisingly, 0551000201 MOS SP power law is poorly constrained, extremely odd (HD 119682 contamination?)
-    #    #if extr.obsid == '0551000201' and extr.instr == 'mos1':
-    #    #    extr.spec.models['sp'].powerlaw.PhoIndex = 0.2
-    #    #    extr.spec.models['sp'].powerlaw.PhoIndex.frozen = True
-    #
-    ## procedure to link nH across annuli
-    ## Directly addressing with XSPEC datagroup #s
-    ##center = xs.AllModels( 1, 'snr_ann_000_100')
-    ##rings = [xs.AllModels( 6, 'snr_ann_100_200'),
-    ##         xs.AllModels(11, 'snr_ann_200_300'),
-    ##         xs.AllModels(16, 'snr_ann_300_400'),
-    ##         xs.AllModels(21, 'snr_ann_400_500')]
-    #center = out['ann_000_100'][0].models['snr_ann_000_100']
-    #rings = [out['ann_100_200'][0].models['snr_ann_100_200'],
-    #         out['ann_200_300'][0].models['snr_ann_200_300'],
-    #         out['ann_300_400'][0].models['snr_ann_300_400'],
-    #         out['ann_400_500'][0].models['snr_ann_400_500']]
-    #for ring in rings:
-    #    ring.TBabs.nH.link = link_name(center, center.TBabs.nH)
-
-    #dump['ann_400_500'][0].models['snr_ann_400_500'].TBabs
-
-    # Here I needed:
-    #  model names
-    #  datagroup numbers for "1st" datagroups for this source
-
-
-
-    # Fits for a range of nH values
-    # -----------------------------
-
-    """
-    for nH_val in nH_vals:
-
-        for reg in regs:
-
-            myxs.load_data([reg], snr_model='vnei', fit_xrb=False)  # Sanity check
-            myxs.prep_fit()
-
-            snr = xs.AllModels(1, 'snr')
-            snr.TBabs.nH = nH_val
-            snr.TBabs.nH.frozen=True
-
-            xs.Fit.perform()
-
-            snr.vnei.kT.frozen=False
-            snr.vnei.Tau.frozen=False
-            xs.Fit.perform()
-
-            if REG not in ['src_SE_ridge_dark']:
-                snr.vnei.Si.frozen=False
-                snr.vnei.S.frozen=False
-                xs.Fit.perform()
-
-            print "Finished at:", datetime.now()
-    """
-
-    # This obviously depends on the details of how the data are loaded
-    # But, fine-grained tweaking will require specific addressing anyways...
-    # that depends on the
-    # 1. ordering of regions you input,
-    # 2. number of obsids/exposures you're working with
-    #
-    # One solution is to build another layer of abstraction --
-    # convert from obsid / exposure / region ---> xspec model number
-    #
-    # Goal would be to reduce coupling between setup and fitting code
-    # but that may be unavoidable -- we have to interface with global
-    # XSPEC objects everywhere!
-
-    #dump_plots_data('results_spec/${reg}');"
-    #dump_plots_data('results_spec/${reg}_nH-${nH}');"
+    print ""
+    for indiv in times:
+        print indiv[0] + ":", indiv[2] - indiv[1]
+        print "   start", indiv[1]
+        print "  finish", indiv[2]
 

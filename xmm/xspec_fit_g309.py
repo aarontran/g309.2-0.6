@@ -106,7 +106,7 @@ def load_data(*regs, **kwargs):
 
     # One instrumental line model per spectrum
     for n_extr, extr in enumerate(all_extrs):
-        load_instr(3 + len(regs) + n_extr, extr, model_name="instr_{:d}".format(n_extr))
+        load_instr(3 + len(regs) + n_extr, extr, model_name="instr_{:d}".format(n_extr+1))
 
     return extrs_from
 
@@ -163,10 +163,16 @@ def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
     # Initialize source model with reasonable "global" parameters
     if case == 'vnei':
         src = xs.Model("constant * TBabs * vnei", model_name, model_n)
-        # Default values are fine
+        # Apply fitting bounds
+        src.setPars({src.TBabs.nH.index : "1, , 1e-2, 0.1, 10, 10"},  # generally well-constrained already
+                    {src.vnei.kT.index : "1, , , , 10, 10"},  # upper bound only
+                    {src.vnei.S.index : "1, , , , 10, 10"},  # upper bound only
+                    {src.vnei.Si.index : "1, , , , 10, 10"} )  # upper bound only
         src.TBabs.nH.frozen = True
         src.vnei.kT.frozen = True
         src.vnei.Tau.frozen = True
+        src.vnei.S.frozen = True
+        src.vnei.Si.frozen = True
     elif case == 'vpshock':
         src = xs.Model("constant * TBabs * vpshock", model_name, model_n)
         src.TBabs.nH = 1
@@ -206,14 +212,16 @@ def load_soft_proton(model_n, extracted_spectra):
 
     # Initialize sp model with reasonable "global" parameters
     sp = xs.Model("constant * powerlaw", 'sp', model_n)
-    sp.powerlaw.PhoIndex.values = "0.4, , -0.1, 0, 1, 2" # Set hard/soft limits
     sp.powerlaw.norm = 1e-2
 
     # Set individal spectrum parameters
     for extr in extracted_spectra:
         sp_curr = xs.AllModels(extr.spec.index, 'sp')
         # Let power law indices, norms vary independently
+        # Must set index limits for each model; parameter limits do not
+        # propagate through links
         sp_curr.powerlaw.PhoIndex.link = ""
+        sp_curr.powerlaw.PhoIndex.values = "0.4, , 0, 0.1, 1, 2" # Set hard/soft limits
         sp_curr.powerlaw.PhoIndex.frozen = False
         sp_curr.powerlaw.norm.link = ""
         sp_curr.powerlaw.norm.frozen = False
@@ -256,13 +264,21 @@ def load_cxrb(model_n, extracted_spectra):
     exrb_norm = 10.9 * (180/pi)**-2 * 60**-4 * (1/0.05)**-2 * ExtractedSpectrum.FIDUCIAL_BACKSCAL
 
     # NOTE HARDCODED -- best fit values from src/bkg combined fit
+    # using backscal ratio 0.95 for 0551000201 MOS1 src.
     xrb.setPars({xrb.powerlaw.PhoIndex.index : 1.4},
                 {xrb.powerlaw.norm.index : exrb_norm},
-                {xrb.apec.kT.index : 0.261},  # Unabsorped apec (local bubble)
-                {xrb.TBabs.nH.index : 1.372},  # Galactic absorption
-                {xrb.apec_5.kT.index : 0.755},  # Absorbed apec (galactic halo)
-                {xrb.apec.norm.index : 3.06e-4},
-                {xrb.apec_5.norm.index : 2.33e-3} )
+                {xrb.apec.kT.index : 0.255},  # Unabsorped apec (local bubble)
+                {xrb.TBabs.nH.index : 1.340},  # Galactic absorption
+                {xrb.apec_5.kT.index : 0.644},  # Absorbed apec (galactic halo)
+                {xrb.apec.norm.index : 2.89e-4},
+                {xrb.apec_5.norm.index : 2.58e-3} )
+
+# Fit without BACKSCAL ratio tweaks.  Change in parameters is <~10%.
+#                {xrb.apec.kT.index : 0.261},  # Unabsorped apec (local bubble)
+#                {xrb.TBabs.nH.index : 1.372},  # Galactic absorption
+#                {xrb.apec_5.kT.index : 0.755},  # Absorbed apec (galactic halo)
+#                {xrb.apec.norm.index : 3.06e-4},
+#                {xrb.apec_5.norm.index : 2.33e-3} )
 
     xs_utils.freeze_model(xrb)
 

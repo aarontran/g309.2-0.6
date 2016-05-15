@@ -8766,6 +8766,9 @@ plasma, even as we tweak our background parameters, assumptions, etc.
 Wednesday 2016 April 13 - clean up, continue work
 =================================================
 
+Fitting code overhaul
+---------------------
+
 How do I get the fit to work with multiple annuli, fitted simultaneously?
 
 Rewrote code multiple times over Weds to Sat April 13-16.
@@ -8795,8 +8798,596 @@ Answer (hand-recorded): yes
          bkg 0551000201 MOS ~ 0.51)
     SNR has nH ~ 2.15, kT ~ 2.36, Si ~ 3.7, S ~ 3.5, Tau ~ 1.77e+10
 
-Good.  Now make a few more tweaks (bound parameters in intermediate fitting
-steps, apply BACKSCAL normalizations to SNR model)
+More fit parameter changes
+--------------------------
+
+BACKSCAL normalization for SNR may not work well because area differences are
+very non-random.
+* 0087940201 PN is affected by CCD gaps / dead columns
+* 0551000201 MOS1 cuts out the NE chunk, which does NOT overlap with the
+  brightest emission.
+
+I made the following changes:
+* set more restrictive parameter bounds on XRB kT values
+* set BACKSCAL ratio to 0.95 for 0551000201 MOS1 source spectrum, based on
+  eyeball-argument that the dropped CCD cuts out an x-ray dim part of the
+  remnant.
+
+Iterated a few times on fits, but fit values kept converging to unreasonable
+values.  Had to freeze XRB parameters and PN SP power law index to converge
+towards decent fit.  A manual fit was able to obtain:
+
+    unabsorbed kT ~ 0.255 
+    nH ~ 1.34
+    absorbed kT ~ 0.645
+    chi-squared 4586/3769 ~ 1.217
+    SNR and SP values "generally reasonable"
+
+Qualitative results unchanged as usual.
+This confirms that BACKSCAL ratio changes / hacks have had relatively small
+effect.
+
+
+Tuesday 2016 April 19 - continued fit iteration
+===============================================
+
+Additional fixes applied to help constrain fit, after trial and error:
+
+* bound XRB nH value to prevent fit running nH -> 0 (physically unreasonable)
+    hard limits: 0.01 -- 10
+    soft limits: 0.1 -- 5
+* After unfreezing SP power law indices, must set parameter bounds for each
+  index individually.  The SP power law fit was running to unreasonable
+  negative values.  Also adjust bounds, just disallow negative values outright.
+* Fit SNR nH, kT, Tau, Si, S all at once to help fit converge more easily,
+  since Si/S are definitely needed to fit spectral lines.
+* (!) do NOT apply backscal hack to 0551000201 MOS1 for XRB or SP.
+  (hack = arbitrarily setting backscal ratio to 95% instead of 88%)
+  Only place to change this value is for SNR, where we know that the missing
+  chip does not coincide w/ bright SNR emission.
+  That was a mistake that would have hurt the fit.
+* Let SNR be fit first, before XRB -- because fit is far from correct fit it
+  goes nuts when trying to fit XRB...
+
+After letting SNR fit first -- fit is able to converge to reasonable
+("typical") values.  I.e., both X-ray background absorption and PN soft proton
+index don't run to zero -- which disqualify the fits as being physically
+unrealistic, so I think it's clear that this is not a cherry-picking / coaxing.
+
+    unabsorbed kT: 0.255 keV
+    absorption: 1.340
+    absorbed kT: 0.644
+
+I go ahead and update hard-coded XRB values in code.
+
+Now set up for an experimental annulus fit.
+
+It takes ~40 minutes just to LOAD all the data!
+Jesus.  But it all looks correct.
+
+1. Fit with SNR nH, kT, Tau + soft proton + instr lines free.
+Start ~ 2:10am Weds April 20
+
+    started = datetime.now() ; xs.Fit.perform() print "started:",started ; print "finished:", datetime.now() 
+
+We have 81 free parameters, though we're only interested in 11 of them.
+
+    1 (nH) + 5*3 (kT,Tau, norm) + 3*5 (SP indices) + 5*5 (SP norms) + 5*5 (instr norms)
+
+3333 degrees of freedom.
+At least, the fit is moving along pretty well.
+It seems that the initial calculation + setting of a lot of parameters takes an
+inordinately long time, and I don't know why.
+
+Ah, forgot to apply parameter bounds on kT...
+* the very young remnant G1.9+0.3 has fitted kT ~ 3 keV (Tau ~ 10^9)
+  (Borkowski+ 2013 ApJL)
+Set this now... don't apply any constraints on Tau though.
+
+OK -- restart w/ new parameter bounds applied to SNR parameters.
+Starting ~2:37am
+    after restarting VNC session, loading is a LOT faster!
+    maybe just had to refresh things.
+
+    OK, never mind, it is taking a while -- still looking at ~40 minutes to
+    load.  Not sure why -- need to profile this code.
+
+Total time: ~70 min. for initial fit.  Not bad.
+    Loading is ~40 min., fit is ~30 min.
+
+SP indices mostly OK (helped by parameter bounds), a few? saturated at ~0.
+Remnant nH is on the high side (3.7) but not unreasonable.
+The kT values however are all over the map.
+Now free Si, S and see what happens.
+
+    Start running ~ 10:09am, finished ~1 hr later
+
+OK... some kT values are not amazing.
+
+Annulus SNR spectrum parameters:
+
+    reduced chi-squared = 4533.92/3323 = 1.364
+
+    In [37]: fp.print_fit(out['ann_000_100'][0].models['snr_ann_000_100'])
+      nH (10^22)    2.091 +/- 0.033
+      kT   (keV)    3.912 +/- 0.344
+      Tau (s/cm^3)  1.58e+10 +/- 9.06e+08
+      Si            1.99  +/- 0.09
+      S             1.46  +/- 0.17
+      norm          1.39e-02 +/- 6.07e-04
+
+    In [38]: fp.print_fit(out['ann_100_200'][0].models['snr_ann_100_200'])
+      nH (10^22)    2.091 +/- 0.000
+      kT   (keV)    2.465 +/- 0.213
+      Tau (s/cm^3)  1.77e+10 +/- 9.52e+08
+      Si            5.75  +/- 0.23
+      S             5.41  +/- 0.38
+      norm          4.65e-03 +/- 2.74e-04
+
+    In [39]: fp.print_fit(out['ann_200_300'][0].models['snr_ann_200_300'])
+      nH (10^22)    2.091 +/- 0.000
+      kT   (keV)    2.118 +/- 0.155
+      Tau (s/cm^3)  2.25e+10 +/- 1.70e+09
+      Si            4.15  +/- 0.16
+      S             3.71  +/- 0.22
+      norm          4.83e-03 +/- 2.97e-04
+
+    In [40]: fp.print_fit(out['ann_300_400'][0].models['snr_ann_300_400'])
+      nH (10^22)    2.091 +/- 0.000
+      kT   (keV)    2.524 +/- 0.351
+      Tau (s/cm^3)  1.93e+10 +/- 1.95e+09
+      Si            3.45  +/- 0.23
+      S             2.88  +/- 0.35
+      norm          1.86e-03 +/- 1.38e-04
+
+
+    In [41]: fp.print_fit(out['ann_400_500'][0].models['snr_ann_400_500'])
+    reduced chi-squared = 4533.92/3323 = 1.364
+    snr model: constant*TBabs*vnei
+      nH (10^22)    2.091 +/- 0.000
+      kT   (keV)    10.000 +/- 4.174
+      Tau (s/cm^3)  2.11e+10 +/- 3.64e+09
+      Si            2.21  +/- 0.58
+      S             2.31  +/- 0.72
+      norm          4.52e-04 +/- 8.15e-05
+
+    soft proton power laws
+      Data group 1, n  0.67 +/- 0.03,  norm  1.74e-01 +/- 8.99e-03
+      Data group 2, n  0.67 +/- 0.00,  norm  1.72e-01 +/- 8.51e-03
+      Data group 3, n  0.98 +/- 0.03,  norm  7.25e-01 +/- 2.71e-02
+      Data group 4, n  0.58 +/- 0.06,  norm  9.72e-02 +/- 9.71e-03
+      Data group 5, n  0.58 +/- 0.00,  norm  3.62e-02 +/- 7.27e-03
+      Data group 6, n  0.42 +/- 0.03,  norm  6.10e-02 +/- 3.39e-03
+      Data group 7, n  0.42 +/- 0.00,  norm  6.58e-02 +/- 3.59e-03
+      Data group 8, n  0.51 +/- 0.06,  norm  1.18e-01 +/- 1.17e-02
+      Data group 9, n  0.43 +/- 0.04,  norm  6.28e-02 +/- 4.39e-03
+      Data group 10, n  0.43 +/- 0.00,  norm  1.60e-02 +/- 2.47e-03
+      Data group 11, n  0.31 +/- 0.03,  norm  4.78e-02 +/- 2.52e-03
+      Data group 12, n  0.31 +/- 0.00,  norm  4.86e-02 +/- 2.60e-03
+      Data group 13, n  0.09 +/- 0.08,  norm  5.50e-02 +/- 8.10e-03
+      Data group 14, n  0.28 +/- 0.04,  norm  4.66e-02 +/- 3.53e-03
+      Data group 15, n  0.28 +/- 0.00,  norm  1.06e-02 +/- 1.56e-03
+      Data group 16, n  0.34 +/- 0.02,  norm  5.13e-02 +/- 1.98e-03
+      Data group 17, n  0.34 +/- 0.00,  norm  5.47e-02 +/- 2.06e-03
+      Data group 18, n  0.09 +/- 0.06,  norm  4.99e-02 +/- 6.20e-03
+      Data group 19, n  0.33 +/- 0.03,  norm  4.66e-02 +/- 2.89e-03
+      Data group 20, n  0.33 +/- 0.00,  norm  1.24e-02 +/- 1.42e-03
+      Data group 21, n  0.28 +/- 0.02,  norm  4.50e-02 +/- 1.67e-03
+      Data group 22, n  0.28 +/- 0.00,  norm  4.58e-02 +/- 1.68e-03
+      Data group 23, n  0.11 +/- 0.05,  norm  5.14e-02 +/- 5.38e-03
+      Data group 24, n  0.38 +/- 0.04,  norm  3.11e-02 +/- 2.50e-03
+      Data group 25, n  0.38 +/- 0.00,  norm  1.26e-02 +/- 1.46e-03
+
+    instrumental lines
+      Data group 1, instr const  1.49 +/- 0.28
+      Data group 2, instr const  2.11 +/- 0.29
+      Data group 3, instr const  0.63 +/- 0.20
+      Data group 4, instr const  2.13 +/- 0.33
+      Data group 5, instr const  1.72 +/- 0.31
+
+      Data group 6, instr const  1.09 +/- 0.12
+      Data group 7, instr const  1.01 +/- 0.11
+      Data group 8, instr const  0.64 +/- 0.06
+      Data group 9, instr const  1.68 +/- 0.14
+      Data group 10, instr const  1.94 +/- 0.14
+
+      Data group 11, instr const  0.84 +/- 0.08
+      Data group 12, instr const  0.84 +/- 0.08
+      Data group 13, instr const  0.49 +/- 0.04
+      Data group 14, instr const  1.77 +/- 0.11
+      Data group 15, instr const  1.87 +/- 0.11
+
+      Data group 16, instr const  0.81 +/- 0.06
+      Data group 17, instr const  0.63 +/- 0.05
+      Data group 18, instr const  0.60 +/- 0.03
+      Data group 19, instr const  1.46 +/- 0.09
+      Data group 20, instr const  1.59 +/- 0.08
+
+      Data group 21, instr const  0.65 +/- 0.05
+      Data group 22, instr const  0.68 +/- 0.05
+      Data group 23, instr const  0.62 +/- 0.03
+      Data group 24, instr const  1.45 +/- 0.08
+      Data group 25, instr const  1.51 +/- 0.07
+
+I am not convinced that this fit is telling us anything useful, yet.
+Attempted to re-run (freeze/thaw cycle on 400-500" annulus kT), and fit seems
+to be doing better at least.  But will need inspection of indiv fits first.
+So, set up and do that
+
+
+In [69]: fp.print_fit(out['ann_000_100'][0].models['snr_ann_000_100'])
+reduced chi-squared = 4545.17/3323 = 1.368
+snr model: constant*TBabs*vnei
+  nH (10^22)    2.076 +/- 0.031
+  kT   (keV)    3.980 +/- 0.346
+  Tau (s/cm^3)  1.58e+10 +/- 8.98e+08
+  Si            2.00  +/- 0.09
+  S             1.47  +/- 0.17
+  norm          1.37e-02 +/- 5.87e-04
+
+soft proton power laws
+  Data group 1, n  0.67 +/- 0.03,  norm  1.73e-01 +/- 8.98e-03
+  Data group 2, n  0.67 +/- 0.00,  norm  1.71e-01 +/- 8.51e-03
+  Data group 3, n  0.98 +/- 0.03,  norm  7.23e-01 +/- 2.71e-02
+  Data group 4, n  0.58 +/- 0.06,  norm  9.67e-02 +/- 9.72e-03
+  Data group 5, n  0.58 +/- 0.00,  norm  3.57e-02 +/- 7.24e-03
+  Data group 6, n  0.42 +/- 0.03,  norm  6.09e-02 +/- 3.39e-03
+  Data group 7, n  0.42 +/- 0.00,  norm  6.56e-02 +/- 3.59e-03
+  Data group 8, n  0.51 +/- 0.06,  norm  1.18e-01 +/- 1.17e-02
+  Data group 9, n  0.43 +/- 0.04,  norm  6.26e-02 +/- 4.39e-03
+  Data group 10, n  0.43 +/- 0.00,  norm  1.59e-02 +/- 2.46e-03
+  Data group 11, n  0.31 +/- 0.03,  norm  4.76e-02 +/- 2.52e-03
+  Data group 12, n  0.31 +/- 0.00,  norm  4.84e-02 +/- 2.60e-03
+  Data group 13, n  0.09 +/- 0.08,  norm  5.47e-02 +/- 8.10e-03
+  Data group 14, n  0.28 +/- 0.04,  norm  4.64e-02 +/- 3.53e-03
+  Data group 15, n  0.28 +/- 0.00,  norm  1.04e-02 +/- 1.56e-03
+  Data group 16, n  0.34 +/- 0.02,  norm  5.12e-02 +/- 1.98e-03
+  Data group 17, n  0.34 +/- 0.00,  norm  5.46e-02 +/- 2.06e-03
+  Data group 18, n  0.09 +/- 0.07,  norm  4.95e-02 +/- 6.20e-03
+  Data group 19, n  0.33 +/- 0.03,  norm  4.64e-02 +/- 2.89e-03
+  Data group 20, n  0.33 +/- 0.00,  norm  1.23e-02 +/- 1.42e-03
+  Data group 21, n  0.29 +/- 0.02,  norm  4.71e-02 +/- 1.59e-03
+  Data group 22, n  0.29 +/- 0.00,  norm  4.79e-02 +/- 1.60e-03
+  Data group 23, n  0.18 +/- 0.05,  norm  6.02e-02 +/- 5.22e-03
+  Data group 24, n  0.40 +/- 0.04,  norm  3.34e-02 +/- 2.40e-03
+  Data group 25, n  0.40 +/- 0.00,  norm  1.43e-02 +/- 1.41e-03
+
+instrumental lines
+  Data group 1, instr const  1.49 +/- 0.28
+  Data group 2, instr const  2.11 +/- 0.29
+  Data group 3, instr const  0.63 +/- 0.20
+  Data group 4, instr const  2.13 +/- 0.33
+  Data group 5, instr const  1.72 +/- 0.31
+  Data group 6, instr const  1.09 +/- 0.12
+  Data group 7, instr const  1.01 +/- 0.11
+  Data group 8, instr const  0.64 +/- 0.06
+  Data group 9, instr const  1.68 +/- 0.14
+  Data group 10, instr const  1.94 +/- 0.14
+  Data group 11, instr const  0.85 +/- 0.08
+  Data group 12, instr const  0.84 +/- 0.08
+  Data group 13, instr const  0.49 +/- 0.04
+  Data group 14, instr const  1.77 +/- 0.11
+  Data group 15, instr const  1.88 +/- 0.11
+  Data group 16, instr const  0.82 +/- 0.06
+  Data group 17, instr const  0.63 +/- 0.05
+  Data group 18, instr const  0.60 +/- 0.03
+  Data group 19, instr const  1.46 +/- 0.09
+  Data group 20, instr const  1.59 +/- 0.08
+  Data group 21, instr const  0.66 +/- 0.05
+  Data group 22, instr const  0.69 +/- 0.05
+  Data group 23, instr const  0.62 +/- 0.03
+  Data group 24, instr const  1.46 +/- 0.08
+  Data group 25, instr const  1.53 +/- 0.07
+
+
+In [70]: fp.print_fit(out['ann_100_200'][0].models['snr_ann_100_200'])
+reduced chi-squared = 4545.17/3323 = 1.368
+snr model: constant*TBabs*vnei
+  nH (10^22)    2.076 +/- 0.000
+  kT   (keV)    2.523 +/- 0.217
+  Tau (s/cm^3)  1.76e+10 +/- 9.37e+08
+  Si            5.79  +/- 0.24
+  S             5.45  +/- 0.38
+  norm          4.54e-03 +/- 2.65e-04
+
+soft proton power laws
+  Data group 1, n  0.67 +/- 0.03,  norm  1.73e-01 +/- 8.98e-03
+  Data group 2, n  0.67 +/- 0.00,  norm  1.71e-01 +/- 8.51e-03
+  Data group 3, n  0.98 +/- 0.03,  norm  7.23e-01 +/- 2.71e-02
+  Data group 4, n  0.58 +/- 0.06,  norm  9.67e-02 +/- 9.72e-03
+  Data group 5, n  0.58 +/- 0.00,  norm  3.57e-02 +/- 7.24e-03
+  Data group 6, n  0.42 +/- 0.03,  norm  6.09e-02 +/- 3.39e-03
+  Data group 7, n  0.42 +/- 0.00,  norm  6.56e-02 +/- 3.59e-03
+  Data group 8, n  0.51 +/- 0.06,  norm  1.18e-01 +/- 1.17e-02
+  Data group 9, n  0.43 +/- 0.04,  norm  6.26e-02 +/- 4.39e-03
+  Data group 10, n  0.43 +/- 0.00,  norm  1.59e-02 +/- 2.46e-03
+  Data group 11, n  0.31 +/- 0.03,  norm  4.76e-02 +/- 2.52e-03
+  Data group 12, n  0.31 +/- 0.00,  norm  4.84e-02 +/- 2.60e-03
+  Data group 13, n  0.09 +/- 0.08,  norm  5.47e-02 +/- 8.10e-03
+  Data group 14, n  0.28 +/- 0.04,  norm  4.64e-02 +/- 3.53e-03
+  Data group 15, n  0.28 +/- 0.00,  norm  1.04e-02 +/- 1.56e-03
+  Data group 16, n  0.34 +/- 0.02,  norm  5.12e-02 +/- 1.98e-03
+  Data group 17, n  0.34 +/- 0.00,  norm  5.46e-02 +/- 2.06e-03
+  Data group 18, n  0.09 +/- 0.07,  norm  4.95e-02 +/- 6.20e-03
+  Data group 19, n  0.33 +/- 0.03,  norm  4.64e-02 +/- 2.89e-03
+  Data group 20, n  0.33 +/- 0.00,  norm  1.23e-02 +/- 1.42e-03
+  Data group 21, n  0.29 +/- 0.02,  norm  4.71e-02 +/- 1.59e-03
+  Data group 22, n  0.29 +/- 0.00,  norm  4.79e-02 +/- 1.60e-03
+  Data group 23, n  0.18 +/- 0.05,  norm  6.02e-02 +/- 5.22e-03
+  Data group 24, n  0.40 +/- 0.04,  norm  3.34e-02 +/- 2.40e-03
+  Data group 25, n  0.40 +/- 0.00,  norm  1.43e-02 +/- 1.41e-03
+
+instrumental lines
+  Data group 1, instr const  1.49 +/- 0.28
+  Data group 2, instr const  2.11 +/- 0.29
+  Data group 3, instr const  0.63 +/- 0.20
+  Data group 4, instr const  2.13 +/- 0.33
+  Data group 5, instr const  1.72 +/- 0.31
+  Data group 6, instr const  1.09 +/- 0.12
+  Data group 7, instr const  1.01 +/- 0.11
+  Data group 8, instr const  0.64 +/- 0.06
+  Data group 9, instr const  1.68 +/- 0.14
+  Data group 10, instr const  1.94 +/- 0.14
+  Data group 11, instr const  0.85 +/- 0.08
+  Data group 12, instr const  0.84 +/- 0.08
+  Data group 13, instr const  0.49 +/- 0.04
+  Data group 14, instr const  1.77 +/- 0.11
+  Data group 15, instr const  1.88 +/- 0.11
+  Data group 16, instr const  0.82 +/- 0.06
+  Data group 17, instr const  0.63 +/- 0.05
+  Data group 18, instr const  0.60 +/- 0.03
+  Data group 19, instr const  1.46 +/- 0.09
+  Data group 20, instr const  1.59 +/- 0.08
+  Data group 21, instr const  0.66 +/- 0.05
+  Data group 22, instr const  0.69 +/- 0.05
+  Data group 23, instr const  0.62 +/- 0.03
+  Data group 24, instr const  1.46 +/- 0.08
+  Data group 25, instr const  1.53 +/- 0.07
+
+
+In [71]: fp.print_fit(out['ann_200_300'][0].models['snr_ann_200_300'])
+reduced chi-squared = 4545.17/3323 = 1.368
+snr model: constant*TBabs*vnei
+  nH (10^22)    2.076 +/- 0.000
+  kT   (keV)    2.175 +/- 0.158
+  Tau (s/cm^3)  2.20e+10 +/- 1.97e+09
+  Si            4.18  +/- 0.16
+  S             3.75  +/- 0.22
+  norm          4.69e-03 +/- 2.43e-04
+
+soft proton power laws
+  Data group 1, n  0.67 +/- 0.03,  norm  1.73e-01 +/- 8.98e-03
+  Data group 2, n  0.67 +/- 0.00,  norm  1.71e-01 +/- 8.51e-03
+  Data group 3, n  0.98 +/- 0.03,  norm  7.23e-01 +/- 2.71e-02
+  Data group 4, n  0.58 +/- 0.06,  norm  9.67e-02 +/- 9.72e-03
+  Data group 5, n  0.58 +/- 0.00,  norm  3.57e-02 +/- 7.24e-03
+  Data group 6, n  0.42 +/- 0.03,  norm  6.09e-02 +/- 3.39e-03
+  Data group 7, n  0.42 +/- 0.00,  norm  6.56e-02 +/- 3.59e-03
+  Data group 8, n  0.51 +/- 0.06,  norm  1.18e-01 +/- 1.17e-02
+  Data group 9, n  0.43 +/- 0.04,  norm  6.26e-02 +/- 4.39e-03
+  Data group 10, n  0.43 +/- 0.00,  norm  1.59e-02 +/- 2.46e-03
+  Data group 11, n  0.31 +/- 0.03,  norm  4.76e-02 +/- 2.52e-03
+  Data group 12, n  0.31 +/- 0.00,  norm  4.84e-02 +/- 2.60e-03
+  Data group 13, n  0.09 +/- 0.08,  norm  5.47e-02 +/- 8.10e-03
+  Data group 14, n  0.28 +/- 0.04,  norm  4.64e-02 +/- 3.53e-03
+  Data group 15, n  0.28 +/- 0.00,  norm  1.04e-02 +/- 1.56e-03
+  Data group 16, n  0.34 +/- 0.02,  norm  5.12e-02 +/- 1.98e-03
+  Data group 17, n  0.34 +/- 0.00,  norm  5.46e-02 +/- 2.06e-03
+  Data group 18, n  0.09 +/- 0.07,  norm  4.95e-02 +/- 6.20e-03
+  Data group 19, n  0.33 +/- 0.03,  norm  4.64e-02 +/- 2.89e-03
+  Data group 20, n  0.33 +/- 0.00,  norm  1.23e-02 +/- 1.42e-03
+  Data group 21, n  0.29 +/- 0.02,  norm  4.71e-02 +/- 1.59e-03
+  Data group 22, n  0.29 +/- 0.00,  norm  4.79e-02 +/- 1.60e-03
+  Data group 23, n  0.18 +/- 0.05,  norm  6.02e-02 +/- 5.22e-03
+  Data group 24, n  0.40 +/- 0.04,  norm  3.34e-02 +/- 2.40e-03
+  Data group 25, n  0.40 +/- 0.00,  norm  1.43e-02 +/- 1.41e-03
+
+instrumental lines
+  Data group 1, instr const  1.49 +/- 0.28
+  Data group 2, instr const  2.11 +/- 0.29
+  Data group 3, instr const  0.63 +/- 0.20
+  Data group 4, instr const  2.13 +/- 0.33
+  Data group 5, instr const  1.72 +/- 0.31
+  Data group 6, instr const  1.09 +/- 0.12
+  Data group 7, instr const  1.01 +/- 0.11
+  Data group 8, instr const  0.64 +/- 0.06
+  Data group 9, instr const  1.68 +/- 0.14
+  Data group 10, instr const  1.94 +/- 0.14
+  Data group 11, instr const  0.85 +/- 0.08
+  Data group 12, instr const  0.84 +/- 0.08
+  Data group 13, instr const  0.49 +/- 0.04
+  Data group 14, instr const  1.77 +/- 0.11
+  Data group 15, instr const  1.88 +/- 0.11
+  Data group 16, instr const  0.82 +/- 0.06
+  Data group 17, instr const  0.63 +/- 0.05
+  Data group 18, instr const  0.60 +/- 0.03
+  Data group 19, instr const  1.46 +/- 0.09
+  Data group 20, instr const  1.59 +/- 0.08
+  Data group 21, instr const  0.66 +/- 0.05
+  Data group 22, instr const  0.69 +/- 0.05
+  Data group 23, instr const  0.62 +/- 0.03
+  Data group 24, instr const  1.46 +/- 0.08
+  Data group 25, instr const  1.53 +/- 0.07
+
+
+In [72]: fp.print_fit(out['ann_300_400'][0].models['snr_ann_300_400'])
+reduced chi-squared = 4545.17/3323 = 1.368
+snr model: constant*TBabs*vnei
+  nH (10^22)    2.076 +/- 0.000
+  kT   (keV)    2.641 +/- 0.358
+  Tau (s/cm^3)  1.89e+10 +/- 2.04e+09
+  Si            3.46  +/- 0.23
+  S             2.89  +/- 0.35
+  norm          1.80e-03 +/- 1.32e-04
+
+soft proton power laws
+  Data group 1, n  0.67 +/- 0.03,  norm  1.73e-01 +/- 8.98e-03
+  Data group 2, n  0.67 +/- 0.00,  norm  1.71e-01 +/- 8.51e-03
+  Data group 3, n  0.98 +/- 0.03,  norm  7.23e-01 +/- 2.71e-02
+  Data group 4, n  0.58 +/- 0.06,  norm  9.67e-02 +/- 9.72e-03
+  Data group 5, n  0.58 +/- 0.00,  norm  3.57e-02 +/- 7.24e-03
+  Data group 6, n  0.42 +/- 0.03,  norm  6.09e-02 +/- 3.39e-03
+  Data group 7, n  0.42 +/- 0.00,  norm  6.56e-02 +/- 3.59e-03
+  Data group 8, n  0.51 +/- 0.06,  norm  1.18e-01 +/- 1.17e-02
+  Data group 9, n  0.43 +/- 0.04,  norm  6.26e-02 +/- 4.39e-03
+  Data group 10, n  0.43 +/- 0.00,  norm  1.59e-02 +/- 2.46e-03
+  Data group 11, n  0.31 +/- 0.03,  norm  4.76e-02 +/- 2.52e-03
+  Data group 12, n  0.31 +/- 0.00,  norm  4.84e-02 +/- 2.60e-03
+  Data group 13, n  0.09 +/- 0.08,  norm  5.47e-02 +/- 8.10e-03
+  Data group 14, n  0.28 +/- 0.04,  norm  4.64e-02 +/- 3.53e-03
+  Data group 15, n  0.28 +/- 0.00,  norm  1.04e-02 +/- 1.56e-03
+  Data group 16, n  0.34 +/- 0.02,  norm  5.12e-02 +/- 1.98e-03
+  Data group 17, n  0.34 +/- 0.00,  norm  5.46e-02 +/- 2.06e-03
+  Data group 18, n  0.09 +/- 0.07,  norm  4.95e-02 +/- 6.20e-03
+  Data group 19, n  0.33 +/- 0.03,  norm  4.64e-02 +/- 2.89e-03
+  Data group 20, n  0.33 +/- 0.00,  norm  1.23e-02 +/- 1.42e-03
+  Data group 21, n  0.29 +/- 0.02,  norm  4.71e-02 +/- 1.59e-03
+  Data group 22, n  0.29 +/- 0.00,  norm  4.79e-02 +/- 1.60e-03
+  Data group 23, n  0.18 +/- 0.05,  norm  6.02e-02 +/- 5.22e-03
+  Data group 24, n  0.40 +/- 0.04,  norm  3.34e-02 +/- 2.40e-03
+  Data group 25, n  0.40 +/- 0.00,  norm  1.43e-02 +/- 1.41e-03
+
+instrumental lines
+  Data group 1, instr const  1.49 +/- 0.28
+  Data group 2, instr const  2.11 +/- 0.29
+  Data group 3, instr const  0.63 +/- 0.20
+  Data group 4, instr const  2.13 +/- 0.33
+  Data group 5, instr const  1.72 +/- 0.31
+  Data group 6, instr const  1.09 +/- 0.12
+  Data group 7, instr const  1.01 +/- 0.11
+  Data group 8, instr const  0.64 +/- 0.06
+  Data group 9, instr const  1.68 +/- 0.14
+  Data group 10, instr const  1.94 +/- 0.14
+  Data group 11, instr const  0.85 +/- 0.08
+  Data group 12, instr const  0.84 +/- 0.08
+  Data group 13, instr const  0.49 +/- 0.04
+  Data group 14, instr const  1.77 +/- 0.11
+  Data group 15, instr const  1.88 +/- 0.11
+  Data group 16, instr const  0.82 +/- 0.06
+  Data group 17, instr const  0.63 +/- 0.05
+  Data group 18, instr const  0.60 +/- 0.03
+  Data group 19, instr const  1.46 +/- 0.09
+  Data group 20, instr const  1.59 +/- 0.08
+  Data group 21, instr const  0.66 +/- 0.05
+  Data group 22, instr const  0.69 +/- 0.05
+  Data group 23, instr const  0.62 +/- 0.03
+  Data group 24, instr const  1.46 +/- 0.08
+  Data group 25, instr const  1.53 +/- 0.07
+
+
+In [73]: fp.print_fit(out['ann_400_500'][0].models['snr_ann_400_500'])
+reduced chi-squared = 4545.17/3323 = 1.368
+snr model: constant*TBabs*vnei
+  nH (10^22)    2.076 +/- 0.000
+  kT   (keV)    5.904 +/- 4.174
+  Tau (s/cm^3)  2.39e+10 +/- 1.37e+10
+  Si            4.04  +/- 1.38
+  S             3.55  +/- 1.48
+  norm          2.88e-04 +/- 7.56e-05
+
+soft proton power laws
+  Data group 1, n  0.67 +/- 0.03,  norm  1.73e-01 +/- 8.98e-03
+  Data group 2, n  0.67 +/- 0.00,  norm  1.71e-01 +/- 8.51e-03
+  Data group 3, n  0.98 +/- 0.03,  norm  7.23e-01 +/- 2.71e-02
+  Data group 4, n  0.58 +/- 0.06,  norm  9.67e-02 +/- 9.72e-03
+  Data group 5, n  0.58 +/- 0.00,  norm  3.57e-02 +/- 7.24e-03
+  Data group 6, n  0.42 +/- 0.03,  norm  6.09e-02 +/- 3.39e-03
+  Data group 7, n  0.42 +/- 0.00,  norm  6.56e-02 +/- 3.59e-03
+  Data group 8, n  0.51 +/- 0.06,  norm  1.18e-01 +/- 1.17e-02
+  Data group 9, n  0.43 +/- 0.04,  norm  6.26e-02 +/- 4.39e-03
+  Data group 10, n  0.43 +/- 0.00,  norm  1.59e-02 +/- 2.46e-03
+  Data group 11, n  0.31 +/- 0.03,  norm  4.76e-02 +/- 2.52e-03
+  Data group 12, n  0.31 +/- 0.00,  norm  4.84e-02 +/- 2.60e-03
+  Data group 13, n  0.09 +/- 0.08,  norm  5.47e-02 +/- 8.10e-03
+  Data group 14, n  0.28 +/- 0.04,  norm  4.64e-02 +/- 3.53e-03
+  Data group 15, n  0.28 +/- 0.00,  norm  1.04e-02 +/- 1.56e-03
+  Data group 16, n  0.34 +/- 0.02,  norm  5.12e-02 +/- 1.98e-03
+  Data group 17, n  0.34 +/- 0.00,  norm  5.46e-02 +/- 2.06e-03
+  Data group 18, n  0.09 +/- 0.07,  norm  4.95e-02 +/- 6.20e-03
+  Data group 19, n  0.33 +/- 0.03,  norm  4.64e-02 +/- 2.89e-03
+  Data group 20, n  0.33 +/- 0.00,  norm  1.23e-02 +/- 1.42e-03
+  Data group 21, n  0.29 +/- 0.02,  norm  4.71e-02 +/- 1.59e-03
+  Data group 22, n  0.29 +/- 0.00,  norm  4.79e-02 +/- 1.60e-03
+  Data group 23, n  0.18 +/- 0.05,  norm  6.02e-02 +/- 5.22e-03
+  Data group 24, n  0.40 +/- 0.04,  norm  3.34e-02 +/- 2.40e-03
+  Data group 25, n  0.40 +/- 0.00,  norm  1.43e-02 +/- 1.41e-03
+
+instrumental lines
+  Data group 1, instr const  1.49 +/- 0.28
+  Data group 2, instr const  2.11 +/- 0.29
+  Data group 3, instr const  0.63 +/- 0.20
+  Data group 4, instr const  2.13 +/- 0.33
+  Data group 5, instr const  1.72 +/- 0.31
+  Data group 6, instr const  1.09 +/- 0.12
+  Data group 7, instr const  1.01 +/- 0.11
+  Data group 8, instr const  0.64 +/- 0.06
+  Data group 9, instr const  1.68 +/- 0.14
+  Data group 10, instr const  1.94 +/- 0.14
+  Data group 11, instr const  0.85 +/- 0.08
+  Data group 12, instr const  0.84 +/- 0.08
+  Data group 13, instr const  0.49 +/- 0.04
+  Data group 14, instr const  1.77 +/- 0.11
+  Data group 15, instr const  1.88 +/- 0.11
+  Data group 16, instr const  0.82 +/- 0.06
+  Data group 17, instr const  0.63 +/- 0.05
+  Data group 18, instr const  0.60 +/- 0.03
+  Data group 19, instr const  1.46 +/- 0.09
+  Data group 20, instr const  1.59 +/- 0.08
+  Data group 21, instr const  0.66 +/- 0.05
+  Data group 22, instr const  0.69 +/- 0.05
+  Data group 23, instr const  0.62 +/- 0.03
+  Data group 24, instr const  1.46 +/- 0.08
+  Data group 25, instr const  1.53 +/- 0.07
+
+
+In [74]:
+
+Fit to 12 regions (7 arbitrary selections + 5 annuli), each with nH free and
+then with nH fixed to 1.5, 2.0, 2.5, 3.0 (times 1e22), yields 60 spectrum fits.
+
+    Started at: 2016-04-20 17:36:55.222467
+    Finished at: 2016-04-20 23:02:32.513476
+
+This took 5.5 hours in total.  The fits with nH free took 5-20 minutes; the
+fits with nH fixed were faster, at ~3-6 minutes.
+
+Putting this all together...
+
+Thurs-Friday 2016 April 21-22 - writing
+=======================================
+
+Re-ran integrated src+bkg fit and dumped outputs to `results-spec/`
+Assembled notes into manuscript.
+
+Plotting tool and process cleanup.
+
+
+Saturday 2016 May 14 - more cleanup
+===================================
+
+Long hiatus.  Pat has May 3 copy of manuscript for a first look.
+
+ISM absorption - updated TBabs model
+------------------------------------
+Update absorption model: use latest `tb_new` from Wilms website:
+
+    http://pulsar.sternwarte.uni-erlangen.de/wilms/research/tbabs/
+
+For CCD spectroscopy, models look almost the same.
+Use anyways as a faster, insignificantly more accurate replacement.
+
+Cleanup
+-------
+Remove some unused scripts.
+
+
+FAQ:
+* Q: why use tbnew_gas instead of tbnew (with grains)?
+  A: grains have little effect on X-ray absorption.  Fig. 2 of Wilms, Allen,
+  McCray (2000) shows that grains change optical depth mainly at energies < 0.3
+  keV.  X-rays penetrate, so grain self-shielding results in little change as
+  when compared to gas-phase absorption.
+
 
 
 Misc. XSPEC has a "delayed gratification" option for levenberg-marquardt
@@ -8828,7 +9419,6 @@ Standing TODOs:
 * Re-run everything from a clean slate to ensure your pipeline is good.
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures
   for image scripts.
-* Image making -- remove corner events
 * Images -- subtract soft proton contamination a la ESAS?  The sharp vignetting
   could contaminate soft emission near the aimpoint, which might look like SNR
   emission...  (partially helped by choice of energy bands for imaging,
@@ -8836,6 +9426,8 @@ Standing TODOs:
 * check the filtering threshold of de Luca and Molendi on the corner data.
   (see sec. 3.3 of de luca/molendi 2003) as a sanity check -- was our GTI
   filtering sufficient?
+* Re-perform SWCX spectrum cut but using ENTIRE FOV (mask out point sources and
+  remnant) -- previously took emission from remnant only
 
 Standing questions:
 * Why did exposure maps for PN generate so fast, relative to MOS maps???
