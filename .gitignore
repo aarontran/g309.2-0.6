@@ -6,10 +6,16 @@ ms/aastex
 ms/refs-snr.bib
 ms/textNotes.bib
 
-most/G309.2-0.6.fits
-most/G309.2-0.6.jpg
+# Keep only the READMEs, or supporting files, for other data folders...
 most/G309.2-0.6.ps
 most/*.con
+
+absmodel/**
+!absmodel/README
+ctio/**
+!ctio/README
+molonglo_gps/**
+!molonglo_gps/README
 
 # Exclude derived DETX/DETY regions
 xmm/regs/0551000201/reg*.txt
@@ -74,6 +80,10 @@ chandra/*/00README
 # PDF files
 *.pdf
 *.PDF
+
+# Postscript
+*.ps
+*.eps
 
 # Log files
 *.log

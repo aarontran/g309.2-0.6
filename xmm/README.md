@@ -1,8 +1,9 @@
 README for analysis of XMM obsids 0087940201, 0551000201
 ========================================================
 
-Uses SAS build version: xmmsas_20141104_1833
+Uses SAS build version: xmmsas_20160201_1833-15.0.0
 Requires PyXSPEC version 1.1.0 (Parameter.index() function in particular)
+and tbabs_new version 2.3.2
 
 Setup and data reduction / fitting
 ----------------------------------
@@ -14,7 +15,7 @@ MOS1, MOS2, PN), run from this top-level directory (xmm/):
 
 This will download and unpackage data for obsids 0087940201 and 0551000201, and
 run XMM-SAS odfingest and cifbuild (via script sasrepro).
-To reprocess steps manually after downloading from XMM data archive, run
+To reprocess manually after downloading from XMM data archive, run
     
     source sasinit ${obsid}
     source sasrepro ${obsid}
@@ -23,36 +24,65 @@ To set-up an interactive environment for SAS/ESAS, run:
 
     source sasinit ${obsid}
 
-which sets the environment variable ${XMM_PATH} to provide access to scripts
-from deep within data directories.  Running `source sasinit` alone also sets up
-the XMM SAS and HEASOFT environment, but does not set obsid-specific parameters
-for SAS analysis (so evselect works, odfingest may not).
+of note, this sets the environment variable ${XMM_PATH} to help resolve links
+in scripts etc.
+Running `source sasinit` alone also sets up the XMM SAS and HEASOFT
+environment, but does not set obsid-specific parameters for SAS analysis (so
+evselect works, odfingest may not).
 
 To pass data through the processing pipeline, run:
 
     source sasinit ${obsid}
+
     cd ${obsid}/odf/repro
-    chainfilter_${obsid}
-    specbackgrp_${obsid}
+    chainfilter_0551000201
+    chainfilter_0087940201
 
-This will output a slew of spectra and files, which can be prepared for fitting
-with the following XSPEC command chains (warning: as of 2016 Jan 13, many
-parameters and commands must be hand-edited.  e.g. perform one fit, then copy
-relevant parameters over to another fitting script)
+Inspect data, create regions in DS9, and create corresponding XMM detector
+regions with:
 
-Main fitting (model both source and background regions, separately):
+    make_xmmregions (calls reg2xmmdets.pl)
+    check_xmmregions
 
-    ff_pn.xcm
-    ff_mos.xcm
-    back_0087940201.xcm
-    back_0551000201.xcm
-    snr.xcm
+Extract observation and FWC spectra with
 
-Alternative, background subtraction and fit:
+    specextract.tcsh, which is a wrapper script for:
+        make_xmmregions
+        specbackgrp $obsid $region
+        ff_fit.py
 
-    specmeth
-    snr_sqpb.xcm
+Spectrum fits: you'll have to configure a lot of stuff by hand unfortunately.
+Still working on it.
 
+    fitter_port.py (replaces fitter.tcsh, but still in works), wrapper for
+        xspec_fit_g309.py
+
+Note strong dependencies on:
+
+    ExtractedSpectrum.py
+    xspec_utils.py
+
+ExtractedSpectrum specifies the interface for addressing spectrum files,
+getting BACKSCAL values, etc.  So, again, it may need tweaking...
+
+Alternative, background subtraction and fit (not well-tested):
+
+    spec_subtract
+    snr_sbkg.xcm
+
+Image creation (not too tidy yet):
+
+    load_g309.sh
+    quick_image.sh
+    quick_image_merge.sh
+    make_ms_image.py
+
+I have been dumping results to:
+
+    results_img
+    results_spec
+
+rather haphazardly.
 
 Tools and scripts
 -----------------
@@ -61,23 +91,45 @@ The chainfilter/specbackgrp scripts should be nearly the same, but have
 variations for each dataset.  Some tools used in current pipeline, which can be
 run independently as well:
 
-    mos-spectra-mod, pn-spectra-mod
-    make_xmmregions, reg2xmmdets.pl
+    get_header_keyword {keyword}
+
+        obtain keyword values from spectrum fits files for all exposures
+
     cheese_smell
+
+        DS9 call to inspect cheese_grater outputs
+
     errcheck.sh
+
+        Scan logfiles for pipeline (glorified grep)
+
     arf_assess.py
-    bkg2src_norm
+
+        Compare ARF files across obsids/exposures
 
 Scripts to inspect pipeline files:
 
     epreject_hist.py
+
+        See the effect of epreject on output spectra counts (channel space)
+
     lightcurve_check.py
+
+        Check your lightcurves, please.
 
 Scripts for side analysis:
 
-    chainfilter_0551000201_no-epreject      check effects of epreject run
-    cheese_grater                           vary cheese (pt src removal) params
-    tbabs_vnei.py                           make plots of absorbed NEI model
-                                            (note: requires ARF/RMF files associated
-                                             with some dummy spectrum)
+    chainfilter_0551000201_no-epreject
+
+        check effects of epreject run on epchain process
+        irrelevant since we are not using PN data from this obsid anyways
+
+    cheese_grater
+
+        vary cheese (pt src removal) params
+
+    tbabs_vnei.py
+
+        make plots of absorbed NEI model (note: requires ARF/RMF files
+        associated with some dummy spectrum, so doesn't work out of the box)
 

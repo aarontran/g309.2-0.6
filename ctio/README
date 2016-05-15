@@ -1,0 +1,44 @@
+README
+
+Data downloaded 2016 April 5.
+
+Optical CTIO data collected by T. Gokas, C. Smith, F. Winkler.
+http://sites.middlebury.edu/snratlas/g309-2-0-6/
+
+Also download linked WISE and 2MASS survey data.  Unclear that these will
+necessarily be helpful, but nice to have the Halpha on hand.
+
+Information copy pasted from website:
+
+    SNR G309.2-0.6                  RA: 13:46:31   |   DEC: -62:54:00
+    Date (UTC)
+        
+    Filter
+        
+    λc (Å)
+        
+    ∆λa (Å)
+        
+    Exposure (s)
+        
+    Integrated Flux
+    (10^-12 ergs cm^-2 s^-1)
+    2001 Jan 28     HA  6568    30  3 x 400     27.5 ± 15.6
+        Red     6852    95  3 x 200     
+        [SII]   6738    50  3 x 400     .0156 (+.0156 or -.012)
+        [OIII]  5023    40  3 x 400     Emission not visible
+        Green   5130    155     3 x 200     
+    Observing Run: Cerro Tololo, 2001 Jan 25 – 30
+    Telescope: CTIO Schmidt, 0.9m
+    CCD: Tek2k#5 w/ Arcon 3.17
+    Scale: original = 2.3184 arcsec/pixel, combined images = 1 arcsec/pixel
+    Observers: T. Gokas, C. Smith, F. Winkler
+
+    Downloads:
+    Optical Images: Mosaicked images and subtracted images, all flux-calibrated (Fits)
+     
+    Other Wavelengths:
+    Infrared: WISE Survey, 3.4, 4.6, 12, 22 microns/μm (Fits Mosaicked)
+    Near-Infrared: 2MASS Survey J (1.25 microns), H (1.65 microns), and Ks (2.17 microns) (Fits Mosaicked)
+    Radio: MOST Catalogue (Fits File)
+

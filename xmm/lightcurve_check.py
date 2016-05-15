@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 """
 Check light curves...
 """
