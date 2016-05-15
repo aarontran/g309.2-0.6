@@ -7,10 +7,11 @@ Exploiting the fact that xspec objects are global (AllData, AllModels, etc...)
 Must be run in a sasinit-sourced environment
 """
 
-from future import __division__
+from __future__ import division
 
 from datetime import datetime
 from subprocess import call
+import os
 import sys
 
 import xspec as xs
@@ -291,6 +292,7 @@ def five_annulus_fit():
 def prep_xs(with_xw=False):
     """Apply standard XSPEC settings for G309"""
     xs.Xset.abund = "wilm"
+    xs.AllModels.lmod("absmodel", dirPath=os.environ['XMM_PATH'] + "/../absmodel")
     xs.Fit.query = "yes"
     if with_xw:
         xs.Plot.device = "/xw"  # Must disable if you are using dump_plots_data
@@ -305,14 +307,15 @@ def prep_xs(with_xw=False):
 
 if __name__ == '__main__':
 
-    prep_xs(with_xs=False)
+    prep_xs(with_xw=False)
 
     # Clock in
     # --------
     started = datetime.now()
 
-    joint_src_bkg_fit()
-    dump_plots_data('results_spec/20160421_src_and_bkg', xs.AllModels(1,'snr_src'), 'src')
+    #joint_src_bkg_fit()
+    out = myxs.load_data("src", "bkg", snr_model='vnei')
+    #dump_plots_data('results_spec/20160421_src_and_bkg', xs.AllModels(1,'snr_src'), 'src')
 
     # five_annulus_fit()
     # dump_plots_data('fiveannfit_ann_000_100', xs.AllModels( 1, 'snr_ann_000_100'), 'ann_000_100')
@@ -389,8 +392,8 @@ if __name__ == '__main__':
     print "Finished at:", datetime.now()
 
     print ""
-    for indiv in times:
-        print indiv[0] + ":", indiv[2] - indiv[1]
-        print "   start", indiv[1]
-        print "  finish", indiv[2]
+#    for indiv in times:
+#        print indiv[0] + ":", indiv[2] - indiv[1]
+#        print "   start", indiv[1]
+#        print "  finish", indiv[2]
 

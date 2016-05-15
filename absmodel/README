@@ -1,0 +1,4 @@
+README: download tbabs_new from
+  http://pulsar.sternwarte.uni-erlangen.de/wilms/research/tbabs/
+and install according to directions (initpackage in XSPEC).
+Currently (2016 May 14) using v2.3.2.

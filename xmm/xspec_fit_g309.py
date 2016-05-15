@@ -162,26 +162,26 @@ def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
 
     # Initialize source model with reasonable "global" parameters
     if case == 'vnei':
-        src = xs.Model("constant * TBabs * vnei", model_name, model_n)
+        src = xs.Model("constant * tbnew_gas * vnei", model_name, model_n)
         # Apply fitting bounds
-        src.setPars({src.TBabs.nH.index : "1, , 1e-2, 0.1, 10, 10"},  # generally well-constrained already
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10"},  # generally well-constrained already
                     {src.vnei.kT.index : "1, , , , 10, 10"},  # upper bound only
                     {src.vnei.S.index : "1, , , , 10, 10"},  # upper bound only
                     {src.vnei.Si.index : "1, , , , 10, 10"} )  # upper bound only
-        src.TBabs.nH.frozen = True
+        src.tbnew_gas.nH.frozen = True
         src.vnei.kT.frozen = True
         src.vnei.Tau.frozen = True
         src.vnei.S.frozen = True
         src.vnei.Si.frozen = True
     elif case == 'vpshock':
-        src = xs.Model("constant * TBabs * vpshock", model_name, model_n)
-        src.TBabs.nH = 1
+        src = xs.Model("constant * tbnew_gas * vpshock", model_name, model_n)
+        src.tbnew_gas.nH = 1
         src.vpshock.kT = 1
         src.vpshock.Tau_l = 1e9
         src.vpshock.Tau_u = 1e11
     elif case == 'vsedov':
         raise Exception("Need to test vsedov further, doesn't work")
-        #src = xs.Model("constant * TBabs * vsedov", model_name, model_n)
+        #src = xs.Model("constant * tbnew_gas * vsedov", model_name, model_n)
         #snr.vsedov.kT = 2
         #snr.vsedov.kT_i = 1
     elif case is None:
@@ -256,7 +256,7 @@ def load_cxrb(model_n, extracted_spectra):
         extr.spec.multiresponse[model_n - 1].arf = extr.arf()
 
     # Initialize XRB model with reasonable "global" parameters
-    xrb = xs.Model("constant * (apec + TBabs*(powerlaw + apec))", 'xrb', model_n)
+    xrb = xs.Model("constant * (apec + tbnew_gas*(powerlaw + apec))", 'xrb', model_n)
 
     # Hickox and Markevitch (2006) norm
     # convert 10.9 photons cm^-2 s^-1 sr^-1 keV^-1 to photons cm^-2 s^-1 keV^-1
@@ -268,14 +268,14 @@ def load_cxrb(model_n, extracted_spectra):
     xrb.setPars({xrb.powerlaw.PhoIndex.index : 1.4},
                 {xrb.powerlaw.norm.index : exrb_norm},
                 {xrb.apec.kT.index : 0.255},  # Unabsorped apec (local bubble)
-                {xrb.TBabs.nH.index : 1.340},  # Galactic absorption
+                {xrb.tbnew_gas.nH.index : 1.340},  # Galactic absorption
                 {xrb.apec_5.kT.index : 0.644},  # Absorbed apec (galactic halo)
                 {xrb.apec.norm.index : 2.89e-4},
                 {xrb.apec_5.norm.index : 2.58e-3} )
 
 # Fit without BACKSCAL ratio tweaks.  Change in parameters is <~10%.
 #                {xrb.apec.kT.index : 0.261},  # Unabsorped apec (local bubble)
-#                {xrb.TBabs.nH.index : 1.372},  # Galactic absorption
+#                {xrb.tbnew_gas.nH.index : 1.372},  # Galactic absorption
 #                {xrb.apec_5.kT.index : 0.755},  # Absorbed apec (galactic halo)
 #                {xrb.apec.norm.index : 3.06e-4},
 #                {xrb.apec_5.norm.index : 2.33e-3} )
