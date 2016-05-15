@@ -1,0 +1,20 @@
+#!/bin/bash
+
+obsids="0087940201 0551000201"
+exps="mos1S001 mos2S002 pnS003"
+
+keyword=$1
+
+for obsid in $obsids; do
+  for exp in $exps; do
+
+    evli="${XMM_PATH}/${obsid}/odf/repro/${exp}-clean.fits"
+
+    fkeypar $evli $keyword
+    value="$(pget fkeypar value)"
+    echo "${obsid} ${exp} ${keyword} = ${value}"
+
+  done
+done
+
+echo ""
