@@ -9362,8 +9362,8 @@ Assembled notes into manuscript.
 Plotting tool and process cleanup.
 
 
-Saturday 2016 May 14 - more cleanup
-===================================
+Saturday,Sunday 2016 May 14-15 - more cleanup
+=============================================
 
 Long hiatus.  Pat has May 3 copy of manuscript for a first look.
 
@@ -9380,6 +9380,32 @@ Cleanup
 -------
 Remove some unused scripts.
 
+Current setup for an interactive fit
+------------------------------------
+...
+
+    In [1]: from fitter_port import *
+
+    In [2]: prep_xs(with_xw=True)
+     Solar Abundance Vector set to wilm:  Wilms, J., Allen, A. & McCray, R. ApJ 542 914 (2000) (abundances are set to zero for those elements not included in the paper).
+    Model package absmodel successfully loaded.
+
+    In [3]: started = datetime.now() ; out = myxs.load_data("src", "bkg", snr_model='vnei') ; finished = datetime.now() ; print "Started at:", started ; print "Finished at:", finished;
+
+With `tbnew_gas` and `fitter_port.joint_src_bkg_fit` (run by hand) I recover
+XRB parameters:
+
+      constant   factor              1.00000      frozen
+      apec       kT         keV      0.256478     +/-  4.09922E-03
+      apec       norm                2.89482E-04  +/-  9.18714E-06
+      tbnew_gas  nH         10^22    1.31762      +/-  4.21957E-02
+      powerlaw   PhoIndex            1.40000      frozen
+      powerlaw   norm                1.22929E-04  frozen
+      apec       kT         keV      0.647672     +/-  1.88093E-02
+      apec       norm                2.50428E-03  +/-  1.81144E-04
+
+after an initial fit, using the 0.95 backscal hack for 0551000201 MOS1 SNR
+region.  Values are ALMOST the same as previous fit values, within error.
 
 FAQ:
 * Q: why use tbnew_gas instead of tbnew (with grains)?

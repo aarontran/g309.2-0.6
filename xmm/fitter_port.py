@@ -31,9 +31,9 @@ def print_fit(snr, f_out=None):
     to throw fit parameters into notes
 
     Input: snr = XSPEC model object for a source of form
-            1. TBabs * vnei
-            2. TBabs * vpshock
-            3. TBabs * vsedov
+            1. tbnew_gas * vnei
+            2. tbnew_gas * vpshock
+            3. tbnew_gas * vsedov
     Input (optional): f_out
         file to print output to.  If None, print to stdout
     Output: n/a.  As advertised, this prints stuff.
@@ -52,7 +52,7 @@ def print_fit(snr, f_out=None):
                 xs.Fit.dof, xs.Fit.statistic/xs.Fit.dof)
 
     print "snr model: {}".format(snr.expression)
-    print "  nH (10^22)    {:.3f} +/- {:.3f}".format(*f(snr.TBabs.nH))
+    print "  nH (10^22)    {:.3f} +/- {:.3f}".format(*f(snr.tbnew_gas.nH))
     if 'vnei' in snr.componentNames:
         plasma = snr.vnei
         print "  kT   (keV)    {:.3f} +/- {:.3f}".format(*f(plasma.kT))
@@ -128,7 +128,7 @@ def make_table(snr, region_name):
     ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 region fits", prec=1)
 
     ltr = [region_name,  # For obvious reasons, hand-edit this in the actual output
-           snr.TBabs.nH.values[0],
+           snr.tbnew_gas.nH.values[0],
            snr.vnei.kT.values[0],
            snr.vnei.Tau.values[0] / 1e10,
            snr.vnei.Si.values[0],
@@ -185,6 +185,18 @@ def dump_plots_data(f_stem, snr, region_name):
 # Specific fit setup and execution routines #
 #############################################
 
+def prep_xs(with_xw=False):
+    """Apply standard XSPEC settings for G309"""
+    xs.Xset.abund = "wilm"
+    xs.AllModels.lmod("absmodel", dirPath=os.environ['XMM_PATH'] + "/../absmodel")
+    xs.Fit.query = "yes"
+    if with_xw:
+        xs.Plot.device = "/xw"  # Must disable if you are using dump_plots_data
+    xs.Plot.xAxis = "keV"
+    xs.Plot.xLog = True
+    xs.Plot.yLog = True
+    xs.Plot.addCommand("rescale y 1e-5 3")  # may need to twiddle
+
 def set_energy_range(all_extrs):
     """Set up fit (range ignores, PN power law setup, renorm)
     These are specific ALWAYS-ON tweaks or fixes, typically determined after
@@ -203,6 +215,10 @@ def set_energy_range(all_extrs):
 def joint_src_bkg_fit():
     """Fit source + bkg regions, allowing XRB to float"""
 
+    # TODO these should be marked with Git commit hashes
+    # to indicate a point in time at which these calls
+    # are (almost) guaranteed to work
+
     out = myxs.load_data("src", "bkg", snr_model='vnei')
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
@@ -213,12 +229,12 @@ def joint_src_bkg_fit():
     # Set XRB parameters to "typical" values, but do NOT allow to vary
     xrb = xs.AllModels(1, 'xrb')
     xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
-                {xrb.TBabs.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
+                {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
                 {xrb.apec_5.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
                 {xrb.apec.norm.index : 1e-3},
                 {xrb.apec_5.norm.index : 1e-3} )
     xrb.apec.kT.frozen = True
-    xrb.TBabs.nH.frozen = True
+    xrb.tbnew_gas.nH.frozen = True
     xrb.apec_5.kT.frozen = True
     xrb.apec.norm.frozen = True
     xrb.apec_5.norm.frozen = True
@@ -227,7 +243,7 @@ def joint_src_bkg_fit():
 
     # Let SNR model vary
     snr = xs.AllModels(1,'snr_src')
-    snr.TBabs.nH.frozen=False
+    snr.tbnew_gas.nH.frozen=False
     snr.vnei.kT.frozen=False
     snr.vnei.Tau.frozen=False
     #xs.Fit.perform()
@@ -238,7 +254,7 @@ def joint_src_bkg_fit():
     # XRB is not as well constrained as SNR, and fits w/ XRB free
     # (and SNR at default vnei values) tend to run away
     xrb.apec.kT.frozen = False
-    xrb.TBabs.nH.frozen = False
+    xrb.tbnew_gas.nH.frozen = False
     xrb.apec_5.kT.frozen = False
     xrb.apec.norm.frozen = False
     xrb.apec_5.norm.frozen = False
@@ -271,13 +287,13 @@ def five_annulus_fit():
              out['ann_300_400'][0].models['snr_ann_300_400'],
              out['ann_400_500'][0].models['snr_ann_400_500']]
     for ring in rings[1:]:  # Exclude center
-        ring.TBabs.nH.link = xs_utils.link_name(rings[0], rings[0].TBabs.nH)
+        ring.tbnew_gas.nH.link = xs_utils.link_name(rings[0], rings[0].tbnew_gas.nH)
 
     xs.Fit.renorm()
     xs.Fit.perform()
 
     for ring in rings:
-        ring.TBabs.nH.frozen = False
+        ring.tbnew_gas.nH.frozen = False
         ring.vnei.kT.frozen = False
         ring.vnei.Tau.frozen = False
 
@@ -288,18 +304,6 @@ def five_annulus_fit():
         ring.vnei.S.frozen = False
 
     xs.Fit.perform()
-
-def prep_xs(with_xw=False):
-    """Apply standard XSPEC settings for G309"""
-    xs.Xset.abund = "wilm"
-    xs.AllModels.lmod("absmodel", dirPath=os.environ['XMM_PATH'] + "/../absmodel")
-    xs.Fit.query = "yes"
-    if with_xw:
-        xs.Plot.device = "/xw"  # Must disable if you are using dump_plots_data
-    xs.Plot.xAxis = "keV"
-    xs.Plot.xLog = True
-    xs.Plot.yLog = True
-    xs.Plot.addCommand("rescale y 1e-5 3")  # may need to twiddle
 
 ###########################
 # Actually run stuff here #
@@ -355,10 +359,10 @@ if __name__ == '__main__':
 #            snr.vnei.kT.frozen=False
 #            snr.vnei.Tau.frozen=False
 #            if nH is not None:
-#                snr.TBabs.nH = nH
-#                snr.TBabs.nH.frozen=True
+#                snr.tbnew_gas.nH = nH
+#                snr.tbnew_gas.nH.frozen=True
 #            else:
-#                snr.TBabs.nH.frozen=False
+#                snr.tbnew_gas.nH.frozen=False
 #            xs.Fit.perform()
 #
 #            # Thaw Si, S

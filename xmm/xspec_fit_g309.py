@@ -44,8 +44,17 @@ def load_data(*regs, **kwargs):
     if not kwargs['snr_model']:
         raise Exception("snr_model is a required kwarg")
 
+    # Some general thoughts
+    # 1. requiring us to have model #s to get models out
+    #    is somewhat cumbersome
+    # 2. reg should be an intrinsic part of ExtractedSpectrum
+    #    (indeed it is, but it's convenient to be able to
+    #     quickly get all spectra from region of interest)
+
     # ExtractedSpectrum objects allow script to easily resolve pipeline outputs
     # regs sets the ordering for XSPEC datagroup assignment
+    # This is REALLY stupid -- extrs_from and all_extrs are just two different
+    # views into the same set of ExtractedSpectrum objects...
     extrs_from = {}
     all_extrs = []  # Keep regs ordering for XSPEC datagroup assignment
     for reg in regs:
@@ -56,8 +65,6 @@ def load_data(*regs, **kwargs):
                   ExtractedSpectrum("0551000201", "mos2S002", reg) ]
         extrs_from[reg] = extrs
         all_extrs.extend(extrs)
-    # a possibly nicer solution is a dataframe that allows quick filtering /
-    # selection by region, obsid, etc
 
     # Spectrum and response assignment
     # --------------------------------
@@ -77,56 +84,76 @@ def load_data(*regs, **kwargs):
 
     # Load models
     # -----------
+    # 1: x-ray background
+    # 2: instrumental lines
+    # 3, ... (3+n_reg-1): SNR plasma model
+    # (3+n_reg), ..., (3+n_reg+n_spec): soft proton background
 
-    # Keep ALL model-specific settings -- rmf/arf assignment,
-    # globally fixed parameter values, "standard" parameter links, etc. inside
-    # loader methods.  Loader methods require all_extrs = list of
-    # ExtractedSpectrum objects that ADDITIONALLY comes with a .spec attribute,
-    # pointing to the associated xs.Spectrum object.
+    # NOTE: loader methods below require that
+    # ExtractedSpectrum objects have xs.Spectrum objects attached
+    # again, breaking abstraction
+
+    # Attach xs.Model objects to ExtractedSpectrum for convenience
+    # no need to address by: xs.AllModels(extr.spec.index, model_name)
+    # Though, this sort of breaks abstraction
+    # think a little about this
     for extr in all_extrs:
         extr.models = {}
-
-    # 0: x-ray background
-    # 1: instrumental lines
-    # 2: SNR plasma model
-    # 3: soft proton background
-    # (maps to 1,2,3,4 in PyXSPEC methods)
 
     load_cxrb(1, all_extrs)
 
     load_soft_proton(2, all_extrs)
+    for extr in all_extrs:
+        extr.models['sp'] = xs.AllModels(extr.spec.index, 'sp')
+        extr.models['xrb'] = xs.AllModels(extr.spec.index, 'xrb')
 
     # SNR model -- distinct source model for each region
-    # if "bkg" in regs, source numbering will be discontinuous; that's OK
+    # if "bkg" in regs, source numbering will be discontinuous
     for n_reg, reg in enumerate(regs):
         if reg == "bkg":
             continue
-        load_source_model(3 + n_reg, extrs_from[reg], model_name="snr_{}".format(reg), case=kwargs['snr_model'])
-        # TODO note code variable snr_model here
+        model_n = 3 + n_reg
+        load_source_model(model_n, extrs_from[reg], model_name="snr_{}".format(reg), case=kwargs['snr_model'])
+        # TODO this is ugly as sin
+        for extr in extrs_from[reg]:
+            extr.models['snr'] = xs.AllModels(extr.spec.index, "snr_" + reg)
 
     # One instrumental line model per spectrum
     for n_extr, extr in enumerate(all_extrs):
-        load_instr(3 + len(regs) + n_extr, extr, model_name="instr_{:d}".format(n_extr+1))
+        model_n = 3 + len(regs) + n_extr
+        load_instr(model_n, extr, model_name="instr_{:d}".format(n_extr+1))
+        extr.models['instr'] = xs.AllModels(extr.spec.index, "instr_{:d}".format(n_extr+1))
 
     return extrs_from
 
 
 
 def load_instr(model_n, extr, model_name=None):
-    """Load instrumental lines.
-
-    Import previously fitted gaussian instrumental lines.
-    Fix instr line energies and norms, but allow overall norm to vary
-    (i.e., all line ratios pinned to FWC line ratios)
+    """Create instrumental line model for ExtractedSpectrum extr
+    Fix line energies and norms based on FWC fit data, but allow overall norm
+    to vary (i.e., all line ratios pinned to FWC line ratios).
+    Use ARFs appropriate for FWC data (no telescope vignetting).
 
     Currently expect 2 lines (MOS) and 7 lines (PN) modeled in FWC spectrum
     MOS lines: Al, Si
     PN lines: Al, Ti, Cr, Ni, Cu, Zn, Cu(K-beta)
 
-    WARNING -- input argument is a single spectrum, not a list
+    WARNING -- operates on a single ExtractedSpectrum, rather than a list,
+    which breaks convention with other model loaders.
+    Reason being, each spectrum has a DIFFERENT instr. line model.
 
-    Input: ...
-        kwarg model_name is _required_
+    (alternative approach: create a single model w/ both MOS and PN lines,
+    and freeze or zero out values accordingly.
+    This makes the xs.AllModels.show() output much harder to read,
+    but the model #s are easier to track)
+
+    Arguments
+        model_n: XSPEC model number, 1-based
+        extr: single ExtractedSpectrum.
+            WARNING - breaks convention w/ other model loaders.
+        model_name: XSPEC model name
+    Output:
+        None.  Global XSPEC objects configured for instrumental lines.
     """
     # Set responses of <xs.Spectrum> objects
     extr.spec.multiresponse[model_n - 1]     = extr.rmf()
@@ -148,13 +175,23 @@ def load_instr(model_n, extr, model_name=None):
     xs_utils.freeze_model(instr)
     instr.constant.factor.frozen = False
 
-    # Save model for this spectrum
-    # no need to address by: xs.AllModels(extr.spec.index, model_name)
-    extr.models[model_name] = instr
 
 
 def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
-    """Set source (typically SNR) model"""
+    """Create source model for extracted_spectra
+    Set appropriate RMF & ARF files, initialize parameters and parameter
+    bounds, apply BACKSCAL ratio scaling.
+    Parameter bounds are of course tuned for G309.2-0.6.
+
+    Arguments
+        model_n: XSPEC model number, 1-based
+        extracted_spectra: list of ExtractedSpectrum objects
+        model_name: XSPEC model name
+        case: remnant type (specifies a canned model setup)
+    Output:
+        None.  Global XSPEC objects configured for SNR.
+    """
+
     # Set responses of <xs.Spectrum> objects
     for extr in extracted_spectra:
         extr.spec.multiresponse[model_n - 1]     = extr.rmf()
@@ -196,13 +233,22 @@ def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
         src_curr.constant.factor = extr.backscal() / ExtractedSpectrum.FIDUCIAL_BACKSCAL
         src_curr.constant.factor.frozen = True
         # Save model for this spectrum
-        extr.models[model_name] = src_curr
 
 
 def load_soft_proton(model_n, extracted_spectra):
-    """Set soft proton contamination power laws
-    Warning -- requires each obsid to have <=1 MOS1, <=1 MOS2 spectrum
-    Will not work otherwise.  Easy to fix, though.
+    """Set soft proton contamination power laws for each spectrum in
+    extracted_spectra.
+    Set appropriate RMF & ARF files, initialize parameters and parameter
+    bounds, apply BACKSCAL ratio scaling.
+
+    Ties power-law indices between MOS1 and MOS2 exposures in same obsid.
+    Requires that each obsid has only one MOS1 and one MOS2 exposure.
+
+    Arguments
+        model_n: XSPEC model number, 1-based
+        extracted_spectra: list of ExtractedSpectrum objects
+    Output:
+        None.  Global XSPEC objects configured for soft proton model.
     """
 
     # Set responses of <xs.Spectrum> objects
@@ -228,27 +274,34 @@ def load_soft_proton(model_n, extracted_spectra):
         # Apply backscal ratio scalings to make comparing norms easier
         sp_curr.constant.factor = extr.backscal() / ExtractedSpectrum.FIDUCIAL_BACKSCAL
         sp_curr.constant.factor.frozen = True
-        # Save model for this spectrum
-        extr.models['sp'] = sp_curr
 
     # Tie MOS1/MOS2 photon indices together
     for x in extracted_spectra:
         if x.instr != 'mos1':
             continue
-        sp_mos1 = x.models['sp']
+        sp_mos1 = xs.AllModels(x.spec.index, 'sp')
         sp_mos2 = None
         # Find matching MOS2 observation
         for y in extracted_spectra:
             if y.instr == 'mos2' and y.reg == x.reg and y.obsid == x.obsid:
                 if sp_mos2:  # May occur in complex XMM pointings
                     raise Exception("Extra mos2 spectrum!")
-                sp_mos2 = y.models['sp']
+                sp_mos2 = xs.AllModels(y.spec.index, 'sp')
         # Tie photon indices
         sp_mos2.powerlaw.PhoIndex.link = xs_utils.link_name(sp_mos1, sp_mos1.powerlaw.PhoIndex)
 
 
 def load_cxrb(model_n, extracted_spectra):
-    """Set CXRB"""
+    """Load cosmic X-ray background for each spectrum in
+    extracted_spectra.
+    Set appropriate RMF & ARF files, initialize XRB model and parameter
+    values, apply BACKSCAL ratio scaling.
+    Arguments
+        model_n: XSPEC model number, 1-based
+        extracted_spectra: list of ExtractedSpectrum objects
+    Output:
+        None.  Global XSPEC objects configured for XRB model.
+    """
 
     # Set responses of <xs.Spectrum> objects
     for extr in extracted_spectra:
@@ -289,43 +342,8 @@ def load_cxrb(model_n, extracted_spectra):
         # Re-freeze because changing value from link thaws by default
         xrb_curr.constant.factor = extr.backscal() / ExtractedSpectrum.FIDUCIAL_BACKSCAL
         xrb_curr.constant.factor.frozen = True
-        # Save model for this spectrum
-        extr.models['xrb'] = xrb_curr
-
-
-
 
 
 if __name__ == '__main__':
     pass
-
-#    parser = argparse.ArgumentParser(description="Execute interactive G309 region fits in XSPEC")
-#    parser.add_argument('reg', default='src',
-#        help="Region to fit to SNR/plasma model")
-#    parser.add_argument('--snr_model', default='vnei',
-#        help="Choose SNR model")
-#    parser.add_argument('--n_H', type=float, default=None,
-#        help="Fix SNR absorption nH in fits (units 10e22), else free to vary")
-#    parser.add_argument('--no_fit', action='store_true',
-#        help="Don't start any fits; drop user straight into interactive mode")
-#    parser.add_argument('--with_bkg', action='store_true',
-#        help=("Load bkg spectra for simultaneous fitting instead of using"
-#              " canned values from integrated SNR/bkg fit"))
-#
-#    # Set a number of global variables from CL args
-#    # Interface in scripts tbd...
-#    args = parser.parse_args()
-#    REG = args.reg
-#    SNR_MODEL = args.snr_model
-#    N_H = args.n_H
-#    WITH_BKG = args.with_bkg
-#    NO_FIT = args.no_fit
-#
-#    if SNR_MODEL not in ['vnei', 'vpshock', 'vsedov', 'xrb']:
-#        raise Exception("Invalid SNR model")
-#
-#    load_data()
-#
-#    print "Finished at:", datetime.now()
-
 
