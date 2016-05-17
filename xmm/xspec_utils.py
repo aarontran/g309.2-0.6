@@ -6,6 +6,37 @@ import json
 
 import xspec as xs
 
+
+# --------------------------------
+# Methods for manipulating spectra
+# --------------------------------
+
+def load_spec(spec_number, spec_path, background=None, default_dir=None):
+    """
+    More robust spectrum load (wrapper for PyXSPEC methods)
+
+    Args:
+        number: XSPEC spectrum number (1-based)
+        spec_path: filename of spectrum
+        background: (optional) filename of background spectrum, to be subtracted
+        default_dir: (optional) if spectrum PHA arf/rmf/bkg are not found,
+            XSPEC will hang, so provide correct directory if needed
+    Returns:
+        newly created xspec.Spectrum instance
+    """
+    old_wd = os.getcwd()
+    if default_dir is not None:
+        os.chdir(default_dir)
+
+    xs.AllData("{n}:{n} {fname}".format(n=n, fname=spec_path)
+    spec = xs.AllData(n)
+    if background is not None
+        spec.background = background
+    os.chdir(old_wd)
+
+    return spec
+
+
 # -------------------------------------------------------
 # Methods for manipulating models, components, parameters
 # -------------------------------------------------------

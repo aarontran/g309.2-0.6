@@ -41,20 +41,9 @@ def load_data(*regs, **kwargs):
     """
     if len(set(regs)) != len(regs):
         raise Exception("Duplicate regions not allowed")
-    if not kwargs['snr_model']:
-        raise Exception("snr_model is a required kwarg")
-
-    # Some general thoughts
-    # 1. requiring us to have model #s to get models out
-    #    is somewhat cumbersome
-    # 2. reg should be an intrinsic part of ExtractedSpectrum
-    #    (indeed it is, but it's convenient to be able to
-    #     quickly get all spectra from region of interest)
 
     # ExtractedSpectrum objects allow script to easily resolve pipeline outputs
-    # regs sets the ordering for XSPEC datagroup assignment
-    # This is REALLY stupid -- extrs_from and all_extrs are just two different
-    # views into the same set of ExtractedSpectrum objects...
+    # order of regs sets the order of XSPEC datagroup assignment
     extrs_from = {}
     all_extrs = []  # Keep regs ordering for XSPEC datagroup assignment
     for reg in regs:
@@ -68,19 +57,10 @@ def load_data(*regs, **kwargs):
 
     # Spectrum and response assignment
     # --------------------------------
-
-    old_wd = os.getcwd()
-
     for i, extr in enumerate(all_extrs, start=1):
-        # Load spectrum into XSPEC
-        os.chdir(extr.repro_dir())  # chdir so XSPEC can resolve header arf/rmf/bkg, avoid awful errors
-        xs.AllData("{n}:{n} {file}".format(n=i, file=extr.pha()))
-        spec = xs.AllData(i)
-        spec.background = extr.qpb()
-        # Attach xs.Spectrum to ExtractedSpectrum
+        spec = xs_utils.load_spec(i, extr.pha(), background=extr.qpb(),
+                                  default_dir=extr.repro_dir())
         extr.spec = spec
-
-    os.chdir(old_wd)
 
     # Load models
     # -----------
@@ -89,18 +69,15 @@ def load_data(*regs, **kwargs):
     # 3, ... (3+n_reg-1): SNR plasma model
     # (3+n_reg), ..., (3+n_reg+n_spec): soft proton background
 
-    # NOTE: loader methods below require that
-    # ExtractedSpectrum objects have xs.Spectrum objects attached
-    # again, breaking abstraction
+    # NOTE: loader methods below require that ExtractedSpectrum objects have
+    # xs.Spectrum objects attached in .spec attribute
 
     # Attach xs.Model objects to ExtractedSpectrum for convenience
     # no need to address by: xs.AllModels(extr.spec.index, model_name)
-    # Though, this sort of breaks abstraction
-    # think a little about this
     for extr in all_extrs:
         extr.models = {}
 
-    load_cxrb(1, all_extrs)
+    load_cxrb(1, 'xrb', all_extrs)
 
     load_soft_proton(2, all_extrs)
     for extr in all_extrs:
@@ -110,11 +87,10 @@ def load_data(*regs, **kwargs):
     # SNR model -- distinct source model for each region
     # if "bkg" in regs, source numbering will be discontinuous
     for n_reg, reg in enumerate(regs):
-        if reg == "bkg":
+        if reg == "bkg" or kwargs['snr_model'] is None:
             continue
         model_n = 3 + n_reg
-        load_source_model(model_n, extrs_from[reg], model_name="snr_{}".format(reg), case=kwargs['snr_model'])
-        # TODO this is ugly as sin
+        load_remnant_model(model_n, extrs_from[reg], model_name="snr_" + reg, case=kwargs['snr_model'])
         for extr in extrs_from[reg]:
             extr.models['snr'] = xs.AllModels(extr.spec.index, "snr_" + reg)
 
@@ -128,7 +104,7 @@ def load_data(*regs, **kwargs):
 
 
 
-def load_instr(model_n, extr, model_name=None):
+def load_instr(model_n, extr, model_name):
     """Create instrumental line model for ExtractedSpectrum extr
     Fix line energies and norms based on FWC fit data, but allow overall norm
     to vary (i.e., all line ratios pinned to FWC line ratios).
@@ -142,16 +118,19 @@ def load_instr(model_n, extr, model_name=None):
     which breaks convention with other model loaders.
     Reason being, each spectrum has a DIFFERENT instr. line model.
 
+    ExtractedSpectrum object additionally _must_ have an attached
+    xs.Spectrum object, referenced via .spec attribute.
+
     (alternative approach: create a single model w/ both MOS and PN lines,
     and freeze or zero out values accordingly.
-    This makes the xs.AllModels.show() output much harder to read,
-    but the model #s are easier to track)
+    This makes xs.AllModels.show() output much harder to read (many zeroed,
+    meaningless parameters, but model #s easier to track)
 
     Arguments
         model_n: XSPEC model number, 1-based
         extr: single ExtractedSpectrum.
             WARNING - breaks convention w/ other model loaders.
-        model_name: XSPEC model name
+        model_name: XSPEC model name, string (no spaces)
     Output:
         None.  Global XSPEC objects configured for instrumental lines.
     """
@@ -176,17 +155,19 @@ def load_instr(model_n, extr, model_name=None):
     instr.constant.factor.frozen = False
 
 
-
-def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
+def load_remnant_model(model_n, extracted_spectra, model_name, case='vnei'):
     """Create source model for extracted_spectra
     Set appropriate RMF & ARF files, initialize parameters and parameter
     bounds, apply BACKSCAL ratio scaling.
     Parameter bounds are of course tuned for G309.2-0.6.
 
+    ExtractedSpectrum objects additionally _must_ have an attached
+    xs.Spectrum object, referenced via .spec attribute.
+
     Arguments
         model_n: XSPEC model number, 1-based
         extracted_spectra: list of ExtractedSpectrum objects
-        model_name: XSPEC model name
+        model_name: XSPEC model name, string (no spaces)
         case: remnant type (specifies a canned model setup)
     Output:
         None.  Global XSPEC objects configured for SNR.
@@ -201,10 +182,23 @@ def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
     if case == 'vnei':
         src = xs.Model("constant * tbnew_gas * vnei", model_name, model_n)
         # Apply fitting bounds
-        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10"},  # generally well-constrained already
-                    {src.vnei.kT.index : "1, , , , 10, 10"},  # upper bound only
-                    {src.vnei.S.index : "1, , , , 10, 10"},  # upper bound only
-                    {src.vnei.Si.index : "1, , , , 10, 10"} )  # upper bound only
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
+                     src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
+                     src.vnei.S.index : "1, , , , 10, 10",  # upper bound only
+                     src.vnei.Si.index : "1, , , , 10, 10"} )  # upper bound only
+        src.tbnew_gas.nH.frozen = True
+        src.vnei.kT.frozen = True
+        src.vnei.Tau.frozen = True
+        src.vnei.S.frozen = True
+        src.vnei.Si.frozen = True
+    elif case == 'vnei+powerlaw':
+        src = xs.Model("constant * tbnew_gas * (vnei + powerlaw)", model_name, model_n)
+        # Apply fitting bounds
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
+                     src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
+                     src.vnei.S.index : "1, , , , 10, 10",  # upper bound only
+                     src.vnei.Si.index : "1, , , , 10, 10"} )  # upper bound only
+        # TODO Appropriate bounds for powerlaw component TBD
         src.tbnew_gas.nH.frozen = True
         src.vnei.kT.frozen = True
         src.vnei.Tau.frozen = True
@@ -222,7 +216,7 @@ def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
         #snr.vsedov.kT = 2
         #snr.vsedov.kT_i = 1
     elif case is None:
-        src = None
+        return
     else:
         raise Exception("Invalid snr model: {} not recognized".format(case))
 
@@ -235,7 +229,7 @@ def load_source_model(model_n, extracted_spectra, model_name, case='vnei'):
         # Save model for this spectrum
 
 
-def load_soft_proton(model_n, extracted_spectra):
+def load_soft_proton(model_n, model_name, extracted_spectra):
     """Set soft proton contamination power laws for each spectrum in
     extracted_spectra.
     Set appropriate RMF & ARF files, initialize parameters and parameter
@@ -244,8 +238,12 @@ def load_soft_proton(model_n, extracted_spectra):
     Ties power-law indices between MOS1 and MOS2 exposures in same obsid.
     Requires that each obsid has only one MOS1 and one MOS2 exposure.
 
+    ExtractedSpectrum objects additionally _must_ have an attached
+    xs.Spectrum object, referenced via .spec attribute.
+
     Arguments
         model_n: XSPEC model number, 1-based
+        model_name: XSPEC model name, string (no spaces)
         extracted_spectra: list of ExtractedSpectrum objects
     Output:
         None.  Global XSPEC objects configured for soft proton model.
@@ -256,13 +254,12 @@ def load_soft_proton(model_n, extracted_spectra):
         extr.spec.multiresponse[model_n - 1]     = extr.rmf_diag()
         extr.spec.multiresponse[model_n - 1].arf = "none"
 
-    # Initialize sp model with reasonable "global" parameters
-    sp = xs.Model("constant * powerlaw", 'sp', model_n)
-    sp.powerlaw.norm = 1e-2
+    # Initialize sp model
+    sp = xs.Model("constant * powerlaw", model_name, model_n)
 
     # Set individal spectrum parameters
     for extr in extracted_spectra:
-        sp_curr = xs.AllModels(extr.spec.index, 'sp')
+        sp_curr = xs.AllModels(extr.spec.index, model_name)
         # Let power law indices, norms vary independently
         # Must set index limits for each model; parameter limits do not
         # propagate through links
@@ -279,25 +276,30 @@ def load_soft_proton(model_n, extracted_spectra):
     for x in extracted_spectra:
         if x.instr != 'mos1':
             continue
-        sp_mos1 = xs.AllModels(x.spec.index, 'sp')
+        sp_mos1 = xs.AllModels(x.spec.index, model_name)
         sp_mos2 = None
         # Find matching MOS2 observation
         for y in extracted_spectra:
             if y.instr == 'mos2' and y.reg == x.reg and y.obsid == x.obsid:
                 if sp_mos2:  # May occur in complex XMM pointings
                     raise Exception("Extra mos2 spectrum!")
-                sp_mos2 = xs.AllModels(y.spec.index, 'sp')
+                sp_mos2 = xs.AllModels(y.spec.index, model_name)
         # Tie photon indices
         sp_mos2.powerlaw.PhoIndex.link = xs_utils.link_name(sp_mos1, sp_mos1.powerlaw.PhoIndex)
 
 
-def load_cxrb(model_n, extracted_spectra):
+def load_cxrb(model_n, model_name, extracted_spectra):
     """Load cosmic X-ray background for each spectrum in
     extracted_spectra.
     Set appropriate RMF & ARF files, initialize XRB model and parameter
     values, apply BACKSCAL ratio scaling.
+
+    ExtractedSpectrum objects additionally _must_ have an attached
+    xs.Spectrum object, referenced via .spec attribute.
+
     Arguments
         model_n: XSPEC model number, 1-based
+        model_name: XSPEC model name, string (no spaces)
         extracted_spectra: list of ExtractedSpectrum objects
     Output:
         None.  Global XSPEC objects configured for XRB model.
@@ -309,7 +311,7 @@ def load_cxrb(model_n, extracted_spectra):
         extr.spec.multiresponse[model_n - 1].arf = extr.arf()
 
     # Initialize XRB model with reasonable "global" parameters
-    xrb = xs.Model("constant * (apec + tbnew_gas*(powerlaw + apec))", 'xrb', model_n)
+    xrb = xs.Model("constant * (apec + tbnew_gas*(powerlaw + apec))", model_name, model_n)
 
     # Hickox and Markevitch (2006) norm
     # convert 10.9 photons cm^-2 s^-1 sr^-1 keV^-1 to photons cm^-2 s^-1 keV^-1
@@ -318,13 +320,13 @@ def load_cxrb(model_n, extracted_spectra):
 
     # NOTE HARDCODED -- best fit values from src/bkg combined fit
     # using backscal ratio 0.95 for 0551000201 MOS1 src.
-    xrb.setPars({xrb.powerlaw.PhoIndex.index : 1.4},
-                {xrb.powerlaw.norm.index : exrb_norm},
-                {xrb.apec.kT.index : 0.255},  # Unabsorped apec (local bubble)
-                {xrb.tbnew_gas.nH.index : 1.340},  # Galactic absorption
-                {xrb.apec_5.kT.index : 0.644},  # Absorbed apec (galactic halo)
-                {xrb.apec.norm.index : 2.89e-4},
-                {xrb.apec_5.norm.index : 2.58e-3} )
+    xrb.setPars({xrb.powerlaw.PhoIndex.index : 1.4,
+                 xrb.powerlaw.norm.index : exrb_norm,
+                 xrb.apec.kT.index : 0.256,  # Unabsorped apec (local bubble)
+                 xrb.tbnew_gas.nH.index : 1.318,  # Galactic absorption
+                 xrb.apec_5.kT.index : 0.648,  # Absorbed apec (galactic halo)
+                 xrb.apec.norm.index : 2.89e-4,
+                 xrb.apec_5.norm.index : 2.50e-3})
 
 # Fit without BACKSCAL ratio tweaks.  Change in parameters is <~10%.
 #                {xrb.apec.kT.index : 0.261},  # Unabsorped apec (local bubble)
@@ -337,11 +339,12 @@ def load_cxrb(model_n, extracted_spectra):
 
     # Set individal spectrum parameters
     for extr in extracted_spectra:
-        xrb_curr = xs.AllModels(extr.spec.index, 'xrb')
+        xrb_curr = xs.AllModels(extr.spec.index, model_name)
         # Apply backscal ratio scalings
         # Re-freeze because changing value from link thaws by default
         xrb_curr.constant.factor = extr.backscal() / ExtractedSpectrum.FIDUCIAL_BACKSCAL
         xrb_curr.constant.factor.frozen = True
+
 
 
 if __name__ == '__main__':

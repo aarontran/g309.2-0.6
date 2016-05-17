@@ -226,7 +226,7 @@ def joint_src_bkg_fit():
 
     xs.AllModels(4,'snr_src').constant.factor = 0.95  # TODO manual hack...
 
-    # Set XRB parameters to "typical" values, but do NOT allow to vary
+    # Reset XRB parameters to "typical" values, but do NOT allow to vary
     xrb = xs.AllModels(1, 'xrb')
     xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
                 {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
@@ -305,21 +305,153 @@ def five_annulus_fit():
 
     xs.Fit.perform()
 
+def ann_400_500_fit():
+    """Fit the 400-500" annulus"""
+
+    out = myxs.load_data("ann_400_500", snr_model='vnei')
+    set_energy_range(out['ann_400_500'])
+    xs.AllData.ignore("bad")
+
+    xs.Fit.renorm()
+    xs.Fit.perform()
+    # chi-squared = 1160.25/826 = 1.40466
+
+    snr.tbnew_gas.nH.frozen=False
+    snr.vnei.kT.frozen=False
+    snr.vnei.Tau.frozen=False
+    xs.Fit.perform()
+    #nH         10^22    3.71168      +/-  0.444826
+    #kT         keV      4.21543      +/-  1.89369
+    #Tau        s/cm^3   1.31465E+10  +/-  3.57926E+09
+    #norm                1.30286E-03  +/-  4.13489E-04
+    # chi-squared = 970.40/823 = 1.1791
+
+    # Annulus 400-500" is dominated by background emission
+    # If I set SNR norm to 0 from best fit, the excess is quite subtle --
+    # although you can see Si/S lines if you quint.
+
+    snr.vnei.Si.frozen=False
+    snr.vnei.S.frozen=False
+    xs.Fit.perform()
+    # Fit runs away to kT = 10 keV, unreasonable.
+    # Freeze to 1, fit, thaw, fit.
+    # chi-squared = 961.04/821 = 1.1706
+
+    # Freeze SNR nH, kT to nH=2, kT=1, fit, thaw, fit
+    # No dice.  Numbers just keep running up.
+
+    # Final attempt:
+    # freeze SNR nH, kT to values from integrated spectrum fit.
+    # Si = 4.44, S = 4.05, Tau = 3.4e+10
+    # chi-squared = 999.40/823 = 1.2143
+
+    # Freezing SNR nH just lets kT run away.
+    # Now try freezing Si,S to 1. -- same as previous fit, but just
+    # force lower nH.
+
+    # kT keeps running away.
+
+    # Finally compare to a fit with NO SNR component, XRB component free
+    # The SNR component definitely helps.
+    ###out = myxs.load_data("ann_400_500", snr_model=None)
+    ###set_energy_range(out['ann_400_500'])
+    ###xs.AllData.ignore("bad")
+    #### Reset XRB parameters to "typical" values, but do NOT allow to vary
+    ###xrb = xs.AllModels(1, 'xrb')
+    ###xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
+    ###            {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
+    ###            {xrb.apec_5.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
+    ###            {xrb.apec.norm.index : 1e-3},
+    ###            {xrb.apec_5.norm.index : 1e-3} )
+    ###xrb.apec.kT.frozen = True
+    ###xrb.tbnew_gas.nH.frozen = True
+    ###xrb.apec_5.kT.frozen = True
+    ###xrb.apec.norm.frozen = True
+    ###xrb.apec_5.norm.frozen = True
+
+    ###xs.Fit.renorm()
+    ###xs.Fit.perform()
+
+    ###xrb.apec.kT.frozen = False
+    ###xrb.tbnew_gas.nH.frozen = False
+    ###xrb.apec_5.kT.frozen = False
+    ###xrb.apec.norm.frozen = False
+    ###xrb.apec_5.norm.frozen = False
+    ###xs.Fit.perform()
+    # Result:
+    # Test statistic : Chi-Squared =        1047.48 using 840 PHA bins.
+    #  Reduced chi-squared =        1.27430 for    822 degrees of freedom
+    #  Null hypothesis probability =   1.394979e-07
+    # Yes, adding a SNR model helps somewhat.
+
+
 ###########################
 # Actually run stuff here #
 ###########################
 
 if __name__ == '__main__':
 
-    prep_xs(with_xw=False)
+    prep_xs(with_xw=True)
 
     # Clock in
     # --------
     started = datetime.now()
 
     #joint_src_bkg_fit()
-    out = myxs.load_data("src", "bkg", snr_model='vnei')
     #dump_plots_data('results_spec/20160421_src_and_bkg', xs.AllModels(1,'snr_src'), 'src')
+    out = myxs.load_data("ann_200_300", snr_model='vnei')
+    set_energy_range(out['ann_200_300'])
+    xs.AllData.ignore("bad")
+
+    xs.Fit.renorm()
+    xs.Fit.perform()
+
+    snr = xs.AllModels(1, 'snr_ann_200_300')
+    snr.tbnew_gas.nH.frozen=False
+    snr.vnei.kT.frozen=False
+    snr.vnei.Tau.frozen=False
+    xs.Fit.perform()
+
+    snr.vnei.Si.frozen=False
+    xs.Fit.perform()
+    #reduced chi-squared = 1000.32/799 = 1.252
+    #snr model: constant*tbnew_gas*vnei
+    #  nH (10^22)    2.714 +/- 0.139
+    #  kT   (keV)    1.411 +/- 0.194
+    #  Tau (s/cm^3)  3.53e+10 +/- 6.79e+09
+    #  Si            2.51  +/- 0.20
+    #  norm          4.42e-03 +/- 8.32e-04
+    #soft proton power laws
+    #  Data group 1, n  0.35 +/- 0.02,  norm  5.29e-02 +/- 2.00e-03
+    #  Data group 2, n  0.35 +/- 0.00,  norm  5.63e-02 +/- 2.08e-03
+    #  Data group 3, n  0.09 +/- 0.06,  norm  5.04e-02 +/- 6.26e-03
+    #  Data group 4, n  0.35 +/- 0.03,  norm  4.89e-02 +/- 2.89e-03
+    #  Data group 5, n  0.35 +/- 0.00,  norm  1.37e-02 +/- 1.48e-03
+
+    snr.vnei.S.frozen=False
+    xs.Fit.perform()
+    #reduced chi-squared = 958.13/798 = 1.201
+    #snr model: constant*tbnew_gas*vnei
+    #  nH (10^22)    2.372 +/- 0.134
+    #  kT   (keV)    1.721 +/- 0.307
+    #  Tau (s/cm^3)  2.34e+10 +/- 3.87e+09
+    #  Si            3.08  +/- 0.25
+    #  S             2.56  +/- 0.34
+    #  norm          2.80e-03 +/- 5.62e-04
+    #soft proton power laws
+    #  Data group 1, n  0.35 +/- 0.02,  norm  5.25e-02 +/- 2.02e-03
+    #  Data group 2, n  0.35 +/- 0.00,  norm  5.59e-02 +/- 2.10e-03
+    #  Data group 3, n  0.09 +/- 0.06,  norm  5.12e-02 +/- 6.36e-03
+    #  Data group 4, n  0.34 +/- 0.03,  norm  4.83e-02 +/- 2.92e-03
+    #  Data group 5, n  0.34 +/- 0.00,  norm  1.35e-02 +/- 1.48e-03
+
+    # Do note that the PN power law is almost FLAT, which may be unphysical.
+
+    print_fit(snr)
+    xs.Fit.error("snr_ann_200_300:4")  # By construction, PyXSPEC will require
+    # us to reference parameters using indices
+
+    # For a single parameter, takes ~3 minutes.
 
     # five_annulus_fit()
     # dump_plots_data('fiveannfit_ann_000_100', xs.AllModels( 1, 'snr_ann_000_100'), 'ann_000_100')
