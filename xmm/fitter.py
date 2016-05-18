@@ -4,6 +4,8 @@ Run fits programatically
 Basically a massive configuration file
 Exploiting the fact that xspec objects are global (AllData, AllModels, etc...)
 
+Tightly coupled to methods in g309_models
+
 Must be run in a sasinit-sourced environment
 """
 
@@ -16,7 +18,7 @@ import sys
 
 import xspec as xs
 
-import xspec_fit_g309 as myxs
+import g309_models as g309
 import xspec_utils as xs_utils
 from nice_tables import LatexTable
 
@@ -219,7 +221,7 @@ def joint_src_bkg_fit():
     # to indicate a point in time at which these calls
     # are (almost) guaranteed to work
 
-    out = myxs.load_data("src", "bkg", snr_model='vnei')
+    out = g309.load_data("src", "bkg", snr_model='vnei')
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
     xs.AllData.ignore("bad")
@@ -266,7 +268,7 @@ def five_annulus_fit():
     so I don't make any fit adjustments.  That will have to be determined from
     individual region fits"""
 
-    out = myxs.load_data("ann_000_100", "ann_100_200", "ann_200_300",
+    out = g309.load_data("ann_000_100", "ann_100_200", "ann_200_300",
                          "ann_300_400", "ann_400_500", snr_model='vnei')
 
     set_energy_range(out['ann_000_100'])
@@ -308,7 +310,7 @@ def five_annulus_fit():
 def ann_400_500_fit():
     """Fit the 400-500" annulus"""
 
-    out = myxs.load_data("ann_400_500", snr_model='vnei')
+    out = g309.load_data("ann_400_500", snr_model='vnei')
     set_energy_range(out['ann_400_500'])
     xs.AllData.ignore("bad")
 
@@ -353,7 +355,7 @@ def ann_400_500_fit():
 
     # Finally compare to a fit with NO SNR component, XRB component free
     # The SNR component definitely helps.
-    ###out = myxs.load_data("ann_400_500", snr_model=None)
+    ###out = g309.load_data("ann_400_500", snr_model=None)
     ###set_energy_range(out['ann_400_500'])
     ###xs.AllData.ignore("bad")
     #### Reset XRB parameters to "typical" values, but do NOT allow to vary
@@ -399,7 +401,7 @@ if __name__ == '__main__':
 
     #joint_src_bkg_fit()
     #dump_plots_data('results_spec/20160421_src_and_bkg', xs.AllModels(1,'snr_src'), 'src')
-    out = myxs.load_data("ann_200_300", snr_model='vnei')
+    out = g309.load_data("ann_200_300", snr_model='vnei')
     set_energy_range(out['ann_200_300'])
     xs.AllData.ignore("bad")
 
@@ -475,7 +477,7 @@ if __name__ == '__main__':
 #
 #            indiv_started = datetime.now()
 #
-#            out = myxs.load_data(reg, snr_model='vnei')
+#            out = g309.load_data(reg, snr_model='vnei')
 #            set_energy_range(out[reg])
 #            if reg == 'ann_000_100':
 #                for extr in out[reg]:
