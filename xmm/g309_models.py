@@ -79,7 +79,7 @@ def load_data(*regs, **kwargs):
 
     load_cxrb(1, 'xrb', all_extrs)
 
-    load_soft_proton(2, all_extrs)
+    load_soft_proton(2, 'sp', all_extrs)
     for extr in all_extrs:
         extr.models['sp'] = xs.AllModels(extr.spec.index, 'sp')
         extr.models['xrb'] = xs.AllModels(extr.spec.index, 'xrb')
@@ -90,21 +90,21 @@ def load_data(*regs, **kwargs):
         if reg == "bkg" or kwargs['snr_model'] is None:
             continue
         model_n = 3 + n_reg
-        load_remnant_model(model_n, extrs_from[reg], model_name="snr_" + reg, case=kwargs['snr_model'])
+        load_remnant_model(model_n, "snr_" + reg, extrs_from[reg], case=kwargs['snr_model'])
         for extr in extrs_from[reg]:
             extr.models['snr'] = xs.AllModels(extr.spec.index, "snr_" + reg)
 
     # One instrumental line model per spectrum
     for n_extr, extr in enumerate(all_extrs):
         model_n = 3 + len(regs) + n_extr
-        load_instr(model_n, extr, model_name="instr_{:d}".format(n_extr+1))
+        load_instr(model_n, "instr_{:d}".format(n_extr+1), extr)
         extr.models['instr'] = xs.AllModels(extr.spec.index, "instr_{:d}".format(n_extr+1))
 
     return extrs_from
 
 
 
-def load_instr(model_n, extr, model_name):
+def load_instr(model_n, model_name, extr):
     """Create instrumental line model for ExtractedSpectrum extr
     Fix line energies and norms based on FWC fit data, but allow overall norm
     to vary (i.e., all line ratios pinned to FWC line ratios).
@@ -155,7 +155,7 @@ def load_instr(model_n, extr, model_name):
     instr.constant.factor.frozen = False
 
 
-def load_remnant_model(model_n, extracted_spectra, model_name, case='vnei'):
+def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
     """Create source model for extracted_spectra
     Set appropriate RMF & ARF files, initialize parameters and parameter
     bounds, apply BACKSCAL ratio scaling.

@@ -32,6 +32,13 @@ class ExtractedSpectrum:
         self.instr = exp.split('S')[0]  # mos1, mos2, pn
         self.spec = None
 
+    def __repr__(self):
+        return "ExtractedSpectrum({}, {:>8s}, {})".format(self.obsid, self.exp,
+                self.reg)
+
+    def __str__(self):
+        return __repr__()
+
     # It may be simpler to write the following methods as object attributes
     # since parameters should not be changed (not enforced though)
 

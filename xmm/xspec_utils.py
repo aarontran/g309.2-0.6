@@ -3,6 +3,7 @@ Utility methods for PyXSPEC usage
 """
 
 import json
+import os
 
 import xspec as xs
 
@@ -28,9 +29,9 @@ def load_spec(spec_number, spec_path, background=None, default_dir=None):
     if default_dir is not None:
         os.chdir(default_dir)
 
-    xs.AllData("{n}:{n} {fname}".format(n=n, fname=spec_path)
-    spec = xs.AllData(n)
-    if background is not None
+    xs.AllData("{n}:{n} {fname}".format(n=spec_number, fname=spec_path))
+    spec = xs.AllData(spec_number)
+    if background is not None:
         spec.background = background
     os.chdir(old_wd)
 
