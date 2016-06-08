@@ -18,7 +18,7 @@ import xspec_utils as xs_utils
 from ExtractedSpectrum import ExtractedSpectrum
 
 
-def load_data(*regs, **kwargs):
+def load_data_and_models(*regs, **kwargs):
     """
     Load G309.2-0.6 data and initialize responses and models.
 

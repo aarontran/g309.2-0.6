@@ -217,7 +217,7 @@ def set_energy_range(all_extrs):
 def joint_src_bkg_fit(error_log):
     """Fit source + bkg regions, allowing XRB to float"""
 
-    out = g309.load_data("src", "bkg", snr_model='vnei')
+    out = g309.load_data_and_models("src", "bkg", snr_model='vnei')
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
     xs.AllData.ignore("bad")
@@ -296,7 +296,7 @@ def five_annulus_fit(error_log):
     so I don't make any fit adjustments.  That will have to be determined from
     individual region fits"""
 
-    out = g309.load_data("ann_000_100", "ann_100_200", "ann_200_300",
+    out = g309.load_data_and_models("ann_000_100", "ann_100_200", "ann_200_300",
                          "ann_300_400", "ann_400_500", snr_model='vnei')
 
     set_energy_range(out['ann_000_100'])
@@ -373,7 +373,7 @@ def five_annulus_fit(error_log):
 def ann_400_500_fit():
     """Fit the 400-500" annulus"""
 
-    out = g309.load_data("ann_400_500", snr_model='vnei')
+    out = g309.load_data_and_models("ann_400_500", snr_model='vnei')
     set_energy_range(out['ann_400_500'])
     xs.AllData.ignore("bad")
 
@@ -418,7 +418,7 @@ def ann_400_500_fit():
 
     # Finally compare to a fit with NO SNR component, XRB component free
     # The SNR component definitely helps.
-    ###out = g309.load_data("ann_400_500", snr_model=None)
+    ###out = g309.load_data_and_models("ann_400_500", snr_model=None)
     ###set_energy_range(out['ann_400_500'])
     ###xs.AllData.ignore("bad")
     #### Reset XRB parameters to "typical" values, but do NOT allow to vary
@@ -466,7 +466,7 @@ if __name__ == '__main__':
     #joint_src_bkg_fit('20160523_error_rerun.log')  # Now includes error runs
     #dump_plots_data('results_spec/20160421_src_and_bkg', xs.AllModels(1,'snr_src'), 'src')
 
-#    out = g309.load_data("ann_200_300", snr_model='vnei')
+#    out = g309.load_data_and_models("ann_200_300", snr_model='vnei')
 #    set_energy_range(out['ann_200_300'])
 #    xs.AllData.ignore("bad")
 #
@@ -542,7 +542,7 @@ if __name__ == '__main__':
 #
 #            indiv_started = datetime.now()
 #
-#            out = g309.load_data(reg, snr_model='vnei')
+#            out = g309.load_data_and_models(reg, snr_model='vnei')
 #            set_energy_range(out[reg])
 #            if reg == 'ann_000_100':
 #                for extr in out[reg]:
