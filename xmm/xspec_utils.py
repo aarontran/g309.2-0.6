@@ -8,6 +8,41 @@ import os
 import xspec as xs
 
 
+def get_models_for_spec(spectrum):
+    """Get all active XSPEC models for a given spectrum object
+
+    Input: XSPEC spectrum
+    Output: list of models, ordered by XSPEC source number
+    """
+    # Suppress "Spectrum X has no response for source Y" console warnings
+    # that appear at chattiness >= 10
+    old_chatter = xs.Xset.chatter
+    old_logChatter = xs.Xset.logChatter
+    xs.Xset.chatter = 9  # Threshold for
+    xs.Xset.logChatter = 9
+
+    source_numbers = []
+    for idx in xs.AllModels.sources:  # source numbers start from 1
+        try:
+            # If spectrum has no response for source number idx,
+            # XSPEC throws a generic Exception (hence the generic "except")
+            spectrum.multiresponse[idx-1]  # convert to 0-based index
+            source_numbers.append(idx)
+        except:
+            pass
+
+    models = []
+    for idx in sorted(source_numbers):
+        model_name = xs.AllModels.sources[idx]
+        models.append(xs.AllModels(spectrum.index, model_name))
+
+    xs.Xset.chatter = old_chatter
+    xs.Xset.logChatter = old_logChatter
+
+    return models
+
+
+
 # --------------------------------
 # Methods for manipulating spectra
 # --------------------------------

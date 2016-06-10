@@ -21,6 +21,8 @@ def main():
 
     # Plot data and models
     fig, axes = plt.subplots(n, sharex=True, figsize=(13, n*3.5))
+    if n == 1:
+        axes = [axes]  # plt.subplots collapses unneeded dimensions
     for fname, ax in zip(fnames, axes):
 
         dat = np.loadtxt(fname)
@@ -57,6 +59,8 @@ def main():
 
     # Plot residuals (copy-pasted code)
     fig2, axes2 = plt.subplots(n, sharex=True, figsize=(13, n*3.5))
+    if n == 1:
+        axes2 = [axes2]  # plt.subplots collapses unneeded dimensions
     for fname, ax in zip(fnames, axes2):
 
         dat = np.loadtxt(fname)

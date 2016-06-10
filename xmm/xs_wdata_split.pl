@@ -39,23 +39,26 @@ my $f_out_fmt = $opt_out . "_%02d.dat";
 # Start numbering from one to match XSPEC convention
 my $i = 1;  
 my ($fh_out, $f_name) = make_fh($i);
-vprint("Writing $f_name...");
+vprint("Writing $f_name ...");
 
 open(my $fh_in, "<", $opt_in) or die "Cannot open $opt_in to read: $!";
 while (<$fh_in>) {
 
     if ($_ =~ /^(NO\s*)+/) {  # Split on "NO NO NO NO NO ..."
+
 	close($fh_out);
 	vprint(" done.\n");
 
 	# Increment file number, name
 	$i++;
 	($fh_out, $f_name) = make_fh($i);
-	vprint("Writing $f_name...");
-    }
+	vprint("Writing $f_name ...");
 
-    # Skip lines that don't start with a number
-    print $fh_out $_ if ($_ =~ /^[\d.]+\s+/);
+    } elsif ($_ =~ /^[\d.]+\s+/) {
+
+    	my @vals = split(/\s+/, $_);
+	say $fh_out join(" ", grep(!/NO/, @vals));
+    }
 }
 close($fh_in);
 close($fh_out);
@@ -97,5 +100,6 @@ sub help {
     say "";
     say "Split XSPEC iplot file dump into individual whitespace delimited";
     say "columnar data files for each spectrum";
+    say "Removes all \"NO\" columns from data, which may obscure information";
     exit $_[0];
 }
