@@ -1,4 +1,4 @@
-#!/data/mpcrit4/bin/perl
+#!/usr/bin/env perl
 
 # Parse output from XSPEC (manually obtained with iplot; wdata; or via PyXSPEC)
 # and dump to multiple whitespace-delimited plaintext files
@@ -8,6 +8,11 @@ use strict;
 use warnings;
 
 use Getopt::Long;
+
+
+# --------------
+# Option parsing
+# --------------
 
 my ($opt_help, $opt_usage, $opt_verbose);
 my ($opt_in, $opt_out);
@@ -21,6 +26,11 @@ GetOptions('help|h'    => \$opt_help,
 help(0) if ($opt_help or $opt_usage);
 help(1) if (! defined $opt_in);
 help(1) if (! defined $opt_out);
+
+
+# -----------
+# Script body
+# -----------
 
 # "Global" variable: output filename format
 my $f_out_fmt = $opt_out . "_%02d.dat";
@@ -54,6 +64,10 @@ vprint(" done.\n");
 vprint("All done!\n");
 
 
+# -----------
+# Subroutines
+# -----------
+
 # Input: file number
 # Output: file handle for writing
 sub make_fh {
@@ -75,10 +89,13 @@ sub help {
     my $progname = $0;
     $progname =~ s/.*\///;
     say "Usage: $progname [-h] -i input_file -o output_file_stem";
-    say "-i, --input: XSPEC iplot file dump (plaintext, QDP/PLT file)";
-    say "-o, --out: output file stem; files will be named {out}_00.dat, _01.dat, ...";
+    say "-i, --input: XSPEC iplot file dump (plaintext QDP/PLT file)";
+    say "-o, --out: output file stem; files will be {out}_01.dat, _02.dat, ...";
     say "-h, --help: get help";
     say "-u, --usage: also get help";
     say "-v, --verbose: be chitchatty";
+    say "";
+    say "Split XSPEC iplot file dump into individual whitespace delimited";
+    say "columnar data files for each spectrum";
     exit $_[0];
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
 """
 Make nicer plots to see what's going on
 """
@@ -11,69 +11,65 @@ def main():
     """ Make plots """
 
     parser = argparse.ArgumentParser(description="Make nice separated plots")
-    parser.add_argument('--stem', default='snr', help="prefix stem for 5 dat files")
-    parser.add_argument('--reg', default='snr', help="region (bkg or snr) to set plotting behavior")
+    parser.add_argument('files', metavar='file', nargs='+',
+                        help=("Whitespace delimited data files, "
+                              "as output by xs_wdata_split.pl"))
     args = parser.parse_args()
-    stem, reg = args.stem, args.reg
-    stem = args.stem
 
-    if (reg != "bkg" and reg != "snr"):
-        raise Exception("bad reg")
+    fnames = args.files
+    n = len(fnames)
 
-    #fnames=["bkg_m1.dat",
-    #        "bkg_m2.dat",
-    #        "bkg_pn.dat",
-    #        "bkg_m1motch.dat",
-    #        "bkg_m2motch.dat"]
-
-    fnames = [stem + x for x in
-        ["_m1.dat", "_m2.dat", "_pn.dat", "_m1motch.dat", "_m2motch.dat"]]
-
-    fig, axes = plt.subplots(5, sharex=True, figsize=(18, 18))
+    # Plot data and models
+    fig, axes = plt.subplots(n, sharex=True, figsize=(13, n*3.5))
     for fname, ax in zip(fnames, axes):
 
-        a = np.loadtxt(fname)
-        x = a[:,0]
-        x_err = a[:,1]
+        dat = np.loadtxt(fname)
+        x       = dat[:,0]
+        x_err   = dat[:,1]
+        y       = dat[:,2]
+        y_err   = dat[:,3]
+        model_sum   = dat[:,4]
 
-        plot_err(x, a[:,2], x_err, a[:,3], ax=ax, capsize=0, ls='none', elinewidth=1)
-        plot_step(x, x_err, a[:,4], ax=ax, color='k')  # Summed model
+        n_models = dat.shape[1] - 5  # Hardcoded
+        # Note - this should also work for n_models = 1
+        # (where XSPEC could only print 5 columns, I don't think it does)
+        # but I have not tested this
 
-        if (reg == "bkg"):
+        plot_err(x, y, x_err, y_err, ax=ax, capsize=0, ls='none', elinewidth=1)
+        plot_step(x, x_err, model_sum, ax=ax, color='k')  # Summed model
 
-            plot_step(x, x_err, a[:,5], ax=ax, color='r')  # X-ray background
-            plot_step(x, x_err, a[:,6], ax=ax, color='y')  # Instrumental lines
-            plot_step(x, x_err, a[:,7], ax=ax, color='c')  # SP power law
+        # 5 colors from http://colorbrewer2.org/
+        # qualitative "5-class Set1" scheme
+        colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00']
+        if len(colors) <  n_models:
+            raise Exception("More models than colors!")
 
-            ax.set_ylim(1e-4, 1.0)
+        for model, color in zip(dat[:,5:].T, colors):
+            plot_step(x, x_err, model, ax=ax, color=color)
 
-        elif (reg == "snr"):
-
-            plot_step(x, x_err, a[:,5], ax=ax, color='r')  # X-ray background
-            plot_step(x, x_err, a[:,6], ax=ax, color='y')  # Instrumental lines
-            plot_step(x, x_err, a[:,7], ax=ax, color='g')  # SNR model
-            plot_step(x, x_err, a[:,8], ax=ax, color='c')  # SP power law
-
-            ax.set_ylim(1e-3, 10.0)  # Appropriate for source
-
+        #ax.set_ylim(1e-3, 10.0)  # Appropriate for (INTEGRATED) source
+        ax.set_ylim(1e-4, 1.0)  # Appropriate for smaller regions
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_xlim(0.3, 11.0)
 
     plt.tight_layout()
 
-    # AD HOC copy-pasta to plot residuals.
-    fig2, axes2 = plt.subplots(5, sharex=True, figsize=(18, 18))
+    # Plot residuals (copy-pasted code)
+    fig2, axes2 = plt.subplots(n, sharex=True, figsize=(13, n*3.5))
     for fname, ax in zip(fnames, axes2):
 
-        a = np.loadtxt(fname)
-        x = a[:,0]
-        x_err = a[:,1]
+        dat = np.loadtxt(fname)
+        x       = dat[:,0]
+        x_err   = dat[:,1]
+        y       = dat[:,2]
+        y_err   = dat[:,3]
+        model_sum   = dat[:,4]
 
         # Residual ratio
-        ax.errorbar(x, (a[:,2] - a[:,4])/a[:,4],
-                xerr=x_err, yerr=(a[:,3] / a[:,4]),
-                capsize=0, ls='none', elinewidth=1)
+        ax.errorbar(x, (y - model_sum)/model_sum,
+                    xerr=x_err, yerr=(y_err / model_sum),
+                    capsize=0, ls='none', elinewidth=1)
 
         ax.axhline(y=0, color='k')
         ax.set_xscale("log")
@@ -81,8 +77,6 @@ def main():
         ax.set_ylim(-1.5, 1.5)  # Appropriate for residual ratio plot
 
     plt.tight_layout()
-
-
     plt.show()
 
 
@@ -94,7 +88,7 @@ def plot_err(x, y, xerr, yerr, ax=None, **kwargs):
         ax = plt.gca()
 
     yerr_low = np.array(yerr)  # Don't modify external yerr
-    yerr_low[yerr >= y] = 0.99999999 * y[yerr >= y]  # Push errorbar to 1e-8 above zero
+    yerr_low[yerr >= y] = 0.99999999 * y[yerr >= y]  # Force lower error bound to 1e-8 above zero
     ax.errorbar(x, y, xerr=xerr, yerr=(yerr_low, yerr), **kwargs)
 
 
