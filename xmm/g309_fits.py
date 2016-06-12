@@ -81,7 +81,7 @@ def print_model(m, f_out=None):
                 continue
 
             name = par.name
-            val = par.values[0]
+            val = "{:g}".format(par.values[0])
 
             if par.unit:
                 name = name + " (" + par.unit + ")"
@@ -89,10 +89,11 @@ def print_model(m, f_out=None):
             if par.error[0] != 0:
                 err_low = par.error[0] - par.values[0]
                 err_high = par.error[1] - par.values[0]
-                val = "{{{:g}}}^{{{:+.2g}}}_{{{:+.2g}}}".format(
+                val = "{{{:s}}}^{{{:+.2g}}}_{{{:+.2g}}}".format(
                         val, err_high, err_low)
 
-            print "{}: {:g} (sigma: {:g})".format(name, val, par.sigma)
+            # recall both name, val are already-formatted strings
+            print "{}: {} (sigma: {:g})".format(name, val, par.sigma)
 
             if par.error[2] != "FFFFFFFFF":
                 print "  error status:", par.error[2]
@@ -454,7 +455,7 @@ if __name__ == '__main__':
 
     prep_xs(with_xs=True)  # This is required before all fits actually...
 
-    f_stem = "results_spec/20160610_src_bkg_rerun"
+    f_stem = "results_spec/20160611_src_bkg_rerun"
 
     stopwatch(joint_src_bkg_fit, error=True, error_log=f_stem+"_error.log")
 
