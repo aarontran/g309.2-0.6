@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [[ -z "$XMM_PATH" ]]; then
+  echo "Source sasinit before running this program"
+  exit 1
+fi
+
+xs_replotter.py $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_01.dat \
+                $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_02.dat \
+                $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_03.dat \
+                $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_04.dat \
+                $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_05.dat \
+                --components "CXRB" "SP" "Remnant" "Instr. lines" \
+                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
+                --labels "0087940201 MOS1" "0087940201 MOS2" "0087940201 PN" \
+                         "0551000201 MOS1" "0551000201 MOS2" \
+                --ylim '1e-3' '3.0' \
+                --residual \
+                --out "$XMM_PATH/results_plots/srcandbkg_snr"
+

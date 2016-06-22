@@ -9205,17 +9205,315 @@ steppar checks... need to make this systematic.
 Do try a fit with power law (vnei+powerlaw) to see if any nonthermal component
 can help explain things.
 
-OK.  I'm gonna pause and make one more effort to clean up the pipeline.
-Keep having to reshuffle files and commands and it's really a mess.
+Procedure:
+1. error runs on combined fit
+2. error runs on joint annulus fit
+3. return to annulus 000-100 fit.
+4. log notes on each annulus fit
+not in order
+
+(twiddling code...  aaaagh)
+
+1 parameter error run takes 2hr 20min
+(testing on kT value for 000"-100" center)
+
+    In [7]: print datetime.now() ;
+            xs.Fit.error("snr_{:s}:{:d}".format('ann_000_100', xs_utils.par_num(ring, ring.vnei.kT))) ;
+            print datetime.now();
+    2016-05-25 16:16:45.225660
+     Parameter   Confidence Range (2.706)
+         4      3.45972      4.59949    (-0.464675,0.675101)
+    2016-05-25 18:38:06.413162
+
+Need to run 5x4 + 1 = 21 parameters (removed norm).
+= ~49 hours, although some parameters (Si, S) may be better constrained
+and will hopefully finish sooner...
 
 
-FAQ:
-* Q: why use tbnew_gas instead of tbnew (with grains)?
-  A: grains have little effect on X-ray absorption.  Fig. 2 of Wilms, Allen,
-  McCray (2000) shows that grains change optical depth mainly at energies < 0.3
-  keV.  X-rays penetrate, so grain self-shielding results in little change as
-  when compared to gas-phase absorption.
+Wednesday, Thursday 2016 June 8-9 - compile error run results
+=============================================================
 
+Revisiting XSPEC error runs from ~May 20-30.
+These results should be reproducible from commit hash:
+
+    5dfa81156daa133eba80df5acc17ed379f66aab1
+
+Source + background fit with error run results
+----------------------------------------------
+
+As-run code in `g309_fits.joint_src_bkg_fit`.
+The terminal stdout is a bit easier to parse than the XSPEC logging output.
+
+    results_spec/20160524_src_and_bkg_with_error*
+    20160523_error_rerun.log
+    20160523_error_rerun_terminal_stdout.txt
+
+Format the results more nicely:
+
+    Supernova remnant
+    nH (10^22)    2.15^{+0.08}_{-0.11}
+    kT   (keV)    2.29^{+0.30}_{-0.24}
+    Tau (s/cm^3)  {1.83e+10}^{+0.10e+10}_{-0.11e+10}
+    Si            3.75^{+0.18}_{-0.16}
+    S             3.42^{+0.26}_{-0.25}
+    norm          {4.52e-03}^{+0.6e-03}_{-0.5e-03}
+
+    X-ray background components
+    unabsorbed kT   0.262^{+0.007}_{-0.007}
+    absorption nH   1.32^{+0.09}_{-0.08}
+    absorbed kT     0.75^{+0.04}_{-0.04}
+
+Result of error runs for 5 annulus fit.
+"round2" just contains the error run for the linked nH value.
+
+    results_spec/20160524_fiveannfit_with_error_ann_*
+    20160524_five_annulus_error.log
+    20160524_five_annulus_error.log_round2.log
+
+In interactive prompt, since my session has not died yet!
+
+    rings = [xs.AllModels( 1, 'snr_ann_000_100'),
+             xs.AllModels( 6, 'snr_ann_100_200'),
+             xs.AllModels(11, 'snr_ann_200_300'),
+             xs.AllModels(16, 'snr_ann_300_400'),
+             xs.AllModels(21, 'snr_ann_400_500')]
+
+    for m in rings:
+
+        print m.name
+
+        for cname in m.componentNames:
+            comp = eval("m." + cname)
+            for pname in comp.parameterNames:
+                par = eval("comp." + pname)
+
+                if par.error[0] != 0:
+                    status = ""
+                    if par.error[2] != "FFFFFFFFF":
+                        status = " (status: {})".format(par.error[2])
+                    print ("{}: {{{:g}}}^{{{:+.2g}}}_{{{:+.2g}}}".format(
+                        par.name, par.values[0], 
+                        par.error[1] - par.values[0],
+                        par.error[0] - par.values[0])
+                        + status)
+        print ""
+
+
+    snr_ann_000_100
+    nH: {2.0833}^{+0.027}_{-0.061} (status: FTFFFFFFF)
+    kT: {3.92448}^{+0.68}_{-0.46}
+    Si: {1.99433}^{+0.14}_{-0.13}
+    S: {1.45475}^{+0.29}_{-0.25}
+    Tau: {1.58537e+10}^{+1.5e+09}_{-1.3e+09}
+
+    snr_ann_100_200
+    kT: {2.46447}^{+0.48}_{-0.31}
+    Si: {5.76327}^{+0.41}_{-0.36}
+    S: {5.43287}^{+0.69}_{-0.56}
+    Tau: {1.76674e+10}^{+1.7e+09}_{-1.5e+09}
+
+    snr_ann_200_300
+    kT: {2.1255}^{+0.25}_{-0.23} (status: FFFFFFFTF)
+    Si: {4.1543}^{+0.28}_{-0.23}
+    S: {3.72228}^{+0.38}_{-0.32}
+    Tau: {2.24032e+10}^{+3.3e+09}_{-2.7e+09} (status: FTFFFFFFF)
+
+    snr_ann_300_400
+    kT: {2.54539}^{+0.68}_{-0.51} (status: FTFFFFFFF)
+    Si: {3.45303}^{+0.43}_{-0.31} (status: FFFFFFFTF)
+    S: {2.89474}^{+0.71}_{-0.51}
+    Tau: {1.91573e+10}^{+4.9e+09}_{-3.1e+09}
+
+    snr_ann_400_500
+    kT: {10}^{-10}_{-0.57} (status: FFFFTFFTF)
+    Si: {2.33684}^{+1.1}_{-0.63}
+    S: {2.47127}^{+1.8}_{-1}
+    Tau: {2.07955e+10}^{+5.3e+09}_{-5.5e+09}
+
+Made a quick plot of kT as a function of radius.  Could go two ways:
+1. 100-400" emission is pretty stable around kT ~ 2 keV,
+   center and outskirts are hotter -- more recently shocked material.
+   this assumes our fits are reasonable.
+2. center/outskirts kT values are simply ill-constrained due to fewer counts.
+
+Hmmmm OK.  This is kind of interesting, warnings on error calculations aside.
+
+
+Code plotting and dump tools
+----------------------------
+
+Outstanding issues:
+1. code is still not very easy to use.
+2. got error runs done. but I don't know how useful or meaningful, yet.
+   Confirmed that it takes ~2 days to run.
+3. need to set up powerlaw + vnei fit.
+
+Spent some time cleaning up plotting and parameter dump tools (see various
+commits to `xs_*` tools).
+
+What information must we dump for combined fits?
+Here we should save ONE qdp file, split into 25, 50 spectra w/ their
+constituent models and let user re-label at plot time.  That's totally fine.
+
+Inquired w/ Craig Gordon about Spectrum.values.
+Why is it counts/cm^2/sec instead of counts/sec?
+Answer: because the data are divided by AREASCAL keyword,
+which is supposed to be a "baseline" effective area for all channels.
+In practice this is usually 1 and is meaningless because we do everything with
+ARFs these days.  But, OK, makes sense.
+
+
+Sunday 2016 June 12 -- troubleshooting fits w/ errors, vnei and power law fits
+==============================================================================
+
+Fits snagged when done and printing model info, otherwise fine.
+I fixed the bugs in model printing.
+
+Attempt to fit vnei + powerlaw to get a sense of how much nonthermal radiation
+is allowed in our integrated spectrum.
+NOTE: XRB is currently fixed.  But arguably better to free this, return to
+this later.
+
+First fit with everything free runs away.
+    Si ->10, S->10, powerlaw index->10.  Not good.
+Try freeing Si,S to help guide fit.
+    Not great.
+Try removing powerlaw component again to re-obtain "decent" fit.
+    First glance w/ photon index 2 -- only marginal improvement.
+    Chi-squared moves from 2704.91 (redchisqr = 1.21843)
+    to 2704.82 (redchisqr = 1.21839)
+    basically zilch.
+
+Start error run on a joint SNR + powerlaw fit
+start: sunday june 12, 12:29 PDT
+VNC session crashed so need to restart.
+
+
+Monday 2016 June 13 -- vnei and power law fits cont
+===================================================
+
+Restarted vnei + powerlaw fit w/ another error command attempt.
+Approach is to start from "standard" good fit, then introduce weak powerlaw
+component, then use error commands to test limits.
+
+
+Wednesday 2016 June 15 -- vnei and power law fits cont
+======================================================
+
+Ran error commands.  Ran to completion, but VNC session later crashed again...
+Restart and dump outputs to:
+
+    20160616_src_powerlaw_rerun
+
+This should suffice.  Going to re-run with srcutlog shortly.
+
+
+Friday 2016 June 17 -- vnei and powerlaw fits to outer annulus
+==============================================================
+
+Fit outer annulus to absorbed vnei and powerlaw, outputs dumped to:
+`20160617_ann_400_500_*` Error runs were not great,
+and we do not have good numbers for kT, Si, S.
+But a powerlaw component does not fit very well; the norm is negligible.
+
+
+Monday 2016 June 20 -- compile fit (and error) results
+======================================================
+
+Fitting result inventory and cleanup
+------------------------------------
+
+Create `.htaccess` and `.htpasswd` files for
+[staging website](http://hea-www.cfa.harvard.edu/~atran/g309/).
+Google bot was crawling files, which is no bueno since the plots and data are
+very preliminary.
+
+Take stock: over last month, I compiled a bunch of fit and error runs.
+Notes above are very haphazard.  So, clarify and clean up cruft.
+File stems in `xmm/results_spec` are:
+
+    20160517_src_and_bkg        first run w/tbnew_gas (no errors); new XRB parameters
+
+    20160523_error_rerun                        src_and_bkg with error
+    20160524_src_and_bkg_with_error
+    20160524_fiveannfit_with_error_ann_*_*      five annulus fit with errors
+    20160524_five_annulus_error
+
+    # Same as 20160524_src_and_bkg_with error,
+    # but with "new" output products for reporting error results.
+    20160610_src_bkg_rerun
+    20160611_src_bkg_rerun
+
+    # Fits with powerlaw components (not all output files dumped)
+    20160613_src_powerlaw
+    20160616_src_powerlaw_rerun
+    20160617_ann_400_500_powerlaw
+
+One derived product from annulus fits:
+
+    results-interm/20160609_kt_annuli_fit_with_errs.pdf
+
+DELETED the following output results:
+
+    20160523_error_rerun                - same as 20160611 run
+
+        diff 20160523_error_rerun.log 20160611_src_bkg_rerun_error.log
+        (minor, insignificant digit numerical diffs)
+
+    20160524_src_and_bkg_with_error     - same as 20160611 run
+
+        diff 20160524_src_and_bkg_with_error.log 20160611_src_bkg_rerun.log
+        (no diff)
+        diff 20160524_src_and_bkg_with_error.qdp 20160611_src_bkg_rerun.qdp
+        (no diff)
+
+    20160610_src_bkg_rerun  - same as 20160611 run, but model error dump bugged out
+    20160611_src_bkg_rerun_snr_model.txt    - model error dump also bugged out
+    20160617_ann_400_500_powerlaw_snr_model_rerun.txt   - 2nd error run was unnecessary, no change
+
+This leaves us with:
+
+    20160421_src_and_bkg        integrated src + bkg fit, tbabs
+    20160517_src_and_bkg        integrated src + bkg fit, tbnew_gas
+
+    20160524_fiveannfit_with_error_ann_*_*      five annulus fit with errors
+    20160524_five_annulus_error
+
+    20160611_src_bkg_rerun      integrated src + bkg fit with errors
+                                ("model dump" bugged out, but error log OK)
+
+    20160613_src_powerlaw           src fit (bkg fixed) with power law, errors
+    20160616_src_powerlaw_rerun     ("rerun" is same as above... more dump files from, well, rerun)
+
+    20160617_ann_400_500_powerlaw   ann_400_500 fit (bkg fixed) with power law, errors
+
+Not all of my interactive session commands were saved (would be great to use
+iPython notebook, but not a good interface to PyXSPEC currently -- maybe test
+this out).
+
+
+Powerlaw fitting results, srcutlog fitting
+------------------------------------------
+
+So far, it looks like a power law component is disfavored for
+fits of (1) integrated SNR, (2) outer annulus.
+
+It's possible that srcutlog could do better, if the photon cutoff falls around
+0.5-2 keV.
+
+
+Monday-Wednesday 2016 June 20-22 -- improve spectrum plots and presentation
+===========================================================================
+
+Add custom matplotlibrc.  Significantly augment xs_replotter.py -- add many
+command-line options, and tweak settings to create manuscript-ready plots.
+Work on wrapper scripts `replot_*` to help visualize key fit results so far.
+
+
+
+
+Standing questions and TODOs
+============================
 
 
 Misc. XSPEC has a "delayed gratification" option for levenberg-marquardt
@@ -9229,9 +9527,13 @@ Test this out...
   (do try this -- may reduce backgrounds in image. but your data are so noisy
   anyways that it may not have much effect).
 
-In general: understanding of mixed morphology remnants and discrepancy between
-x-ray and radio features, with general eye towards other remnants and broader
-conclusions or predictions.
+Suggestion -- sample folded model curves much more finely for plotting
+purposes?
+Fitting residuals are less clear (potentially misleading), but easier for the
+viewer to read and understand the models.
+
+Suggestion -- can we combine the MOS1/2 spectra from each obsid?
+    results in three spectra / region to fit.
 
 Is Gamma Cas introducing light curve noise?
 compute FOV lightcurve _without_ point sources.
@@ -9242,6 +9544,10 @@ List of assumptions to test.  How do the (KEY) fits above change if I:
   (do separately to illustrate effects)
 * change x-ray background fit parameters
 * use x-ray background fit parameters from fitting XRB alone?
+
+* SANITY CHECK: if I change soft proton background to BROKEN POWER LAW, e.g. in
+  combined fit alone, how do parameters change if at all?
+  Double check this in case XRB fit results may change.
 
 Standing TODOs:
 * Re-run everything from a clean slate to ensure your pipeline is good.
@@ -9254,6 +9560,7 @@ Standing TODOs:
 * check the filtering threshold of de Luca and Molendi on the corner data.
   (see sec. 3.3 of de luca/molendi 2003) as a sanity check -- was our GTI
   filtering sufficient?
+  http://xmm2.esac.esa.int/external/xmm_sw_cal/background/epic_scripts.shtml
 * Re-perform SWCX spectrum cut but using ENTIRE FOV (mask out point sources and
   remnant) -- previously took emission from remnant only
 
@@ -9603,81 +9910,4 @@ SO, mos{prefix}-obj.pi (with arf,rmf) is to be used with mos{prefix}-back.pi.
 You need to set BACKSCALE keyword and stuff appropriately.  After this, you're
 supposed to fit instrumental lines + cosmic (galactic + extragalactic) X-ray
 background yourself.
-
-
-
-
-FAQ (things I was somewhat stumped on at some point)
-====================================================
-
-Q: What's the difference between epproc/emproc and epchain/emchain?
-A: Same thing, script vs. compiled implementation.  Maybe chains are better?
-> There are two types of tool available, the procs (epproc and emproc) and the
-> chains (epchain and emchain) which do essentially the same job. However, the
-> chains allow more user control, and can also be set to keep intermediate
-> files (like the badpixel files) and can be stopped at certain points and
-> restarted at others. An example of when this is useful is to stop the chain
-> after bad pixel detection, add, or remove some pixels from the badpixel list,
-> then complete the chain, if you're not happy with the bad pixels it detects
-> by itself. The chains also appear to do a better job of detecting bad pixels
-> and events than the procs, so I would recommend using them.
-(from: http://www.sr.bham.ac.uk/xmm2/dataprep.html)
-
-
-Q: What's in an obsid?
-A: 10 digits (PPPPPPOOLL), where PPPPPP = proposal ID, OO = observation within proposal ID, and LL = "extended ID" (usually 1)
-
-Flare removal by GTI cuts decreases error compared to blank sky subtraction
-===========================================================================
-
-Tuesday Oct 6 2015
-
-What's the better way to remove flares from spectra: cutting time intervals of
-significant flaring, or subtracting blank sky background?
-
-Flares are ~10x the source count rate during flaring periods (note that MOS/PN
-histogram of FOV count rate are likely dominated by the bright star HD119682,
-and SNR is probably 2-10x fainter).
-
-	Counts in filtered image (flares completely removed; original event list cleaned with XMMEA_EM and espfilt):
-	- SNR: 0.077 cts/arcsec^2    / 27ks     -->  2.85e-3 ct/ks/arcsec^2
-	- blank sky: 0.04 cts/arcsec^2  / 27ks  -->  1.48e-3 ct/ks/arcsec^2
-
-	Counts in unfiltered image (original event list; no filtering for bad events, but there should be very few of those):
-	- SNR: 0.217 cts/arcsec^2   / 40ks    	-->  5.43e-3 ct/ks/arcsec^2
-	- blank sky: 0.165 cts/arcsec   / 40ks	-->  4.13e-3 ct/ks/arcsec^2
-
-SNR is ~ 1.4e-3 ct/ks/arcsec, without blank sky background (instrumental, sky, etc. all in one)
-Flaring is ~2.6e-3 ct/ks/arcsec^2, roughly 2x SNR brightness.  But flaring is concentrated in 13 of 40 ks.
-
-	Estimated SNR counts (40 ks): 0.056 ct/arcsec^2
-	Estimated flare counts (40 ks, but concentrated within 13 ks): 0.10 ct/arcsec^2
-	Estimated SNR counts (13 ks): 0.018 ct/arcsec^2
-
-Flares thus cause count rates ~10x brighter than actual SNR (after background removal), over the span of 13 ks.
-But, what matters is the total error over 40ks.
-
-	SNR alone (40 ks): 0.056*A +/- sqrt(0.056*A) ct
-
-			relative error: sqrt(0.056*A) / (0.056*A) ~ 4.23 / sqrt(A)
-
-	SNR alone (27 ks): 0.038*A +/- sqrt(0.038*A) ct
-
-			relative error: sqrt(0.038*A) / (0.038*A) ~ 5.13 / sqrt(A)
-
-	SNR (40 ks) - flare (13 ks): 0.056*A +/- sqrt(0.056*A) +/- sqrt(2*0.10*A) ct
-
-			relative error: sqrt(0.256*A) / (0.056*A) ~ 9.04 / sqrt(A)
-
-Adding errors in quadrature. flare subtraction using another region introduces sqrt(2 * flare cts) uncertainty.
-This is a very rough estimate, but it looks like we almost double the relative error, as opposed to simply cutting out flare times.
-
-Flares in different parts of FOV are definitely correlated.  So subtraction
-process may not introduce that much error if the "actual" Poissonian error in
-flare counts from one part of the FOV to another is similar (or, it doesn't
-make sense to represent the counts as random discrete events).
-
-So the error for blank sky subtraction is likely not as bad as I estimate.
-Nevertheless, simply taking GTIs seems to be the safest approach.
-
 
