@@ -6,16 +6,18 @@ ms/aastex
 ms/refs-snr.bib
 ms/textNotes.bib
 
-# Keep only the READMEs, or supporting files, for other data folders...
+# Keep only READMEs or supporting files for radio, optical, other data
 most/G309.2-0.6.ps
 most/*.con
-
-absmodel/**
-!absmodel/README
 ctio/**
 !ctio/README
 molonglo_gps/**
 !molonglo_gps/README
+# Keep only READMEs for XSPEC local models
+absmodel/**
+!absmodel/README
+srcutlog/**
+!srcutlog/README
 
 # Exclude derived DETX/DETY regions
 xmm/regs/0551000201/reg*.txt
@@ -47,7 +49,7 @@ xmm/*/odf/**/*gti*.txt
 xmm/*/odf/**/command.csh
 xmm/*/odf/**/*cmd.csh
 xmm/*/odf/**/*/*cmd.csh
-# cfa git is 1.7.1 so ** doesn't work quite right...
+# cfa head lan git is 1.7.1 so ** doesn't work quite right...
 # just add a special case
 
 # Fitting outputs

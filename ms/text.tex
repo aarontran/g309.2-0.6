@@ -35,7 +35,7 @@
 
 \begin{document}
 
-\title{Fuzzy blobs in G309.2-0.6}
+\title{Spatially Resolved Ejecta in G309.2-0.6}
 
 % Not quite in line with recommended aastex style
 \author{
@@ -280,13 +280,10 @@ relevant for this remnant's evolution.
 % TODO: check out ATCA J134649--625235, mentioned in Gaensler
 
 % Summary / wrap-up
-\citetalias{gaensler1998} and \citetalias{rakowski2001} have given the most comprehensive radio and
-X-ray imaging studies of G309.2-0.6 to date.
-The remnant has received little attention since -- not unsurprising for its
-location in the southern sky, overlapping foreground objects, and non-detection
-of clearly associated emission outside of radio and X-ray wavelengths.
-Here, we provide the first spatially resolved X-ray study of this remnant based
-entirely on archived XMM-Newton observations.
+\citetalias{gaensler1998} and \citetalias{rakowski2001} have given the most
+comprehensive radio and X-ray imaging studies of G309.2-0.6 to date.
+Here, we study the spatially resolved X-ray remnant using archived XMM-Newton
+observations.
 
 %
 %Safi-Harb report:
@@ -419,11 +416,13 @@ $\lesssim 10\%$ of our available exposures due to severe flare contamination.
 Spectra are created from ``good'' single and double events (i.e.,
 \texttt{PATTERN} $\leq 12,4$ for MOS, PN respectively; \texttt{FLAG} $= 0$ for
 both MOS and PN), using ESAS tasks \texttt{\{mos,pn\}-spectra}.
-Our models and spectral fits are performed in XSPEC 12.9.0d \citep{arnaud1996}
-using the T{\"u}bingen-Boulder abundances and absorption model
-\citep{wilms2000}
-% TODO TODO download tb_new and use that!!!!!
-% If downloading new version, update this text accordingly
+We fit all spectra in XSPEC 12.9.0d \citep{arnaud1996}
+using the T{\"u}bingen-Boulder solar elemental abundances
+\citep{wilms2000}.
+Our absorption model is \texttt{tbnew} v2.3.2
+\footnote{http://pulsar.sternwarte.uni-erlangen.de/wilms/research/tbabs/},
+which is the latest version of the gas absorption model discussed by
+\citet{wilms2000}.
 
 % QPB
 The detector background is modeled by ESAS tasks \texttt{\{mos,pn\}\_back}
@@ -485,8 +484,16 @@ We thus argue that SWCX can safely be neglected in both observations.
 % Residual soft proton contamination
 Residual soft protons dominate the X-ray background above $\sim 3 \unit{keV}$
 and are not removed by flare filtering due to their slow time variation.
+% TODO clarify
+Spectra plotted in channel space show a constant count rate signal in the
+highest energy bins that clearly cannot be modeled by any astrophysical source
+-- a power law with index 0, folded through the effective area, falls off far
+too rapidly to account for the observed signal.
+The near constant nature of the noise is consistent with detector noise induced
+by soft proton interaction.
 We model residual soft protons by a power law not passed through CCD response
 and effective area functions, following the ESAS prescription.
+
 
 % =============================================================================
 % Spectrum fits
@@ -504,10 +511,11 @@ and effective area functions, following the ESAS prescription.
 %\citep{whiteoak1996}.
 \end{figure*}
 
-We first fit the integrated remnant spectrum and sky background simultaneously
-to a four component model non-equilibrium ionized plasma spectrum, implemented
-as \texttt{vnei} \citep{hamilton1983} in XSPEC
-\textbf{(is there a better reference?)}.
+We first fit the integrated remnant spectrum to a non-equilibrium ionized
+plasma spectrum, implemented as \texttt{vnei} \citep{hamilton1983} in XSPEC.
+\textbf{(is there a better reference?)}
+The remnant and sky background regions are simultaneously fit
+to derive ``baseline'' remnant and sky X-ray background parameter values.
 We also fit to \texttt{vpshock} and \texttt{vsedov} models, which integrate
 emission over an assumed plane shock or Sedov geometry \citep{borkowski2001},
 but find no significant difference in fitted plasma parameters, expected given
@@ -575,10 +583,11 @@ pointings \citep[e.g.,][]{chen1997, kushino2002, de-luca2004, moretti2009}.
 % But this seems reasonable for an observation in the galactic plane.
 % TODO QUESTION does the galactic halo have a temperature gradient?
 
-We obtain unabsorbed plasma temperature $0.26 \unit{keV}$, absorption column
-$1.34 \times 10^{22} \unit{cm^{-2}}$, and absorbed halo temperature
-$0.64 \unit{keV}$.  The \texttt{apec} normalizations are $2.9\times10^{-4}$
-and $2.6\times10^{-3}$ for each plasma.
+We obtain unabsorbed plasma temperature ${0.262}^{+0.007}_{-0.007} \unit{keV}$,
+absorption column ${1.32}^{+0.08}_{-0.08} \times 10^{22} \unit{cm^{-2}}$,
+and absorbed halo temperature ${0.75}^{-0.04}_{+0.03} \unit{keV}$.
+The \texttt{apec} normalizations are $2.9\times10^{-4}$ and $2.6\times10^{-3}$
+for each plasma.  % TODO provide error bars for the norms here!
 % TODO: validate per notes...
 The absorbed plasma emission measure is within the range expected for galactic
 halo emission, but its temperature is $\abt 2\times$ that deduced from high
@@ -596,6 +605,13 @@ Because of this I would argue that fitting the x-ray background from the full
 annulus is preferable.
 This is probably a small / subtle effect.
 But I'll revisit this analysis to be sure.
+
+Off-axis spectra are more difficult to interpret.
+In the annulus fits, soft proton contamination scales with area,
+but the actual sky photons do not increase as rapidly due to vignetting.
+Basically, farther off-axis, we get more noise.
+This compounds the fact that the remnant appears to be genuinely dimmer off
+axis.
 
 % Variability of the sky X-ray background
 %%It is unclear whether the sky X-ray background can be treated as constant over
@@ -620,7 +636,23 @@ But I'll revisit this analysis to be sure.
         Region & $n_\mathrm{H}$             & $kT$  & $\tau$   & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
                & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
         \midrule
-        Integrated SNR & 2.12 & 2.39 & 1.89 & 3.81 & 3.36 & 1.213 (3768) \\  % 20160421_src_and_bkg_row.tex
+        % NOTE: this is hand-edited temporarily
+%        Integrated SNR
+%            & ${2.12}^{+0.11}_{-0.08}$ % N_H
+%            & ${2.39}^{+0.20}_{-0.34}$ % kT
+%            & ${1.89}^{+0.03}_{-0.18}$ % Tau (in units 10^10)
+%            & ${3.82}^{+0.11}_{-0.23}$ % Si
+%            & ${3.37}^{+0.31}_{-0.20}$ % S
+%            % TODO -- we need to provide a norm here.
+%            & 1.215 (3768) \\  % 20160517_src_and_bkg_row.tex
+        Integrated SNR % CORRECTED AFTER ERROR RUN(!)
+            & ${2.15}^{+0.11}_{-0.08}$ % N_H
+            & ${2.29}^{+0.24}_{-0.30}$ % kT
+            & ${1.83}^{+0.}_{-0.}$ % Tau (in units 10^10)
+            & ${3.82}^{+0.}_{-0.}$ % Si
+            & ${3.37}^{+0.}_{-0.}$ % S
+            % TODO -- we need to provide a norm here.
+            & 1.215 (3768) \\  % 20160517_src_and_bkg_row.tex
         \midrule
         N clump & 2.86 & 0.98 & 4.99 & 4.51 & 4.11 & 1.336 (691) \\  % 20160420_src_north_clump_nH_free_row.tex
         E lobe  & 3.34 & 1.34 & 2.77 & 3.25 & 2.07 & 0.939 (206) \\  % 20160420_src_E_lobe_nH_free_row.tex
@@ -673,7 +705,7 @@ linear regression against optical extinction $\AV$ \citep[e.g.,][]{foight2015}
 -- which benefits from a strong sampling of sources within the galactic plane,
 and empirical validation -- but does not offer physical insight into the
 discrepancy. We find approximate agreement ($2$--$3 \nHunits$) with the various
-relations put
+relations.
 \textbf{TODO: for now detailed accounting of absorption is beyond the scope of
 this work, but may be revisited...}
 
@@ -693,12 +725,7 @@ star.
 
 So what?
 
-This doesn't seem interesting unless we can start drawing conclusions from
-systematic study of a population of remnants.
 
-
-
-Main observation: nH values are generally quite high (2-3e22).
 
 If nH is low, we can still get reasonable kT and Si/S abundances
 by driving down O,Ne,Fe emission. (based on north clump fits)

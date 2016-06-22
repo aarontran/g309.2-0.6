@@ -30,11 +30,13 @@ Running `source sasinit` alone also sets up the XMM SAS and HEASOFT
 environment, but does not set obsid-specific parameters for SAS analysis (so
 evselect works, odfingest may not).
 
+All working files should reside in:
+
+    ${XMM_PATH}/${OBSID}/odf/repro
+
 To pass data through the processing pipeline, run:
 
     source sasinit ${obsid}
-
-    cd ${obsid}/odf/repro
     chainfilter_0551000201
     chainfilter_0087940201
 
@@ -54,18 +56,16 @@ Extract observation and FWC spectra with
 Spectrum fits: you'll have to configure a lot of stuff by hand unfortunately.
 Still working on it.
 
-    fitter_port.py (replaces fitter.tcsh, but still in works), wrapper for
+    g309_models.py
+    g309_fits.py (replaces fitter.tcsh, but still in works), wrapper for
         xspec_fit_g309.py
 
-Note strong dependencies on:
-
+    # Dependencies:
     ExtractedSpectrum.py
     xspec_utils.py
+    nice_tables.py
 
-ExtractedSpectrum specifies the interface for addressing spectrum files,
-getting BACKSCAL values, etc.  So, again, it may need tweaking...
-
-Alternative, background subtraction and fit (not well-tested):
+Alternative, background subtraction and fit (not well-tested or explored):
 
     spec_subtract
     snr_sbkg.xcm
@@ -77,12 +77,21 @@ Image creation (not too tidy yet):
     quick_image_merge.sh
     make_ms_image.py
 
-I have been dumping results to:
+Plotting and manipulation spectrum fit results:
+
+    from g309_fits import *  # Interactive use methods
+    xs_wdata_split.pl
+    xs_replotter.pl
+    replot_*
+    latex_table_oneliner.sh
+
+Intermediate results dumped to:
 
     results_img
     results_spec
 
-rather haphazardly.
+
+
 
 Tools and scripts
 -----------------

@@ -1,0 +1,10 @@
+README
+------
+XSPEC local model, srcutlog (srcutlog.tar.gz from Oct 2014, B.J. Williams)
+
+I (AT) modified `srcutlog.f` (see comments therein), only minor errors that
+prevented it from compiling.  Model calculations should be unchanged.
+
+Build in XSPEC as usual:
+
+    XSPEC12> initpackage srcutlog lmodel.dat .

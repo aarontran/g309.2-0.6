@@ -175,6 +175,7 @@ def prep_xs(with_xs=False):
     """Apply standard XSPEC settings for G309"""
     xs.Xset.abund = "wilm"
     xs.AllModels.lmod("absmodel", dirPath=os.environ['XMM_PATH'] + "/../absmodel")
+    xs.AllModels.lmod("srcutlog", dirPath=os.environ['XMM_PATH'] + "/../srcutlog")
     xs.Fit.query = "yes"
     if with_xs:
         xs.Plot.device = "/xs"
@@ -197,6 +198,114 @@ def set_energy_range(all_extrs):
         #if extr.instr == 'pn':  # May not need to fix by default
         #    extr.spec.models['sp'].powerlaw.PhoIndex = 0.2
         #    extr.spec.models['sp'].powerlaw.PhoIndex.frozen = True
+
+def src_powerlaw_xrbfree(error=False, error_log=None):
+    """Fit integrated source w/ vnei+powerlaw, XRB free"""
+
+    prep_xs(with_xs=True)
+    out = g309.load_data_and_models('src', 'bkg', snr_model='vnei+powerlaw')
+    set_energy_range(out['src'])
+    set_energy_range(out['bkg'])
+    xs.AllData.ignore('bad')
+
+    xs.AllModels(4,'snr_src').constant.factor = 0.95  # TODO manual hack
+
+    # Reset XRB parameters to "typical" values, but do NOT allow to vary
+    xrb = xs.AllModels(1, 'xrb')
+    xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
+                {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
+                {xrb.apec_5.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
+                {xrb.apec.norm.index : 1e-3},
+                {xrb.apec_5.norm.index : 1e-3} )
+    xrb.apec.kT.frozen = True
+    xrb.tbnew_gas.nH.frozen = True
+    xrb.apec_5.kT.frozen = True
+    xrb.apec.norm.frozen = True
+    xrb.apec_5.norm.frozen = True
+
+    xs.Fit.renorm()
+
+    # Ordering: (1) free vnei, (2) free power law, (3) free XRB
+    # then let error runs investigate non-monotonicity...
+    snr = xs.AllModels(1,'snr_src')
+
+    snr.tbnew_gas.nH.frozen=False
+    snr.vnei.kT.frozen=False
+    snr.vnei.Tau.frozen=False
+    snr.vnei.Si.frozen=False
+    snr.vnei.S.frozen=False
+    snr.powerlaw.PhoIndex=2
+    snr.powerlaw.PhoIndex.frozen=True
+    snr.powerlaw.norm=0
+    snr.powerlaw.norm.frozen=True
+    xs.Fit.perform()
+    xs.Plot("ld delch")
+
+    snr.powerlaw.norm.frozen=False
+    xs.Fit.perform()
+    snr.powerlaw.PhoIndex.frozen=False
+    xs.Fit.perform()
+    xs.Plot("ld delch")
+
+    xrb.apec.kT.frozen = False
+    xrb.tbnew_gas.nH.frozen = False
+    xrb.apec_5.kT.frozen = False
+    xrb.apec.norm.frozen = False
+    xrb.apec_5.norm.frozen = False
+    xs.Fit.perform()
+    xs.Plot("ld delch")
+
+    if error:
+        xs.Fit.error("snr_src:21,22,2,4,12,13,18,20")
+
+        xs.Fit.error("xrb:{:d},{:d},{:d}".format(
+            xs_utils.par_num(xrb, xrb.apec.kT),
+            xs_utils.par_num(xrb, xrb.tbnew_gas.nH),
+            xs_utils.par_num(xrb, xrb.apec_5.kT)))
+
+
+def src_powerlaw(region='src', error=False, error_log=None):
+    """Fit integrated source w/ vnei+powerlaw, XRB fixed"""
+
+    prep_xs(with_xs=True)
+    out = g309.load_data_and_models(region, snr_model='vnei+powerlaw')
+    set_energy_range(out[region])
+    xs.AllData.ignore('bad')
+
+    if region == 'src':
+        xs.AllModels(4,'snr_'+region).constant.factor = 0.95  # TODO manual hack
+
+    xs.Fit.renorm()
+
+    # Let SNR model vary to nominal best fit, w/o power law first
+    # (fit does not converge well otherwise)
+    snr = xs.AllModels(1,'snr_'+region)
+    snr.tbnew_gas.nH.frozen=False
+    snr.vnei.kT.frozen=False
+    snr.vnei.Tau.frozen=False
+    snr.vnei.Si.frozen=False
+    snr.vnei.S.frozen=False
+
+    snr.powerlaw.PhoIndex=2
+    snr.powerlaw.PhoIndex.frozen=True
+    snr.powerlaw.norm=0
+    snr.powerlaw.norm.frozen=True
+
+    xs.Fit.perform()
+
+    xs.Plot("ld delch")
+
+    # Now introduce power law
+
+    snr.powerlaw.norm.frozen=False
+    xs.Fit.perform()
+    snr.powerlaw.PhoIndex.frozen=False
+    xs.Fit.perform()
+
+    xs.Plot("ld delch")
+
+    if error:
+        xs.Fit.error("snr_{}:21,22,2,4,12,13,18".format(region))
 
 
 def joint_src_bkg_fit(error=False, error_log=None):
@@ -453,7 +562,7 @@ def ann_400_500_fit():
 
 if __name__ == '__main__':
 
-    prep_xs(with_xs=True)  # This is required before all fits actually...
+    prep_xs(with_xs=True)  # This is required before all fits
 
     f_stem = "results_spec/20160611_src_bkg_rerun"
 
