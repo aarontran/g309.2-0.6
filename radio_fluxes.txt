@@ -1,0 +1,5 @@
+# Freq (GHz)  Flux density (Jy)   Error (Jy)  Reference
+0.408       10                  1           1975AuJPA..37....1C     # Green+ 1970s Mills Cross survey
+0.843       6                   0.6         1996A%26AS..118..329W   # Whiteoak & Green MOST catalog
+1.344       5.2                 0.2         1998MNRAS.299..812G     # Gaensler ATCA
+5           3.9                 0.4         1975AuJPA..37....1C     # Green+ 1970s Parkes survey

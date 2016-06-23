@@ -9509,6 +9509,77 @@ Add custom matplotlibrc.  Significantly augment xs_replotter.py -- add many
 command-line options, and tweak settings to create manuscript-ready plots.
 Work on wrapper scripts `replot_*` to help visualize key fit results so far.
 
+Idly downloaded Green's galactic SNR catalog and made a sky plot.
+
+Radio spectral index
+--------------------
+
+Setup for srcutlog fits -- what is the radio spectral index of this source?
+
+Compiling data (retracing the numbers in Gaensler+ 1998), we have:
+
+    Freq (GHz)  Flux density (Jy)   Error (Jy)  Reference
+    0.408       10                  1           1975AuJPA..37....1C     # Green+ 1970s Mills Cross survey
+    0.843       6                   0.6         1996A%26AS..118..329W   # Whiteoak & Green MOST catalog
+    1.344       5.2                 0.2         1998MNRAS.299..812G     # Gaensler ATCA
+    5           3.9                 0.4         1975AuJPA..37....1C     # Green+ 1970s Parkes survey
+
+Error for Molonglo Cross / Parkes observations in Green+ 1975
+are taken as 10%, following Gaensler+ 1998; see pg. 2 of Green+ 1975
+("intensity errors are believed to be generally less than 10%").
+
+Error for MOST observation in Whiteoak & Green 1996 is also taken as 10%.
+> For extended SNRs, baselevel uncertainties result in integrated flux
+> densities with errors ~10%, increasing to 30% for very faint objects.  The
+> MOST does not measure visibilities on baselines <~ 15 m and so is not
+> sensitive to smooth structure on a scale >~ 30'.  For SNRs with large angular
+> diameter, the flux density may be underestimated, and hence only a lower
+> limit is given.
+
+Other sources:
+
+Gaensler excludes single-dish observations, arguing that the SNR is confused
+with RCW 80 to the north.
+- Day, Thomas & Goss 1969 = 2.7 GHz survey
+  ADS doesn't have a copy of this paper, but Wolbach does.
+  Result: 2.65 GHz flux density is estimated as 4e-26 W m^-2 Hz^-1 = 4 Jy
+  Beamwidth: 8.2' so very confused...
+  Positional error <~ 1'
+- Duncan, Stewart, Haynes & Jones 1995 = 2.4 GHz survey.
+  Parkes beam is very large (~0.4 deg. = 24 arcmin. wide),
+  remnant is confused with background galactic plane emission.
+  Makes sense to omit this.
+- Clark et al. 1975 = Parkes 5000 MHz survey
+  Beamwidth: 4'
+  Positional error <~ 0.5'
+
+Caswell+ 1981 observed G309.2-0.6 with FIRST (Fleurs synthesis telescope)
+at 1415 MHz, but state that intensity scaling is uncertain far from the field
+center; gain variation across the radio map is not corrected for.
+Surface brightness is not given, but it's similar to the expected flux obtained
+by interpolating between 408 and 5000 MHz.
+Therefore, no 1415 MHz flux density is reported.
+
+Green+ state, regarding G309.2-0.6:
+> The 5000 MHz map is confused to the north with a thermal region, which
+> probably corresponds to the optical nebula RCW 80. However, the northern
+> boundary [of the SNR] was defined by reference to the 408 MHz map, with the
+> flux density estimate thus obtained giving a mean spectral index for the
+> complete 408 MHz object of -0.37. Individually the two portions [ears] have
+> spectra similar to this mean value, as may be inferred from their similar
+> relative intensities at 408 and 5000 MHz.
+The majority of 5000 MHz emission appears associated with the SNR.  I would
+think that the cut of the thermal region (RCW 80) emission is reasonable, and
+take the data point w/ its associated error.
+
+Including or excluding the 5000 MHz points substantially shifts the fitted
+spectral index: either 0.35 or 0.52 (0.53 given by Gaensler+).
+
+See fitting ipynb
+
+Thursday
+
+
 
 
 
