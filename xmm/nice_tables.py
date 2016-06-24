@@ -86,6 +86,9 @@ class LatexTable(object):
         of input "types" array.
             Each "type 1" column will have 1 extra entry,
             each "type 2" column will have 2 extra entries (+ve error first)
+                +ve, -ve error should have correct sign
+                (i.e. -ve error is normally, well, negative)
+                This is the user's responsibility.
         """
         self.prec = prec    # Save for user access
         self.types = types  # Need for e.g., self.ncols()
@@ -128,13 +131,14 @@ class LatexTable(object):
         # Build row spec (string)
         rlist = []
         fmt = '{:0.' + str(self.prec) + 'f}'  # Forces decimal pt notation
+        fmt_sgn = '{:+0.' + str(self.prec) + 'f}'
         for t in types:
             if t == 0:  # General number
                 rlist.append('{:0.' + str(self.prec) + 'g}')
             elif t == 1:  # Single error splits into two columns
                 rlist.extend(2*['$'+fmt+'$'])
             elif t == 2:  # Double error w/ braces around all values
-                rlist.append('${{'+fmt+'}}^{{+'+fmt+'}}_{{-'+fmt+'}}$')
+                rlist.append('${{'+fmt+'}}^{{'+fmt_sgn+'}}_{{'+fmt_sgn+'}}$')
             else:
                 rlist.append(t)  # Supply your own spec
         self.rspec = ' & '.join(rlist)

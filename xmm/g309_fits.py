@@ -65,11 +65,11 @@ def val_errs(par):
 
 def err_pos(par):
     """Return _signed_ positive error for XSPEC parameter"""
-    return par.error[0] - par.values[0]
+    return par.error[1] - par.values[0]
 
 def err_neg(par):
     """Return _signed_ negative error for XSPEC parameter"""
-    return par.error[1] - par.values[0]
+    return par.error[0] - par.values[0]
 
 def print_model(m, f_out=None):
     """More succinct model output printer
@@ -767,7 +767,7 @@ def bkg_only_fit(output, error=False):
         ltr.extend(val_errs(xrb.apec.norm))
         ltr.extend(val_errs(xrb.tbnew_gas.nH))
         ltr.extend(val_errs(xrb.apec_5.kT))
-        ltr.extend(val_errs(xrb.apec_t.norm))
+        ltr.extend(val_errs(xrb.apec_5.norm))
 
         ltr.append("{:0.3f} = {:0.3f}/{:d}".format(xs.Fit.statistic/xs.Fit.dof,
                                                 xs.Fit.statistic, xs.Fit.dof))

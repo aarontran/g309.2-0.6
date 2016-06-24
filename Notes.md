@@ -9637,9 +9637,6 @@ Current fits fix it at 0.95.  Now, check values 0.88 (backscal ratio) and 1.
 If the fit values agree within error, then there is no need to go further.
 I will most likely just stick to backscal = 0.88 for consistency's sake.
 
-TODO -- a few commands modified, need to be executed to get helpful output
-products (specifically dump useful LaTeX tables for appendices and the like).
-
 If the fit values disagree, then we need to work on this further.
 
 
@@ -9655,6 +9652,19 @@ Lets check our X-ray background parameter values:
     prep_xs(with_xs=True)
     stopwatch(bkg_only_fit, "results_spec/20160624_bkg_only", error=True)
 
+
+Bug hunting
+-----------
+
+Fix +/- signs in latex table dumps.  I got the numbers swapped, need to redo
+all the tables.  Attempted to re-create tables by hand, but re-run from scratch
+to be very safe while I get groceries anyways.  Expect output to be identical.
+
+    stopwatch(joint_src_bkg_fit, "results_spec/20160624_src_bkg_hack_eq_one_rerun", backscal_ratio_hack=1, error=True)
+    stopwatch(joint_src_bkg_fit, "results_spec/20160624_src_bkg_nohack_rerun", backscal_ratio_hack=None, error=True)
+    stopwatch(bkg_only_fit, "results_spec/20160624_bkg_only_rerun", error=True)
+
+After running and diffing, remove old outputs.
 
 
 
