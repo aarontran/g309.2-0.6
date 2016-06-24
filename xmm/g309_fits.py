@@ -168,10 +168,6 @@ def clear():
     xs.AllModels.clear()
 
 
-#############################################
-# Specific fit setup and execution routines #
-#############################################
-
 def stopwatch(function, *args, **kwargs):
     """Time a function call, printing start/stop times to console after the
     function halts (after Exceptions as well)"""
@@ -180,10 +176,15 @@ def stopwatch(function, *args, **kwargs):
         function(*args, **kwargs)
     finally:
         stopped = datetime.now()
-        print "Started:", started
-        print "Stopped:", stopped
-        print "Elapsed:", stopped - started
+        print function.func_name, "timing"
+        print "  Started:", started
+        print "  Stopped:", stopped
+        print "  Elapsed:", stopped - started
 
+
+########################
+# Customized fit setup #
+########################
 
 def prep_xs(with_xs=False):
     """Apply standard XSPEC settings for G309"""
@@ -210,6 +211,10 @@ def set_energy_range(all_extrs):
         if extr.instr == "pn":
             extr.spec.ignore("**-0.4, 11.0-**")
 
+
+############################
+# Customized fit execution #
+############################
 
 def src_powerlaw_xrbfree(output, error=False):
     """Fit integrated source w/ vnei+powerlaw, XRB free"""
@@ -412,16 +417,25 @@ def src_powerlaw(output, region='src', solar=False, error=False):
     # No need for a LaTeX table currently; fit disfavors powerlaw
 
 
-def joint_src_bkg_fit(output, error=False):
+def joint_src_bkg_fit(output, backscal_ratio_hack=None, error=False):
     """
     Fit source + bkg regions, allowing XRB to float
+    backscal_ratio_hack = arbitrary adjustment to 0551000201 MOS1S001
+        source region backscal ratio.
+        This was the smallest geometric w.r.t. 0087940201 MOS1 (ratio 0.88).
+        But, because the missing area (missing chip #6) sampled little of the
+        remnant, I thought that this ratio might be an underestimate of the
+        true sampled remnant flux, and therefore introduced an arbitrary ratio
+        adjustment to 0.95 in some fits.
+        Build in this parameter as a way to explore fit scaling tension.
     """
     out = g309.load_data_and_models("src", "bkg", snr_model='vnei')
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
     xs.AllData.ignore("bad")
 
-    xs.AllModels(4,'snr_src').constant.factor = 0.95  # TODO manual hack...  !!!!
+    if backscal_ratio_hack:
+        xs.AllModels(4,'snr_src').constant.factor = backscal_ratio_hack
 
     # Reset XRB to "typical" values, do NOT vary yet
     xrb = xs.AllModels(1, 'xrb')
@@ -463,7 +477,12 @@ def joint_src_bkg_fit(output, error=False):
 
         xs.Xset.openLog(output + "_error.log")
 
-        print "First error run:", datetime.now()
+        # Perform XRB error run first because a new best fit is [typically]
+        # found in this step
+        print "Error run start:", datetime.now()
+        xs.Fit.error("xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.kT))
+                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.tbnew_gas.nH))
+                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
         xs.Fit.error("snr_src:{:d}".format(xs_utils.par_num(snr, snr.tbnew_gas.nH))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.kT))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.Tau))
@@ -471,24 +490,7 @@ def joint_src_bkg_fit(output, error=False):
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.S))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.norm))
                      )
-        xs.Fit.error("xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.kT))
-                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.tbnew_gas.nH))
-                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
-
-        # Repeat because a new best fit is found in the first error run
-        print "Second error run:", datetime.now()
-        xs.Fit.error("snr_src:{:d}".format(xs_utils.par_num(snr, snr.tbnew_gas.nH))
-                  + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.kT))
-                  + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.Tau))
-                  + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.Si))
-                  + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.S))
-                  + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.norm))
-                     )
-        xs.Fit.error("xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.kT))
-                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.tbnew_gas.nH))
-                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
-
-        print "Error runs complete:", datetime.now()
+        print "Error run stop:", datetime.now()
 
         xs.Xset.closeLog()
 
@@ -499,6 +501,7 @@ def joint_src_bkg_fit(output, error=False):
     wdata(output + ".qdp")
     xs_utils.dump_fit_log(output + ".log")
     print_model(snr, output + "_snr_src.txt")
+    print_model(xrb, output + "_xrb.txt")
 
     # Dump fit parameters to 1. copy-pastable table, 2. just rows alone
     latex_hdr = [['Region', ''],
@@ -507,18 +510,49 @@ def joint_src_bkg_fit(output, error=False):
                  [r'$\tau$', r'($10^{10} \unit{s\;cm^{-3}}$)'],
                  ['Si', '(-)'],
                  ['S', '(-)'],
-                 [r'$\chi^2_{\mathrm{red}} (\mathrm{dof}$)', '']]
+                 ['vnei EM', '(EM units)'],
+                 [r'XRB local $kT$', '(keV)'],
+                 [r'XRB $n_\mathrm{H}$', r'($10^{22} \unit{cm^{-2}}$)'],
+                 [r'XRB halo $kT$', '(keV)'],
+                 [r'$\chi^2_{\mathrm{red}} = \chi^2/\mathrm{dof}$', '']]
     latex_hdr = np.array(latex_hdr).T
-    latex_cols = ['{:s}', 0, 0, 0, 0, 0, '{:s}']  # TODO incorporate errors
-    ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 integrated fit", prec=4)
 
-    ltr = ['Source',
-           snr.tbnew_gas.nH.values[0],
-           snr.vnei.kT.values[0],
-           snr.vnei.Tau.values[0] / 1e10,
-           snr.vnei.Si.values[0],
-           snr.vnei.S.values[0],
-           "{:0.3f} ({:d})".format(xs.Fit.statistic/xs.Fit.dof, xs.Fit.dof)]
+    if error:
+        latex_cols = ['{:s}', 2, 2, 2, 2, 2, 2, 2, 2, 2, '{:s}']
+        ltr = ['Source']
+        ltr.extend(val_errs(snr.tbnew_gas.nH))
+        ltr.extend(val_errs(snr.vnei.kT))
+        ltr.extend([snr.vnei.Tau.values[0] / 1e10,
+                    err_pos(snr.vnei.Tau) / 1e10,
+                    err_neg(snr.vnei.Tau) / 1e10])
+        ltr.extend(val_errs(snr.vnei.Si))
+        ltr.extend(val_errs(snr.vnei.S))
+        ltr.extend(val_errs(snr.vnei.norm))
+        ltr.extend(val_errs(xrb.apec.kT))
+        ltr.extend(val_errs(xrb.tbnew_gas.nH))
+        ltr.extend(val_errs(xrb.apec_5.kT))
+
+        ltr.append("{:0.3f} = {:0.3f}/{:d}".format(xs.Fit.statistic/xs.Fit.dof,
+                                                xs.Fit.statistic, xs.Fit.dof))
+
+    else:
+        latex_cols = ['{:s}', 0, 0, 0, 0, 0, 0, 0, 0, 0, '{:s}']
+        ltr = ['Source',
+               snr.tbnew_gas.nH.values[0],
+               snr.vnei.kT.values[0],
+               snr.vnei.Tau.values[0] / 1e10,
+               snr.vnei.Si.values[0],
+               snr.vnei.S.values[0],
+               snr.vnei.norm.values[0],
+               xrb.apec.kT.values[0],
+               xrb.tbnew_gas.nH.values[0],
+               xrb.apec_5.kT.values[0]
+            ]
+        ltr.append("{:0.3f} = {:0.3f}/{:d}".format(xs.Fit.statistic/xs.Fit.dof,
+                                                xs.Fit.statistic, xs.Fit.dof))
+
+    ltab = LatexTable(latex_hdr, latex_cols,
+                      "G309.2-0.6 {} fit".format(output), prec=4)
     ltab.add_row(*ltr)
 
     with open(output + ".tex", 'w') as f_tex:
@@ -661,6 +695,104 @@ def five_annulus_fit(output, error=False, error_rerun=False):
         f_tex.write('\n'.join(ltab.get_rows()))
 
 
+def bkg_only_fit(output, error=False):
+    """
+    Fit bkg region alone to XRB model
+    """
+    out = g309.load_data_and_models("bkg", snr_model=None)
+    set_energy_range(out['bkg'])
+    xs.AllData.ignore("bad")
+
+    # Reset XRB to "typical" values
+    # As usual, fit is pretty sensitive to initial values
+    # (initial kT values that are too small drive fit to a bad local minimum)
+    xrb = xs.AllModels(1, 'xrb')
+    xrb.setPars({xrb.apec.kT.index : "0.2, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
+                {xrb.tbnew_gas.nH.index : "1.5, , 0.01, 0.1, 5, 10"},  # Galactic absorption
+                {xrb.apec_5.kT.index : "0.7, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
+                {xrb.apec.norm.index : 1e-3},
+                {xrb.apec_5.norm.index : 1e-3} )
+    xrb.apec.kT.frozen = False
+    xrb.tbnew_gas.nH.frozen = False
+    xrb.apec_5.kT.frozen = False
+    xrb.apec.norm.frozen = False
+    xrb.apec_5.norm.frozen = False
+
+    xs.Fit.perform()
+    if xs.Plot.device == "/xs":
+        xs.Plot("ldata delchi")
+
+    xs.Fit.steppar("xrb:{:d} 0.1 0.5 20".format(xs_utils.par_num(xrb, xrb.apec.kT)))
+    xs.Fit.steppar("xrb:{:d} 0.4 0.8 20".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
+
+    if xs.Plot.device == "/xs":
+        xs.Plot("ldata delchi")
+
+    if error:
+
+        xs.Xset.openLog(output + "_error.log")
+
+        print "Error run started:", datetime.now()
+        xs.Fit.error("xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.kT))
+                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.norm))
+                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.tbnew_gas.nH))
+                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.kT))
+                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.norm)))
+
+        print "Error run complete:", datetime.now()
+
+        xs.Xset.closeLog()
+
+    # Dump useful things here...
+
+    # Diagnostic plots and numbers
+    pdf(output + ".pdf", cmd="ldata delchi")  # Plot is a useless mess
+    wdata(output + ".qdp")
+    xs_utils.dump_fit_log(output + ".log")
+    print_model(xrb, output + "_xrb.txt")
+
+    # Dump fit parameters to 1. copy-pastable table, 2. just rows alone
+    latex_hdr = [[r'XRB local $kT$', '(keV)'],
+                 ['XRB local EM', '(EM units)'],
+                 [r'XRB $n_\mathrm{H}$', r'($10^{22} \unit{cm^{-2}}$)'],
+                 [r'XRB halo $kT$', '(keV)'],
+                 ['XRB halo EM', '(EM units)'],
+                 [r'$\chi^2_{\mathrm{red}} = \chi^2/\mathrm{dof}$', '']]
+    latex_hdr = np.array(latex_hdr).T
+
+    if error:
+        latex_cols = [2, 2, 2, 2, 2, '{:s}']
+        ltr = []
+        ltr.extend(val_errs(xrb.apec.kT))
+        ltr.extend(val_errs(xrb.apec.norm))
+        ltr.extend(val_errs(xrb.tbnew_gas.nH))
+        ltr.extend(val_errs(xrb.apec_5.kT))
+        ltr.extend(val_errs(xrb.apec_t.norm))
+
+        ltr.append("{:0.3f} = {:0.3f}/{:d}".format(xs.Fit.statistic/xs.Fit.dof,
+                                                xs.Fit.statistic, xs.Fit.dof))
+
+    else:
+        latex_cols = [0, 0, 0, 0, 0, '{:s}']
+        ltr = [xrb.apec.kT.values[0],
+               xrb.apec.norm.values[0],
+               xrb.tbnew_gas.nH.values[0],
+               xrb.apec_5.kT.values[0],
+               xrb.apec_5.norm.values[0],
+            ]
+        ltr.append("{:0.3f} = {:0.3f}/{:d}".format(xs.Fit.statistic/xs.Fit.dof,
+                                                xs.Fit.statistic, xs.Fit.dof))
+
+    ltab = LatexTable(latex_hdr, latex_cols,
+                      "G309.2-0.6 {} fit".format(output), prec=4)
+    ltab.add_row(*ltr)
+
+    with open(output + ".tex", 'w') as f_tex:
+        f_tex.write(str(ltab))
+    with open(output + "_row.tex", 'w') as f_tex:
+        f_tex.write('\n'.join(ltab.get_rows()))
+
+
 
 ###########################
 # Actually run stuff here #
@@ -668,18 +800,17 @@ def five_annulus_fit(output, error=False, error_rerun=False):
 
 if __name__ == '__main__':
 
-    prep_xs(with_xs=True)  # This is required before all fits
-
     # Options so far:
     # five_annulus_fit(output, error=False, error_rerun=False)
     # joint_src_bkg_fit(output, error=False)
     # src_powerlaw(output, region='src', error=False)
     # src_powerlaw_xrbfree(error=False, error=False)
+    # src_srcutlog(...)
+    # bkg_only_fit(...)
 
+    prep_xs(with_xs=True)  # Required before all fits
     stopwatch(joint_src_bkg_fit, error=True,
-              output="results_spec/20160611_src_bkg_rerun")
-
-
+              output="results_spec/2016MMDD_src_bkg_rerun")
 
 
     # Sub region fits with varying nH values

@@ -9595,12 +9595,83 @@ XRB is fixed to values from integrated src + bkg fit as usual.
 
 Started at 23:26:23, completed ~ 01:15am.
 
+A very weak srcutlog component is allowed by data.
+Break at 10^15.76 Hz corresponds to photon energy 0.02 keV.
+Need to plot and confirm this result.
+
+
+Friday 2016 June 24 -- re-assemble fitting results
+====================================================
+
+Continue taking stock.  A lot of intermediate results to sort through.
+
+Re-assess backscal ad hoc "hack"
+--------------------------------
+
+For the 0551000201 MOS1 backscal factor, where I'm using an ad hoc 0.95 scaling
+factor (instead of 0.88) for SNR emission in the integrated src region only.
+How can I make this more quantitative?
+1. set scaling factor 1 for everything
+2. accept backscal ratio scaling (88% for 0551000201 MOS1)
+3. compute new weights based on actual emission map;
+   calculate as weight ~ integral of exposure * 1-2.6 keV counts map
+   similar to detector maps created for RMF/ARF.
+
+Now basically we're looking at a 5-10% correction to the VNEI norm, which could
+change (increase or decrease) tension in fits.
+On a log scale though, this is a really small correction.  I suspect there are
+already many other factors at play (single temperature NEI approximation.
+
+Let's conduct a quick analysis.  How do the fit results change if I tune
+the 0551000201 MOS1 backscal factor alone?
+Current fits fix it at 0.95.  Now, check values 0.88 (backscal ratio) and 1.
+
+    from g309_fits import *
+    prep_xs(with_xs=True)
+    stopwatch(joint_src_bkg_fit, "results_spec/20160624_src_bkg_hack_eq_one", hack=1, error=True)
+
+    from g309_fits import *
+    prep_xs(with_xs=True)
+    stopwatch(joint_src_bkg_fit, "results_spec/20160624_src_bkg_nohack", hack=None, error=True)
+
+If the fit values agree within error, then there is no need to go further.
+I will most likely just stick to backscal = 0.88 for consistency's sake.
+
+TODO -- a few commands modified, need to be executed to get helpful output
+products (specifically dump useful LaTeX tables for appendices and the like).
+
+If the fit values disagree, then we need to work on this further.
+
+
+X-ray background fitting checks
+-------------------------------
+
+Finally with code infrastructure to generate and dump error command outputs,
+I can systematically follow up on lingering questions.
+
+Lets check our X-ray background parameter values:
+
+    from g309_fits import *
+    prep_xs(with_xs=True)
+    stopwatch(bkg_only_fit, "results_spec/20160624_bkg_only", error=True)
+
+
+
+
 
 
 
 
 Standing questions and TODOs
 ============================
+
+TODO
+1. srcutlog with solar abundances XOR Si/S free?
+2. powerlaw with solar abundances XOR Si/S free?
+3. srcutlog, powerlaw with solar abundances XOR Si/S free, and XRB free?
+4. re-run certain fits without BACKSCAL hack
+5. re-run annulus fits with central region Mg free (expect subsolar),
+   then see where to go from here (re-free O, Ne? finally return to sub-regions?).
 
 
 Misc. XSPEC has a "delayed gratification" option for levenberg-marquardt
@@ -9622,7 +9693,7 @@ viewer to read and understand the models.
 Suggestion -- can we combine the MOS1/2 spectra from each obsid?
     results in three spectra / region to fit.
 
-Is Gamma Cas introducing light curve noise?
+Is HD 119682 introducing light curve noise?
 compute FOV lightcurve _without_ point sources.
 
 List of assumptions to test.  How do the (KEY) fits above change if I:
