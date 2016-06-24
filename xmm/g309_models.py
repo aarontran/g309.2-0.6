@@ -172,6 +172,8 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
     Output:
         None.  Global XSPEC objects configured for SNR.
     """
+    if case is None:
+        return
 
     # Set responses of <xs.Spectrum> objects
     for extr in extracted_spectra:
@@ -179,8 +181,11 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         extr.spec.multiresponse[model_n - 1].arf = extr.arf()
 
     # Initialize source model with reasonable "global" parameters
+
+    model_expression = "constant * tbnew_gas * ( {} )".format(case)
+    src = xs.Model(model_expression, model_name, model_n)
+
     if case == 'vnei':
-        src = xs.Model("constant * tbnew_gas * vnei", model_name, model_n)
         # Apply fitting bounds
         src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
@@ -192,7 +197,6 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         src.vnei.S.frozen = True
         src.vnei.Si.frozen = True
     elif case == 'vnei+powerlaw':
-        src = xs.Model("constant * tbnew_gas * (vnei + powerlaw)", model_name, model_n)
         # Apply fitting bounds
         src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
@@ -204,8 +208,24 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         src.vnei.Tau.frozen = True
         src.vnei.S.frozen = True
         src.vnei.Si.frozen = True
+    elif case == 'vnei+srcutlog':
+        # Apply fitting bounds
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
+                     src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
+                     src.vnei.S.index : "1, , , , 10, 10",  # upper bound only
+                     src.vnei.Si.index : "1, , , , 10, 10",  # upper bound only
+                     src.srcutlog.alpha.index : "0.53",  # Gaensler+ 1998
+                     src.srcutlog.norm.index : 6  # 1 GHz flux density (Jy), interpolated from Gaensler+ data fit
+                     } )  # upper bound only
+        src.tbnew_gas.nH.frozen = True
+        src.vnei.kT.frozen = True
+        src.vnei.Tau.frozen = True
+        src.vnei.S.frozen = True
+        src.vnei.Si.frozen = True
+        src.srcutlog.alpha.frozen = True
+        src.srcutlog.norm.frozen = True
+        src.srcutlog.__getattribute__('break').frozen = False  # break reserved in Python...
     elif case == 'vpshock':
-        src = xs.Model("constant * tbnew_gas * vpshock", model_name, model_n)
         src.tbnew_gas.nH = 1
         src.vpshock.kT = 1
         src.vpshock.Tau_l = 1e9
@@ -215,10 +235,8 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         #src = xs.Model("constant * tbnew_gas * vsedov", model_name, model_n)
         #snr.vsedov.kT = 2
         #snr.vsedov.kT_i = 1
-    elif case is None:
-        return
     else:
-        raise Exception("Invalid snr model: {} not recognized".format(case))
+        print "Warning: case {} not pre-configured, please freeze and set parameters manually"
 
     # Set individal spectrum parameters
     for extr in extracted_spectra:

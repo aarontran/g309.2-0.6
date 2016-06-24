@@ -57,6 +57,20 @@ from nice_tables import LatexTable
 # Stuff for printing and displaying output #
 ############################################
 
+# Lazy man's methods for dealing with XSPEC errors
+
+def val_errs(par):
+    """Convenience method: return tuple (value, +ve err, -ve err) for a given XSPEC parameter"""
+    return par.values[0], err_pos(par), err_neg(par)
+
+def err_pos(par):
+    """Return _signed_ positive error for XSPEC parameter"""
+    return par.error[0] - par.values[0]
+
+def err_neg(par):
+    """Return _signed_ negative error for XSPEC parameter"""
+    return par.error[1] - par.values[0]
+
 def print_model(m, f_out=None):
     """More succinct model output printer
     Ignores all frozen components
@@ -72,10 +86,10 @@ def print_model(m, f_out=None):
     print m.name, ":", m.expression
 
     for cname in m.componentNames:  # for comp in m.components
-        comp = eval("m." + cname)
+        comp = m.__getattribute__(cname)
 
         for pname in comp.parameterNames:  # for par in comp.parameters
-            par = eval("comp." + pname)
+            par = comp.__getattribute__(pname)
 
             if par.frozen:
                 continue
@@ -195,14 +209,11 @@ def set_energy_range(all_extrs):
             extr.spec.ignore("**-0.3, 11.0-**")
         if extr.instr == "pn":
             extr.spec.ignore("**-0.4, 11.0-**")
-        #if extr.instr == 'pn':  # May not need to fix by default
-        #    extr.spec.models['sp'].powerlaw.PhoIndex = 0.2
-        #    extr.spec.models['sp'].powerlaw.PhoIndex.frozen = True
 
-def src_powerlaw_xrbfree(error=False, error_log=None):
+
+def src_powerlaw_xrbfree(output, error=False):
     """Fit integrated source w/ vnei+powerlaw, XRB free"""
 
-    prep_xs(with_xs=True)
     out = g309.load_data_and_models('src', 'bkg', snr_model='vnei+powerlaw')
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
@@ -210,7 +221,7 @@ def src_powerlaw_xrbfree(error=False, error_log=None):
 
     xs.AllModels(4,'snr_src').constant.factor = 0.95  # TODO manual hack
 
-    # Reset XRB parameters to "typical" values, but do NOT allow to vary
+    # Reset XRB to "typical" values, do NOT vary yet
     xrb = xs.AllModels(1, 'xrb')
     xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
                 {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
@@ -264,10 +275,81 @@ def src_powerlaw_xrbfree(error=False, error_log=None):
             xs_utils.par_num(xrb, xrb.apec_5.kT)))
 
 
-def src_powerlaw(region='src', error=False, error_log=None):
-    """Fit integrated source w/ vnei+powerlaw, XRB fixed"""
+def src_srcutlog(output, region='src', solar=False, error=False):
+    """
+    Fit a region to vnei+srcutlog, XRB fixed
+    Arguments
+        output: file stem string
+        region: region ID
+        solar: fit to solar abundances, or let Si,S run free
+        error: perform error runs
+    """
 
-    prep_xs(with_xs=True)
+    out = g309.load_data_and_models(region, snr_model='vnei+srcutlog')
+    set_energy_range(out[region])
+    xs.AllData.ignore('bad')
+
+    if region == 'src':
+        xs.AllModels(4,'snr_'+region).constant.factor = 0.95  # TODO manual hack
+
+    xs.Fit.renorm()
+
+    # Let XSPEC fit vnei and srcutlog simultaneously,
+    # a little better behaved than w/ powerlaw
+    snr = xs.AllModels(1,'snr_'+region)
+    snr.tbnew_gas.nH.frozen = False
+    snr.vnei.kT.frozen = False
+    snr.vnei.Tau.frozen = False
+    if solar:
+        snr.vnei.Si.frozen = True
+        snr.vnei.S.frozen = True
+    else:
+        snr.vnei.Si.frozen = False
+        snr.vnei.S.frozen = False
+
+    # Set 10^10 Hz break, basically zero contribution at X-ray energies
+    #break_p = snr.srcutlog.__getattribute__('break')
+    #break_p._setValues(10)  # HACKY WORKAROUND...
+    #break_p.frozen = True
+
+    xs.Fit.perform()
+    xs.Plot("ld delch")
+
+    # In case srcutlog break ran to zero, make sure we do traverse
+    # reasonably high break values: 15 -- 17 in 10+1 steps.
+    xs.Fit.steppar("snr_{}:22 15 17 10".format(region))
+
+    if error:
+        xs.Xset.openLog(output + "_error.log")
+        print "Error run start:", datetime.now()
+
+        # 22 = srcutlog break
+        # 2 = nH, 4 = kT, 12/13 = Si/S, 18 = Tau, 20 = vnei norm
+        xs.Fit.error("snr_{}:22,2,4,12,13,18,20".format(region))
+        # note: if Si/S frozen, XSPEC will print a benign warning
+
+        xs.Xset.closeLog()
+        print "Error run stop:", datetime.now()
+
+    # Diagnostic plots and numbers
+    pdf(output + ".pdf", cmd="ldata delchi")
+    wdata(output + ".qdp")
+    xs_utils.dump_fit_log(output + ".log")
+    print_model(snr, output + "_snr_" + region + ".txt")
+
+    # No need for a LaTeX table currently; fit disfavors powerlaw
+
+
+def src_powerlaw(output, region='src', solar=False, error=False):
+    """
+    Fit a region to vnei+powerlaw, XRB fixed
+    Arguments
+        output: file stem string
+        region: region ID
+        solar: fit to solar abundances, or let Si,S run free
+        error: perform error runs
+    """
+
     out = g309.load_data_and_models(region, snr_model='vnei+powerlaw')
     set_energy_range(out[region])
     xs.AllData.ignore('bad')
@@ -277,14 +359,18 @@ def src_powerlaw(region='src', error=False, error_log=None):
 
     xs.Fit.renorm()
 
-    # Let SNR model vary to nominal best fit, w/o power law first
+    # Let SNR model attain nominal best fit without power law first
     # (fit does not converge well otherwise)
     snr = xs.AllModels(1,'snr_'+region)
-    snr.tbnew_gas.nH.frozen=False
-    snr.vnei.kT.frozen=False
-    snr.vnei.Tau.frozen=False
-    snr.vnei.Si.frozen=False
-    snr.vnei.S.frozen=False
+    snr.tbnew_gas.nH.frozen = False
+    snr.vnei.kT.frozen = False
+    snr.vnei.Tau.frozen = False
+    if solar:
+        snr.vnei.Si.frozen = True
+        snr.vnei.S.frozen = True
+    else:
+        snr.vnei.Si.frozen = False
+        snr.vnei.S.frozen = False
 
     snr.powerlaw.PhoIndex=2
     snr.powerlaw.PhoIndex.frozen=True
@@ -292,25 +378,44 @@ def src_powerlaw(region='src', error=False, error_log=None):
     snr.powerlaw.norm.frozen=True
 
     xs.Fit.perform()
-
     xs.Plot("ld delch")
 
     # Now introduce power law
-
     snr.powerlaw.norm.frozen=False
     xs.Fit.perform()
     snr.powerlaw.PhoIndex.frozen=False
     xs.Fit.perform()
-
     xs.Plot("ld delch")
 
+    # Because powerlaw generally runs to zero, make sure we do traverse
+    # moderately strong power law cases
+    xs.Fit.steppar("snr_{}:22 1e-5 1e-3 10".format(region))
+
     if error:
-        xs.Fit.error("snr_{}:21,22,2,4,12,13,18".format(region))
+        xs.Xset.openLog(output + "_error.log")
+        print "Error run start:", datetime.now()
+
+        # 21 = PhoIndex, 22 = norm
+        # 2 = nH, 4 = kT, 12/13 = Si/S, 18 = Tau, 20 = vnei norm
+        xs.Fit.error("snr_{}:21,22,2,4,12,13,18,20".format(region))
+        # note: if Si/S frozen, XSPEC will print a benign warning
+
+        xs.Xset.closeLog()
+        print "Error run stop:", datetime.now()
+
+    # Diagnostic plots and numbers
+    pdf(output + ".pdf", cmd="ldata delchi")  # Plot is a useless mess
+    wdata(output + ".qdp")
+    xs_utils.dump_fit_log(output + ".log")
+    print_model(snr, output + "_snr_" + region + ".txt")
+
+    # No need for a LaTeX table currently; fit disfavors powerlaw
 
 
-def joint_src_bkg_fit(error=False, error_log=None):
-    """Fit source + bkg regions, allowing XRB to float"""
-
+def joint_src_bkg_fit(output, error=False):
+    """
+    Fit source + bkg regions, allowing XRB to float
+    """
     out = g309.load_data_and_models("src", "bkg", snr_model='vnei')
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
@@ -318,7 +423,7 @@ def joint_src_bkg_fit(error=False, error_log=None):
 
     xs.AllModels(4,'snr_src').constant.factor = 0.95  # TODO manual hack...  !!!!
 
-    # Reset XRB parameters to "typical" values, but do NOT allow to vary
+    # Reset XRB to "typical" values, do NOT vary yet
     xrb = xs.AllModels(1, 'xrb')
     xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
                 {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
@@ -352,15 +457,13 @@ def joint_src_bkg_fit(error=False, error_log=None):
     xrb.apec_5.norm.frozen = False
     xs.Fit.perform()
 
+    # Error runs
+
     if error:
 
-        # Now that the fit has converged, run the error command on parameters of
-        # interest
-        if error_log:
-            xs.Xset.openLog(error_log)
+        xs.Xset.openLog(output + "_error.log")
 
-        print "START OF FIRST ERROR RUN:", datetime.now()
-
+        print "First error run:", datetime.now()
         xs.Fit.error("snr_src:{:d}".format(xs_utils.par_num(snr, snr.tbnew_gas.nH))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.kT))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.Tau))
@@ -368,14 +471,12 @@ def joint_src_bkg_fit(error=False, error_log=None):
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.S))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.norm))
                      )
-
         xs.Fit.error("xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.kT))
                   + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.tbnew_gas.nH))
                   + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
 
-        print "START OF SECOND ERROR RUN:", datetime.now()
-
-        # Repeat because a new best fit gets found in the process
+        # Repeat because a new best fit is found in the first error run
+        print "Second error run:", datetime.now()
         xs.Fit.error("snr_src:{:d}".format(xs_utils.par_num(snr, snr.tbnew_gas.nH))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.kT))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.Tau))
@@ -383,22 +484,54 @@ def joint_src_bkg_fit(error=False, error_log=None):
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.S))
                   + " snr_src:{:d}".format(xs_utils.par_num(snr, snr.vnei.norm))
                      )
-
         xs.Fit.error("xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.kT))
                   + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.tbnew_gas.nH))
                   + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
 
-        print "END OF ERROR RUNS:", datetime.now()
+        print "Error runs complete:", datetime.now()
 
-        if error_log:
-            xs.Xset.closeLog()
+        xs.Xset.closeLog()
+
+    # Dump useful things here...
+
+    # Diagnostic plots and numbers
+    pdf(output + ".pdf", cmd="ldata delchi")  # Plot is a useless mess
+    wdata(output + ".qdp")
+    xs_utils.dump_fit_log(output + ".log")
+    print_model(snr, output + "_snr_src.txt")
+
+    # Dump fit parameters to 1. copy-pastable table, 2. just rows alone
+    latex_hdr = [['Region', ''],
+                 [r'$n_\mathrm{H}$', r'($10^{22} \unit{cm^{-2}}$)'],
+                 [r'$kT$', r'(keV)'],
+                 [r'$\tau$', r'($10^{10} \unit{s\;cm^{-3}}$)'],
+                 ['Si', '(-)'],
+                 ['S', '(-)'],
+                 [r'$\chi^2_{\mathrm{red}} (\mathrm{dof}$)', '']]
+    latex_hdr = np.array(latex_hdr).T
+    latex_cols = ['{:s}', 0, 0, 0, 0, 0, '{:s}']  # TODO incorporate errors
+    ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 integrated fit", prec=4)
+
+    ltr = ['Source',
+           snr.tbnew_gas.nH.values[0],
+           snr.vnei.kT.values[0],
+           snr.vnei.Tau.values[0] / 1e10,
+           snr.vnei.Si.values[0],
+           snr.vnei.S.values[0],
+           "{:0.3f} ({:d})".format(xs.Fit.statistic/xs.Fit.dof, xs.Fit.dof)]
+    ltab.add_row(*ltr)
+
+    with open(output + ".tex", 'w') as f_tex:
+        f_tex.write(str(ltab))
+    with open(output + "_row.tex", 'w') as f_tex:
+        f_tex.write('\n'.join(ltab.get_rows()))
 
 
 
-def five_annulus_fit(error_log):
-    """Fit five annuli simultaneously... extremely hard to see what's going on,
-    so I don't make any fit adjustments.  That will have to be determined from
-    individual region fits"""
+def five_annulus_fit(output, error=False, error_rerun=False):
+    """
+    Fit five annuli simultaneously...
+    """
 
     out = g309.load_data_and_models("ann_000_100", "ann_100_200", "ann_200_300",
                          "ann_300_400", "ann_400_500", snr_model='vnei')
@@ -417,14 +550,13 @@ def five_annulus_fit(error_log):
     # Link nH across annuli
     # Each region has 5 spectra (5 exposures)
     # [0] gets 1st of 5 ExtractedSpectra objects
-    # .models['...'] call obtains corresponding 1st of 5 XSPEC models
-    rings = [out['ann_000_100'][0].models['snr'],
-             out['ann_100_200'][0].models['snr'],
-             out['ann_200_300'][0].models['snr'],
-             out['ann_300_400'][0].models['snr'],
-             out['ann_400_500'][0].models['snr']]
+    # .models['...'] gets corresponding 1st of 5 XSPEC models
+    regs = ['ann_000_100', 'ann_100_200', 'ann_200_300', 'ann_300_400', 'ann_400_500']
+    rings = [out[reg][0].models['snr'] for reg in regs]
     for ring in rings[1:]:  # Exclude center
         ring.tbnew_gas.nH.link = xs_utils.link_name(rings[0], rings[0].tbnew_gas.nH)
+
+    # Start fit process
 
     xs.Fit.renorm()
     xs.Fit.perform()
@@ -433,127 +565,101 @@ def five_annulus_fit(error_log):
         ring.tbnew_gas.nH.frozen = False
         ring.vnei.kT.frozen = False
         ring.vnei.Tau.frozen = False
-
     xs.Fit.perform()
 
     for ring in rings:
         ring.vnei.Si.frozen = False
         ring.vnei.S.frozen = False
-
     xs.Fit.perform()
 
-    # RUN ERROR CMDS
-    print datetime.now()
-    xs.Xset.openLog(error_log)
-    for reg in ['ann_000_100', 'ann_100_200', 'ann_200_300', 'ann_300_400', 'ann_400_500']:
-        ring = out[reg][0].models['snr']
-        xs.Fit.error("snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.kT))
-                  + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Tau))
-                  + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Si))
-                  + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.S))
-#                  + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.norm))
-                     )
+    # Error runs
+
+    if error:
+
+        xs.Xset.openLog(output + "_error.log")
+
+        print "First error run:", datetime.now()
+        for reg, ring in zip(regs, rings):
+            xs.Fit.error("snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.kT))
+                      + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Tau))
+                      + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Si))
+                      + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.S))
+                         )
+            print reg, "errors complete:", datetime.now()  # Will not appear in error log
+        xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH)))
+
+        # 2016 May 24 - second run was not needed
+        # This could change if the annulus fits or spectra are altered
+        if error_rerun:
+            print "Second error run:", datetime.now()
+            for reg, ring in zip(regs, rings):
+                xs.Fit.error("snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.kT))
+                          + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Tau))
+                          + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Si))
+                          + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.S))
+                             )
+                print datetime.now()
+            xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH)))
+
+        xs.Xset.closeLog()
         print datetime.now()
-    xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH)))
-    xs.Xset.closeLog()
-    print datetime.now()
 
-    # RUN ERROR CMDS AGAIN, presuming that we'll find better fits
-    # 2016 May 24 - second run was ultimately not needed
-    # this could change if the annulus fits or spectra are altered
-    #xs.Xset.openLog(error_log + '_round2.log')
-    #for reg in ['ann_000_100', 'ann_100_200', 'ann_200_300', 'ann_300_400', 'ann_400_500']:
-    #    ring = out[reg][0].models['snr']
-    #    xs.Fit.error("snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.kT))
-    #              + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Tau))
-    #              + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Si))
-    #              + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.S))
-    #              + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.norm))
-    #                 )
-    #    print datetime.now()
-    #xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH)))
-    #xs.Xset.closeLog()
-    #print datetime.now()
+    # Dump useful things here...
 
+    # Diagnostic plots and numbers
+    pdf(output + ".pdf", cmd="ldata delchi")  # Plot is a useless mess
+    wdata(output + ".qdp")
+    xs_utils.dump_fit_log(output + ".log")
+    for ring in rings:
+        model_log = output + "_{}.txt".format(ring.name)
+        print_model(ring, model_log)
 
-def ann_400_500_fit():
-    """Fit the 400-500" annulus"""
+    # Nice LaTeX table
 
-    out = g309.load_data_and_models("ann_400_500", snr_model='vnei')
-    set_energy_range(out['ann_400_500'])
-    xs.AllData.ignore("bad")
+    latex_hdr = [['Annulus', ''],
+                 [r'$n_\mathrm{H}$', r'($10^{22} \unit{cm^{-2}}$)'],
+                 [r'$kT$', r'(keV)'],
+                 [r'$\tau$', r'($10^{10} \unit{s\;cm^{-3}}$)'],
+                 ['Si', '(-)'],
+                 ['S', '(-)']]
+    latex_hdr = np.array(latex_hdr).T
 
-    xs.Fit.renorm()
-    xs.Fit.perform()
-    # chi-squared = 1160.25/826 = 1.40466
+    if error:
 
-    snr.tbnew_gas.nH.frozen=False
-    snr.vnei.kT.frozen=False
-    snr.vnei.Tau.frozen=False
-    xs.Fit.perform()
-    #nH         10^22    3.71168      +/-  0.444826
-    #kT         keV      4.21543      +/-  1.89369
-    #Tau        s/cm^3   1.31465E+10  +/-  3.57926E+09
-    #norm                1.30286E-03  +/-  4.13489E-04
-    # chi-squared = 970.40/823 = 1.1791
+        latex_cols = ['{:s}', 2, 2, 2, 2, 2]
+        ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 annuli fit with errors", prec=2)
 
-    # Annulus 400-500" is dominated by background emission
-    # If I set SNR norm to 0 from best fit, the excess is quite subtle --
-    # although you can see Si/S lines if you quint.
+        for ring in rings:
+            ltr = [ring.name]
+            ltr.extend(val_errs(ring.tbnew_gas.nH))
+            ltr.extend(val_errs(ring.vnei.kT))
+            ltr.extend([ring.vnei.Tau.values[0] / 1e10,
+                        err_pos(ring.vnei.Tau) / 1e10,
+                        err_neg(ring.vnei.Tau) / 1e10])
+            ltr.extend(val_errs(ring.vnei.Si))
+            ltr.extend(val_errs(ring.vnei.S))
 
-    snr.vnei.Si.frozen=False
-    snr.vnei.S.frozen=False
-    xs.Fit.perform()
-    # Fit runs away to kT = 10 keV, unreasonable.
-    # Freeze to 1, fit, thaw, fit.
-    # chi-squared = 961.04/821 = 1.1706
+            ltab.add_row(*ltr)
 
-    # Freeze SNR nH, kT to nH=2, kT=1, fit, thaw, fit
-    # No dice.  Numbers just keep running up.
+    else:
 
-    # Final attempt:
-    # freeze SNR nH, kT to values from integrated spectrum fit.
-    # Si = 4.44, S = 4.05, Tau = 3.4e+10
-    # chi-squared = 999.40/823 = 1.2143
+        latex_cols = ['{:s}', 0, 0, 0, 0, 0]
+        ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 annuli fit", prec=2)
 
-    # Freezing SNR nH just lets kT run away.
-    # Now try freezing Si,S to 1. -- same as previous fit, but just
-    # force lower nH.
+        for ring in rings:
+            ltr = [ring.name,
+                   ring.tbnew_gas.nH.values[0],
+                   ring.vnei.kT.values[0],
+                   ring.vnei.Tau.values[0] / 1e10,
+                   ring.vnei.Si.values[0],
+                   ring.vnei.S.values[0]]
+            ltab.add_row(*ltr)
 
-    # kT keeps running away.
+    with open(output + ".tex", 'w') as f_tex:
+        f_tex.write(str(ltab))
+    with open(output + "_row.tex", 'w') as f_tex:
+        f_tex.write('\n'.join(ltab.get_rows()))
 
-    # Finally compare to a fit with NO SNR component, XRB component free
-    # The SNR component definitely helps.
-    ###out = g309.load_data_and_models("ann_400_500", snr_model=None)
-    ###set_energy_range(out['ann_400_500'])
-    ###xs.AllData.ignore("bad")
-    #### Reset XRB parameters to "typical" values, but do NOT allow to vary
-    ###xrb = xs.AllModels(1, 'xrb')
-    ###xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
-    ###            {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
-    ###            {xrb.apec_5.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
-    ###            {xrb.apec.norm.index : 1e-3},
-    ###            {xrb.apec_5.norm.index : 1e-3} )
-    ###xrb.apec.kT.frozen = True
-    ###xrb.tbnew_gas.nH.frozen = True
-    ###xrb.apec_5.kT.frozen = True
-    ###xrb.apec.norm.frozen = True
-    ###xrb.apec_5.norm.frozen = True
-
-    ###xs.Fit.renorm()
-    ###xs.Fit.perform()
-
-    ###xrb.apec.kT.frozen = False
-    ###xrb.tbnew_gas.nH.frozen = False
-    ###xrb.apec_5.kT.frozen = False
-    ###xrb.apec.norm.frozen = False
-    ###xrb.apec_5.norm.frozen = False
-    ###xs.Fit.perform()
-    # Result:
-    # Test statistic : Chi-Squared =        1047.48 using 840 PHA bins.
-    #  Reduced chi-squared =        1.27430 for    822 degrees of freedom
-    #  Null hypothesis probability =   1.394979e-07
-    # Yes, adding a SNR model helps somewhat.
 
 
 ###########################
@@ -564,79 +670,14 @@ if __name__ == '__main__':
 
     prep_xs(with_xs=True)  # This is required before all fits
 
-    f_stem = "results_spec/20160611_src_bkg_rerun"
+    # Options so far:
+    # five_annulus_fit(output, error=False, error_rerun=False)
+    # joint_src_bkg_fit(output, error=False)
+    # src_powerlaw(output, region='src', error=False)
+    # src_powerlaw_xrbfree(error=False, error=False)
 
-    stopwatch(joint_src_bkg_fit, error=True, error_log=f_stem+"_error.log")
-
-    snr = xs.AllModels(1, 'snr_src')
-
-    pdf(f_stem + ".pdf", cmd="ldata delchi")
-    wdata(f_stem + ".qdp")
-    xs_utils.dump_fit_log(f_stem + ".log")
-    print_model(snr, f_out=f_stem+"_snr_model.txt")
-
-    # Dump fit parameters to 1. copy-pastable table, 2. just rows alone
-    latex_hdr = [['Region', ''],
-                 [r'$n_\mathrm{H}$', r'($10^{22} \unit{cm^{-2}}$)'],
-                 [r'$kT$', r'(keV)'],
-                 [r'$\tau$', r'($10^{10} \unit{s\;cm^{-3}}$)'],
-                 ['Si', '(-)'],
-                 ['S', '(-)'],
-                 [r'$\chi^2_{\mathrm{red}} (\mathrm{dof}$)', '']]
-    latex_hdr = np.array(latex_hdr).T
-    latex_cols = ['{:s}', 0, 0, 0, 0, 0, '{:s}'] # TODO incorporate errors
-    ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 integrated fit", prec=4)
-
-    ltr = ['Source',
-           snr.tbnew_gas.nH.values[0],
-           snr.vnei.kT.values[0],
-           snr.vnei.Tau.values[0] / 1e10,
-           snr.vnei.Si.values[0],
-           snr.vnei.S.values[0],
-           "{:0.3f} ({:d})".format(xs.Fit.statistic/xs.Fit.dof, xs.Fit.dof)]
-    ltab.add_row(*ltr)
-
-    with open(f_stem + ".tex", 'w') as f_tex:
-        f_tex.write(str(ltab))
-    with open(f_stem + "_row.tex", 'w') as f_tex:
-        f_tex.write('\n'.join(ltab.get_rows()))
-
-
-
-    # five_annulus_fit('2016mmdd_five_annulus_error.log')
-    #rings = [xs.AllModels(1,  'snr_ann_000_100'),
-    #         xs.AllModels(6,  'snr_ann_100_200'),
-    #         xs.AllModels(11, 'snr_ann_200_300'),
-    #         xs.AllModels(16, 'snr_ann_300_400'),
-    #         xs.AllModels(21, 'snr_ann_400_500')]
-    ##pdf(  "results_spec/2016mmdd_five_ann_fit.pdf", cmd="ldata delchi")  # USELESS MESS
-    #wdata("results_spec/2016mmdd_five_ann_fit.qdp")
-    #xs_utils.dump_fit_log("results_spec/2016mmdd_five_ann_fit.log")
-
-    #for ring in rings:
-    #    model_log = "results_spec/2016mmdd_five_ann_fit_" + ring.name + ".txt"
-    #    print_model(ring, model_log)
-
-    #latex_hdr = [['Annulus', ''],
-    #             [r'$n_\mathrm{H}$', r'($10^{22} \unit{cm^{-2}}$)'],
-    #             [r'$kT$', r'(keV)'],
-    #             [r'$\tau$', r'($10^{10} \unit{s\;cm^{-3}}$)'],
-    #             ['Si', '(-)'],
-    #             ['S', '(-)'],
-    #latex_hdr = np.array(latex_hdr).T
-
-    #latex_cols = ['{:s}', 0, 0, 0, 0, 0] # TODO incorporate errors
-    #ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 annuli fit", prec=2)
-
-    ## IF error command results are available, can (conditionally) add here.
-    #for ring in rings:
-    #    ltr = [ring.name,
-    #           snr.tbnew_gas.nH.values[0],
-    #           snr.vnei.kT.values[0],
-    #           snr.vnei.Tau.values[0] / 1e10,
-    #           snr.vnei.Si.values[0],
-    #           snr.vnei.S.values[0]]
-    #    ltab.add_row(*ltr)
+    stopwatch(joint_src_bkg_fit, error=True,
+              output="results_spec/20160611_src_bkg_rerun")
 
 
 

@@ -80,13 +80,13 @@ def load_spec(spec_number, spec_path, background=None, default_dir=None):
 def freeze_model(model):
     """Freeze all parameters in a given model"""
     for cname in model.componentNames:
-        comp = eval("model." + cname)
+        comp = model.__getattribute__(cname)
         freeze_component(comp)
 
 def freeze_component(comp):
     """Freeze all parameters in a given component"""
     for pname in comp.parameterNames:
-        par = eval("comp." + pname)
+        par = comp.__getattribute__(pname)
         par.frozen=True
 
 

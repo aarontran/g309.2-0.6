@@ -9575,9 +9575,25 @@ take the data point w/ its associated error.
 Including or excluding the 5000 MHz points substantially shifts the fitted
 spectral index: either 0.35 or 0.52 (0.53 given by Gaensler+).
 
-See fitting ipynb
+See radio flux fit jupyter notebook.
 
-Thursday
+
+Thursday 2016 June 23 -- srcutlog
+=================================
+
+Cleanup fitting scripts and setup for srcutlog fits.
+Recovered some fit results (`results_spec/20160615_src_bkg_powerlaw_xrb_free.txt`)
+that I thought had been lost to VNC session crash.
+
+Initial srcutlog fit, using Gaensler+ spectral index (alpha = 0.53, flux
+density at 1 GHz = 6 Jy).
+XRB is fixed to values from integrated src + bkg fit as usual.
+
+    from g309_fits import *
+    prep_xs(with_xs=True)
+    src_srcutlog("results_spec/20160624_srcutlog_nonsolar", region='src', solar=False, error=True)
+
+Started at 23:26:23, completed ~ 01:15am.
 
 
 

@@ -114,6 +114,7 @@ chandra/*/00README
 
 # Python stuff
 *.pyc
+.ipynb_checkpoints
 
 # -------------------------------------------
 # Exclusions from github.com/github/gitignore

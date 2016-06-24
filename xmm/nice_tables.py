@@ -83,7 +83,9 @@ class LatexTable(object):
         str: any string format specifier you like (single right aligned column)
 
         'add_row' takes an arbitrary length list which should match the length
-        of input "types" array: +2 for each "type 1" column, +1 for rest
+        of input "types" array.
+            Each "type 1" column will have 1 extra entry,
+            each "type 2" column will have 2 extra entries (+ve error first)
         """
         self.prec = prec    # Save for user access
         self.types = types  # Need for e.g., self.ncols()
