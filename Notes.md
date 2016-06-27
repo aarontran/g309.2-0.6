@@ -9665,9 +9665,50 @@ to be very safe while I get groceries anyways.  Expect output to be identical.
     stopwatch(bkg_only_fit, "results_spec/20160624_bkg_only_rerun", error=True)
 
 After running and diffing, remove old outputs.
+Visually verified that
+- `20160624_src_bkg_nohack` tables match actual error runs
+- `20160624_bkg_only` logs and tables are identical
+    (issue: table printing for norm didn't work.
+     That's ok, we can recover value + bounds from error log)
+- `20160624_src_bkg_hack_eq_one` logs matched up to unimportant decimal place
+
+Reviewed error runs:
+- `20160624_src_bkg_nohack` 
+    SNR: Si error search failed in -ve direction
+        "identical values gave different values of the statistic"
+        should be ok... ? but should steppar around there to be safe.
+    xrb error runs had no issues
+- `20160624_src_bkg_hack_eq_one`
+    SNR error strings FTFFFFFFF = non-monotonicity, OK
+    xrb error runs had no issues
+- `20160624_bkg_only` no issues in error run
+
+Result of BACKSCAL tweak: fit parameters differ only in insignificant places!
+I suspect power law, instrumental lines, XRB norm could vary more.
+OK, no need for this.  Good :).
+
+Set up fit with Mg free in center.  First attempt hit bug, fixed it.
+
+    from g309_fits import *
+    prep_xs(with_xs=True)
+    stopwatch(five_annulus_fit, "results_spec/20160625_fiveann_center-mg-free",
+              error=True, error_rerun=False, free_center_mg=True)
+
+(!) XRB parameters are not quite right...
+  the chi-squared differs very marginally, but the kT value best fit, as
+  discovered by the error run, is definitely ~0.75 regardless of BACKSCAL
+  ratio.  I'd simply missed this slightly better fit earlier,
+  when I hardcoded in new XRB values.
+
+    See 20160517_src_and_bkg.log
 
 
+Monday 2016 June 27 -- update fixed XRB parameters, remove BACKSCAL hack
+------------------------------------------------------------------------
 
+Removed BACKSCAL hack from fit configuration methods.  The powerlaw and
+srcutlog fits need to be redone due to change in 0551000201 MOS1 constant
+scaling.  Address this later.
 
 
 

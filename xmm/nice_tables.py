@@ -130,8 +130,8 @@ class LatexTable(object):
 
         # Build row spec (string)
         rlist = []
-        fmt = '{:0.' + str(self.prec) + 'f}'  # Forces decimal pt notation
-        fmt_sgn = '{:+0.' + str(self.prec) + 'f}'
+        fmt = '{:0.' + str(self.prec) + 'g}'  # Forces decimal pt notation
+        fmt_sgn = '{:+0.' + str(self.prec) + 'g}'
         for t in types:
             if t == 0:  # General number
                 rlist.append('{:0.' + str(self.prec) + 'g}')

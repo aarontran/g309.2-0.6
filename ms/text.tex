@@ -83,38 +83,11 @@ Individual object study to build information for more ambitious global studies
 of remnant properties and interaction with the ISM -- not undertaken here.
 Just one piece of a puzzle.
 
-We present the first ``modern'' high-resolution X-ray image of G309.2-0.6 based
-on two archival XMM-Newton observations.  We fit the CCD spectra of
-morphologically distinct regions of the remnant to map the distribution of
-ejecta abundances, plasma temperature, and ionization states.
-
-% TODO Interpretation TBD -- so throw out text for now
-
-% \subsection{SNR stuff}
-%
-% MMSNRs (Rho and Petre, 1998).  Tilley+ (2006) - model anisotropic thermal
-% conduction in remnants in regular ISM vs. dense medium.
-% Is this a mixed morphology SNR?
-% Answer: not quite.  What other remnants look similar to this one?
-% Rakowski did not label as such but noted ejecta dominated nature.
-%
-% Possible for MM to have some mixture of ejecta -- how have definitions /
-% classifications evolved?
-%
-% MC interaction: what are the most common proxies and
-% claims?
-% Kilpatrick, Bieging, Rieke (2016) give a very lucid ALMA study of CO(2-1)
-% broadening: http://iopscience.iop.org/article/10.3847/0004-637X/816/1/1/pdf
-%
-% On barrel morphology and magnetic field orientation: Kesteven and Caswell (1987),
-% Gaensler (1998), West et al. (2016),
-%
-% General question: how can we safely infer that the ISM is solar in abundance,
-% outside of our area?
-%
-% A comparative study may be interesting.
-% G352.7-0.1 (Pannuti+ 2014, XMM/Chandra) exhibits similar features...
-% G298.6-0.0 (Bamba+ 2015, Suzaku)
+We present a spatially resolved X-ray image and localized CCD-resolution
+spectra of G309.2-0.6 based on two archival XMM-Newton observations.
+We fit the CCD spectra of morphologically distinct regions of the remnant to
+map the distribution of ejecta abundances, plasma temperature, and ionization
+states.
 
 
 \subsection{Previous observations of G309.2-0.6}
@@ -122,21 +95,21 @@ ejecta abundances, plasma temperature, and ionization states.
 % Radio remnant observations and morphology
 G309.2-0.6 (J2000 RA 13h46m30s, dec. $-62\arcdeg 54\arcmin 00\arcsec$) was
 discovered in Molonglo $408 \unit{MHz}$ and Parkes $5000 \unit{MHz}$ surveys
-\citep{clark1973, green1974, clark1975}, and has since been observed multiple
+\citep{day1969, clark1973, green1974, clark1975}, and has since been observed multiple
 times by southern radio telescopes \citep{caswell1981, kesteven1987,
 whiteoak1996, gaensler1998}.
+% NOT QUITE TRUE:
+% Day, Thomas, Goss (1969 Au. J. Phys. Astrophys. Suppl.)
+% flagged G309.2-0.6 as a complex source, but did not identify it as a remnant
+% or explore further.  Molongo/Parkes surveys may have occurred at the same
+% time.  And, yes, it is confused (at the edge) with RCW 80.
 \citet{gaensler1998} (hereafter, \citetalias{gaensler1998}) provide the most
 comprehensive radio study to date based upon Australia Telescope Compact Array
 (ATCA) $1.344 \unit{GHz}$ continuum and $1.420 \unit{GHz}$ HI observations at
 angular resolution $24\arcsec$.
 The radio remnant is a circular shell with two bright lobes to the NE and SW,
-hereafter referred to as ``ears'' (Fig \ref{fig:snr}).
-Its flux density at $843 \unit{MHz}$ is $\abt 6 \unit{Jy}$, corresponding to a
-surface brightness $5.4\times10^{-21} \unit{W \; m^{-2} \; Hz^{-1} \; sr^{-1}}$
-\citep{whiteoak1996}.
-% Comment: Bryan's ATCA data are publically available, but no real motivation
-% to download and reduce at this time
-% TODO -- we could provide surface brightness for the bright ears alone
+hereafter referred to as ``ears'' (Fig \ref{fig:snr});
+the flux density at $843 \unit{MHz}$ is $6 \unit{Jy}$ \citep{whiteoak1996}.
 
 % X-ray remnant observation(s) and morphology
 X-ray emission was discovered in an Advanced Satellite for Cosmology and
@@ -770,6 +743,15 @@ NOTE: SW lobe and ridge both show weird shifts in PN spectral lines (Si, S)
 Details tbd (pending updates to plotting tools...)
 
 
+\section{Discussion}
+
+A comparative study could be interesting.
+
+G352.7-0.1 (Pannuti+ 2014 2014ApJ...782..102P, XMM/Chandra) appears very
+similar: we see a radio shell, somewhat center-filled X-rays (but not quite),
+and more ejecta emission than would be expected for its age.
+
+
 \acknowledgments
 
 X acknowledges support by contract ...
@@ -812,6 +794,108 @@ This research was expedited in part by Jonathan Sick's \texttt{ads2bibdesk}.
 \renewcommand{\thetable}{A\arabic{table}}
 \setcounter{figure}{0}
 \renewcommand{\thefigure}{A\arabic{figure}}
+
+\section{Does inaccuracy introduced by $\abt 10\%$ error in BACKSCAL ratio for
+integrated source fits impact fit results?}
+
+I performed joint fits of integrated source and X-ray background while
+varying the BACKSCAL ratio for MOS1S001.
+Results in Table~\ref{table:backscal-hack}.
+
+\begin{table*}[!h]
+    \centering
+    \caption{Motch MOS1 BACKSCAL ratio has very little effect on fits
+        \label{table:backscal-hack}}
+
+    \begin{tabular}{@{}lllllll@{}}
+    \toprule
+    Ratio & $n_\mathrm{H}$ & $kT$ & $\tau$ & Si & S & vnei EM \\
+     & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) & (EM units) \\
+    \midrule
+    % 1 (hack) = results_spec/20160624_src_bkg_hack_eq_one_rerun fit
+    \textbf{1}     & ${2.16}^{+0.08}_{-0.11}$ & ${2.29}^{+0.30}_{-0.12}$ & ${1.82}^{+0.14}_{-0.11}$
+          & ${3.75}^{+0.18}_{-0.16}$ & ${3.42}^{+0.29}_{-0.25}$ & ${4.5}^{+0.6}_{-0.5} \times 10^{-3}$ \\
+    % 0.95 (hack) = results_spec/20160611_src_bkg_rerun, manually entered!
+    \textbf{0.95}  & $2.15^{+0.08}_{-0.11}$ & $2.29^{+0.30}_{-0.24}$ & $1.83^{+0.10}_{-0.11}$  % vnei nH, kT, Tau
+          & $3.75^{+0.18}_{-0.16}$ & $3.42^{+0.26}_{-0.25}$ & $4.5^{+0.6}_{-0.5} \times 10^{-3}$ \\ % vnei Si,S,norm
+    % 0.88 (area ratio) = results_spec/20160624_src_bkg_nohack_rerun fit
+    \textbf{0.885} & ${2.15}^{+0.07}_{-0.08}$ & ${2.30}^{+0.29}_{-0.12}$ & ${1.83}^{+0.11}_{-0.11}$
+          & ${3.75}^{+0.18}_{-0.16}$ & ${3.42}^{+0.28}_{-0.25}$ & ${4.6}^{+0.5}_{-0.5} \times 10^{-3}$ \\
+    \bottomrule
+    \end{tabular}
+
+    \quad
+    \quad
+
+    \begin{tabular}{@{}llllr@{}}
+    \toprule
+    Ratio & XRB local $kT$ & XRB $n_\mathrm{H}$ & XRB halo $kT$
+           & $\chi^2_{\mathrm{red}} = \chi^2/\mathrm{dof}$ \\
+     & (keV) & ($10^{22} \unit{cm^{-2}}$) & (keV) &  \\
+    \midrule
+    % 1 (hack) = results_spec/20160624_src_bkg_hack_eq_one_rerun fit
+    \textbf{1} & ${0.262}^{+0.007}_{-0.007}$ & ${1.33}^{+0.08}_{-0.08}$ & ${0.75}^{+0.04}_{-0.03}$
+          & 1.224 = 4611.94/3768 \\
+    % 0.95 (hack) = results_spec/20160611_src_bkg_rerun, manually entered!
+    \textbf{0.95} & ${0.262}^{+0.007}_{-0.007}$ & $1.32^{+0.08}_{-0.08}$ & $0.75^{+0.04}_{-0.03}$ % XRB
+          & 1.213 = 4572.28/3768 \\
+    % 0.88 (area ratio) = results_spec/20160624_src_bkg_nohack_rerun fit
+    \textbf{0.885} & ${0.262}^{+0.007}_{-0.007}$ & ${1.32}^{+0.08}_{-0.08}$ & ${0.74}^{+0.03}_{-0.03}$
+          & 1.206 = 4545.24/3768 \\
+    \bottomrule
+    \end{tabular}
+\end{table*}
+
+% Deluxetable variant
+%\floattable
+%\begin{deluxetable}{@{}rllllllllll@{}}
+%    \rotate
+%    \tablecaption{Motch MOS1 BACKSCAL ratio has very little effect on fits
+%        \label{table:backscal-hack}}
+%    \tablehead{
+%          \colhead{Ratio}
+%        & \colhead{$n_\mathrm{H}$ }%% $10^{22} \unit{cm^{-2}}$}
+%        & \colhead{$kT$ }%% keV}
+%        & \colhead{$\tau$ }%% $10^{10} \unit{s\;cm^{-3}}$}
+%        & \colhead{Si}
+%        & \colhead{S}
+%        & \colhead{vnei EM }%% EM units}
+%        & \colhead{XRB local $kT$ }%% keV}
+%        & \colhead{XRB $n_\mathrm{H}$ }%% $10^{22} \unit{cm^{-2}}$}
+%        & \colhead{XRB halo $kT$ }%% keV}
+%        & \colhead{$\chi^2_{\mathrm{red}} = \chi^2/\mathrm{dof}$}
+%        \\
+%          \colhead{}
+%        & \colhead{($10^{22} \unit{cm^{-2}}$)}
+%        & \colhead{(keV)}
+%        & \colhead{($10^{10} \unit{s\;cm^{-3}}$)}
+%        & \colhead{(-)}
+%        & \colhead{(-)}
+%        & \colhead{(EM units)}
+%        & \colhead{(keV)}
+%        & \colhead{($10^{22} \unit{cm^{-2}}$)}
+%        & \colhead{(keV)}
+%        & \colhead{}
+%      }
+%
+%    \startdata
+%    % 1 (hack) = results_spec/20160624_src_bkg_hack_eq_one_rerun fit
+%    \textbf{1}     & ${2.16}^{+0.08}_{-0.11}$ & ${2.29}^{+0.30}_{-0.12}$ & ${1.82}^{+0.14}_{-0.11}$
+%          & ${3.75}^{+0.18}_{-0.16}$ & ${3.42}^{+0.29}_{-0.25}$ & ${4.5}^{+0.6}_{-0.5} \times 10^{-3}$
+%          & ${0.262}^{+0.007}_{-0.007}$ & ${1.33}^{+0.08}_{-0.08}$ & ${0.75}^{+0.04}_{-0.03}$
+%          & 1.224 = 4611.939/3768 \\
+%    % 0.95 (hack) = results_spec/20160611_src_bkg_rerun, manually entered!
+%    \textbf{0.95}  & $2.15^{+0.08}_{-0.11}$ & $2.29^{+0.30}_{-0.24}$ & $1.83^{+0.10}_{-0.11}$  % vnei nH, kT, Tau
+%          & $3.75^{+0.18}_{-0.16}$ & $3.42^{+0.26}_{-0.25}$ & $4.5^{+0.6}_{-0.5} \times 10^{-3}$  % vnei Si,S,norm
+%          & ${0.262}^{+0.007}_{-0.007}$ & $1.32^{+0.08}_{-0.08}$ & $0.75^{+0.04}_{-0.03}$ % XRB
+%          & 1.213 = 4572.28/3768 \\
+%    % 0.88 (area ratio) = results_spec/20160624_src_bkg_nohack_rerun fit
+%    \textbf{0.885} & ${2.15}^{+0.07}_{-0.08}$ & ${2.30}^{+0.29}_{-0.12}$ & ${1.83}^{+0.11}_{-0.11}$
+%          & ${3.75}^{+0.18}_{-0.16}$ & ${3.42}^{+0.28}_{-0.25}$ & ${4.6}^{+0.5}_{-0.5} \times 10^{-3}$
+%          & ${0.262}^{+0.007}_{-0.007}$ & ${1.32}^{+0.08}_{-0.08}$ & ${0.74}^{+0.03}_{-0.03}$
+%          & 1.206 = 4545.244/3768 \\
+%    \enddata
+%\end{deluxetable}
 
 
 %\begin{table*}

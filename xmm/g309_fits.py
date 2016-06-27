@@ -224,8 +224,6 @@ def src_powerlaw_xrbfree(output, error=False):
     set_energy_range(out['bkg'])
     xs.AllData.ignore('bad')
 
-    xs.AllModels(4,'snr_src').constant.factor = 0.95  # TODO manual hack
-
     # Reset XRB to "typical" values, do NOT vary yet
     xrb = xs.AllModels(1, 'xrb')
     xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
@@ -294,9 +292,6 @@ def src_srcutlog(output, region='src', solar=False, error=False):
     set_energy_range(out[region])
     xs.AllData.ignore('bad')
 
-    if region == 'src':
-        xs.AllModels(4,'snr_'+region).constant.factor = 0.95  # TODO manual hack
-
     xs.Fit.renorm()
 
     # Let XSPEC fit vnei and srcutlog simultaneously,
@@ -358,9 +353,6 @@ def src_powerlaw(output, region='src', solar=False, error=False):
     out = g309.load_data_and_models(region, snr_model='vnei+powerlaw')
     set_energy_range(out[region])
     xs.AllData.ignore('bad')
-
-    if region == 'src':
-        xs.AllModels(4,'snr_'+region).constant.factor = 0.95  # TODO manual hack
 
     xs.Fit.renorm()
 
@@ -562,7 +554,8 @@ def joint_src_bkg_fit(output, backscal_ratio_hack=None, error=False):
 
 
 
-def five_annulus_fit(output, error=False, error_rerun=False):
+def five_annulus_fit(output, error=False, error_rerun=False,
+                     free_center_mg=False):
     """
     Fit five annuli simultaneously...
     """
@@ -604,7 +597,13 @@ def five_annulus_fit(output, error=False, error_rerun=False):
     for ring in rings:
         ring.vnei.Si.frozen = False
         ring.vnei.S.frozen = False
+    if free_center_mg:
+        rings[0].vnei.Mg.frozen = False
+
     xs.Fit.perform()
+
+    if xs.Plot.device == "/xs":
+        xs.Plot("ldata delchi")
 
     # Error runs
 
@@ -620,7 +619,9 @@ def five_annulus_fit(output, error=False, error_rerun=False):
                       + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.S))
                          )
             print reg, "errors complete:", datetime.now()  # Will not appear in error log
-        xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH)))
+        xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
+                  + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg)))
+        # if center Mg is not free, XSPEC throws a benign warning
 
         # 2016 May 24 - second run was not needed
         # This could change if the annulus fits or spectra are altered
@@ -632,11 +633,12 @@ def five_annulus_fit(output, error=False, error_rerun=False):
                           + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Si))
                           + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.S))
                              )
-                print datetime.now()
-            xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH)))
+                print reg, "errors complete:", datetime.now()  # Will not appear in error log
+            xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
+                      + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg)))
 
         xs.Xset.closeLog()
-        print datetime.now()
+        print "Error runs complete:", datetime.now()
 
     # Dump useful things here...
 
