@@ -339,6 +339,114 @@ def src_srcutlog(output, region='src', solar=False, error=False):
 
     # No need for a LaTeX table currently; fit disfavors powerlaw
 
+    # Zero out the vnei component to isolate srcutlog contribution
+    norm_vnei = snr.vnei.norm.values[0]
+    snr.vnei.norm = 0
+    wdata(output + "_srcutlog-only.qdp")
+    snr.vnei.norm = norm_vnei  # Reset
+
+    # Zero out the srcutlog component to isolate vnei contribution
+    break_p = snr.srcutlog.__getattribute__('break')  # hacky workaround
+    break_srcutlog = break_p.values[0]
+    break_p._setValues(1e-7)  # log(freq), so break=10 is already negligible
+    wdata(output + "_vnei-only.qdp")
+    break_p._setValues(break_srcutlog)  # Reset
+
+
+
+def src_alone(output, region='src', solar=False, error=False,
+              backscal_ratio_hack=None):
+    """
+    Fit a region to vnei, XRB fixed
+    Arguments
+        output: file stem string
+        region: region ID
+        solar: fit to solar abundances, or let Si,S run free
+        error: perform error runs
+    """
+
+    out = g309.load_data_and_models(region, snr_model='vnei')
+    set_energy_range(out[region])
+    xs.AllData.ignore('bad')
+
+    xs.Fit.renorm()
+
+    snr = xs.AllModels(1,'snr_'+region)
+    snr.tbnew_gas.nH.frozen = False
+    snr.vnei.kT.frozen = False
+    snr.vnei.Tau.frozen = False
+    if solar:
+        snr.vnei.Si.frozen = True
+        snr.vnei.S.frozen = True
+    else:
+        snr.vnei.Si.frozen = False
+        snr.vnei.S.frozen = False
+
+    xs.Fit.perform()
+    xs.Plot("ld delch")
+
+    if error:
+        xs.Xset.openLog(output + "_error.log")
+        print "Error run start:", datetime.now()
+        # 2 = nH, 4 = kT, 12/13 = Si/S, 18 = Tau, 20 = vnei norm
+        # note: if Si/S frozen, XSPEC will print a benign warning
+        xs.Fit.error("snr_{}:2,4,12,13,18,20".format(region))
+        xs.Xset.closeLog()
+        print "Error run stop:", datetime.now()
+
+    # Diagnostic plots and numbers
+    pdf(output + ".pdf", cmd="ldata delchi")  # Plot is a useless mess
+    wdata(output + ".qdp")
+    xs_utils.dump_fit_log(output + ".log")
+    print_model(snr, output + "_snr_" + region + ".txt")
+
+    latex_hdr = [['Region', ''],
+                 [r'$n_\mathrm{H}$', r'($10^{22} \unit{cm^{-2}}$)'],
+                 [r'$kT$', r'(keV)'],
+                 [r'$\tau$', r'($10^{10} \unit{s\;cm^{-3}}$)'],
+                 ['Si', '(-)'],
+                 ['S', '(-)'],
+                 ['vnei EM', '(EM units)'],
+                 [r'$\chi^2_{\mathrm{red}} = \chi^2/\mathrm{dof}$', '']]
+    latex_hdr = np.array(latex_hdr).T
+
+    if error:
+        latex_cols = ['{:s}', 2, 2, 2, 2, 2, 2, '{:s}']
+        ltr = ['Source']
+        ltr.extend(val_errs(snr.tbnew_gas.nH))
+        ltr.extend(val_errs(snr.vnei.kT))
+        ltr.extend([snr.vnei.Tau.values[0] / 1e10,
+                    err_pos(snr.vnei.Tau) / 1e10,
+                    err_neg(snr.vnei.Tau) / 1e10])
+        ltr.extend(val_errs(snr.vnei.Si))
+        ltr.extend(val_errs(snr.vnei.S))
+        ltr.extend(val_errs(snr.vnei.norm))
+        ltr.append("{:0.3f} = {:0.3f}/{:d}".format(xs.Fit.statistic/xs.Fit.dof,
+                                                xs.Fit.statistic, xs.Fit.dof))
+
+    else:
+        latex_cols = ['{:s}', 0, 0, 0, 0, 0, 0, '{:s}']
+        ltr = ['Source',
+               snr.tbnew_gas.nH.values[0],
+               snr.vnei.kT.values[0],
+               snr.vnei.Tau.values[0] / 1e10,
+               snr.vnei.Si.values[0],
+               snr.vnei.S.values[0],
+               snr.vnei.norm.values[0],
+            ]
+        ltr.append("{:0.3f} = {:0.3f}/{:d}".format(xs.Fit.statistic/xs.Fit.dof,
+                                                xs.Fit.statistic, xs.Fit.dof))
+
+    ltab = LatexTable(latex_hdr, latex_cols,
+                      "G309.2-0.6 {} fit".format(output), prec=4)
+    ltab.add_row(*ltr)
+
+    with open(output + ".tex", 'w') as f_tex:
+        f_tex.write(str(ltab))
+    with open(output + "_row.tex", 'w') as f_tex:
+        f_tex.write('\n'.join(ltab.get_rows()))
+
+
 
 def src_powerlaw(output, region='src', solar=False, error=False):
     """
@@ -408,6 +516,19 @@ def src_powerlaw(output, region='src', solar=False, error=False):
 
     # No need for a LaTeX table currently; fit disfavors powerlaw
 
+    # Zero out the vnei component to isolate powerlaw contribution
+    norm_vnei = snr.vnei.norm.values[0]
+    snr.vnei.norm = 0
+    wdata(output + "_powerlaw-only.qdp")
+    snr.vnei.norm = norm_vnei  # Reset
+
+    # Zero out the powerlaw component to isolate vnei contribution
+    norm_powerlaw = snr.powerlaw.norm.values[0]
+    snr.powerlaw.norm = 0
+    wdata(output + "_vnei-only.qdp")
+    snr.powerlaw.norm = norm_powerlaw  # Reset
+
+
 
 def joint_src_bkg_fit(output, backscal_ratio_hack=None, error=False):
     """
@@ -472,6 +593,9 @@ def joint_src_bkg_fit(output, backscal_ratio_hack=None, error=False):
         # Perform XRB error run first because a new best fit is [typically]
         # found in this step
         print "Error run start:", datetime.now()
+        # Note: error commands cannot be combined; XSPEC only looks at
+        # parameter numbers after the first "<model name>: ...", so error
+        # command reruns must be done manually
         xs.Fit.error("xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.kT))
                   + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.tbnew_gas.nH))
                   + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
@@ -555,7 +679,8 @@ def joint_src_bkg_fit(output, backscal_ratio_hack=None, error=False):
 
 
 def five_annulus_fit(output, error=False, error_rerun=False,
-                     free_center_mg=False):
+                     free_center_mg=False,
+                     free_center_fe=False):
     """
     Fit five annuli simultaneously...
     """
@@ -599,6 +724,8 @@ def five_annulus_fit(output, error=False, error_rerun=False,
         ring.vnei.S.frozen = False
     if free_center_mg:
         rings[0].vnei.Mg.frozen = False
+    if free_center_fe:
+        rings[0].vnei.Fe.frozen = False
 
     xs.Fit.perform()
 
@@ -620,10 +747,12 @@ def five_annulus_fit(output, error=False, error_rerun=False,
                          )
             print reg, "errors complete:", datetime.now()  # Will not appear in error log
         xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
-                  + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg)))
+                  + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg))
+                  + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Fe)))
         # if center Mg is not free, XSPEC throws a benign warning
 
-        # 2016 May 24 - second run was not needed
+        # 2016 May 24 - second run was not needed for five annuli alone
+        # 2016 June .. - second run is needed if Mg is freed
         # This could change if the annulus fits or spectra are altered
         if error_rerun:
             print "Second error run:", datetime.now()
@@ -635,7 +764,8 @@ def five_annulus_fit(output, error=False, error_rerun=False,
                              )
                 print reg, "errors complete:", datetime.now()  # Will not appear in error log
             xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
-                      + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg)))
+                      + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg))
+                      + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Fe)))
 
         xs.Xset.closeLog()
         print "Error runs complete:", datetime.now()
@@ -811,8 +941,77 @@ if __name__ == '__main__':
     # bkg_only_fit(...)
 
     prep_xs(with_xs=True)  # Required before all fits
-    stopwatch(joint_src_bkg_fit, error=True,
-              output="results_spec/2016MMDD_src_bkg_rerun")
+
+    # List of "latest" fits
+
+    stopwatch(joint_src_bkg_fit, "results_spec/20160630_src_bkg_nohack_rerun",
+              error=True)
+    clear()
+    # Time: ~1-2 hrs
+
+
+
+    # Time: each ~ 2.5 hrs. ??
+
+    stopwatch(src_powerlaw, "results_spec/20160630_src_powerlaw_solar",
+              region='src', solar=True, error=True)
+    clear()
+    stopwatch(src_powerlaw, "results_spec/20160630_src_powerlaw_nonsolar",
+              region='src', solar=False, error=True)
+    clear()
+
+    stopwatch(src_srcutlog, "results_spec/20160630_src_srcutlog_solar",
+              region='src', solar=True, error=True)
+    clear()
+    stopwatch(src_srcutlog, "results_spec/20160630_src_srcutlog_nonsolar",
+              region='src', solar=False, error=True)
+    clear()
+    stopwatch(src_srcutlog, "results_spec/20160630_ann-400-500_srcutlog_nonsolar",
+              region='ann_400_500', solar=False, error=True)
+    clear()
+
+
+    # Extensive five-annulus fits
+    # ---------------------------
+
+    stopwatch(five_annulus_fit, "results_spec/2016xxxx_fiveann",
+              error=True, error_rerun=False, free_center_mg=True)
+    clear()
+    # Time: 2 days, ??? hrs
+
+    stopwatch(five_annulus_fit, "results_spec/2016xxxx_fiveann_center-mg-free",
+              error=True, error_rerun=True, free_center_mg=True)
+    clear()
+    # Time: 2 days, 9.25 hrs
+    # WARNING, error_rerun is needed.
+
+    stopwatch(five_annulus_fit, "results_spec/2016xxxx_fiveann_center-mg-fe-free",
+              error=True, error_rerun=True, free_center_mg=True,
+              free_center_fe=True)
+    clear()
+    # Time: 2 days, 9.25 hrs
+    # WARNING, error_rerun is probably needed.
+
+    src_powerlaw_xrbfree("...", error=True)  # TODO
+    src_srcutlog("...", region='src', solar=False, error=False)  # TODO
+
+    # XRB parameters from joint fit vs. bkg fit alone
+    # are basically the same within error
+    # -----------------------------------------------------------
+    #stopwatch(bkg_only_fit, "results_spec/20160624_bkg_only_rerun",
+    #          error=True)
+    #clear()
+
+    # Changing BACKSCAL ratio for 0551000201 MOS1 source region
+    # has no practical effect on fits.
+    # ---------------------------------------------------------
+    #stopwatch(joint_src_bkg_fit, "results_spec/20160624_src_bkg_hack_eq_one_rerun",
+    #          backscal_ratio_hack=1, error=True)
+    #clear()
+
+
+
+
 
 
     # Sub region fits with varying nH values

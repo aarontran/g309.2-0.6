@@ -9703,12 +9703,149 @@ Set up fit with Mg free in center.  First attempt hit bug, fixed it.
     See 20160517_src_and_bkg.log
 
 
-Monday 2016 June 27 -- update fixed XRB parameters, remove BACKSCAL hack
-------------------------------------------------------------------------
+Monday 2016 June 27 -- assess XRB parameters, remove BACKSCAL hack
+==================================================================
 
 Removed BACKSCAL hack from fit configuration methods.  The powerlaw and
 srcutlog fits need to be redone due to change in 0551000201 MOS1 constant
 scaling.  Address this later.
+
+X-ray background parameters
+---------------------------
+
+From `20160624_src_bkg_nohack_rerun_xrb.txt`:
+
+    Unabsorbed kT = 0.262 +/- 0.007 keV
+    Unabsorbed norm (EM) = 2.98e-4
+    nH = 1.32 {+0.09/-0.08} x10^22 cm^-2
+    Absorbed kT = 0.74 {+0.04/-0.03} keV
+    Absorbed norm (EM) = 2.19e-3
+
+Now, compare to fit to XRB alone:
+
+    Unabsorbed kT = 0.25 +/- 0.01
+    Unabsorbed norm = {2.7 +/- 0.2} x 10^-4
+    nH = 1.32 (+0.08/-0.09)
+    Absorbed kT = 0.78 +/- 0.05
+    Absorbed norm (EM) = {2.0 +/- 0.3} x 10^-3
+
+Verdict: X-ray background parameters are basically the same within error.
+OK.  Tweak parameters later for consistency, but it's not worth sweating.
+
+Powerlaw and srcutlog fits
+--------------------------
+
+Issue: everything was run with BACKSCAL hack.
+
+    from g309_fits import *
+    prep_xs(with_xs=True)
+    stopwatch(src_alone, "results_spec/20160627_src_alone_backscal-hack0.95-reference", error=True, backscal_ratio_hack=0.95)
+
+Rerun this, with src alone, for reference (to help compare chi-squared values).
+
+I need to redo my fitting code to enable visualization...
+    Because we want to fit the SNR as one piece (nonthermal + vnei)
+    we need a second piece of code to generate sub-component pieces.
+
+
+Thursday 2016 June 30 -- new XRB parameters, dump nonthermal model fits
+=======================================================================
+
+Updated x-ray background parameters to new standard values from
+`20160624_src_bkg_nohack_rerun` fit run.
+
+Added code to spit out data from fits with non-thermal component.
+Hacky approach is to zero out vnei component, then save new data file.
+Then, zero out nonthermal component, save new data file.
+
+Re-run new "standard" joint source-background fit, verify that it matches
+output from `20160624_src_bkg_nohack_rerun` exactly.
+No reason to do so, only to give the new "standard" fit a nicer name.
+
+Then, re-run nonthermal fits to generate new data products.
+Delete old ones when done.
+
+Now running:
+- src + bkg
+- src with powerlaw, solar and nonsolar
+- src with srcutlog, solar and nonsolar
+
+- five annulus fit with center Mg and Fe both free.
+
+
+
+Friday 2016 July 1 -- some code fix
+===================================
+
+Various fixes, model setup.
+
+Fit adjustments and execution
+-----------------------------
+
+1. Attempt to write error calls for multiple models in one command.
+   No dice.  After the model name, xspec only looks at numbers
+
+    In [12]: xs.Fit.error("snr_src:20 xrb:6")
+    *** Parameter snr_src:6 is not a variable model parameter and no confidence range will be calculated.
+
+   So we must do the `error_rerun` thing on an as-needed basis.
+
+2. Set up a few more fits
+
+   Now running:
+   - five annulus fit with center Mg and Fe both free (continued)
+   - src + bkg (fixed name)
+   - five annulus fit, "stock"
+
+3.  Fits to src with powerlaw/srcutlog, solar abundances, failed @ error runs.
+   By eye, it looks like need non-solar Si,S in these fits.
+   - srcutlog w/ only one parameter forces break frequency to negligibly small value
+   - powerlaw is a bit harder to push to a good fit.
+
+4. Annulus fits are converging to very different parameters for outermost ring.
+   Currently running "center Mg/Fe free" fit yielded:
+
+        outer annulus kT = 0.56 keV
+        Si = 8.5, S = 10 (max), Tau = 4.89e13
+
+   Current rerun of "stock" five annulus fit (only Si/S free in all rings)
+   is also finding similar parameters for outermost ring.
+   Compare to previous `20160524_fiveannfit_with_error` fit:
+
+        outer annulus kT = 10 keV (hit ceiling)
+        Si = 2.3, S = 2.47, Tau = 2.08e10; norm = 4.29e-4
+
+   The only thing I think that has changed is the XRB parameters
+
+   Quick plot in: `results-interm/20160701_ann_400_500_vnei_comparison.png`
+   Red (old) = 10 keV, Tau = 2e10 case with Si,S ~ 2
+   Blue (new) = 0.6 keV, Tau = 5e13 (equilibrium-ish) case with Si,S ~ 9
+
+   I think, very simply, these values are horribly constrained.
+   And I don't think they mean very much.
+
+Nagging thought: there must be a more elegant way to do this.
+
+Casual thought: can I run vnc on statler...
+
+Cleanup:
+    rm 20160613_src_powerlaw_*
+    rm 20160616_src_powerlaw_rerun_*
+    rm 20160624_srcutlog_nonsolar*      // manually verified parameters were about the same
+    rm 20160630_src_bkg_nohack_rerun*   // re-running w/ better name ("20160701_src_bkg")
+
+
+Attempt to explore vnei behavior again:
+
+    lmod absmodel ../../../../absmodel
+    setplot en
+    cpd /xs
+    abund wilm
+
+    model tbnew_gas*vnei
+    energies 0.5,10,,log
+    setplot command rescale y 0.001 100
+    plot model
 
 
 
@@ -9717,8 +9854,6 @@ Standing questions and TODOs
 ============================
 
 TODO
-1. srcutlog with solar abundances XOR Si/S free?
-2. powerlaw with solar abundances XOR Si/S free?
 3. srcutlog, powerlaw with solar abundances XOR Si/S free, and XRB free?
 4. re-run certain fits without BACKSCAL hack
 5. re-run annulus fits with central region Mg free (expect subsolar),

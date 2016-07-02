@@ -337,21 +337,15 @@ def load_cxrb(model_n, model_name, extracted_spectra):
     exrb_norm = 10.9 * (180/pi)**-2 * 60**-4 * (1/0.05)**-2 * ExtractedSpectrum.FIDUCIAL_BACKSCAL
 
     # NOTE HARDCODED -- best fit values from src/bkg combined fit
-    # using backscal ratio 0.95 for 0551000201 MOS1 src.
+    # after error runs on some parameters of interest
+    # Corresponds to: 20160624_src_bkg_nohack_rerun.log outputs
     xrb.setPars({xrb.powerlaw.PhoIndex.index : 1.4,
                  xrb.powerlaw.norm.index : exrb_norm,
-                 xrb.apec.kT.index : 0.256,  # Unabsorped apec (local bubble)
-                 xrb.tbnew_gas.nH.index : 1.318,  # Galactic absorption
-                 xrb.apec_5.kT.index : 0.648,  # Absorbed apec (galactic halo)
-                 xrb.apec.norm.index : 2.89e-4,
-                 xrb.apec_5.norm.index : 2.50e-3})
-
-# Fit without BACKSCAL ratio tweaks.  Change in parameters is <~10%.
-#                {xrb.apec.kT.index : 0.261},  # Unabsorped apec (local bubble)
-#                {xrb.tbnew_gas.nH.index : 1.372},  # Galactic absorption
-#                {xrb.apec_5.kT.index : 0.755},  # Absorbed apec (galactic halo)
-#                {xrb.apec.norm.index : 3.06e-4},
-#                {xrb.apec_5.norm.index : 2.33e-3} )
+                 xrb.apec.kT.index : 0.262,  # Unabsorped apec (local bubble)
+                 xrb.tbnew_gas.nH.index : 1.321,  # Galactic absorption
+                 xrb.apec_5.kT.index : 0.744,  # Absorbed apec (galactic halo)
+                 xrb.apec.norm.index : 2.98e-4,
+                 xrb.apec_5.norm.index : 2.19e-3})
 
     xs_utils.freeze_model(xrb)
 
