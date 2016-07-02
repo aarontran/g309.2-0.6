@@ -39,12 +39,13 @@
 
 % Not quite in line with recommended aastex style
 \author{
-Joe Bob\altaffilmark{1}, Joe Smith\altaffilmark{2}
+A. Alpha,%\altaffilmark{1},
+B. Beta%\altaffilmark{2}
 }
 
 \affil{
-\tsup{1}Smithsonian Astrophysical Observatory, 60 Garden Street MS-70, Cambridge, MA 02138, USA \\
-\tsup{2}Department of Basket Weaving, Belafonte Hall, Univ. Calumny, Belabored, CA 00000, USA
+%\tsup{1}
+Smithsonian Astrophysical Observatory, 60 Garden Street MS-70, Cambridge, MA 02138, USA
 }
 
 %\received{receipt date}
@@ -124,7 +125,7 @@ Both radio ears are X-ray dark.
 % Other wavelengths
 The field of G309.2-0.6 has been well-observed in galactic plane surveys in
 many wavelengths.
-No H$\alpha$ filaments are observed (\textbf{SOURCE}) % TODO
+No H$\alpha$ filaments are observed (\textbf{SOURCE; give brightness bound}) % TODO
 % OH maser
 No $1720.5 \unit{MHz}$ OH maser emission is observed above $40 \unit{mJy}$
 \citep{green1997}.
@@ -291,17 +292,23 @@ observations.
 % =============================================================================
 \section{Observations and Data Reduction} \label{sec:obs}
 
-% Summary of observations -- same as Table 1 and could be cut to 1-2 sentences
-XMM-Newton's European Photon Imaging Camera (EPIC) observed G309.2-0.6 for a
-total of $97.73 \unit{ks}$ in two pointings on 2001 August 28 and 2009 March
-6--7.  The first pointing (obsid 0087940201; PI John P. Hughes) was $40.46
-\unit{ks}$ with MOS1/2 in Full Frame mode, PN in Extended Full Frame mode, and
-XMM's ``thick'' optical filter.
-The second pointing (obsid 0551000201; PI Christian Motch) was $57.27
-\unit{ks}$  with MOS1/2 in Full Frame mode, PN in Large Window mode, and XMM's
-``medium'' optical filter.
-The Motch pointing targeted the foreground Be star HD 119682, but as a
-byproduct captured most of G309.2-0.6 on all three XMM detectors.
+XMM-Newton has observed G309.2-0.6 for $97.7 \unit{ks}$ in two pointings
+(Table~\ref{tab:obs}).
+Obsid 055100201 (PI: Motch) targeted the Be star HD 119682, but also captured
+G309.2-0.6 on the MOS1/2 and PN detectors.
+After background flare filtering, our good exposure times are $47 \unit{ks}$
+for MOS1/2 and $27 \unit{ks}$ for PN.
+
+% More verbose version
+%XMM-Newton has observed G309.2-0.6 for $97.73 \unit{ks}$ in two pointings.
+%Obsid 0087940201 (PI J. P. Hughes) was $40.46 \unit{ks}$ on 2001 August 28
+%with MOS1/2 in Full Frame mode, PN in Extended Full Frame mode, and XMM's
+%``thick'' optical filter.
+%Obsid 0551000201 (PI C. Motch) was $57.27 \unit{ks}$ on 2009 March 6--7
+%with MOS1/2 in Full Frame mode, PN in Large Window mode, and XMM's ``medium''
+%optical filter.
+%The Motch pointing targeted the foreground Be star HD 119682, but also
+%captured G309.2-0.6 on the MOS1/2 and PN detectors.
 
 % TODO I have not thought at all about the effects of optical loading on these
 % observations...
@@ -319,7 +326,7 @@ byproduct captured most of G309.2-0.6 on all three XMM detectors.
         0551000201 & $57.3$ & $21.9$ &  $9.0$ & 2009 March 6--7 & 1692 & Medium & Motch \\
         \bottomrule
     \end{tabular}
-    \tablecomments{Durations are in kiloseconds (ks).
+    \tablecomments{Durations in kiloseconds (ks).
     Good duration $t_{\mt{live}}$ is central CCD live time after flare
     filtering; MOS value averages MOS1 and MOS2 times ($\sim 0.6 \unit{ks}$
     difference in both obsids).
@@ -484,15 +491,41 @@ and effective area functions, following the ESAS prescription.
 %\citep{whiteoak1996}.
 \end{figure*}
 
+% Overview / summary
+\paragraph{Fitting Summary}
+The integrated remnant is well fit to a single temperature, non-equilibrium
+ionization plasma with above-solar silicon and sulfur abundances (\texttt{vnei}
+in XSPEC, after \citet{hamilton1983}).  \textbf{(is there a better reference?)}
+
+Most emission is concentrated in 100\arcsec--300\arcsec, about half-way in from
+the radio-inferred remnant edge.
+
+
+We also fit spectra from $100\arcsec$ wide annuli centered on the remnant
+to discern how thermal plasma emission varies with remnant radius.
+% TODO ensure PSF was acronym-defined earlier
+We neglect redistribution of counts between annuli due to PSF wings as the
+half-energy-enclosed width $\abt10$--$20\arcsec$ is much smaller than our
+annuli widths.
+
+The half-energy enclosed raiud
+
+We further fit annuli spectra centered on the remnant
+
+We further extract spectra from fit the remnant using
+
+
 We first fit the integrated remnant spectrum to a non-equilibrium ionized
 plasma spectrum, implemented as \texttt{vnei} \citep{hamilton1983} in XSPEC.
-\textbf{(is there a better reference?)}
 The remnant and sky background regions are simultaneously fit
 to derive ``baseline'' remnant and sky X-ray background parameter values.
-We also fit to \texttt{vpshock} and \texttt{vsedov} models, which integrate
-emission over an assumed plane shock or Sedov geometry \citep{borkowski2001},
-but find no significant difference in fitted plasma parameters, expected given
-fitted electron temperatures of order $1 \unit{keV}$ \citep{borkowski2001}.
+
+% TODO need to revisit this for thoroughness.
+%We also fit to \texttt{vpshock} and \texttt{vsedov} models, which integrate
+%emission over an assumed plane shock or Sedov geometry \citep{borkowski2001},
+%but find no significant difference in fitted plasma parameters, expected given
+%fitted electron temperatures of order $1 \unit{keV}$ \citep{borkowski2001}.
+
 % The \texttt{vpshock} fit converges to $\tau_{\mt{l}} \sim 0$
 % Discuss assumptions and arguments laid out by Borkowski, Lyerly, Reynolds
 % (2001, ApJ 548:820).
@@ -794,6 +827,52 @@ This research was expedited in part by Jonathan Sick's \texttt{ads2bibdesk}.
 \renewcommand{\thetable}{A\arabic{table}}
 \setcounter{figure}{0}
 \renewcommand{\thefigure}{A\arabic{figure}}
+
+\section{Is a non-thermal component compatible with integrated remnant fits?}
+
+\begin{table*}[!h]
+    \centering
+    \caption{Power law and srcutlog fits \label{table:nonthermal-component}}
+
+    \begin{tabular}{@{}lllllll@{}}
+    \toprule
+    Ratio & $n_\mathrm{H}$ & $kT$ & $\tau$ & Si & S & vnei EM \\
+     & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) & (EM units) \\
+    \midrule
+    % 1 (hack) = results_spec/20160624_src_bkg_hack_eq_one_rerun fit
+    \textbf{1}     & ${2.16}^{+0.08}_{-0.11}$ & ${2.29}^{+0.30}_{-0.12}$ & ${1.82}^{+0.14}_{-0.11}$
+          & ${3.75}^{+0.18}_{-0.16}$ & ${3.42}^{+0.29}_{-0.25}$ & ${4.5}^{+0.6}_{-0.5} \times 10^{-3}$ \\
+    % 0.95 (hack) = results_spec/20160611_src_bkg_rerun, manually entered!
+    \textbf{0.95}  & $2.15^{+0.08}_{-0.11}$ & $2.29^{+0.30}_{-0.24}$ & $1.83^{+0.10}_{-0.11}$  % vnei nH, kT, Tau
+          & $3.75^{+0.18}_{-0.16}$ & $3.42^{+0.26}_{-0.25}$ & $4.5^{+0.6}_{-0.5} \times 10^{-3}$ \\ % vnei Si,S,norm
+    % 0.88 (area ratio) = results_spec/20160624_src_bkg_nohack_rerun fit
+    \textbf{0.885} & ${2.15}^{+0.07}_{-0.08}$ & ${2.30}^{+0.29}_{-0.12}$ & ${1.83}^{+0.11}_{-0.11}$
+          & ${3.75}^{+0.18}_{-0.16}$ & ${3.42}^{+0.28}_{-0.25}$ & ${4.6}^{+0.5}_{-0.5} \times 10^{-3}$ \\
+    \bottomrule
+    \end{tabular}
+
+    \quad
+    \quad
+
+    \begin{tabular}{@{}llllr@{}}
+    \toprule
+    Ratio & XRB local $kT$ & XRB $n_\mathrm{H}$ & XRB halo $kT$
+           & $\chi^2_{\mathrm{red}} = \chi^2/\mathrm{dof}$ \\
+     & (keV) & ($10^{22} \unit{cm^{-2}}$) & (keV) &  \\
+    \midrule
+    % 1 (hack) = results_spec/20160624_src_bkg_hack_eq_one_rerun fit
+    \textbf{1} & ${0.262}^{+0.007}_{-0.007}$ & ${1.33}^{+0.08}_{-0.08}$ & ${0.75}^{+0.04}_{-0.03}$
+          & 1.224 = 4611.94/3768 \\
+    % 0.95 (hack) = results_spec/20160611_src_bkg_rerun, manually entered!
+    \textbf{0.95} & ${0.262}^{+0.007}_{-0.007}$ & $1.32^{+0.08}_{-0.08}$ & $0.75^{+0.04}_{-0.03}$ % XRB
+          & 1.213 = 4572.28/3768 \\
+    % 0.88 (area ratio) = results_spec/20160624_src_bkg_nohack_rerun fit
+    \textbf{0.885} & ${0.262}^{+0.007}_{-0.007}$ & ${1.32}^{+0.08}_{-0.08}$ & ${0.74}^{+0.03}_{-0.03}$
+          & 1.206 = 4545.24/3768 \\
+    \bottomrule
+    \end{tabular}
+\end{table*}
+
 
 \section{Does inaccuracy introduced by $\abt 10\%$ error in BACKSCAL ratio for
 integrated source fits impact fit results?}
