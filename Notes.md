@@ -9817,17 +9817,6 @@ Fit adjustments and execution
 
    The only thing I think that has changed is the XRB parameters
 
-   Quick plot in: `results-interm/20160701_ann_400_500_vnei_comparison.png`
-   Red (old) = 10 keV, Tau = 2e10 case with Si,S ~ 2
-   Blue (new) = 0.6 keV, Tau = 5e13 (equilibrium-ish) case with Si,S ~ 9
-
-   I think, very simply, these values are horribly constrained.
-   And I don't think they mean very much.
-
-Nagging thought: there must be a more elegant way to do this.
-
-Casual thought: can I run vnc on statler...
-
 Cleanup:
     rm 20160613_src_powerlaw_*
     rm 20160616_src_powerlaw_rerun_*
@@ -9835,13 +9824,24 @@ Cleanup:
     rm 20160630_src_bkg_nohack_rerun*   // re-running w/ better name ("20160701_src_bkg")
 
 
-Attempt to explore vnei behavior again:
+Uncertainty in outermost annulus fit parameters
+-----------------------------------------------
+
+To understand how much the outermost annulus fits differ, I plot the two
+different vnei models from 5-annulus fits with different CXRB parameters.
+Plot is at: `results-interm/20160701_ann_400_500_vnei_comparison.png`
+Legend:
+- Red (old): 10 keV, Tau = 2e10 case with Si,S ~ 2
+- Blue (new): 0.6 keV, Tau = 5e13 (equilibrium-ish) case with Si,S ~ 9
+
+I think these values are very ill-constrained, and do not mean very much.
+
+Sidebar -- to quickly play with vnei or other XSPEC models:
 
     lmod absmodel ../../../../absmodel
     setplot en
     cpd /xs
     abund wilm
-
     model tbnew_gas*vnei
     energies 0.5,10,,log
     setplot command rescale y 0.001 100
@@ -9849,9 +9849,68 @@ Attempt to explore vnei behavior again:
 
 
 
+Tuesday 2016 July 5 -- assembling results
+=========================================
+
+Began writing up latest fits over the weekend.
+
+Fit results inventory
+---------------------
+
+Current inventory of fits:
+- source and background "stock" fit: `20160701_src_bkg`
+- background alone: `20160624_bkg_only_rerun`
+- source with powerlaw component: `20160630_src_powerlaw_nonsolar`
+- source with srcutlog component: `20160630_src_srcutlog_nonsolar`
+- source AND background with powerlaw component: `20160615_src_bkg_powerlaw_xrb_free`
+    (out of date, did not explore or check for good convergence)
+- `ann_400_500` with powerlaw component: `20160617_ann_400_500_powerlaw`
+    (out of date, should re-run with new XRB parameters)
+- five annulus "stock" fit: `20160701_fiveann`
+- five annulus fit with center Mg free: `20160625_fiveann_center-mg-free`
+    (out of date -- should re-run with new XRB parameters)
+- five annulus fit with center Mg and Fe both free: still running...
+
+Generated new spectrum+model plots, overwriting old plots.
+    (visually verified that new fit plots look the same, or almost the same,
+    before overwriting.  minor changes to SNR fits, XRB components nearly
+    identical)
+
+For reference on ill-constrained 400-500" annulus fit, saved two plots.
+Same takeaway as `results-interm/20160701_ann_400_500_vnei_comparison.png`.
+Plots confirm that fit favors very weak SNR emission, and is therefore
+insensitive to vnei parameters.
+
+    results-interm/20160705_fiveann_0087940201_mos1_using_20160524_fit.pdf
+    results-interm/20160705_fiveann_0087940201_mos1_using_20160701_fit.pdf
+
+
+
+
+
+
+Prepare new plots:
+- source and background, one instrument's source + model
+- five annulus fit, one instrument plot.
+- plot of how kT, Tau, Si, S vary with radial distance.
+- plot nonthermal component fits
+
+Prepare new tables:
+- soft proton index + norm as a function of annulus radius,
+  for each exposure/instrument...
+
+Assemble
 
 Standing questions and TODOs
 ============================
+
+Maybe change five-annulus fits to four-annulus fits...
+it might save a lot of time when varying parameters...
+
+Nagging thought: there must be a more elegant way to do fits, and track fit
+versions.
+
+Casual thought: can I run vnc on statler...
 
 TODO
 3. srcutlog, powerlaw with solar abundances XOR Si/S free, and XRB free?

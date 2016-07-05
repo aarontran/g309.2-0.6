@@ -5,11 +5,11 @@ if [[ -z "$XMM_PATH" ]]; then
   exit 1
 fi
 
-xs_replotter.py $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_06.dat \
-                $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_07.dat \
-                $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_08.dat \
-                $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_09.dat \
-                $XMM_PATH/results_spec/20160611_src_bkg_rerun_spec_10.dat \
+xs_replotter.py $XMM_PATH/results_spec/20160701_src_bkg_spec_06.dat \
+                $XMM_PATH/results_spec/20160701_src_bkg_spec_07.dat \
+                $XMM_PATH/results_spec/20160701_src_bkg_spec_08.dat \
+                $XMM_PATH/results_spec/20160701_src_bkg_spec_09.dat \
+                $XMM_PATH/results_spec/20160701_src_bkg_spec_10.dat \
                 --components "CXRB" "SP" "Instr. lines" \
                 --colors "#4daf4a" "#f781bf" "#999999" \
                 --labels "0087940201 MOS1" "0087940201 MOS2" "0087940201 PN" \

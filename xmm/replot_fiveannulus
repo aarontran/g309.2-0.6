@@ -8,11 +8,11 @@ fi
 # Arcsecond symbol \mbox{$^{\prime\prime}$} from aastex6.cls
 
 # 0087940201 MOS1
-xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_01.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_06.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_11.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_16.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_21.dat \
+xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_01.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_06.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_11.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_16.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_21.dat \
                 --components "CXRB" "SP" "Remnant" "Instr. lines" \
                 --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
                 --labels '0--100\mbox{$^{\prime\prime}$}' \
@@ -25,11 +25,11 @@ xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_01.da
                 --out "$XMM_PATH/results_plots/fiveannulus_0087940201_mos1"
 
 # 0087940201 MOS2
-xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_02.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_07.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_12.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_17.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_22.dat \
+xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_02.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_07.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_12.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_17.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_22.dat \
                 --components "CXRB" "SP" "Remnant" "Instr. lines" \
                 --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
                 --labels '0--100\mbox{$^{\prime\prime}$}' \
@@ -42,11 +42,11 @@ xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_02.da
                 --out "$XMM_PATH/results_plots/fiveannulus_0087940201_mos2"
 
 # 0087940201 PN
-xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_03.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_08.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_13.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_18.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_23.dat \
+xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_03.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_08.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_13.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_18.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_23.dat \
                 --components "CXRB" "SP" "Remnant" "Instr. lines" \
                 --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
                 --labels '0--100\mbox{$^{\prime\prime}$}' \
@@ -59,11 +59,11 @@ xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_03.da
                 --out "$XMM_PATH/results_plots/fiveannulus_0087940201_pn"
 
 # 0551000201 MOS1
-xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_04.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_09.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_14.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_19.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_24.dat \
+xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_04.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_09.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_14.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_19.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_24.dat \
                 --components "CXRB" "SP" "Remnant" "Instr. lines" \
                 --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
                 --labels '0--100\mbox{$^{\prime\prime}$}' \
@@ -76,11 +76,11 @@ xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_04.da
                 --out "$XMM_PATH/results_plots/fiveannulus_0551000201_mos1"
 
 # 0551000201 MOS2
-xs_replotter.py $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_05.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_10.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_15.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_20.dat \
-                $XMM_PATH/results_spec/20160524_fiveannfit_with_error_spec_25.dat \
+xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_05.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_10.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_15.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_20.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_spec_25.dat \
                 --components "CXRB" "SP" "Remnant" "Instr. lines" \
                 --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
                 --labels '0--100\mbox{$^{\prime\prime}$}' \
