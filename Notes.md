@@ -9849,8 +9849,8 @@ Sidebar -- to quickly play with vnei or other XSPEC models:
 
 
 
-Tuesday 2016 July 5 -- assembling results
-=========================================
+Tuesday, Wednesday 2016 July 5-6 -- assembling results
+======================================================
 
 Began writing up latest fits over the weekend.
 
@@ -9885,21 +9885,32 @@ insensitive to vnei parameters.
     results-interm/20160705_fiveann_0087940201_mos1_using_20160701_fit.pdf
 
 
+New plots and tables for writeup text
+-------------------------------------
+
+* Update `xs_replotter.py` to customize legend, tick/axis label display for
+  ad hoc subplots.
+* New figure generating config: `replot_src_bkg_singles`
+* Change figure sizes in `make_ms_images.py` for new matplotlibrc
+* Generate more compact figure #1 (radio + XMM images)
+
+New spectrum fit plots:
+[x] source and background, one instrument's source + model
+[x] five annulus fit, one instrument plot.
+[ ] plot of how kT, Tau, Si, S vary with radial distance.
+[ ] plot nonthermal component fits
+
+New tables:
+[ ] soft proton index + norm as a function of annulus radius,
+    for each exposure/instrument...
+
+New region plots:
+[x] annuli overlay on SNR
 
 
 
 
-Prepare new plots:
-- source and background, one instrument's source + model
-- five annulus fit, one instrument plot.
-- plot of how kT, Tau, Si, S vary with radial distance.
-- plot nonthermal component fits
 
-Prepare new tables:
-- soft proton index + norm as a function of annulus radius,
-  for each exposure/instrument...
-
-Assemble
 
 Standing questions and TODOs
 ============================

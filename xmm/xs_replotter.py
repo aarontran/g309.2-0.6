@@ -48,6 +48,7 @@ def main():
                               " Writes {stem}.pdf, {stem}-delchi.pdf."),
                         metavar='STEM')
     parser.add_argument('--residuals', action='store_true')
+    parser.add_argument('--no-x-labels', action='store_true')
     args = parser.parse_args()
 
     fnames = args.files
@@ -58,6 +59,7 @@ def main():
     plot_labels = args.labels
     opt_ylim = args.ylim
     opt_outstem = args.out
+    opt_no_x_labels = args.no_x_labels
 
     n = len(fnames)
 
@@ -128,9 +130,13 @@ def main():
                     transform=ax.transAxes)
 
         if ax is axes[-1]:
-            if args.labels is not None:
-                ax.legend(loc='best')
+            if args.components is not None:  # do not confuse with args.labels!  TODO change to better names
+                ax.legend(loc='best', prop={'size':8})
             ax.set_xlabel("Energy (keV)")
+
+            if opt_no_x_labels:  # Only need to change on bottom plot
+                ax.set_xlabel("")
+                ax.set_xticklabels([])
 
         # Check that output plot doesn't obscure information
         print "{} data range: [{:.2g}, {:.2g}]".format(

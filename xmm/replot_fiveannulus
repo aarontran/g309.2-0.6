@@ -22,7 +22,7 @@ xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_01.dat \
                          '400--500\mbox{$^{\prime\prime}$}' \
                 --ylim '1e-3' '0.5' \
                 --residual \
-                --out "$XMM_PATH/results_plots/fiveannulus_0087940201_mos1"
+                --out "$XMM_PATH/results_plots/fig_fiveann_0087940201-mos1"
 
 # 0087940201 MOS2
 xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_02.dat \
@@ -39,7 +39,7 @@ xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_02.dat \
                          '400--500\mbox{$^{\prime\prime}$}' \
                 --ylim '1e-3' '0.5' \
                 --residual \
-                --out "$XMM_PATH/results_plots/fiveannulus_0087940201_mos2"
+                --out "$XMM_PATH/results_plots/fig_fiveann_0087940201-mos2"
 
 # 0087940201 PN
 xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_03.dat \
@@ -56,7 +56,7 @@ xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_03.dat \
                          '400--500\mbox{$^{\prime\prime}$}' \
                 --ylim '2e-3' '1' \
                 --residual \
-                --out "$XMM_PATH/results_plots/fiveannulus_0087940201_pn"
+                --out "$XMM_PATH/results_plots/fig_fiveann_0087940201-pn"
 
 # 0551000201 MOS1
 xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_04.dat \
@@ -73,7 +73,7 @@ xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_04.dat \
                          '400--500\mbox{$^{\prime\prime}$}' \
                 --ylim '1e-3' '0.5' \
                 --residual \
-                --out "$XMM_PATH/results_plots/fiveannulus_0551000201_mos1"
+                --out "$XMM_PATH/results_plots/fig_fiveann_0551000201-mos1"
 
 # 0551000201 MOS2
 xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_05.dat \
@@ -90,4 +90,4 @@ xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_05.dat \
                          '400--500\mbox{$^{\prime\prime}$}' \
                 --ylim '2e-4' '0.5' \
                 --residual \
-                --out "$XMM_PATH/results_plots/fiveannulus_0551000201_mos2"
+                --out "$XMM_PATH/results_plots/fig_fiveann_0551000201-mos2"
