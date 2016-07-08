@@ -78,7 +78,7 @@ def main(fig_num):
                              figsize=(7,5))  # only height affects final size
         f.recenter(ra2deg(13,46,30), -62.9, width=30./60, height=24./60)
         f.show_colorscale(vmin=1e-5, stretch='log',cmap='hot')
-        f.show_regions('regs/circ_100.reg')
+        f.show_regions('regs/ann_000_100.reg')
         f.show_regions('regs/circ_200.reg')
         f.show_regions('regs/circ_300.reg')
         f.show_regions('regs/src.reg')  # Equivalent to circ_400, but changed color/width
