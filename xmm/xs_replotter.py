@@ -49,6 +49,18 @@ def main():
                         metavar='STEM')
     parser.add_argument('--residuals', action='store_true')
     parser.add_argument('--no-x-labels', action='store_true')
+
+    parser.add_argument('--augment', nargs='*',
+                        help=("Add model components from other QDP dumps."
+                              " Must provide same number of files as ARGV."
+                              " Other options: labels, components, ..."
+                              " must include augmented columsn."
+                              " Must provide --augment-cols."),
+                        metavar='FILE')
+    parser.add_argument('--augment-cols', nargs='*',
+                        help=("Identify which columns (0-based) to add to plot"
+                              " from --augment QDP files."),
+                        type=int)
     args = parser.parse_args()
 
     fnames = args.files
@@ -61,11 +73,22 @@ def main():
     opt_outstem = args.out
     opt_no_x_labels = args.no_x_labels
 
+    opt_augment_fnames = args.augment
+    opt_augment_cols = args.augment_cols
+
+    # Begin validating arguments
+
     n = len(fnames)
 
+    if not opt_augment_fnames:
+        opt_augment_fnames = [None] * n
+    else:
+        assert len(opt_augment_cols) >= 1
+    assert len(opt_augment_fnames) == n
+
     if not plot_labels:
-        plot_labels = [None] * len(fnames)
-    assert len(plot_labels) == len(fnames)
+        plot_labels = [None] * n
+    assert len(plot_labels) == n
 
     if not opt_ylim:
         opt_ylim = (1e-4, 1.0)  # Appropriate for small G309 regions
@@ -74,7 +97,7 @@ def main():
     fig, axes = plt.subplots(n, sharex=True, figsize=(7.5, n*2))
     if n == 1:
         axes = [axes]  # plt.subplots collapses unneeded dimensions
-    for fname, ax, plot_lab in zip(fnames, axes, plot_labels):
+    for fname, ax, plot_lab, f_augment in zip(fnames, axes, plot_labels, opt_augment_fnames):
 
         dat = np.loadtxt(fname)
         x       = dat[:,0]
@@ -82,6 +105,11 @@ def main():
         y       = dat[:,2]
         y_err   = dat[:,3]
         model_sum   = dat[:,4]
+
+        if f_augment:  # Just stitch it on and proceed like nothing else happened
+            dat_augment = np.loadtxt(f_augment)
+            dat = np.concatenate((dat, dat_augment[:, opt_augment_cols]), axis=1)
+
         n_models = dat.shape[1] - 5
 
         # Set up and plot model components
@@ -149,6 +177,8 @@ def main():
         print "Writing: {}".format(opt_outstem + '.pdf')
         plt.savefig(opt_outstem + '.pdf')
         plt.clf()
+    else:
+        plt.show()
 
     if opt_residuals:
 
