@@ -9849,8 +9849,8 @@ Sidebar -- to quickly play with vnei or other XSPEC models:
 
 
 
-Tuesday, Wednesday 2016 July 5-6 -- assembling results
-======================================================
+Tuesday--Friday 2016 July 5-8 -- assembling results
+===================================================
 
 Began writing up latest fits over the weekend.
 
@@ -9898,14 +9898,30 @@ New spectrum fit plots:
 [x] source and background, one instrument's source + model
 [x] five annulus fit, one instrument plot.
 [ ] plot of how kT, Tau, Si, S vary with radial distance.
-[ ] plot nonthermal component fits
+[x] plot nonthermal component fits
+        yup, not super useful.  Throw this into an appendix.
 
 New tables:
 [ ] soft proton index + norm as a function of annulus radius,
     for each exposure/instrument...
 
 New region plots:
-[x] annuli overlay on SNR
+[x] annuli overlay on SNR, with background
+    replace the "src" plot entirely.
+    color the 400 arcsecond circle to designate the "source" region
+
+Create new "circ_xxx" regions for plotting only
+
+More fit results to process
+---------------------------
+
+Start four annulus fits -- Wednesday ~19:53.
+    Stock fit with rerun (Mg, Fe NOT free)
+
+Five annulus fits with Mg,Fe free started last week? Still running.
+
+Try running vnc sessions on: statler, cooper, chompers.
+They have slightly beefier and newer processors, and more RAM.
 
 
 

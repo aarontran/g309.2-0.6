@@ -677,22 +677,21 @@ def joint_src_bkg_fit(output, backscal_ratio_hack=None, error=False):
         f_tex.write('\n'.join(ltab.get_rows()))
 
 
-
-def five_annulus_fit(output, error=False, error_rerun=False,
-                     free_center_mg=False,
-                     free_center_fe=False):
+def annulus_fit(output, error=False, error_rerun=False, free_center_mg=False,
+                free_center_fe=False, four_ann=False):
     """
     Fit five annuli simultaneously...
+    Optionally, fit only four of the annuli (outermost is poorly constrained)
     """
 
-    out = g309.load_data_and_models("ann_000_100", "ann_100_200", "ann_200_300",
-                         "ann_300_400", "ann_400_500", snr_model='vnei')
+    regs = ["ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400", "ann_400_500"]
+    if four_ann:
+        regs = ["ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400"]
 
-    set_energy_range(out['ann_000_100'])
-    set_energy_range(out['ann_100_200'])
-    set_energy_range(out['ann_200_300'])
-    set_energy_range(out['ann_300_400'])
-    set_energy_range(out['ann_400_500'])
+    out = g309.load_data_and_models(*regs, snr_model='vnei')
+    for reg in regs:
+        set_energy_range(out[reg])
+
     xs.AllData.ignore("bad")
 
     # TODO really weird bug -- regenerate spectrum and see if it persists
@@ -703,7 +702,6 @@ def five_annulus_fit(output, error=False, error_rerun=False,
     # Each region has 5 spectra (5 exposures)
     # [0] gets 1st of 5 ExtractedSpectra objects
     # .models['...'] gets corresponding 1st of 5 XSPEC models
-    regs = ['ann_000_100', 'ann_100_200', 'ann_200_300', 'ann_300_400', 'ann_400_500']
     rings = [out[reg][0].models['snr'] for reg in regs]
     for ring in rings[1:]:  # Exclude center
         ring.tbnew_gas.nH.link = xs_utils.link_name(rings[0], rings[0].tbnew_gas.nH)
@@ -722,6 +720,7 @@ def five_annulus_fit(output, error=False, error_rerun=False,
     for ring in rings:
         ring.vnei.Si.frozen = False
         ring.vnei.S.frozen = False
+
     if free_center_mg:
         rings[0].vnei.Mg.frozen = False
     if free_center_fe:
@@ -749,7 +748,7 @@ def five_annulus_fit(output, error=False, error_rerun=False,
         xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
                   + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg))
                   + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Fe)))
-        # if center Mg is not free, XSPEC throws a benign warning
+        # if center Mg/Fe are frozen, XSPEC throws a benign warning
 
         # 2016 May 24 - second run was not needed for five annuli alone
         # 2016 June .. - second run is needed if Mg is freed
