@@ -129,12 +129,13 @@ class LatexTable(object):
         # instead of column headers alone.
 
         # Build row spec (string)
+        # TODO let the user set their own format spec for values & errors
         rlist = []
-        fmt = '{:0.' + str(self.prec) + 'g}'  # Forces decimal pt notation
-        fmt_sgn = '{:+0.' + str(self.prec) + 'g}'
+        fmt = '{:0.' + str(self.prec) + 'f}'  # Forces decimal pt notation
+        fmt_sgn = '{:+0.' + str(self.prec) + 'f}'
         for t in types:
             if t == 0:  # General number
-                rlist.append('{:0.' + str(self.prec) + 'g}')
+                rlist.append('{:0.' + str(self.prec) + 'f}')
             elif t == 1:  # Single error splits into two columns
                 rlist.extend(2*['$'+fmt+'$'])
             elif t == 2:  # Double error w/ braces around all values

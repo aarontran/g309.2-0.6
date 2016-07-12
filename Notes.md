@@ -9968,6 +9968,9 @@ Further, check new fiveann "stock" and fourann "stock" fits.
 Saturday--Tuesday 2016 July 5-8 -- four annulus, varied central abundances
 ==========================================================================
 
+Review results
+--------------
+
 Comment: although we don't see much SNR emission at outer annulus,
 the presence of Si/S lines, without much room for thermal bremsstrahlung, tells
 us something.  Based on the two extremes so far, either we are getting highly
@@ -9989,18 +9992,50 @@ Comments from casual look at results:
   Soft proton power law is overshooting everywhere.
   This occurs in 0087940201 MOS as well (but, not in 0551000201).
 
-* Save ALL fit parameters to JSON (instr lines, SP power law, XRB, ...).
-* Write code to generate tables from JSON files (kind of like what is being
-  done for plots now) -- a lot easier to manipulate and re-do tables after the
-  fact, e.g., if I want to start using LaTeX deluxetable
+
+Comprehensive JSON dumps in data products
+-----------------------------------------
+
+[x] Save all fit parameters to JSON (instr lines, SP power law, XRB, ...).
+Approach: save all models associated with a given spectrum.
+A lot of redundancy, but life is easier.
+Dumped new JSON files for:
+
+    20160701_fiveann.json
+    20160708_fourann_center-mg-o-free.json
+    20160708_fourann_center-mg-ne-free.json
+    20160708_fourann_center-mg-o-ne-free.json
+    20160708_fourann_center-mg-fe-free.json
+
+Would need to re-generate fits for other files, or construct tables by hand
+from XSPEC `.log` files.
+
+[x] Write code to generate tables from JSON files (kind of like what is being
+done for plots now) -- a lot easier to manipulate and re-do tables after
+the fact, e.g., if I want to start using LaTeX deluxetable.
+
+This makes life a lot easier.
+
+
+More fits to explore parameter space
+------------------------------------
 * Run a fit with O, Mg, Fe free.
 * Run a fit with Mg free in all 4 annuli.
-* Plot parameters as a function of radius.
+* Run fits for various subregions
+
+Coming up -- continue incorporating into text.
+Compute filling factors...
+Address some systematics
 
 
 
 Standing questions and TODOs
 ============================
+
+TODO that's been nagging at me for 1-3 years: figure out bayesian statistics
+and MCMC sampling.
+
+Cash statistic...
 
 Make a giant list of possible systematics.
 
