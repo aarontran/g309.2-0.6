@@ -9852,7 +9852,8 @@ Sidebar -- to quickly play with vnei or other XSPEC models:
 Tuesday--Friday 2016 July 5-8 -- assembling results
 ===================================================
 
-Began writing up latest fits over the weekend.
+Began writing up latest fits over the July 4 weekend.
+Now filling in the gaps.
 
 Fit results inventory
 ---------------------
@@ -9868,10 +9869,24 @@ Current inventory of fits:
     (out of date, should re-run with new XRB parameters)
 - five annulus "stock" fit: `20160701_fiveann`
 - five annulus fit with center Mg free: `20160625_fiveann_center-mg-free`
-    (out of date -- should re-run with new XRB parameters)
-- five annulus fit with center Mg and Fe both free: still running...
+    (out of date -- should re-run with new XRB parameters!)
+- five annulus fit with center Mg and Fe both free: `20160701_fiveann_center-mg-fe-free`
+- four annulus "stock" fit: `20160706_fourann_stock`
 
-Generated new spectrum+model plots, overwriting old plots.
+Set up the following fits
+- four annulus with center Mg free (treble vnc session)             <- started friday july 8 1806
+- four annulus with center Mg, Ne free (statler vnc session)        <- started friday july 8 ~1810
+- four annulus with center Mg, O free (statler vnc session)         <- started friday july 8 ~1810
+- four annulus with center Mg, O, Ne free (cooper vnc session)      <- started friday july 8 ~1813
+- four annulus with center Mg, Fe free (cooper vnc session)         <- started friday july 8 ~1813
+
+Caught bug.  Restarted around 7pm.
+
+Start dumping json files of model parameters for annulus fits -- need to add this to old methods too!...
+(time for another refactor)
+
+Generated new spectrum+model plots, overwriting old plots, using new "stock"
+fits.
     (visually verified that new fit plots look the same, or almost the same,
     before overwriting.  minor changes to SNR fits, XRB components nearly
     identical)
@@ -9912,39 +9927,82 @@ New region plots:
 
 Create new "circ_xxx" regions for plotting only
 
+
 More fit results to process
 ---------------------------
 
-Start four annulus fits -- Wednesday ~19:53.
-    Stock fit with rerun (Mg, Fe NOT free)
+Some notes on specific fits
 
-Five annulus fits with Mg,Fe free started last week? Still running.
+Start four annulus fits.  See above
 
-Try running vnc sessions on: statler, cooper, chompers.
-They have slightly beefier and newer processors, and more RAM.
+Five annulus fit with Mg,Fe free completed after 6 days, 10 hrs.
+Check if single error rerun was sufficient.  Expect total of 12 error command
+calls.
+- First error run: a new best fit was found.  Very marginal improvement,
+  reduced chi-squared decreased
+    fr 4517.23 / 3321 = 1.36020
+    to 4517.05 / 3321 = 1.36015
+- On next-to-last error command call (error run for `ann_400_500`), a new best
+  fit was found; reduced chi-squared decreased
+    fr 4517.05 / 3321 = 1.36015
+    to 4517.01 / 3321 = 1.36014
+Formally, I "should" re-run the error commands.  But this is so small that no
+one would ever care.
+I inspected fit values by eye (vnei parameters, soft proton power law
+parameters) and we are looking at <~ 0.1-1% shifts.
+
+Further, check new fiveann "stock" and fourann "stock" fits.
+- four annulus stock fit is fine.  Yes, error runs did hit new best fits.
+  Two error runs is fine; did not check whether new best fits were significant
+  or not.
+
+    :%s/\*\*\*Warning.*snr_ann_400_500:18\n Parameter snr_ann_400_500:18.*\n caused by the fit being insensitive to the
+    parameter.\n//g
+- five annulus stock fit requires an error rerun for central annulus only.
+  I do this by hand -- save time.
+  May not be important since the four annulus fits will probably be more useful
+  anyways.
 
 
 
+Saturday--Tuesday 2016 July 5-8 -- four annulus, varied central abundances
+==========================================================================
+
+Comment: although we don't see much SNR emission at outer annulus,
+the presence of Si/S lines, without much room for thermal bremsstrahlung, tells
+us something.  Based on the two extremes so far, either we are getting highly
+enhanced ejecta, or we are getting very hot ejecta (with less extreme
+abundances) st. the soft bremsstrahlung continuum is heavily suppressed (i.e.
+it trends towards higher energy, where we will not detect it so well).
+
+Most fits done running.  Kludged a piece of code to dump "expanded" tables with
+all elemental abundances, at:
+
+    *_ONeMgFe.tex
+    *_ONeMgFe_row.tex
+
+Plotted latest 4 annulus fits + tabulated results.
+
+Comments from casual look at results:
+* fits with O free are surprisingly helpful.
+* I am suspicious about 0.4-0.5 keV fit to PN data.
+  Soft proton power law is overshooting everywhere.
+  This occurs in 0087940201 MOS as well (but, not in 0551000201).
+
+* Save ALL fit parameters to JSON (instr lines, SP power law, XRB, ...).
+* Write code to generate tables from JSON files (kind of like what is being
+  done for plots now) -- a lot easier to manipulate and re-do tables after the
+  fact, e.g., if I want to start using LaTeX deluxetable
+* Run a fit with O, Mg, Fe free.
+* Run a fit with Mg free in all 4 annuli.
+* Plot parameters as a function of radius.
 
 
 
 Standing questions and TODOs
 ============================
 
-Maybe change five-annulus fits to four-annulus fits...
-it might save a lot of time when varying parameters...
-
-Nagging thought: there must be a more elegant way to do fits, and track fit
-versions.
-
-Casual thought: can I run vnc on statler...
-
-TODO
-3. srcutlog, powerlaw with solar abundances XOR Si/S free, and XRB free?
-4. re-run certain fits without BACKSCAL hack
-5. re-run annulus fits with central region Mg free (expect subsolar),
-   then see where to go from here (re-free O, Ne? finally return to sub-regions?).
-
+Make a giant list of possible systematics.
 
 Misc. XSPEC has a "delayed gratification" option for levenberg-marquardt
 fitting
@@ -9957,16 +10015,14 @@ Test this out...
   (do try this -- may reduce backgrounds in image. but your data are so noisy
   anyways that it may not have much effect).
 
-Suggestion -- sample folded model curves much more finely for plotting
-purposes?
-Fitting residuals are less clear (potentially misleading), but easier for the
-viewer to read and understand the models.
-
 Suggestion -- can we combine the MOS1/2 spectra from each obsid?
     results in three spectra / region to fit.
 
 Is HD 119682 introducing light curve noise?
 compute FOV lightcurve _without_ point sources.
+https://arxiv.org/abs/astro-ph/0205278
+http://adsabs.harvard.edu/abs/2015ApJ...799...84S
+http://adsabs.harvard.edu/abs/2015ApJ...806..177M
 
 List of assumptions to test.  How do the (KEY) fits above change if I:
 * run vpshock/vsedov for integrated source or subregion (partially done)
@@ -9974,6 +10030,8 @@ List of assumptions to test.  How do the (KEY) fits above change if I:
   (do separately to illustrate effects)
 * change x-ray background fit parameters
 * use x-ray background fit parameters from fitting XRB alone?
+    (partially addressed.  parameters agree within uncertainty.
+     but, see how fit results change to get a handle on systematics)
 
 * SANITY CHECK: if I change soft proton background to BROKEN POWER LAW, e.g. in
   combined fit alone, how do parameters change if at all?
@@ -10064,7 +10122,7 @@ detector map for PN RMF...
    * 0553110201 (G341.2+0.9) -- PN full frame, good
        (2009-03-09 15:01:14 to 2009-03-09 21:02:35) -- 22ks
    * 0553850101 (PSR J1734-3333) -- large window, not useful
-   * 0551120301 (Proxima Cen) -- large window (holy shit that's bright)
+   * 0551120301 (Proxima Cen) -- large window (that's really bright)
    * 0550410301 (Geminga) -- small window
    * 0551761001 (3C153) -- full frame, good
        (2009-03-10 20:13:55 to 2009-03-11 02:37:32) -- 23ks

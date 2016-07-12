@@ -677,12 +677,27 @@ def joint_src_bkg_fit(output, backscal_ratio_hack=None, error=False):
         f_tex.write('\n'.join(ltab.get_rows()))
 
 
-def annulus_fit(output, error=False, error_rerun=False, free_center_mg=False,
-                free_center_fe=False, four_ann=False):
+def annulus_fit(output, error=False, error_rerun=False,
+                free_center_elements=None, four_ann=False):
     """
     Fit five annuli simultaneously...
-    Optionally, fit only four of the annuli (outermost is poorly constrained)
+
+    Arguments:
+        output = output products file stem
+        error = run error commands?
+        error_rerun = run error commands 2nd time?
+        four_ann = fit only 4 instead of 5 annuli?
+        free_center_elements = (case-sensitive) elements to free in central
+            circle (0-100 arcsec).
+            Element names much match XSPEC parameter names.
+            Si, S already free by default.
+    Output: n/a
+        loads of stuff dumped to output*
+        XSPEC session left in fitted state
     """
+
+    if free_center_elements is None:
+        free_center_elements = []
 
     regs = ["ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400", "ann_400_500"]
     if four_ann:
@@ -721,10 +736,10 @@ def annulus_fit(output, error=False, error_rerun=False, free_center_mg=False,
         ring.vnei.Si.frozen = False
         ring.vnei.S.frozen = False
 
-    if free_center_mg:
-        rings[0].vnei.Mg.frozen = False
-    if free_center_fe:
-        rings[0].vnei.Fe.frozen = False
+    for elem in free_center_elements:
+        # rings[0] to get center region only
+        comp = rings[0].vnei.__getattribute__(elem)
+        comp.frozen = False
 
     xs.Fit.perform()
 
@@ -739,32 +754,32 @@ def annulus_fit(output, error=False, error_rerun=False, free_center_mg=False,
 
         print "First error run:", datetime.now()
         for reg, ring in zip(regs, rings):
-            xs.Fit.error("snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.kT))
-                      + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Tau))
-                      + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Si))
-                      + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.S))
+            xs.Fit.error("snr_{:s}:{:d},{:d},{:d},{:d}".format(reg,
+                            xs_utils.par_num(ring, ring.vnei.kT),
+                            xs_utils.par_num(ring, ring.vnei.Tau),
+                            xs_utils.par_num(ring, ring.vnei.Si),
+                            xs_utils.par_num(ring, ring.vnei.S))
                          )
             print reg, "errors complete:", datetime.now()  # Will not appear in error log
-        xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
-                  + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg))
-                  + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Fe)))
-        # if center Mg/Fe are frozen, XSPEC throws a benign warning
 
-        # 2016 May 24 - second run was not needed for five annuli alone
-        # 2016 June .. - second run is needed if Mg is freed
-        # This could change if the annulus fits or spectra are altered
+        center_str = "snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
+        for elem in free_center_elements:
+            comp = rings[0].vnei.__getattribute__(elem)
+            center_str = center_str + ",{:d}".format(xs_utils.par_num(rings[0], comp))
+        print "Running center errors:", center_str
+        xs.Fit.error(center_str)
+
         if error_rerun:
             print "Second error run:", datetime.now()
             for reg, ring in zip(regs, rings):
-                xs.Fit.error("snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.kT))
-                          + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Tau))
-                          + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.Si))
-                          + " snr_{:s}:{:d}".format(reg, xs_utils.par_num(ring, ring.vnei.S))
+                xs.Fit.error("snr_{:s}:{:d},{:d},{:d},{:d}".format(reg,
+                                xs_utils.par_num(ring, ring.vnei.kT),
+                                xs_utils.par_num(ring, ring.vnei.Tau),
+                                xs_utils.par_num(ring, ring.vnei.Si),
+                                xs_utils.par_num(ring, ring.vnei.S))
                              )
                 print reg, "errors complete:", datetime.now()  # Will not appear in error log
-            xs.Fit.error("snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
-                      + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Mg))
-                      + " snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].vnei.Fe)))
+            xs.Fit.error(center_str)  # Take advantage of previous work
 
         xs.Xset.closeLog()
         print "Error runs complete:", datetime.now()
@@ -778,6 +793,9 @@ def annulus_fit(output, error=False, error_rerun=False, free_center_mg=False,
     for ring in rings:
         model_log = output + "_{}.txt".format(ring.name)
         print_model(ring, model_log)
+        # Save best fit model parameters to JSON -- includes errors & errorstr
+        xs_utils.dump_fit_dict(output + "_{}.json".format(ring.name),
+                               ring)
 
     # Nice LaTeX table
 
@@ -792,7 +810,7 @@ def annulus_fit(output, error=False, error_rerun=False, free_center_mg=False,
     if error:
 
         latex_cols = ['{:s}', 2, 2, 2, 2, 2]
-        ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 annuli fit with errors", prec=2)
+        ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 annuli fit with errors", prec=3)
 
         for ring in rings:
             ltr = [ring.name]
@@ -809,7 +827,7 @@ def annulus_fit(output, error=False, error_rerun=False, free_center_mg=False,
     else:
 
         latex_cols = ['{:s}', 0, 0, 0, 0, 0]
-        ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 annuli fit", prec=2)
+        ltab = LatexTable(latex_hdr, latex_cols, "G309.2-0.6 annuli fit", prec=3)
 
         for ring in rings:
             ltr = [ring.name,
@@ -938,19 +956,65 @@ if __name__ == '__main__':
     # src_powerlaw_xrbfree(error=False, error=False)
     # src_srcutlog(...)
     # bkg_only_fit(...)
+    # ...
 
     prep_xs(with_xs=True)  # Required before all fits
-
-    # List of "latest" fits
 
     stopwatch(joint_src_bkg_fit, "results_spec/20160630_src_bkg_nohack_rerun",
               error=True)
     clear()
     # Time: ~1-2 hrs
 
+    stopwatch(five_annulus_fit, "results_spec/20160701_fiveann",
+              error=True, error_rerun=False)
+    ring = xs.AllModels(1,'snr_ann_000_100')
+    # Rerun error command for center only
+    xs.Xset.openLog("results_spec/20160701_fiveann" + "_error_rerun_manual.log")
+    stopwatch(xs.Fit.error, "snr_ann_000_100:{:d},{:d},{:d},{:d}".format(
+                                    xs_utils.par_num(ring, ring.vnei.kT),
+                                    xs_utils.par_num(ring, ring.vnei.Tau),
+                                    xs_utils.par_num(ring, ring.vnei.Si),
+                                    xs_utils.par_num(ring, ring.vnei.S)))
+    xs.Xset.closeLog()
+    print_model(ring, "results_spec/20160701_fiveann_snr_ann_000_100.txt")
+    clear()
+    # Time: 2 days, 17 hrs on treble
+    #   + extra 5 hours for error_rerun redo
+    # (would roughly double to 4 days with error_rerun)
+
+    stopwatch(five_annulus_fit, "results_spec/20160701_fiveann_center-mg-fe-free",
+              free_center_mg=True, free_center_fe=True,
+              error=True, error_rerun=True)
+    clear()
+    # Time: 6 days, 10 hrs (!) on treble
+
+    stopwatch(annulus_fit, "results_spec/20160706_fourann_stock",
+              four_ann=True,
+              error=True, error_rerun=True)
+    clear()
+    # Time: 1 day, 19.5 hrs on treble
+
+    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-free", four_ann=True, free_center_elements=["Mg"], error=True, error_rerun=True)
+    clear()
+    # Time: 2 days, 14 hrs on treble (37 minutes without error run)
+
+    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-ne-free", four_ann=True, free_center_elements=["Mg", "Ne"], error=True, error_rerun=True)
+    clear()
+    # Time: 2 days, 11 hrs on statler
+
+    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-o-free", four_ann=True, free_center_elements=["Mg", "O"], error=True, error_rerun=True)
+    clear()
+    # Time: 1 day, 17.5 hrs on statler
+
+    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-o-ne-free", four_ann=True, free_center_elements=["Mg", "O", "Ne"], error=True, error_rerun=True)
+    clear()
+    # Time: 3 days, 2 hrs on cooper
+
+    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-fe-free", four_ann=True, free_center_elements=["Mg", "Fe"], error=True, error_rerun=True)
+    clear()
+    # Time: 1 day, 23.75 hrs on cooper
 
 
-    # Time: each ~ 2.5 hrs. ??
 
     stopwatch(src_powerlaw, "results_spec/20160630_src_powerlaw_solar",
               region='src', solar=True, error=True)

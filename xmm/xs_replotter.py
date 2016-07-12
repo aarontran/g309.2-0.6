@@ -106,9 +106,11 @@ def main():
         y_err   = dat[:,3]
         model_sum   = dat[:,4]
 
-        if f_augment:  # Just stitch it on and proceed like nothing else happened
+        if f_augment:  # Stitch it on and proceed like nothing else happened
+            # But save the data to plot slightly differently (lower zorder)
             dat_augment = np.loadtxt(f_augment)
             dat = np.concatenate((dat, dat_augment[:, opt_augment_cols]), axis=1)
+            n_augment_models = dat_augment[:, opt_augment_cols].shape[1]
 
         n_models = dat.shape[1] - 5
 
@@ -124,9 +126,14 @@ def main():
         assert len(comp_labels) == n_models
         assert len(linestyles) == n_models
 
-        for model, color, lab, ls in zip(dat[:,5:].T, colors, comp_labels, linestyles):
-            plot_step(x, x_err, model, ax=ax,
-                      color=color, label=lab, linestyle=ls)
+        for model, color, lab, ls, n_m in zip(dat[:,5:].T, colors, comp_labels, linestyles, range(n_models)):
+            if n_m < (n_models - n_augment_models):  # Normal models
+                plot_step(x, x_err, model, ax=ax,
+                          color=color, label=lab, linestyle=ls)
+            else:  # Augment models
+                plot_step(x, x_err, model, ax=ax,
+                          color=color, label=lab, linestyle=ls,
+                          zorder=0)
 
         # Plot summed model
         plot_step(x, x_err, model_sum, ax=ax, color='k',

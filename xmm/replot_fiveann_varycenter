@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [[ -z "$XMM_PATH" ]]; then
+  echo "Source sasinit before running this program"
+  exit 1
+fi
+
+# 0087940201 MOS1
+xs_replotter.py $XMM_PATH/results_spec/20160701_fiveann_spec_01.dat \
+                $XMM_PATH/results_spec/20160625_fiveann_center-mg-free_spec_01.dat \
+                $XMM_PATH/results_spec/20160701_fiveann_center-mg-fe-free_spec_01.dat \
+                --components "CXRB" "SP" "SNR" "Instr. lines" \
+                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
+                --labels '0--100\mbox{$^{\prime\prime}$}: Si,S' \
+                         '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg' \
+                         '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg,Fe' \
+                --ylim '1e-3' '0.5' \
+                --residual
+#                --out "$XMM_PATH/results_plots/fig_fiveann_0087940201-mos1_varycenter"
+
+
+
+
+

@@ -150,20 +150,16 @@ def load_fit_dict(f_in):
 def dump_fit_dict(f_out, *args, **kwargs):
     """Dump fit info to filename f_out; see fit_dict for *args, **kwargs"""
     with open(f_out, 'w') as fh:
-        ret = json.dump(fit_dict(*args), fh, indent=2)
+        ret = json.dump(fit_dict(*args, **kwargs), fh, indent=2)
     return ret
 
 
-def fit_dict(model, want_err=False):
+def fit_dict(model):
     """
     Form dictionary of fit parameters.
     Mostly useful for simple fits: one or two models, one spectrum.
     For more complex fits, dict will not encode/store enough information
     to retrace fit.
-
-    Warning: want_err runs XSPEC error command.  This is time consuming and
-    may find new local chi-squared minima in the process.
-    Don't use this unless your fit is really simple.
 
     Wishlist:
     - generalize to multiple source models for given datagroup
@@ -180,24 +176,16 @@ def fit_dict(model, want_err=False):
     fdict['comps']={}
 
     for cname in model.componentNames:
+        comp = model.__getattribute__(cname)
 
-        # Component object, e.g. m.gaussian1
-        comp = eval('model.'+cname)  # E.g., model.
         fdict['comps'][cname] = {}
 
         for pname in comp.parameterNames:
-
-            # Parameter object, e.g. p = m.srcutlog.break
-            if "srcutlog" in cname and pname == 'break':
-                # Hacky workaround for local model
-                p = comp.__getattribute__('break')
-            else:
-                p = eval('model.'+cname+'.'+pname)
+            p = comp.__getattribute__(pname)
 
             fdict['comps'][cname][pname] = {}
             fdict['comps'][cname][pname]['value'] = p.values[0]
-            if want_err:
-                fdict['comps'][cname][pname]['error'] = p.error
+            fdict['comps'][cname][pname]['error'] = p.error
             fdict['comps'][cname][pname]['sigma'] = p.sigma
             fdict['comps'][cname][pname]['frozen'] = p.frozen
 
