@@ -1,25 +1,18 @@
 #!/bin/sh
 
-# Check that command line arg is valid tex file
-# otherwise use paper-tycho.tex
-if [ -e "${1}.tex" ]
-then
-    arg=$1
-else
-    arg="text"
+fname="text"
+
+# Run bibtex if any command line arg given (gibberish OK)
+if [[ "$#" -eq 1 ]]; then
+  pdflatex "${fname}.tex" 
+  bibtex $fname
+fi
+pdflatex "${fname}.tex"
+pdflatex "${fname}.tex"
+
+# Only "deploy" on HEAD computer
+if [[ $HOSTNAME == 'treble' ]]; then
+  cp "${arg}.pdf" /data/wdocs/atran/g309/.
 fi
 
-echo "Compiling ${arg}.tex"
 
-# Run bibtex if multiple command line args are given
-# (second arg can be gibberish string)
-if [ "$#" -eq 2 ]
-then
-    pdflatex "${arg}.tex" 
-    bibtex $arg
-fi
-
-pdflatex "${arg}.tex"
-pdflatex "${arg}.tex"
-#firefox "${arg}.pdf"
-cp "${arg}.pdf" /data/wdocs/atran/g309/.
