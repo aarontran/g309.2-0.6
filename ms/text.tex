@@ -486,12 +486,12 @@ and effective area functions, following the ESAS prescription.
 \subsection{Integrated spectrum} \label{sec:src-bkg}
 
 \begin{figure*}[]
-    \plotone{fig/fig_snr_regs-src-bkg.pdf}
+    \plotone{fig/fig_snr_regs-fiveann.pdf}
     %\caption{Broadband 0.8--3.3 keV image of SNR G309.2-0.6.}
     % figcaption is an aastex alias -- cannot use with emulateapj (?)
     \figcaption{Unsmoothed 0.8--3.3 keV image of SNR G309.2-0.6 with
-    integrated source and background regions.}
-    \label{fig:src-bkg-regs}  % TODO this must follow figcaption, forgot why
+    ``integrated source'', annulus, background regions.}
+    \label{fig:regions}  % TODO this must follow figcaption, forgot why
 \end{figure*}
 
 % Introduce -- joint source + background fit, source model, regions & spectra
@@ -500,7 +500,7 @@ non-equilibrium ionization plasma with above-solar silicon and sulfur
 abundances (XSPEC model \texttt{tbabs\_new * vnei}, after \citet{hamilton1983}.
 \textbf{(better reference?  better phrasing?)}
 We jointly fit source (0--400\arcsec) and background (510--700\arcsec) regions
-centered on the remnant (Figure~\ref{fig:src-bkg-regs});
+centered on the remnant (Figure~\ref{fig:regions});
 the source region encloses (by eye) the brightest X-ray emission, and the
 background region lies outside the radio remnant ears.
 % TODO either omit unnecessary description, or note in caption
@@ -528,6 +528,7 @@ and emission measure $\EM = ?? d_{5}$  % TODO define d_{5} and use consistently
 % Will this be d_{8}?
 We find silicon abundance $3.75^{+0.18}_{-0.16}$
 and sulfur abundance $3.42^{+0.28}_{-0.25}$ above solar.
+The galactic absorption is ...... % TODO provide this.
 The fit statistic $\chi^2_{\mathrm{reduced}} = 1.206$ for $3768$ degrees of
 freedom.
 % TODO fill in filling factor details... considerable uncertainty in this step
@@ -647,18 +648,9 @@ that parameters are reasonable.
 
 \subsection{Annuli spectra}
 
-\begin{figure*}[]
-    \plotone{fig/fig_snr_regs-fiveann.pdf}
-    %\caption{Broadband 0.8--3.3 keV image of SNR G309.2-0.6.}
-    % figcaption is an aastex alias -- cannot use with emulateapj (?)
-    \figcaption{Unsmoothed 0.8--3.3 keV image of SNR G309.2-0.6 with
-    integrated source and background regions.}
-    \label{fig:fiveann-regs}  % TODO this must follow figcaption, forgot why
-\end{figure*}
-
 We extract and fit spectra from five $100\arcsec$ wide annuli centered on the
 remnant to discern how thermal plasma emission varies with remnant radius
-(Figure~\ref{fig:fiveann-regs}).
+(Figure~\ref{fig:regions}).
 Each annulus is modeled by an absorbed NEI plasma
 % TODO ensure NEI was acronym-defined earlier
 % TODO write a shell script that checks for all acronyms and aggregates all
@@ -684,33 +676,153 @@ Representative annulus spectra are shown in Figure~\ref{fig:annuli-spectra}
 \end{figure*}
 
 The outer annulus (400-500\arcsec) fit is ill-constrained.
-A fit with two sets of X-ray background parameters, which were estimated and
-agreed within error, yielded two wildly divergent fits.
-(kT 0.6 vs 10, Si/S 10 vs 9, Tau 1e10 vs 5e13).
+A fit with two sets of sky X-ray background parameters that agreed within error
+yielded wildly divergent fits ($kT = 0.6$ vs. $10$, Si and S abundance $10$ vs.
+$2$, ionization timescale $\tau = 1 \times 10^{10}$ vs. $5 \times 10^{13}$).
 Only the silicon and sulfur lines can be attributed to the remnant; the rest of
 the spectrum is dominated by background emission.
-The outer annulus fit is NOT aided by addition of a thermal model.
+The outer annulus fit is NOT aided by addition of a nonthermal model.
 It's just so dominated by background components already.
 Give error bars here.
 % TODO....
-We therefore omit presentation of outer annulus parameters,
-although we have provided example fit values here.
+We perform subsequent fits with the inner four annuli only, although we show
+representative fit values in Table~\ref{tab:annulus-fit}.
+% TODO update fit parameters
 
-The inner annulus fit differs from the other annuli in that:
-(1) the fit allows us to constrain a sub-solar abundance of magnesium,
-(2) the fit shows some soft excess, which can / cannot \textbf{???} % TODO
-    be modeled by some combination of non-solar Fe, O, and Ne abundances.
 
+% TODO fit outer annulus to just NEI -- check fit for ISM abundances.
+
+Central emission from hot thermal plasma, with enhanced Si and S, suggests that
+the reverse shock has traversed the entire remnant.
+
+The central annulus shows soft X-ray ($<1 \unit{keV}$) excess that our
+$\texttt{vnei}$ model with Si and S free cannot explain.
+Mg emission is also reduced compared to the rest of the remnant.
+In Table~\ref{tab:annulus-varycenter}, we explore combinations of non-solar
+elemental abundances that might explain this central excess -- specifically,
+Fe, O, and Ne.
+Although additional elements improve the fit, it is not clear that any
+combination of abundances fully explains the observed excess.
+% TODO you should not be saying "by eye"...
+% by eye, O emission appears to have the best shot.
+
+The source of the central emission is uncertain.
+Significant O line emission can be produced by SWCX, but the absence of soft
+X-ray excess outside the central region disfavors this explanation (as we might
+expect SWCX to fill the field of view).
+
+% TODO fit center region to another NEI piece?
 
 % SANITY check: do soft proton power law parameters show expected behavior?
 % EXPECT: vignetted (lower norm), harder spectrum farther off-axis
 % SP vignetting differs from the standard photon vignetting.
 We also check soft proton parameters for the annuli.
-This is pretty questionable, letting them all float so freely.
-We should try the ESAS approach -- model SP everywhere far off-axis,
-then attempt to build expected SP indices on-axis based on measured vignetting
-function --- OR at least use this as a comparison.
+Although they are not always strongly constrained in fitting, we find a
+fall-off in soft proton contamination as a function of radial distance, which
+appears consistent with off-axis vignetting.
+% TODO citation
+Plots and further information are given in Appendix~\ref{app:sp-annuli}.
+% TODO build this...
+
+%We should try the ESAS approach -- model SP everywhere far off-axis,
+%then attempt to build expected SP indices on-axis based on measured vignetting
+%function --- OR at least use this as a comparison.
 % TODO Maybe push to appendix after assembling this
+
+
+Annulus fits: this is five annuli with central Mg free.
+Old XRB parameters -- that's ok.  updated fit incoming...
+Not obvious that Fe should be free but let's roll with it.
+Best fit absorption is $2.13^{+0.05}_{-0.06}$.
+
+\begin{table*}
+    \centering
+    \caption{G309.2-0.6 -- annulus fits \label{tab:annulus-fit}
+    \begin{tabular}{@{}lrrrrr@{}}
+        \toprule
+        Annulus & $kT$  & $\tau$                        & Mg & Si  & S \\
+                & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) & (-) \\
+        \midrule
+        % 20160625_fiveann_center-mg-free.tex
+        % TODO update with newest values... use ipynb for this
+        $0$--$100\arcsec$   & ${3.0}^{+0.5}_{-0.4}$ & ${1.5}^{+0.2}_{-0.2}$ & $0.49^{+0.08}_{-0.08}$ & ${1.64}^{+0.13}_{-0.12}$ & ${1.2}^{+0.3}_{-0.3}$ \\
+        $100$--$200\arcsec$ & ${2.3}^{+0.5}_{-0.3}$ & ${1.8}^{+0.2}_{-0.2}$ &                        & ${5.7}^{+0.4}_{-0.4}$ & ${5.3}^{+0.7}_{-0.6}$ \\
+        $200$--$300\arcsec$ & ${2.0}^{+0.3}_{-0.3}$ & ${2.3}^{+0.4}_{-0.3}$ &                        & ${4.0}^{+0.3}_{-0.2}$ & ${3.6}^{+0.4}_{-0.3}$ \\
+        $300$--$400\arcsec$ & ${2.3}^{+0.7}_{-0.5}$ & ${2.0}^{+0.6}_{-0.4}$ &                        & ${3.4}^{+0.4}_{-0.3}$ & ${2.8}^{+0.7}_{-0.5}$ \\
+        $400$--$500\arcsec$ & ${10}^{?}_{-0.6}$     & ${2.1}^{+0.5}_{-0.6}$ &                        & ${2.2}^{+1.1}_{-0.6}$ & ${2.3}^{+1.9}_{-1.0}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+% First table:
+% Compare fits with various center elemental abundances
+
+
+\begin{table*}
+    \centering
+    \caption{Varying center abundances\label{tab:annulus-varycenter}}
+    \scriptsize
+\begin{tabular}{@{}lllllllllll@{}}
+\toprule
+Fit & $n_\mathrm{H}$ & $kT$ & $\tau$
+        & O & Ne & Mg & Si & S & Fe
+        & $\chi^2_{\mt{red}}$ \\
+    & $10^{22} \unit{cm^{-2}}$ & keV & $10^{10} \unit{s\;cm^{-3}}$
+        & - & - & - & - & - & -
+        & $\chi^2 / (\mt{dof})$ \\
+\midrule
+5std    & ${2.10}^{+0.05}_{-0.05}$ & ${3.82}^{+0.64}_{-0.64}$ & ${1.57}^{+0.16}_{-0.15}$
+    &                 &                 &                          & ${1.98}^{+0.13}_{-0.16}$ & ${1.45}^{+0.29}_{-0.29}$ &
+    & 1.385 = 4603.25/3323 \\
+    % File 20160701_fiveann_row.tex
+4std    & ${2.11}^{+0.04}_{-0.07}$ & ${3.79}^{+0.55}_{-0.42}$ & ${1.56}^{+0.14}_{-0.13}$
+    &                 &                 &                          & ${1.98}^{+0.14}_{-0.13}$ & ${1.45}^{+0.30}_{-0.26}$ &
+    & 1.432 = 3581.34/2501 \\
+    % File 20160706_fourann_stock_row.tex
+
+\midrule
+
+4Mg     & ${2.15}^{+0.04}_{-0.09}$ & ${2.95}^{+0.36}_{-0.41}$ & ${1.50}^{+0.18}_{-0.17}$
+    &                 &                 & ${0.50}^{+0.08}_{-0.08}$ & ${1.63}^{+0.13}_{-0.11}$ & ${1.25}^{+0.33}_{-0.26}$ &
+    & 1.403 = 3508.26/2500 \\
+    % File 20160708_fourann_center-mg-free_ONeMgFe_row.tex
+
+4Mg,O   & ${2.10}^{+0.04}_{-0.06}$ & ${2.64}^{+0.55}_{-0.43}$ & ${1.57}^{+0.19}_{-0.18}$
+    & ${9.5}^{+1.6}_{-1.5}$ &                 & ${0.57}^{+0.09}_{-0.08}$ & ${1.86}^{+0.15}_{-0.14}$ & ${1.35}^{+0.34}_{-0.28}$ &
+    & 1.365 = 3411.25/2499 \\
+    % File 20160708_fourann_center-mg-o-free_ONeMgFe_row.tex
+
+4Mg,Ne  & ${2.14}^{+0.09}_{-0.07}$ & ${3.02}^{+0.56}_{-0.45}$ & ${1.50}^{+0.17}_{-0.17}$
+    &                 & ${1.05}^{+0.39}_{-0.26}$ & ${0.51}^{+0.10}_{-0.08}$ & ${1.66}^{+0.17}_{-0.15}$ & ${1.27}^{+0.33}_{-0.26}$ &
+    & 1.404 = 3507.97/2499 \\
+    % File 20160708_fourann_center-mg-ne-free_ONeMgFe_row.tex
+
+4Mg,O,Ne& ${2.28}^{+0.04}_{-0.03}$ & ${3.24}^{+0.56}_{-0.26}$ & ${1.50}^{+0.14}_{-0.13}$
+    & ${36}^{+18}_{-9}$ & ${4.7}^{+2.6}_{-1.0}$ & ${1.41}^{+0.64}_{-0.27}$ & ${3.68}^{+1.09}_{-0.58}$ & ${2.68}^{+0.71}_{-0.61}$ &
+    & 1.348 = 3367.95/2498 \\
+    % File 20160708_fourann_center-mg-o-ne-free_ONeMgFe_row.tex
+
+\midrule
+
+4Mg,Fe  & ${2.22}^{+0.06}_{-0.11}$ & ${3.99}^{+1.09}_{-0.47}$ & ${1.63}^{+0.16}_{-0.15}$
+    &                 &                 & ${0.67}^{+0.14}_{-0.11}$ & ${2.01}^{+0.28}_{-0.20}$ & ${1.32}^{+0.29}_{-0.24}$ & ${1.88}^{+0.48}_{-0.42}$
+    & 1.399 = 3497.19/2499 \\
+    % File 20160708_fourann_center-mg-fe-free_ONeMgFe_row.tex
+
+4Mg,O,Fe  & ${2.21}^{+0.06}_{-0.03}$ & ${4.15}^{+0.75}_{-0.57}$ & ${1.81}^{+0.13}_{-0.14}$
+    & ${32}^{+22}_{-12}$ &                 & ${1.28}^{+0.4}_{-0.2}$ & ${3.88}^{+2.2}_{-0.73}$ & ${2.19}^{+0.38}_{-0.47}$ & ${4.20}^{+2.6}_{-0.58}$
+    & 1.351 = 3374.89/2498 \\
+    % From 20160712_fourann_center-mg-o-fe-free fits, manually
+
+5Mg,Fe  & ${2.22}^{+0.06}_{-0.08}$ & ${4.0}^{+1.0}_{-0.7}$ & ${1.63}^{+0.15}_{-0.15}$
+    &                 &                 & ${0.68}^{+0.13}_{-0.11}$ & ${2.03}^{+0.24}_{-0.21}$ & ${1.33}^{+0.28}_{-0.24}$ & ${1.93}^{+0.49}_{-0.42}$
+    & 1.360 = 4517.01/3321 \\
+    % File 20160701_fiveann_center-mg-fe-free_row.tex
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
 
 
 
@@ -755,45 +867,45 @@ Basically, farther off-axis, we get more noise.
 This compounds the fact that the remnant appears to be genuinely dimmer off
 axis.
 
-\begin{table*}
-    \centering
-    \caption{Integrated remnant and X-ray background fit
-    \label{tab:fits}}
-    \begin{tabular}{@{}lrrrrrr@{}}
-        \toprule
-        Region & $n_\mathrm{H}$             & $kT$  & $\tau$   & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
-               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \TauUnits$) & (-) & (-) &  \\
-        \midrule
-        % NOTE: this is hand-edited temporarily
-%        Integrated SNR
-%            & ${2.12}^{+0.11}_{-0.08}$ % N_H
-%            & ${2.39}^{+0.20}_{-0.34}$ % kT
-%            & ${1.89}^{+0.03}_{-0.18}$ % Tau (in units 10^10)
-%            & ${3.82}^{+0.11}_{-0.23}$ % Si
-%            & ${3.37}^{+0.31}_{-0.20}$ % S
-%            % TODO -- we need to provide a norm here.
-%            & 1.215 (3768) \\  % 20160517_src_and_bkg_row.tex
-        Integrated SNR % CORRECTED AFTER ERROR RUN(!)
-            & ${2.15}^{+0.11}_{-0.08}$ % N_H
-            & ${2.29}^{+0.24}_{-0.30}$ % kT
-            & ${1.83}^{+0.}_{-0.}$ % Tau (in units 10^10)
-            & ${3.82}^{+0.}_{-0.}$ % Si
-            & ${3.37}^{+0.}_{-0.}$ % S
-            % TODO -- we need to provide a norm here.
-            & 1.215 (3768) \\  % 20160517_src_and_bkg_row.tex
-        \midrule
-        N clump & 2.86 & 0.98 & 4.99 & 4.51 & 4.11 & 1.336 (691) \\  % 20160420_src_north_clump_nH_free_row.tex
-        E lobe  & 3.34 & 1.34 & 2.77 & 3.25 & 2.07 & 0.939 (206) \\  % 20160420_src_E_lobe_nH_free_row.tex
-        SW lobe & 1.87 & 4.04 & 1.29 & 3.47 & 4.06 & 1.324 (437) \\  % 20160420_src_SW_lobe_nH_free_row.tex
-        SE dark & 2.45 & 1.01 & 4.71 & 2.17 & 1.37 & 0.958 (221) \\  % 20160420_src_SE_dark_nH_free_row.tex
-        \midrule
-        % Bad fits (!)
-        Pre ridge & 1.34 & 8.53 & 2.86 & 0.50 & 0.00 & 1.238 (25) \\  % 20160420_src_pre_ridge_nH_free_row.tex
-        Ridge         & 2.81 & 0.76 & 8.52 & 2.07 &  1.67 & 1.390 (224) \\  % 20160420_src_ridge_nH_free_row.tex
-        SE dark ridge & 2.86 & 1.11 & 0.53 & 6.00 & 10.00 & 1.103 (101) \\  % 20160420_src_SE_ridge_dark_nH_free_row.tex
-        \bottomrule
-    \end{tabular}
-\end{table*}
+%-% \begin{table*}
+%-%     \centering
+%-%     \caption{Integrated remnant and X-ray background fit
+%-%     \label{tab:fits}}
+%-%     \begin{tabular}{@{}lrrrrrr@{}}
+%-%         \toprule
+%-%         Region & $n_\mathrm{H}$             & $kT$  & $\tau$   & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+%-%                & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \TauUnits$) & (-) & (-) &  \\
+%-%         \midrule
+%-%         % NOTE: this is hand-edited temporarily
+%-% %        Integrated SNR
+%-% %            & ${2.12}^{+0.11}_{-0.08}$ % N_H
+%-% %            & ${2.39}^{+0.20}_{-0.34}$ % kT
+%-% %            & ${1.89}^{+0.03}_{-0.18}$ % Tau (in units 10^10)
+%-% %            & ${3.82}^{+0.11}_{-0.23}$ % Si
+%-% %            & ${3.37}^{+0.31}_{-0.20}$ % S
+%-% %            % TODO -- we need to provide a norm here.
+%-% %            & 1.215 (3768) \\  % 20160517_src_and_bkg_row.tex
+%-%         Integrated SNR % CORRECTED AFTER ERROR RUN(!)
+%-%             & ${2.15}^{+0.11}_{-0.08}$ % N_H
+%-%             & ${2.29}^{+0.24}_{-0.30}$ % kT
+%-%             & ${1.83}^{+0.}_{-0.}$ % Tau (in units 10^10)
+%-%             & ${3.82}^{+0.}_{-0.}$ % Si
+%-%             & ${3.37}^{+0.}_{-0.}$ % S
+%-%             % TODO -- we need to provide a norm here.
+%-%             & 1.215 (3768) \\  % 20160517_src_and_bkg_row.tex
+%-%         \midrule
+%-%         N clump & 2.86 & 0.98 & 4.99 & 4.51 & 4.11 & 1.336 (691) \\  % 20160420_src_north_clump_nH_free_row.tex
+%-%         E lobe  & 3.34 & 1.34 & 2.77 & 3.25 & 2.07 & 0.939 (206) \\  % 20160420_src_E_lobe_nH_free_row.tex
+%-%         SW lobe & 1.87 & 4.04 & 1.29 & 3.47 & 4.06 & 1.324 (437) \\  % 20160420_src_SW_lobe_nH_free_row.tex
+%-%         SE dark & 2.45 & 1.01 & 4.71 & 2.17 & 1.37 & 0.958 (221) \\  % 20160420_src_SE_dark_nH_free_row.tex
+%-%         \midrule
+%-%         % Bad fits (!)
+%-%         Pre ridge & 1.34 & 8.53 & 2.86 & 0.50 & 0.00 & 1.238 (25) \\  % 20160420_src_pre_ridge_nH_free_row.tex
+%-%         Ridge         & 2.81 & 0.76 & 8.52 & 2.07 &  1.67 & 1.390 (224) \\  % 20160420_src_ridge_nH_free_row.tex
+%-%         SE dark ridge & 2.86 & 1.11 & 0.53 & 6.00 & 10.00 & 1.103 (101) \\  % 20160420_src_SE_ridge_dark_nH_free_row.tex
+%-%         \bottomrule
+%-%     \end{tabular}
+%-% \end{table*}
 
 %\begin{figure*}[]
 %    \plotone{fig/fig_src_and_bkg_fit_temp.pdf}
@@ -824,10 +936,13 @@ For G309.2-0.6, the \textit{Swift} galactic $\nH$ calculator implementation of
 Dust scattering can bias X-ray spectrum fits of absorption alone to
 overestimate the absorbing column by $\abt25\%$ \citep{corrales2016}.
 % TODO -- possibly pull out their model and use it... cite randall2016 as well if needed
-Our absorption column estimate varies strongly with our model assumptions and
-spectrum extraction regions (Table~\ref{tab:fits}), but a 25\% overestimate of
-column density is consistent with our integrated remnant fit column of $2.1
-\nHUnits$.
+%Our absorption column estimate varies strongly with our model assumptions and
+%spectrum extraction regions (Table~\ref{tab:fits}), but a 25\% overestimate of
+%column density is consistent with our integrated remnant fit column of $2.1
+%\nHUnits$.
+% We're converging towards more stable values after having adequately
+% characterized the X-ray background, added correct background
+% scalings,incorporated power law component, etc...
 The \textit{spectrum fit value} of $\nH$ may also be estimated from empirical
 linear regression against optical extinction $\AV$ \citep[e.g.,][]{foight2015}
 -- which benefits from a strong sampling of sources within the galactic plane,
@@ -873,25 +988,6 @@ be taken as evidence that the progenitor cannot have ionized "too much" stuff.
 But, the absence of Balmer shocks doesn't tell us as much.
 The shock could be weak, the density could be low, the material could be fully
 ionized.
-
-\begin{table*}
-    \centering
-    \caption{G309.2-0.6 -- annulus fits}
-    \begin{tabular}{@{}lrrrrrr@{}}
-        \toprule
-        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
-               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
-        \midrule
-        $0$--$100\arcsec$ & 1.59 & 9.52 & 1.68e+10 & 2.34 & 2.01 & 1.893 (356) \\  % File ann_000_100_row.tex
-        $100$--$200\arcsec$ & 2.17 & 1.68 & 2.24e+10 & 5.96 & 5.56 & 1.189 (559) \\  % File ann_100_200_row.tex
-        $200$--$300\arcsec$ & 2.86 & 0.82 & 7.33e+10 & 3.31 & 3.21 & 1.268 (792) \\  % File ann_200_300_row.tex
-        $300$--$400\arcsec$ & 2.59 & 0.73 & 1.03e+11 & 4.01 & 3.76 & 1.276 (799) \\  % File ann_300_400_row.tex
-        $400$--$500\arcsec$ & 4.77 & 0.40 & 8.90e+10 & 4.34 & 10.99 & 1.186 (822) \\  % File ann_400_500_row.tex
-        \midrule
-        $0$--$100\arcsec$ (ONeMg) & 1.59 & 6.22 & 1.72e+10 & 1.97 & 1.42 & 1.543 (353) \\  % File ann_000_100_ONeMg_row.tex
-        \bottomrule
-    \end{tabular}
-\end{table*}
 
 
 NOTE: SW lobe and ridge both show weird shifts in PN spectral lines (Si, S)
@@ -1162,89 +1258,89 @@ Results in Table~\ref{table:backscal-hack}.
 %    \end{tabular}
 %\end{table*}
 
-\begin{table*}
-    \centering
-    \caption{sub-region fits, varying $n_H$}
-    \begin{tabular}{@{}lrrrrrr@{}}
-        \toprule
-        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
-               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
-        \midrule
-        north clump & 1.50 & 8.50 & 1.81e+10 & 8.76 & 8.92 & 1.933 (692) \\  % File 20160420_src_north_clump_nH_1.5_row.tex
-        north clump & 2.00 & 2.42 & 2.08e+10 & 6.52 & 5.95 & 1.623 (692) \\  % File 20160420_src_north_clump_nH_2.0_row.tex
-        north clump & 2.50 & 1.33 & 3.23e+10 & 5.15 & 4.59 & 1.361 (692) \\  % File 20160420_src_north_clump_nH_2.5_row.tex
-        north clump & 3.00 & 0.91 & 5.46e+10 & 4.27 & 3.98 & 1.338 (692) \\  % File 20160420_src_north_clump_nH_3.0_row.tex
-        \midrule
-        E lobe & 1.50 & 8.62 & 2.02e+10 & 9.71 & 7.85 & 1.331 (207) \\  % File 20160420_src_E_lobe_nH_1.5_row.tex
-        E lobe & 2.00 & 5.68 & 1.89e+10 & 5.80 & 4.25 & 1.086 (207) \\  % File 20160420_src_E_lobe_nH_2.0_row.tex
-        E lobe & 2.50 & 2.75 & 2.03e+10 & 4.53 & 2.97 & 0.979 (207) \\  % File 20160420_src_E_lobe_nH_2.5_row.tex
-        E lobe & 3.00 & 1.73 & 2.46e+10 & 3.65 & 2.30 & 0.941 (207) \\  % File 20160420_src_E_lobe_nH_3.0_row.tex
-        \midrule
-        SW lobe & 1.50 & 9.21 & 1.44e+10 & 3.98 & 4.79 & 1.390 (438) \\  % File 20160420_src_SW_lobe_nH_1.5_row.tex
-        SW lobe & 2.00 & 3.09 & 1.27e+10 & 3.40 & 4.11 & 1.326 (438) \\  % File 20160420_src_SW_lobe_nH_2.0_row.tex
-        SW lobe & 2.50 & 1.64 & 1.28e+10 & 3.06 & 4.50 & 1.403 (438) \\  % File 20160420_src_SW_lobe_nH_2.5_row.tex
-        SW lobe & 3.00 & 1.13 & 1.30e+10 & 2.93 & 5.32 & 1.522 (438) \\  % File 20160420_src_SW_lobe_nH_3.0_row.tex
-        \midrule
-        SE dark & 1.50 & 5.47 & 1.69e+10 & 3.26 & 2.39 & 1.079 (222) \\  % File 20160420_src_SE_dark_nH_1.5_row.tex
-        SE dark & 2.00 & 1.79 & 2.43e+10 & 2.54 & 1.56 & 0.996 (222) \\  % File 20160420_src_SE_dark_nH_2.0_row.tex
-        SE dark & 2.50 & 1.00 & 4.60e+10 & 2.10 & 1.32 & 0.956 (222) \\  % File 20160420_src_SE_dark_nH_2.5_row.tex
-        SE dark & 3.00 & 0.70 & 7.14e+10 & 1.83 & 1.35 & 0.985 (222) \\  % File 20160420_src_SE_dark_nH_3.0_row.tex
-        \midrule
-        ridge & 1.50 & 3.46 & 2.13e+10 & 4.58 & 3.22 & 2.476 (225) \\  % File 20160420_src_ridge_nH_1.5_row.tex
-        ridge & 2.00 & 1.64 & 2.88e+10 & 3.03 & 2.13 & 1.764 (225) \\  % File 20160420_src_ridge_nH_2.0_row.tex
-        ridge & 2.50 & 0.96 & 5.67e+10 & 2.33 & 1.74 & 1.504 (225) \\  % File 20160420_src_ridge_nH_2.5_row.tex
-        ridge & 3.00 & 0.66 & 1.03e+11 & 1.96 & 1.70 & 1.370 (225) \\  % File 20160420_src_ridge_nH_3.0_row.tex
-        \midrule
-        % NOTE: may need to re-do these fits
-        % (1) without SNR component, (2) with SNR, Si,S fixed
-        SE dark ridge & 1.50 & 2.26 & 8.48e+11 & 1.36 & 0.45 & 1.252 (102) \\  % File 20160420_src_SE_ridge_dark_nH_1.5_row.tex
-        SE dark ridge & 2.00 & 10.00 & 7.39e+09 & 3.95 & 10.00 & 1.081 (102) \\  % File 20160420_src_SE_ridge_dark_nH_2.0_row.tex
-        SE dark ridge & 2.50 & 3.48 & 6.78e+09 & 3.68 & 6.48 & 1.080 (102) \\  % File 20160420_src_SE_ridge_dark_nH_2.5_row.tex
-        SE dark ridge & 3.00 & 1.39 & 7.11e+09 & 3.85 & 7.64 & 1.073 (102) \\  % File 20160420_src_SE_ridge_dark_nH_3.0_row.tex
-        %SE dark ridge & 1.50 & 1.73 & 1.21e+11 & 1.00 & 1.00 & 1.344 (105) \\  % File src_SE_ridge_dark_nH-1.5_row.tex
-        %SE dark ridge & 2.00 & 1.36 & 6.70e+10 & 1.00 & 1.00 & 1.284 (105) \\  % File src_SE_ridge_dark_nH-2.0_row.tex
-        %SE dark ridge & 2.50 & 0.78 & 2.51e+11 & 1.00 & 1.00 & 1.232 (105) \\  % File src_SE_ridge_dark_nH-2.5_row.tex
-        %SE dark ridge & 3.00 & 0.79 & 5.14e+10 & 1.00 & 1.00 & 1.196 (105) \\  % File src_SE_ridge_dark_nH-3.0_row.tex
-        \bottomrule
-    \end{tabular}
-\end{table*}
+%\begin{table*}
+%    \centering
+%    \caption{sub-region fits, varying $n_H$}
+%    \begin{tabular}{@{}lrrrrrr@{}}
+%        \toprule
+%        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+%               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
+%        \midrule
+%        north clump & 1.50 & 8.50 & 1.81e+10 & 8.76 & 8.92 & 1.933 (692) \\  % File 20160420_src_north_clump_nH_1.5_row.tex
+%        north clump & 2.00 & 2.42 & 2.08e+10 & 6.52 & 5.95 & 1.623 (692) \\  % File 20160420_src_north_clump_nH_2.0_row.tex
+%        north clump & 2.50 & 1.33 & 3.23e+10 & 5.15 & 4.59 & 1.361 (692) \\  % File 20160420_src_north_clump_nH_2.5_row.tex
+%        north clump & 3.00 & 0.91 & 5.46e+10 & 4.27 & 3.98 & 1.338 (692) \\  % File 20160420_src_north_clump_nH_3.0_row.tex
+%        \midrule
+%        E lobe & 1.50 & 8.62 & 2.02e+10 & 9.71 & 7.85 & 1.331 (207) \\  % File 20160420_src_E_lobe_nH_1.5_row.tex
+%        E lobe & 2.00 & 5.68 & 1.89e+10 & 5.80 & 4.25 & 1.086 (207) \\  % File 20160420_src_E_lobe_nH_2.0_row.tex
+%        E lobe & 2.50 & 2.75 & 2.03e+10 & 4.53 & 2.97 & 0.979 (207) \\  % File 20160420_src_E_lobe_nH_2.5_row.tex
+%        E lobe & 3.00 & 1.73 & 2.46e+10 & 3.65 & 2.30 & 0.941 (207) \\  % File 20160420_src_E_lobe_nH_3.0_row.tex
+%        \midrule
+%        SW lobe & 1.50 & 9.21 & 1.44e+10 & 3.98 & 4.79 & 1.390 (438) \\  % File 20160420_src_SW_lobe_nH_1.5_row.tex
+%        SW lobe & 2.00 & 3.09 & 1.27e+10 & 3.40 & 4.11 & 1.326 (438) \\  % File 20160420_src_SW_lobe_nH_2.0_row.tex
+%        SW lobe & 2.50 & 1.64 & 1.28e+10 & 3.06 & 4.50 & 1.403 (438) \\  % File 20160420_src_SW_lobe_nH_2.5_row.tex
+%        SW lobe & 3.00 & 1.13 & 1.30e+10 & 2.93 & 5.32 & 1.522 (438) \\  % File 20160420_src_SW_lobe_nH_3.0_row.tex
+%        \midrule
+%        SE dark & 1.50 & 5.47 & 1.69e+10 & 3.26 & 2.39 & 1.079 (222) \\  % File 20160420_src_SE_dark_nH_1.5_row.tex
+%        SE dark & 2.00 & 1.79 & 2.43e+10 & 2.54 & 1.56 & 0.996 (222) \\  % File 20160420_src_SE_dark_nH_2.0_row.tex
+%        SE dark & 2.50 & 1.00 & 4.60e+10 & 2.10 & 1.32 & 0.956 (222) \\  % File 20160420_src_SE_dark_nH_2.5_row.tex
+%        SE dark & 3.00 & 0.70 & 7.14e+10 & 1.83 & 1.35 & 0.985 (222) \\  % File 20160420_src_SE_dark_nH_3.0_row.tex
+%        \midrule
+%        ridge & 1.50 & 3.46 & 2.13e+10 & 4.58 & 3.22 & 2.476 (225) \\  % File 20160420_src_ridge_nH_1.5_row.tex
+%        ridge & 2.00 & 1.64 & 2.88e+10 & 3.03 & 2.13 & 1.764 (225) \\  % File 20160420_src_ridge_nH_2.0_row.tex
+%        ridge & 2.50 & 0.96 & 5.67e+10 & 2.33 & 1.74 & 1.504 (225) \\  % File 20160420_src_ridge_nH_2.5_row.tex
+%        ridge & 3.00 & 0.66 & 1.03e+11 & 1.96 & 1.70 & 1.370 (225) \\  % File 20160420_src_ridge_nH_3.0_row.tex
+%        \midrule
+%        % NOTE: may need to re-do these fits
+%        % (1) without SNR component, (2) with SNR, Si,S fixed
+%        SE dark ridge & 1.50 & 2.26 & 8.48e+11 & 1.36 & 0.45 & 1.252 (102) \\  % File 20160420_src_SE_ridge_dark_nH_1.5_row.tex
+%        SE dark ridge & 2.00 & 10.00 & 7.39e+09 & 3.95 & 10.00 & 1.081 (102) \\  % File 20160420_src_SE_ridge_dark_nH_2.0_row.tex
+%        SE dark ridge & 2.50 & 3.48 & 6.78e+09 & 3.68 & 6.48 & 1.080 (102) \\  % File 20160420_src_SE_ridge_dark_nH_2.5_row.tex
+%        SE dark ridge & 3.00 & 1.39 & 7.11e+09 & 3.85 & 7.64 & 1.073 (102) \\  % File 20160420_src_SE_ridge_dark_nH_3.0_row.tex
+%        %SE dark ridge & 1.50 & 1.73 & 1.21e+11 & 1.00 & 1.00 & 1.344 (105) \\  % File src_SE_ridge_dark_nH-1.5_row.tex
+%        %SE dark ridge & 2.00 & 1.36 & 6.70e+10 & 1.00 & 1.00 & 1.284 (105) \\  % File src_SE_ridge_dark_nH-2.0_row.tex
+%        %SE dark ridge & 2.50 & 0.78 & 2.51e+11 & 1.00 & 1.00 & 1.232 (105) \\  % File src_SE_ridge_dark_nH-2.5_row.tex
+%        %SE dark ridge & 3.00 & 0.79 & 5.14e+10 & 1.00 & 1.00 & 1.196 (105) \\  % File src_SE_ridge_dark_nH-3.0_row.tex
+%        \bottomrule
+%    \end{tabular}
+%\end{table*}
 
-\begin{table*}
-    \centering
-    \caption{Annulus fits with varying $n_H$}
-    \begin{tabular}{@{}lrrrrrr@{}}
-        \toprule
-        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
-               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
-        \midrule
-        000--100$\arcsec$ & 1.50 &10.00 & 1.75e+10 & 2.51 & 2.15 & 2.184 (352) \\  % File 20160420_ann_000_100_nH_1.5_row.tex
-        000--100$\arcsec$ & 2.00 & 4.55 & 1.59e+10 & 2.04 & 1.53 & 2.338 (352) \\  % File 20160420_ann_000_100_nH_2.0_row.tex
-        000--100$\arcsec$ & 2.50 & 2.43 & 1.58e+10 & 1.77 & 1.25 & 2.884 (352) \\  % File 20160420_ann_000_100_nH_2.5_row.tex
-        000--100$\arcsec$ & 3.00 & 1.58 & 1.78e+10 & 1.57 & 1.11 & 3.479 (352) \\  % File 20160420_ann_000_100_nH_3.0_row.tex
-        \midrule
-        100--200$\arcsec$ & 1.50 & 8.47 & 1.67e+10 & 7.56 & 7.97 & 1.375 (559) \\  % File 20160420_ann_100_200_nH_1.5_row.tex
-        100--200$\arcsec$ & 2.00 & 2.83 & 1.72e+10 & 5.96 & 5.64 & 1.196 (559) \\  % File 20160420_ann_100_200_nH_2.0_row.tex
-        100--200$\arcsec$ & 2.50 & 1.58 & 2.14e+10 & 4.93 & 4.63 & 1.210 (559) \\  % File 20160420_ann_100_200_nH_2.5_row.tex
-        100--200$\arcsec$ & 3.00 & 1.04 & 2.85e+10 & 4.29 & 4.21 & 1.303 (559) \\  % File 20160420_ann_100_200_nH_3.0_row.tex
-        \midrule
-        200--300$\arcsec$ & 1.50 & 6.67 & 1.84e+10 & 5.98 & 5.85 & 1.742 (792) \\  % File 20160420_ann_200_300_nH_1.5_row.tex
-        200--300$\arcsec$ & 2.00 & 2.39 & 2.12e+10 & 4.35 & 3.92 & 1.412 (792) \\  % File 20160420_ann_200_300_nH_2.0_row.tex
-        200--300$\arcsec$ & 2.50 & 1.37 & 3.09e+10 & 3.41 & 3.03 & 1.284 (792) \\  % File 20160420_ann_200_300_nH_2.5_row.tex
-        200--300$\arcsec$ & 3.00 & 0.91 & 5.39e+10 & 2.84 & 2.65 & 1.280 (792) \\  % File 20160420_ann_200_300_nH_3.0_row.tex
-        \midrule
-        300--400$\arcsec$ & 1.50 & 8.59 & 1.82e+10 & 4.57 & 4.19 & 1.255 (799) \\  % File 20160420_ann_300_400_nH_1.5_row.tex
-        300--400$\arcsec$ & 2.00 & 2.95 & 1.87e+10 & 3.56 & 2.98 & 1.202 (799) \\  % File 20160420_ann_300_400_nH_2.0_row.tex
-        300--400$\arcsec$ & 2.50 & 1.61 & 2.31e+10 & 2.92 & 2.49 & 1.201 (799) \\  % File 20160420_ann_300_400_nH_2.5_row.tex
-        300--400$\arcsec$ & 3.00 & 1.00 & 3.86e+10 & 2.56 & 2.19 & 1.220 (799) \\  % File 20160420_ann_300_400_nH_3.0_row.tex
-        \midrule
-        400--500$\arcsec$ & 1.50 & 10.00 & 2.20e+10 & 2.07 & 2.50 & 1.254 (822) \\  % File 20160420_ann_400_500_nH_1.5_row.tex
-        400--500$\arcsec$ & 2.00 &  4.34 & 4.34e+13 & 0.00 & 0.00 & 1.267 (822) \\  % File 20160420_ann_400_500_nH_2.0_row.tex
-            % This fit obviously failed
-        400--500$\arcsec$ & 2.50 & 10.00 & 1.53e+10 & 1.34 & 2.16 & 1.184 (822) \\  % File 20160420_ann_400_500_nH_2.5_row.tex
-        400--500$\arcsec$ & 3.00 & 10.00 & 1.32e+10 & 1.50 & 2.48 & 1.171 (822) \\  % File 20160420_ann_400_500_nH_3.0_row.tex
-        \bottomrule
-    \end{tabular}
-\end{table*}
+%\begin{table*}
+%    \centering
+%    \caption{Annulus fits with varying $n_H$}
+%    \begin{tabular}{@{}lrrrrrr@{}}
+%        \toprule
+%        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
+%               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
+%        \midrule
+%        000--100$\arcsec$ & 1.50 &10.00 & 1.75e+10 & 2.51 & 2.15 & 2.184 (352) \\  % File 20160420_ann_000_100_nH_1.5_row.tex
+%        000--100$\arcsec$ & 2.00 & 4.55 & 1.59e+10 & 2.04 & 1.53 & 2.338 (352) \\  % File 20160420_ann_000_100_nH_2.0_row.tex
+%        000--100$\arcsec$ & 2.50 & 2.43 & 1.58e+10 & 1.77 & 1.25 & 2.884 (352) \\  % File 20160420_ann_000_100_nH_2.5_row.tex
+%        000--100$\arcsec$ & 3.00 & 1.58 & 1.78e+10 & 1.57 & 1.11 & 3.479 (352) \\  % File 20160420_ann_000_100_nH_3.0_row.tex
+%        \midrule
+%        100--200$\arcsec$ & 1.50 & 8.47 & 1.67e+10 & 7.56 & 7.97 & 1.375 (559) \\  % File 20160420_ann_100_200_nH_1.5_row.tex
+%        100--200$\arcsec$ & 2.00 & 2.83 & 1.72e+10 & 5.96 & 5.64 & 1.196 (559) \\  % File 20160420_ann_100_200_nH_2.0_row.tex
+%        100--200$\arcsec$ & 2.50 & 1.58 & 2.14e+10 & 4.93 & 4.63 & 1.210 (559) \\  % File 20160420_ann_100_200_nH_2.5_row.tex
+%        100--200$\arcsec$ & 3.00 & 1.04 & 2.85e+10 & 4.29 & 4.21 & 1.303 (559) \\  % File 20160420_ann_100_200_nH_3.0_row.tex
+%        \midrule
+%        200--300$\arcsec$ & 1.50 & 6.67 & 1.84e+10 & 5.98 & 5.85 & 1.742 (792) \\  % File 20160420_ann_200_300_nH_1.5_row.tex
+%        200--300$\arcsec$ & 2.00 & 2.39 & 2.12e+10 & 4.35 & 3.92 & 1.412 (792) \\  % File 20160420_ann_200_300_nH_2.0_row.tex
+%        200--300$\arcsec$ & 2.50 & 1.37 & 3.09e+10 & 3.41 & 3.03 & 1.284 (792) \\  % File 20160420_ann_200_300_nH_2.5_row.tex
+%        200--300$\arcsec$ & 3.00 & 0.91 & 5.39e+10 & 2.84 & 2.65 & 1.280 (792) \\  % File 20160420_ann_200_300_nH_3.0_row.tex
+%        \midrule
+%        300--400$\arcsec$ & 1.50 & 8.59 & 1.82e+10 & 4.57 & 4.19 & 1.255 (799) \\  % File 20160420_ann_300_400_nH_1.5_row.tex
+%        300--400$\arcsec$ & 2.00 & 2.95 & 1.87e+10 & 3.56 & 2.98 & 1.202 (799) \\  % File 20160420_ann_300_400_nH_2.0_row.tex
+%        300--400$\arcsec$ & 2.50 & 1.61 & 2.31e+10 & 2.92 & 2.49 & 1.201 (799) \\  % File 20160420_ann_300_400_nH_2.5_row.tex
+%        300--400$\arcsec$ & 3.00 & 1.00 & 3.86e+10 & 2.56 & 2.19 & 1.220 (799) \\  % File 20160420_ann_300_400_nH_3.0_row.tex
+%        \midrule
+%        400--500$\arcsec$ & 1.50 & 10.00 & 2.20e+10 & 2.07 & 2.50 & 1.254 (822) \\  % File 20160420_ann_400_500_nH_1.5_row.tex
+%        400--500$\arcsec$ & 2.00 &  4.34 & 4.34e+13 & 0.00 & 0.00 & 1.267 (822) \\  % File 20160420_ann_400_500_nH_2.0_row.tex
+%            % This fit obviously failed
+%        400--500$\arcsec$ & 2.50 & 10.00 & 1.53e+10 & 1.34 & 2.16 & 1.184 (822) \\  % File 20160420_ann_400_500_nH_2.5_row.tex
+%        400--500$\arcsec$ & 3.00 & 10.00 & 1.32e+10 & 1.50 & 2.48 & 1.171 (822) \\  % File 20160420_ann_400_500_nH_3.0_row.tex
+%        \bottomrule
+%    \end{tabular}
+%\end{table*}
 
 
 \end{document}
