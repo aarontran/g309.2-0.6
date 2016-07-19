@@ -9965,8 +9965,8 @@ Further, check new fiveann "stock" and fourann "stock" fits.
 
 
 
-Saturday--Tuesday 2016 July 5-8 -- four annulus, varied central abundances
-==========================================================================
+Saturday--Tuesday 2016 July 10-12 -- four annulus, varied central abundances
+============================================================================
 
 Review results
 --------------
@@ -10016,12 +10016,24 @@ the fact, e.g., if I want to start using LaTeX deluxetable.
 
 This makes life a lot easier.
 
+[x] Remove tables from fitting code; refactor standard output dumps
+
+[x] Test fits with new utility code
+
 
 More fits to explore parameter space
 ------------------------------------
-* Run a fit with O, Mg, Fe free.
+* Joint src/bkg fit with Mg free: `20160712_src_bkg_mg`
+* Four annuli fit with central O, Mg, Fe free: `20160713_fourann_center-mg-o-fe-free`
+
+
+Tuesday 2016 July 19 -- compiling results
+=========================================
+
 * Run a fit with Mg free in all 4 annuli.
+    (not yet implemented)
 * Run fits for various subregions
+    (not yet implemented)
 
 Coming up -- continue incorporating into text.
 Compute filling factors...
@@ -10032,8 +10044,10 @@ Address some systematics
 Standing questions and TODOs
 ============================
 
-TODO that's been nagging at me for 1-3 years: figure out bayesian statistics
-and MCMC sampling.
+TODO: FWC fit code needs to be updated to work with new XSPEC utils.
+    (ff_fit.py, g309_models.py)
+    basically, when I next regenerate spectra from scratch, this shall be
+    addressed.
 
 Cash statistic...
 

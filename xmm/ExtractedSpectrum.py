@@ -83,4 +83,4 @@ class ExtractedSpectrum:
 
     def fwc_fit(self):
         fjson = self.repro_dir() + "/{exp}-{reg}-ff-key-fit.json".format(exp=self.exp, reg=self.reg)
-        return xs_utils.load_fit_dict(fjson)
+        return xs_utils.load_dict(fjson)

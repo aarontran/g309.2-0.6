@@ -91,7 +91,7 @@ def freeze_component(comp):
 
 def par_num(model, par):
     """Get XSPEC parameter number _within a given model_.
-    Used for parameter linking.
+    Used for parameter linking, error runs
 
     An XSPEC SOURCE comprises distinct models for each datagroup:
     > Model sp:constant<1>*powerlaw<2> Source No.: 2   Active/On
