@@ -10030,6 +10030,12 @@ More fits to explore parameter space
 Tuesday 2016 July 19 -- compiling results
 =========================================
 
+Misc: added git filter nbstripout
+(by [kynan, minrk](https://github.com/kynan/nbstripout))
+to assist versioning of ipynb files.
+
+
+
 * Run a fit with Mg free in all 4 annuli.
     (not yet implemented)
 * Run fits for various subregions
