@@ -41,7 +41,6 @@ from __future__ import division
 
 from subprocess import call
 from datetime import datetime
-import numpy as np
 import os
 import sys
 import tempfile
@@ -156,6 +155,7 @@ def pdf(fname, cmd="ldata delchi"):
 
 
 def clear():
+    """Reset XSPEC session (unload all data and models)"""
     xs.AllData.clear()
     xs.AllModels.clear()
 
@@ -202,6 +202,26 @@ def set_energy_range(all_extrs):
             extr.spec.ignore("**-0.3, 11.0-**")
         if extr.instr == "pn":
             extr.spec.ignore("**-0.4, 11.0-**")
+
+def error_str(model, comp, par_names):
+    """Construct an error string"""
+    pars = [comp.__getattribute__(par_name) for par_name in par_names]
+    par_nums = ["{:d}".format(xs_utils.par_num(model, par)) for par in pars]
+    err_str = model.name + ":" + ",".join(par_nums)
+    return err_str
+
+def append_error_str(err_str, model, comp, par_names):
+    """Append more stuff to an error string
+    WARNING: model must be the same as for the original error string.
+    (check for this TBD)
+
+    This provides a crude mechanism to construct error strings for different
+    components in a given model
+    """
+    for p_name in par_names:
+        par = comp.__getattribute__(p_name)
+        err_str = err_str + ",{:d}".format(xs_utils.par_num(model, par))
+    return err_str
 
 
 ############################
@@ -476,7 +496,7 @@ def src_powerlaw(output, region='src', solar=False, error=False):
 
 
 def joint_src_bkg_fit(output, free_elements=None, error=False,
-                      backscal_ratio_hack=None):
+                      error_rerun=False, backscal_ratio_hack=None):
     """
     Fit source + bkg regions, allowing XRB to float
     backscal_ratio_hack = arbitrary adjustment to 0551000201 MOS1S001
@@ -568,6 +588,11 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
             snr_err_str = snr_err_str + ",{:d}".format(xs_utils.par_num(snr, comp))
         xs.Fit.error(snr_err_str)
 
+        if error_rerun:
+            print "Second error run:", datetime.now()
+            xs.Fit.error(xrb_err_str)
+            xs.Fit.error(snr_err_str)
+
         print "Error run stop:", datetime.now()
         xs.Xset.closeLog()
 
@@ -578,7 +603,8 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
 
 
 def annulus_fit(output, error=False, error_rerun=False,
-                free_center_elements=None, four_ann=False):
+                free_center_elements=None, free_all_elements=None,
+                four_ann=False):
     """
     Fit five annuli simultaneously...
 
@@ -587,10 +613,12 @@ def annulus_fit(output, error=False, error_rerun=False,
         error = run error commands?
         error_rerun = run error commands 2nd time?
         four_ann = fit only 4 instead of 5 annuli?
-        free_center_elements = (case-sensitive) elements to free in central
-            circle (0-100 arcsec).
+        free_all_elements = (case-sensitive) elements to free in all annuli.
             Element names much match XSPEC parameter names.
-            Si, S already free by default.
+            Default: Si, S free
+        free_center_elements = (case-sensitive) additional elements to free in
+            central circle (0-100 arcsec)
+            Element names much match XSPEC parameter names.
     Output: n/a
         loads of stuff dumped to output*
         XSPEC session left in fitted state
@@ -598,6 +626,8 @@ def annulus_fit(output, error=False, error_rerun=False,
 
     if free_center_elements is None:
         free_center_elements = []
+    if free_all_elements is None:
+        free_all_elements = ['Si', 'S']
 
     regs = ["ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400", "ann_400_500"]
     if four_ann:
@@ -608,7 +638,6 @@ def annulus_fit(output, error=False, error_rerun=False,
         set_energy_range(out[reg])
 
     xs.AllData.ignore("bad")
-
     # TODO really weird bug -- regenerate spectrum and see if it persists
     for extr in out['ann_000_100']:
         extr.spec.ignore("10.0-**")  # 10-11 keV range messed up
@@ -632,9 +661,11 @@ def annulus_fit(output, error=False, error_rerun=False,
         ring.vnei.Tau.frozen = False
     xs.Fit.perform()
 
+    # Default: thaw Si,S in all annuli
     for ring in rings:
-        ring.vnei.Si.frozen = False
-        ring.vnei.S.frozen = False
+        for elem in free_all_elements:
+            comp = ring.vnei.__getattribute__(elem)
+            comp.frozen = False
 
     for elem in free_center_elements:
         # rings[0] to get center region only
@@ -654,30 +685,25 @@ def annulus_fit(output, error=False, error_rerun=False,
 
         print "First error run:", datetime.now()
         for reg, ring in zip(regs, rings):
-            xs.Fit.error("snr_{:s}:{:d},{:d},{:d},{:d}".format(reg,
-                            xs_utils.par_num(ring, ring.vnei.kT),
-                            xs_utils.par_num(ring, ring.vnei.Tau),
-                            xs_utils.par_num(ring, ring.vnei.Si),
-                            xs_utils.par_num(ring, ring.vnei.S))
-                         )
+            ring_str = error_str(ring, ring.vnei,
+                                 ['kT', 'Tau', 'norm'] + free_all_elements)
+            print "Running", reg, "errors:", ring_str
+            xs.Fit.error(ring_str)
             print reg, "errors complete:", datetime.now()  # Will not appear in error log
 
-        center_str = "snr_ann_000_100:{:d}".format(xs_utils.par_num(rings[0], rings[0].tbnew_gas.nH))
-        for elem in free_center_elements:
-            comp = rings[0].vnei.__getattribute__(elem)
-            center_str = center_str + ",{:d}".format(xs_utils.par_num(rings[0], comp))
+        center_str = error_str(rings[0], rings[0].tbnew_gas, ['nH'])
+        center_str = append_error_str(center_str, rings[0], rings[0].vnei,
+                        free_center_elements)
         print "Running center errors:", center_str
         xs.Fit.error(center_str)
 
         if error_rerun:
             print "Second error run:", datetime.now()
             for reg, ring in zip(regs, rings):
-                xs.Fit.error("snr_{:s}:{:d},{:d},{:d},{:d}".format(reg,
-                                xs_utils.par_num(ring, ring.vnei.kT),
-                                xs_utils.par_num(ring, ring.vnei.Tau),
-                                xs_utils.par_num(ring, ring.vnei.Si),
-                                xs_utils.par_num(ring, ring.vnei.S))
-                             )
+                ring_str = error_str(ring, ring.vnei,
+                                     ['kT', 'Tau', 'norm'] + free_all_elements)
+                print "Running", reg, "errors:", ring_str
+                xs.Fit.error(ring_str)
                 print reg, "errors complete:", datetime.now()  # Will not appear in error log
             xs.Fit.error(center_str)  # Take advantage of previous work
 
@@ -780,6 +806,17 @@ if __name__ == '__main__':
     # Time: 1.5 hrs on statler
     # Time without error: ~2 minutes (4 minutes on treble)
 
+    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_o-ne-mg-fe",
+              free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], error=True,
+              error_rerun=True)
+    # Time: 4.5 hrs on statler (one error run only)
+    # Time: ... on statler (with error rerun)
+
+    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_o-ne-mg-ar-ca-fe-ni",
+            free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe', 'Ni'],
+            error=True, error_rerun=True)
+    # Time: ... on statler (running now)
+
 
     # Annulus fits, all varieties
     # ---------------------------
@@ -799,11 +836,11 @@ if __name__ == '__main__':
     print_model(ring, "results_spec/20160701_fiveann_snr_ann_000_100.txt")
     clear()
     # Time: 2 days, 17 hrs on treble
-    #   + extra 5 hours for error_rerun redo
-    # (would roughly double to 4 days with error_rerun)
+    #   + extra 5 hours for center error rerun
+    # (would roughly double to 4 days with full error_rerun)
 
-    stopwatch(five_annulus_fit, "results_spec/2016xxxx_fiveann_center-mg-free",
-              error=True, error_rerun=True, free_center_mg=True)
+    stopwatch(annulus_fit, "results_spec/2016xxxx_fiveann_center-mg-free",
+              error=True, error_rerun=True, free_center_elements=['Mg'])
     clear()
     # WARNING - needs to be regenerated.
 
@@ -813,13 +850,19 @@ if __name__ == '__main__':
 
     # FOUR ANNULUS FITS
 
-    stopwatch(annulus_fit, "results_spec/20160706_fourann_stock", four_ann=True, error=True, error_rerun=True)
+    stopwatch(annulus_fit, "results_spec/20160725_fourann_stock", four_ann=True, error=True, error_rerun=True)
     clear()
-    # Time: 1 day, 19.5 hrs on treble
+    # Time: 1 day, 19.5 hrs on treble (with error rerun)
+    # Time: ... on cooper (running now)
 
-    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-free", four_ann=True, free_center_elements=["Mg"], error=True, error_rerun=True)
+    stopwatch(annulus_fit, "results_spec/20160725_fourann_all-mg-free", four_ann=True, free_all_elements=["Mg", "Si", "S"], error=True, error_rerun=True)
+    clear()
+    # Time: ... on cooper (running now)
+
+    stopwatch(annulus_fit, "results_spec/20160725_fourann_center-mg-free", four_ann=True, free_center_elements=["Mg"], error=True, error_rerun=True)
     clear()
     # Time: 2 days, 14 hrs on treble (37 minutes without error run)
+    # Time: ... on statler (running now)
 
     stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-ne-free", four_ann=True, free_center_elements=["Mg", "Ne"], error=True, error_rerun=True)
     clear()
