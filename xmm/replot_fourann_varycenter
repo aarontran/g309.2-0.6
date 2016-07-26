@@ -31,9 +31,11 @@ for ((i=0;i<${#nums[@]};++i)); do
                   "$XMM_PATH/results_spec/20160708_fourann_center-mg-free_spec_${num}.dat" \
                   "$XMM_PATH/results_spec/20160708_fourann_center-mg-o-free_spec_${num}.dat" \
                   "$XMM_PATH/results_spec/20160708_fourann_center-mg-ne-free_spec_${num}.dat" \
-                  "$XMM_PATH/results_spec/20160708_fourann_center-mg-o-ne-free_spec_${num}.dat" \
                   "$XMM_PATH/results_spec/20160708_fourann_center-mg-fe-free_spec_${num}.dat" \
+                  "$XMM_PATH/results_spec/20160708_fourann_center-mg-o-ne-free_spec_${num}.dat" \
+                  "$XMM_PATH/results_spec/20160712_fourann_center-mg-o-fe-free_spec_${num}.dat" \
                   --augment "$XMM_PATH/results_spec/20160708_fourann_center-mg-free_spec_${num}.dat" \
+                            "$XMM_PATH/results_spec/20160708_fourann_center-mg-free_spec_${num}.dat" \
                             "$XMM_PATH/results_spec/20160708_fourann_center-mg-free_spec_${num}.dat" \
                             "$XMM_PATH/results_spec/20160708_fourann_center-mg-free_spec_${num}.dat" \
                             "$XMM_PATH/results_spec/20160708_fourann_center-mg-free_spec_${num}.dat" \
@@ -47,8 +49,9 @@ for ((i=0;i<${#nums[@]};++i)); do
                            '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg' \
                            '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg,O' \
                            '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg,Ne' \
-                           '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg,O,Ne' \
                            '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg,Fe' \
+                           '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg,O,Ne' \
+                           '0--100\mbox{$^{\prime\prime}$}: Si,S,Mg,O,Fe' \
                   --ylim "$ymin" "$ymax" \
                   --residual \
                   --out "$XMM_PATH/results_plots/fig_fourann-varycenter_${name}"

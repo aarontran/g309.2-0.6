@@ -94,7 +94,7 @@ def main():
         opt_ylim = (1e-4, 1.0)  # Appropriate for small G309 regions
 
     # Plot data and models
-    fig, axes = plt.subplots(n, sharex=True, figsize=(7.5, n*2))
+    fig, axes = plt.subplots(n, sharex=True, figsize=(6.5, n*1.75))
     if n == 1:
         axes = [axes]  # plt.subplots collapses unneeded dimensions
     for fname, ax, plot_lab, f_augment in zip(fnames, axes, plot_labels, opt_augment_fnames):
@@ -111,6 +111,8 @@ def main():
             dat_augment = np.loadtxt(f_augment)
             dat = np.concatenate((dat, dat_augment[:, opt_augment_cols]), axis=1)
             n_augment_models = dat_augment[:, opt_augment_cols].shape[1]
+        else:
+            n_augment_models = 0
 
         n_models = dat.shape[1] - 5
 

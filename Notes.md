@@ -10027,28 +10027,63 @@ More fits to explore parameter space
 * Four annuli fit with central O, Mg, Fe free: `20160713_fourann_center-mg-o-fe-free`
 
 
-Tuesday 2016 July 19 -- compiling results
-=========================================
+Tuesday-Friday 2016 July 19-22 -- compiling results
+===================================================
 
 Misc: added git filter nbstripout
 (by [kynan, minrk](https://github.com/kynan/nbstripout))
 to assist versioning of ipynb files.
 
+Writing.  Derive density/mass estimates and add to text; continue adding plots
+and numbers.
 
+Misc: Wilms+ (2000) distinguishes between solar and ISM abundances (ISM is
+marginally less metallic), and I confirmed that XSPEC uses the ISM abundances.
+But, the literature appears to use "{sub,super}-solar abundance" to imply
+abundance relative to ISM.
+I tried to scrub out some references to sub/super-solar abundances, although
+this is unfortunate since it's in such common use (super-solar rolls off the
+tongue way better than super-ISM.
 
-* Run a fit with Mg free in all 4 annuli.
-    (not yet implemented)
+New fits running:
+* 4 annulus stock - rerun to get norm errors (cooper)
+* 4 annulus Mg free (center only) - rerun to get norm errors (statler)
+* 4 annulus, Mg free in all regions (cooper)
+* integrated source with O,Ne,Mg,Fe free (statler)
+* integrated source with O,Ne,Mg,Ar,Ca,Fe,Ni free (statler)
+
+New fits TBA:
+* Run fit to center region with two thermal plasmas
+* Run vpshock fits
 * Run fits for various subregions
     (not yet implemented)
+* Fit outer annulus to just NEI (look for ISM?)
 
-Coming up -- continue incorporating into text.
-Compute filling factors...
-Address some systematics
+Created some "narrower" band images (0.1 keV wide to select Mg, S, Si lines).
+I think this brings out the spatial variation.  Used: log scale, 6e-7 to 10e-6
+cts/sec/cm^2 whatever, contrast = 3.890, bias = 0.605, smooth = 12.
 
+    20160725_fig_rgb_mg.png
+    20160725_fig_rgb.png
+    20160725_fig_rgb_si.png
+    20160725_fig_rgb_s.png
+
+Nomoto+ 1997 http://adsabs.harvard.edu/abs/1997NuPhA.621..467N
+    Type Ia nucleosynthesis products
+
+Iwamoto+ 1999 http://adsabs.harvard.edu/abs/1999ApJS..125..439I
+    Type Ia nucleosynthesis products
+
+Badenes 2003 summarizes some WD models
+    http://iopscience.iop.org/article/10.1086/376448/pdf
 
 
 Standing questions and TODOs
 ============================
+
+Huge todo -- review how my spectrum error bars were computed.
+This dictates error calculations and cannot be neglected.
+
 
 TODO: FWC fit code needs to be updated to work with new XSPEC utils.
     (ff_fit.py, g309_models.py)
@@ -10064,6 +10099,14 @@ fitting
 http://mads.lanl.gov/presentations/Leif_LM_presentation_m.pdf
 http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/XSmethod.html
 Test this out...
+
+List of standard text checks:
+[ ] equations correct (check units and plug in numbers)
+[ ] acronyms defined at first usage
+[ ] symbols (variables) defined at first usage
+[ ] all equations, figures, tables referenced in text, __in number order__
+[ ] spell check
+[ ] all quantities (numbers, magnitudes, prefixes) checked
 
 
 * use proton to extrapolate power law indices based on energy-/space- dependent vignetting?

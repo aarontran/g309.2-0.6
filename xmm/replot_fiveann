@@ -8,7 +8,7 @@ fi
 # Arcsecond symbol \mbox{$^{\prime\prime}$} from aastex6.cls
 
 date="20160701"
-fstem="fiveann_center-mg-fe-free"
+fstem="fiveann"
 
 # 0087940201 MOS1
 xs_replotter.py $XMM_PATH/results_spec/${date}_${fstem}_spec_01.dat \

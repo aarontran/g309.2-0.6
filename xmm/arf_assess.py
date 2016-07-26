@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 """
 Compare arfs. Yeah.
 """
@@ -12,20 +13,25 @@ for obsid in ["0087940201", "0551000201"]:
     subdir = "/data/mpofls/atran/research/g309/xmm/{0}/odf/repro/".format(obsid)
     exposures = ["mos1S001", "mos2S002", "pnS003"]
 
+    reg1 = "ann_000_100"
+    reg2 = "bkg"
+
     for exp in exposures:
 
-        arf_src = fits.open(subdir + exp + "-src.arf")
-        arf_bkg = fits.open(subdir + exp + "-bkg.arf")
+        arf_src = fits.open(subdir + "{}-{}.arf".format(exp,reg1))
+        arf_bkg = fits.open(subdir + "{}-{}.arf".format(exp,reg2))
 
+        plt.figure(figsize=(11,8))
         plt.loglog(arf_src[1].data['ENERG_LO'], arf_src[1].data['SPECRESP'],
-            drawstyle='steps')
+            drawstyle='steps', color='red', label=reg1.replace('_', '-'))
         plt.loglog(arf_bkg[1].data['ENERG_LO'], arf_bkg[1].data['SPECRESP'], 'r',
-            drawstyle='steps')
-        plt.title("Obsid {0}, {1} src/bkg ARFs".format(obsid, exp))
+            drawstyle='steps', color='blue', label=reg2.replace('_', '-'))
+        plt.title("Obsid {0} {1} ARFs".format(obsid, exp))
+        plt.legend(loc='best')
         plt.show()
 
         plt.plot(arf_bkg[1].data['ENERG_LO'],
                  arf_src[1].data['SPECRESP'] / arf_bkg[1].data['SPECRESP'],
                  'r', drawstyle='steps')
-        plt.title("Obsid {0}, {1} src/bkg ARF ratio".format(obsid, exp))
+        plt.title("Obsid {0} {1} ARF ratio".format(obsid, exp))
         plt.show()

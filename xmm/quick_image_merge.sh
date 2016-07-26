@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Three narrow bands, one broad band
-bands="0.8-1.4 1.75-2.3 2.3-3.3 0.8-3.3"
-#bands="0.8-3.3"
+# Three bands, one broad band, three narrow line bands (Mg, Si, S)
+bands="0.8-3.3 0.8-1.4 1.75-2.3 2.3-3.3 1.3-1.4 1.8-1.9 2.4-2.5"
 for band in $bands; do
 
   imsets=""
