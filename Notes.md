@@ -10027,8 +10027,8 @@ More fits to explore parameter space
 * Four annuli fit with central O, Mg, Fe free: `20160713_fourann_center-mg-o-fe-free`
 
 
-Tuesday-Friday 2016 July 19-22 -- compiling results
-===================================================
+Tuesday-Tuesday 2016 July 19-26 -- compiling results
+====================================================
 
 Misc: added git filter nbstripout
 (by [kynan, minrk](https://github.com/kynan/nbstripout))
@@ -10051,13 +10051,8 @@ New fits running:
 * 4 annulus, Mg free in all regions (cooper)
 * integrated source with O,Ne,Mg,Fe free (statler)
 * integrated source with O,Ne,Mg,Ar,Ca,Fe,Ni free (statler)
-
-New fits TBA:
-* Run fit to center region with two thermal plasmas
-* Run vpshock fits
-* Run fits for various subregions
-    (not yet implemented)
-* Fit outer annulus to just NEI (look for ISM?)
+* integrated source with vnei/ejecta + nei/ISM (treble)
+* integrated source with vpshock (treble)
 
 Created some "narrower" band images (0.1 keV wide to select Mg, S, Si lines).
 I think this brings out the spatial variation.  Used: log scale, 6e-7 to 10e-6
@@ -10080,6 +10075,9 @@ Badenes 2003 summarizes some WD models
 
 Standing questions and TODOs
 ============================
+
+New fits TBA:
+* Run fits for various subregions (not yet implemented)
 
 Huge todo -- review how my spectrum error bars were computed.
 This dictates error calculations and cannot be neglected.

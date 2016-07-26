@@ -157,6 +157,23 @@ def link_name(model, par):
     return "{:s}:{:d}".format(model.name, src_index)
 
 
+def get_all_pars(model):
+    """(convenience) Generator for xspec `Parameter` objects in model obj"""
+    for comp in get_comps(model):
+        for par in get_pars(comp):
+            yield par
+
+def get_pars(comp):
+    """Generator for xspec `Parameter` objects in component obj"""
+    for pname in comp.parameterNames:
+        yield comp.__getattribute__(pname)
+
+def get_comps(model):
+    """Generator for xspec `Component` objects in model obj"""
+    for cname in model.componentNames:
+        yield model.__getattribute__(cname)
+
+
 # ---------------------------------
 # Methods for saving / dumping fits
 # ---------------------------------
@@ -184,9 +201,6 @@ def dump_dict(dict_obj, f_name):
 
 def fit_dict():
     """Construct serializable dict of current XSPEC fit information
-
-    WARNING: not backwards-compatible as of 2016 July 12.
-    Significantly overhauled dump products.
 
     Hierarchy: fit -> spectrum -> model
     (yes, there will be considerable redundancy where multiple spectra are

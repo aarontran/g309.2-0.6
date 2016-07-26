@@ -168,7 +168,9 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         model_n: XSPEC model number, 1-based
         extracted_spectra: list of ExtractedSpectrum objects
         model_name: XSPEC model name, string (no spaces)
-        case: remnant type (specifies a canned model setup)
+        case: remnant type (specifies a canned model setup), one of:
+                'vnei', 'vnei+powerlaw', 'vnei+srcutlog', 'vnei+nei',
+                'vpshock'
     Output:
         None.  Global XSPEC objects configured for SNR.
     """
@@ -225,6 +227,20 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         src.srcutlog.alpha.frozen = True
         src.srcutlog.norm.frozen = True
         src.srcutlog.__getattribute__('break').frozen = False  # break reserved in Python...
+    elif case == 'vnei+nei':
+        # Apply fitting bounds
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
+                     src.vnei.kT.index : "1, , , , 10, 10",  # upper bounds only
+                     src.vnei.S.index : "1, , , , 10, 10",
+                     src.vnei.Si.index : "1, , , , 10, 10",
+                     src.nei.kT.index : "1, , , , 10, 10"})
+        src.tbnew_gas.nH.frozen = True
+        src.vnei.kT.frozen = True
+        src.vnei.Tau.frozen = True
+        src.vnei.S.frozen = True
+        src.vnei.Si.frozen = True
+        src.nei.kT.frozen = True
+        src.nei.Tau.frozen = True
     elif case == 'vpshock':
         src.tbnew_gas.nH = 1
         src.vpshock.kT = 1
