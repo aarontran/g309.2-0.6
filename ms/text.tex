@@ -512,27 +512,78 @@ latitude XMM pointings outside the galactic plane \citep{henley2013}.
 From extremely crude estimates, assuming halo density $\propto r^{-3/2}$ and an
 average sight-line length $1/2\times$ ours through the galactic disk, we might
 expect a factor of $8$--$10$ increase in emission measure in our observation.
-It is possible that there is tension between our fitted local bubble
-and halo parameters and more thorough measurements, but we qualitatively
-suggest that degeneracy in our fits (especially with soft proton contamination)
-limits our ability to constrain X-ray background parameters further.
+Degeneracy in our fits (e.g., with soft proton contamination) limits our
+ability to constrain X-ray background parameters further.
 
-% We don't care
-Constraints on X-ray background parameters are beyond the scope of
-this study; an inaccurate background model may be obscured by the free soft
-proton power law parameters in any case.
-Our conclusions are largely consistent with ASCA data analysis by
-\citet{rakowski2001}, except that we find significantly higher absorption
-which may be affected by inaccurate background modeling.
-% TODO...
+% Varying abundances
+We vary other elemental abundances that are less obviously constrained by our
+data, and our results are shown in Table~\ref{tab:src-varyabund} and
+Figure~\ref{fig:src-varyabund}.
 
-% SANITY check: do soft proton power law parameters show expected behavior?
-% EXPECT: vignetted (lower norm), harder spectrum farther off-axis
-% SP vignetting differs from the standard photon vignetting.
-Soft proton parameters are tabulated
-Although typically ignored, given the high XMM background levels we must verify
-that parameters are reasonable.
-% TODO Maybe push to appendix after assembling this
+\begin{table*}[!ht]
+    \centering
+    \caption{Source fit with varying abundances \label{tab:src-varyabund}}
+
+\begin{tabular}{@{}lllllllll@{}}
+\toprule
+ & Stock & Mg & ONeMgFe & All... & OMg & NeMg & MgFe & ONeMg \\
+\midrule
+\multicolumn{9}{c}{Remnant plasma} \\
+\midrule
+$\nH$   & ${2.15}^{+0.07}_{-0.08}$ & ${2.03}^{+0.10}_{-0.09}$ & ${0.83}^{+0.16}_{-0.05}$ & ${0.84}^{+0.08}_{-0.07}$
+            & ${2.03}^{+0.06}_{-0.08}$ & ${1.80}^{+0.08}_{-0.07}$ & ${1.84}^{+0.10}_{-0.09}$ & ${2.06}^{+0.09}_{-0.11}$ \\ [0.5em]
+$\kB T$ & ${2.3}^{+0.3}_{-0.1}$    & ${2.9}^{+0.5}_{-0.4}$ & ${2.9}^{+0.4}_{-0.3}$ & ${2.5}^{+0.2}_{-0.3}$
+            & ${2.4}^{+0.5}_{-0.3}$ & ${2.7}^{+0.4}_{-0.3}$ & ${2.3}^{+0.4}_{-0.4}$ & ${2.4}^{+0.3}_{-0.1}$ \\ [0.5em]
+$\tau$  & ${1.83}^{+0.12}_{-0.11}$ & ${1.75}^{+0.11}_{-0.10}$ & ${1.49}^{+0.09}_{-0.09}$ & ${1.60}^{+0.11}_{-0.10}$
+            & ${1.78}^{+0.11}_{-0.11}$ & ${1.65}^{+0.10}_{-0.09}$ & ${1.72}^{+0.16}_{-0.10}$ & ${1.79}^{+0.12}_{-0.10}$ \\ [0.5em]
+EM      & ${4.6}^{+0.5}_{-0.5}$ & ${3.6}^{+0.6}_{-0.5}$ & ${3.8}^{+0.4}_{-0.4}$ & ${4.0}^{+0.4}_{-0.4}$
+        & ${3.6}^{+0.4}_{-0.5}$ & ${3.8}^{+0.5}_{-0.4}$ & ${4.5}^{+1.0}_{-0.6}$ & ${3.5}^{+0.5}_{-0.5}$ \\ [0.5em]
+O  &                          &                          & $< 0.11$                 & $< 0.03$                 & ${7.0}^{+1.3}_{-1.2}$    &                          &                          & ${8.1}^{+3.5}_{-2.8}$ \\ [0.5em]
+Ne &                          &                          & $< 0.05$                 & $< 0.10$                 &                          & ${0.14}^{+0.17}_{-0.14}$ &                          & ${1.2}^{+0.6}_{-0.5}$ \\ [0.5em]
+Mg &                          & ${1.24}^{+0.11}_{-0.10}$ & ${0.30}^{+0.05}_{-0.03}$ & ${0.31}^{+0.04}_{-0.03}$ & ${1.28}^{+0.11}_{-0.10}$ & ${0.92}^{+0.10}_{-0.09}$ & ${0.81}^{+0.11}_{-0.11}$ & ${1.4}^{+0.2}_{-0.3}$ \\ [0.5em]
+Si & ${3.75}^{+0.18}_{-0.16}$ & ${4.2}^{+0.3}_{-0.3}$    & ${2.50}^{+0.14}_{-0.11}$ & ${2.51}^{+0.13}_{-0.07}$ & ${4.5}^{+0.3}_{-0.3}$    & ${3.6}^{+0.3}_{-0.2}$    & ${3.4}^{+0.2}_{-0.3}$    & ${4.7}^{+0.7}_{-0.5}$ \\ [0.5em]
+S  & ${3.42}^{+0.28}_{-0.25}$ & ${3.9}^{+0.4}_{-0.3}$    & ${3.6}^{+0.4}_{-0.2}$    & ${3.5}^{+0.3}_{-0.2}$    & ${4.2}^{+0.4}_{-0.3}$    & ${3.8}^{+0.3}_{-0.4}$    & ${3.5}^{+0.3}_{-0.3}$    & ${4.4}^{+0.6}_{-0.5}$ \\ [0.5em]
+Ar &                          &                          &                          & ${3.9}^{+1.0}_{-0.9}$    &                          &                          &                          &      \\ [0.5em]
+Ca &                          &                          &                          & ${14.2}^{+5.3}_{-4.3}$   &                          &                          &                          &      \\ [0.5em]
+Fe &                          &                          & ${0.06}^{+0.03}_{-0.02}$ & ${0.05}^{+0.02}_{-0.02}$ &                          &                          & ${0.19}^{+0.15}_{-0.13}$ &      \\ [0.5em]
+Ni &                          &                          &                          & ${0.30}^{+0.37}_{-0.30}$ &                          &                          &                          &      \\
+\midrule
+\multicolumn{9}{c}{X-ray Background} \\
+\midrule
+$\kB T_{\mt{local}}$   & ${0.26}^{+0.01}_{-0.01}$ & ${0.26}^{+0.01}_{-0.01}$ & ${0.25}^{+0.01}_{-0.01}$ & ${0.25}^{+0.01}_{-0.01}$ & ${0.25}^{+0.01}_{-0.01}$ & ${0.26}^{+0.01}_{-0.01}$ & ${0.26}^{+0.01}_{-0.01}$ & ${0.25}^{+0.01}_{-0.01}$ \\ [0.5em]
+$\mt{EM}_{\mt{local}}$ & ${0.30}^{+0.02}_{-0.02}$ & ${0.30}$ & ${0.27}$ & ${0.25}$ & ${0.30}^{+0.02}_{-0.02}$ & ${0.30}^{+0.02}_{-0.02}$ & ${0.29}^{+0.02}_{-0.02}$ & ${0.30}^{+0.02}_{-0.02}$ \\ [0.5em]
+$\nH$                  & ${1.32}^{+0.08}_{-0.08}$ & ${1.33}^{+0.08}_{-0.08}$ & ${1.37}^{+0.08}_{-0.08}$ & ${1.33}^{+0.08}_{-0.08}$ & ${1.37}^{+0.07}_{-0.07}$ & ${1.39}^{+0.07}_{-0.07}$ & ${1.34}^{+0.08}_{-0.08}$ & ${1.37}^{+0.07}_{-0.07}$ \\ [0.5em]
+$\kB T_{\mt{halo}}$    & ${0.74}^{+0.03}_{-0.03}$ & ${0.74}^{+0.03}_{-0.03}$ & ${0.64}^{+0.03}_{-0.03}$ & ${0.62}^{+0.03}_{-0.03}$ & ${0.81}^{+0.04}_{-0.04}$ & ${0.79}^{+0.05}_{-0.04}$ & ${0.71}^{+0.03}_{-0.06}$ & ${0.81}^{+0.04}_{-0.04}$ \\ [0.5em]
+$\mt{EM}_{\mt{halo}}$  & ${2.19}^{+0.29}_{-0.26}$ & ${2.25}$ & ${2.65}$ & ${2.62}$ & ${2.17}^{+0.27}_{-0.25}$ & ${2.25}^{+0.28}_{-0.26}$ & ${2.35}^{+0.30}_{-0.27}$ & ${2.17}^{+0.27}_{-0.25}$ \\ [0.5em]
+$\chi^2$ & 4545.2 & 4528.5 & 4421.5 & 4347.5 & 4447.1 & 4492.5 & 4486.8 & 4446.7 \\ [0.5em]
+$\chi^2_{\mt{red}}$ & 1.206 & 1.202 & 1.175 & 1.156 & 1.181 & 1.193 & 1.191 & 1.181 \\
+\bottomrule
+\end{tabular}
+
+    \tablecomments{Units as in Table~\ref{tab:src-fit}, except EM is in units of $10^{11}$; i.e., $10^3 \times$ the usual XSPEC norm.}
+\end{table*}
+
+
+\begin{figure*}[!ht]
+    \plotone{fig/fig_src_varabund_0087940201-mos1_pt1.pdf}
+    \plotone{fig/fig_src_varabund_0087940201-mos1_pt2.pdf}
+    \plotone{fig/fig_src_varabund_0087940201-mos1_pt3.pdf}
+    \figcaption{Integrated source fits with varying abundances (top plot label
+        should read Si,S \textbf{TODO}), as labeled, for
+        0087940201 MOS1 (one of five exposures fitted)}
+    \label{fig:src-varyabund}
+\end{figure*}
+
+\begin{figure*}[!ht]
+    \plotone{fig/fig_src_varabund_0087940201-pn_pt1.pdf}
+    \plotone{fig/fig_src_varabund_0087940201-pn_pt2.pdf}
+    \plotone{fig/fig_src_varabund_0087940201-pn_pt3.pdf}
+    \figcaption{Same as Figure~\ref{fig:src-varyabund}, but 0087940201 PN exposure.}
+    \label{fig:src-varyabund-pn}
+\end{figure*}
+
+
+
 
 \subsection{Annuli spectra}
 
@@ -615,13 +666,19 @@ expect SWCX to fill the field of view).
 % SANITY check: do soft proton power law parameters show expected behavior?
 % EXPECT: vignetted (lower norm), harder spectrum farther off-axis
 % SP vignetting differs from the standard photon vignetting.
-We also check soft proton parameters for the annuli.
-Although they are not always strongly constrained in fitting, we find a
-fall-off in soft proton contamination as a function of radial distance, which
-appears consistent with off-axis vignetting.
+We confirm that soft proton parameters from annuli fits qualitatively show
+expected energy-dependent vignetting, with stronger vignetting at soft energies
+\ref{fig:sp}.
 % TODO citation
-Plots and further information are given in Appendix~\ref{app:sp-annuli}.
 % TODO build this...
+
+\begin{figure}[!h]
+    \plotone{fig/fig_sp.png}
+    \figcaption{Fitted soft proton power laws from annuli fits (TODO: ``stock''
+        fits, temporary).  Power law for $200$--$300\arcsec$ overlaps
+        $400$--$500\arcsec$ plot.}
+    \label{fig:sp}
+\end{figure}
 
 \begin{table*}[!ht]
     \centering
@@ -748,9 +805,9 @@ super-ISM Si, S and sub-ISM O, Ne, Mg, Ca, Fe.
 
 The relative abundances $[Mg/Si] = 0.23^{+0.09}_{0.08}$ and $[S/Si] =
 1.09^{+0.24}_{-0.18}$ from \citet{rakowski2001} are consistent with our fits
-($0.29 \pm 0.03$ and $0.93 \pm 0.12$ respectively).  Similarly, the Si, S, Mg
-abundances of \citet{safi-harb2007} are consistent with our
-findings.
+($0.29 \pm 0.03$ and $0.93 \pm 0.12$ respectively).  Similarly our Si, S, Mg
+abundances are consistent with the qualitative statement of supersolar
+abundances by \citet{safi-harb2007}.
 
 \citet{rakowski2001} report emission measure
 $(4\pi D^2)^{-1} \int n_e n_H dV = 9.7^{+200}_{-9.7} \times 10^8$, much smaller
@@ -773,26 +830,25 @@ Although our fits are limited by soft proton contamination at high and
 low energy ranges as well, XMM's spatial and spectral resolution allow us to
 excise point source emission and better constrain the bremsstrahlung continuum.
 
-More simply, free abundances of O, Ne, Mg, Ar, Ca, and Fe may suffice to
-explain the very different absorption numbers.
-Under-abundant O, Ne, Fe
+Alternatively, the absorption can be as low as $0.8 \times 10^{22}$ if
+O, Ne, and Fe are highly subsolar (Table~\ref{tab:src-varyabund}).
+\textbf{This is being investigated further.}
 
-% Discussion: nH value discrepancies (TODO revisit these calculations)
-Our fitted absorption column density is higher than that computed from HI and
-dust maps.
+If the absorption is truly that high, it is just marginally consistent with
+the galactic column computed from HI and dust maps.
 For G309.2-0.6, the \textit{Swift} galactic $\nH$ calculator implementation of
 \citet{willingale2013} provides an expected column density $1.81 \nHUnits$.
-Dust scattering can bias X-ray spectrum fits for a purely absorbing column
-$\abt25\%$ its true value \citep{corrales2016}, although
-some scattered light is recaptured in our extended source region spectra.
-The \textit{spectrum fit value} of $\nH$ may also be estimated from empirical
-linear regression against optical extinction $\AV$ \citep[e.g.,][]{foight2016}
--- which benefits from a strong sampling of sources within the galactic plane,
-and empirical validation -- but does not offer physical insight into the
-discrepancy. We find approximate agreement ($2$--$3 \nHUnits$) with the various
-relations.
-\textbf{TODO: for now detailed accounting of absorption is beyond the scope of
-this work}
+%Dust scattering can bias X-ray spectrum fits for a purely absorbing column
+%$\abt25\%$ its true value \citep{corrales2016}, although
+%some scattered light is recaptured in our extended source region spectra.
+%The \textit{spectrum fit value} of $\nH$ may also be estimated from empirical
+%linear regression against optical extinction $\AV$ \citep[e.g.,][]{foight2016}
+%-- which benefits from a strong sampling of sources within the galactic plane,
+%and empirical validation -- but does not offer physical insight into the
+%discrepancy. We find approximate agreement ($2$--$3 \nHUnits$) with the various
+%relations.
+%\textbf{TODO: for now detailed accounting of absorption is beyond the scope of
+%this work}
 
 The absence of H$\alpha$ emission is unilluminating.
 Assuming H$\alpha$ emission to arise by shock propagation through ISM
@@ -802,6 +858,9 @@ progenitor or supernova ionization, low ambient ISM density, or some local
 conditions (extremely high post-shock density?) that rapidly ionize neutral H,
 preventing Balmer line emission.
 Or, the available imagery may just not be deep enough.
+The outcome is that we are unable to constrain shock velocity independently by
+Balmer line width measurement.
+
 
 \subsection{Morphology}
 
@@ -819,9 +878,9 @@ dominant Si line), but Mg and S appear to be localized to the north and east
 Both Si and S are concentrated in the northern clump (\textbf{TODO:
 green-band Si image is overexposed, obscuring detail}), although Si more
 visibly fills the remnant.
-Mg, in comparison, appears localized to a large northwestern clump and possibly
-some towards the southeast X-ray limb, although the significance of this
-apparent spatial enhancement is questionable.
+Mg appears localized to a large northwestern clump and possibly some towards
+the southeast X-ray limb, although the significance of this possible spatial
+enhancement is questionable.
 
 % log scale, 6e-7 to 10e-6 cts/sec/cm^2 whatever
 % contrast = 3.890, bias = 0.605
@@ -843,18 +902,18 @@ apparent spatial enhancement is questionable.
 \textbf{TODO: calculate mirror asymmetry and compare to \citet{lopez2011}.}
 
 
-\subsection{A young remnant}
+\subsection{Dynamical character}
 
 % Radial variation in kT and Tau
 The plasma temperature and ionization timescale vary across annuli, even with
 our coarse radial binning (Figure~\ref{fig:kt-tau-radius}).
 The center and limb plasma is hotter and more recently shocked than the bright
 $200$--$300\arcsec$ annulus.
-These variations are small and of order $20$--$50\%$, and may be meaningless in
-light of errors from systematic assumptions.
+These variations are small and of order $20$--$50\%$, and may be insignificant
+compared to errors from systematic assumptions.
 But, these variations are consistent with the standard picture of supernova
-remnant acceleration, wherein we expect recently shocked ISM and central
-reverse-shocked central ejecta to be the ``youngest'' emitting plasma.
+remnant acceleration, wherein recently shocked ISM and central reverse-shocked
+central ejecta should be the ``youngest'' emitting plasma.
 
 \begin{figure*}[!ht]
     \plottwo{fig/fig_kt_radius.pdf}{fig/fig_tau_radius.pdf}
@@ -887,45 +946,75 @@ of these elements do not clearly constrain the progenitor type.
 \textbf{TODO: read more about Ia and CC models and their yields.}
 
 
+\subsection{A young remnant}
+
 The high electron temperature, low ionization age, enhanced ejecta abundances,
 low emitting plasma mass all point towards a dynamically young remnant.
-The shock velocity derived from the outer ($300$--$400\arcsec$) annulus
-electron temperature is $1000$--$50,000 \unit{km/s}$ depending on the assumed
-extent of electron-proton equilibration.
-The age inferred from the emitting plasma norm and integrated ionization age
-$1.75 \TauUnits$ is $5000 f^{1/2} d_{5}^{1/2} \unit{yr}$.
-Enhanced central Si and S emission suggests that the reverse shock has
-traversed most of the remnant.
-
-There is significant tension with respect to the expected Sedov-model physical
-size and age.
-
-The ionization age and temperature suggest that G309 is a few kyr old.
-But, the Sedov age for a $6\arcmin$ radius at $d_{5} = 1$ and $E_{51} = 1$ is
-$24000 \unit{yr}$!
-
-This would be resolved if our absorption is much lower than what I'm getting,
-in fact.
-
 G309 is somewhat center-filled in X-rays and clearly shell-like in radio,
 consistent with the definition of a mixed-morphology (MM) remnant
 \citep{rho1998}.
 But, the plasma is relatively hot and recently shocked for a MM remnant, and
 the surface brightness peaks off-center.
 The remnant's age estimates, fitted X-ray plasma parameters and brightness
-distribution are all consistent with an ejecta-dominated young remnant, which
+distribution are consistent with an ejecta-dominated young remnant, which
 does not require complex cloud or thermal conduction models as proposed for MM
 remnants.
+
+The outer ($300$--$400\arcsec$) annulus temperature of $2 \unit{keV}$
+suggests strong-shock heating (shock velocity $\gtrsim 1000 \unit{km/s}$).
+It is unclear whether emission arises from ejecta or shocked ISM, but in either
+case requires the shock to be dynamically young.
+
+The age inferred from the emitting plasma norm and integrated ionization age
+$1.75 \TauUnits$ is $5000 f^{1/2} d_{5}^{1/2} \unit{yr}$.
+Enhanced central Si and S emission suggests that the reverse shock has
+traversed most of the remnant.
+
+The Sedov-derived age \citep{taylor1950, sedov1959} is calculated using the
+numerical constants for a monatomic gas \citet{taylor1950-pt2}.
+From the shock radius scaling
+$R = (0.34 \unit{pc}) \left( \frac{E_{51}}{n_0} \right)^{1/5} t_{\mt{yr}}^{2/5}$,
+we invert for remnant age and assume angular radius $400\arcsec$ to obtain:
+\[
+    t = (4300 \unit{yr}) d_5^{5/2} E_{51}^{-1/2} n_0^{1/2} .
+\]
+which is somewhat on the high side for an ejecta dominated remnant.
+\textbf{TODO: factor 0.34 is derived from $\beta^5 = 2.052$, but would be preferable to draw value
+from closed form solution.  See my paper notes.}
+
+The Sedov age and ionization timescale / norm derived age scale differently
+with remnant distance and can help set a lower bound on our distance estimate
+(Figure~\ref{fig:age}).
+However, the Sedov estimate represents an upper bound on age as the remnant
+may still be ejecta-dominated, or transitioning into Sedov expansion.
+\citet{rakowski2001} already considered these estimates, and our current age
+estimates are no more stringent than theirs.
+
+
+\begin{figure}[!ht]
+    \plotone{fig/fig_age_plot.pdf}
+    \figcaption{Red: Sedov-derived age bound with $E_{51} = 1$
+        and $n_0 \in [0.1, 1] \unit{cm^{-3}}$.
+        Blue: plasma ionization and EM derived age estimate, with filling factor
+        $f \in [0.2, 1]$.  Plasma is assumed to be homogenous and spherical
+        volume filling.}
+    \label{fig:age}
+\end{figure}
+
+
+\textbf{TODO: review ejecta-dominated free expansion and transition into Sedov}
+% Vink: http://arxiv.org/pdf/1112.0576v2.pdf
+% Chevalier 1972?: ...
+% Truelove McKee: http://adsabs.harvard.edu/abs/1999ApJS..120..299T
+% Tang Chevalier: http://arxiv.org/pdf/1607.06391v1.pdf
+
 
 % NOTE: SW lobe and ridge both show weird shifts in PN spectral lines (Si, S)
 % (this dates from Jan/Feb -- to be investigated with now up to date procedures)
 
 \subsection{Friends of young remnants}
 
-A comparative study could be interesting.
-G352.7-0.1 (Pannuti+ 2014 2014ApJ...782..102P, XMM/Chandra) appears very
-similar: we see a radio shell, somewhat center-filled X-rays (but not quite),
-and more ejecta emission than would be expected for its age.
+Comparative study?  TBD.
 
 \section{Conclusions}
 
@@ -946,7 +1035,6 @@ Questions for self-edification (many things I don't understand):
         YES: Ferrand+ 2014 show lovely 3D images (don't trace reverse shock all
         the way).
         Lee+ 2014 for CR Hydro NEI
-        These are probably the best starting points.
 \end{itemize}
 
 \acknowledgments

@@ -513,7 +513,8 @@ def src_powerlaw(output, region='src', solar=False, error=False):
 
 def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
                       error=False, error_rerun=False,
-                      backscal_ratio_hack=None):
+                      backscal_ratio_hack=None,
+                      tau_freeze=None):
     """
     Fit source + bkg regions, allowing XRB to float
     backscal_ratio_hack = arbitrary adjustment to 0551000201 MOS1S001
@@ -531,6 +532,7 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
             if [], use solar abundances
         error: perform single error run
         backscal_ratio_hack: see above
+        tau_freeze: freeze ionization timescale to some value
     """
     if free_elements is None:
         free_elements = ['Si', 'S']
@@ -565,28 +567,40 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
 
         snr.tbnew_gas.nH.frozen=False
         snr.vnei.kT.frozen=False
-        snr.vnei.Tau.frozen=False
+        if tau_freeze:
+            snr.vnei.Tau.frozen = tau_freeze
+            snr.vnei.Tau.frozen = True
+        else:
+            snr.vnei.Tau.frozen = False
+
         for elem in free_elements:
             comp = snr.vnei.__getattribute__(elem)
             comp.frozen = False
-        xs.Fit.perform()
 
     elif snr_model == 'vpshock':
 
         snr.tbnew_gas.nH.frozen=False
         snr.vpshock.kT.frozen=False
         snr.vpshock.Tau_l.frozen=False
-        snr.vpshock.Tau_u.frozen=False
+        if tau_freeze:
+            snr.vpshock.Tau_u.frozen = tau_freeze
+            snr.vpshock.Tau_u.frozen = True
+        else:
+            snr.vpshock.Tau_u.frozen = False
+
         for elem in free_elements:
             comp = snr.vpshock.__getattribute__(elem)
             comp.frozen = False
-        xs.Fit.perform()
 
     elif snr_model == 'vnei+nei':
 
         snr.tbnew_gas.nH.frozen=False
         snr.vnei.kT.frozen=False
-        snr.vnei.Tau.frozen=False
+        if tau_freeze:
+            snr.vnei.Tau.frozen = tau_freeze
+            snr.vnei.Tau.frozen = True
+        else:
+            snr.vnei.Tau.frozen = False
 
         snr.nei.kT.frozen=False
         snr.nei.Tau.frozen=False
@@ -596,7 +610,8 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
         for elem in free_elements:
             comp = snr.vnei.__getattribute__(elem)
             comp.frozen = False
-        xs.Fit.perform()
+
+    xs.Fit.perform()
 
     # XRB is not as well constrained as SNR, and fits w/ XRB free
     # (and SNR at default vnei values) tend to run away
@@ -631,6 +646,19 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
     products(output)
     print_model(snr, output + "_snr_src.txt")
     print_model(xrb, output + "_xrb.txt")
+
+    if snr_model == 'vnei+nei':
+        # Zero out ejecta vnei component to isolate ISM nei contribution
+        norm_vnei = snr.vnei.norm.values[0]
+        snr.vnei.norm = 0
+        wdata(output + "_nei-only.qdp")
+        snr.vnei.norm = norm_vnei  # Reset
+
+        # Zero out ISM nei component to isolate ejecta vnei contribution
+        norm_nei = snr.nei.norm.values[0]
+        snr.nei.norm = 0
+        wdata(output + "_vnei-only.qdp")
+        snr.nei.norm = norm_nei  # Reset
 
 
 
@@ -829,9 +857,9 @@ if __name__ == '__main__':
     # Integrated source fits
     # ----------------------
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160630_src_bkg_nohack_rerun",
-              error=True)
-    # Time: ~1-2 hrs
+    stopwatch(joint_src_bkg_fit, "results_spec/20160729_src_bkg_stock",
+              error=True, error_rerun=True)
+    # Time: 2.6 hrs on statler
 
     stopwatch(joint_src_bkg_fit, "results_spec/20160712_src_bkg_mg",
               free_elements=["Mg", "Si", "S"], error=True)
@@ -842,20 +870,40 @@ if __name__ == '__main__':
               free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], error=True,
               error_rerun=True)
     # Time: 4.5 hrs on statler (one error run only)
-    # Time: ... on statler (with error rerun)
+    # Time: 7.5 hrs on statler (with error rerun)
 
     stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_o-ne-mg-ar-ca-fe-ni",
             free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe', 'Ni'],
             error=True, error_rerun=True)
-    # Time: ... on statler (running now)
+    # Time: 9.5 hrs on statler
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_with-ism-nei",
-              snr_model='vnei+nei', error=True, error_rerun=True)
-    # Time: ... on treble (running now)
+    stopwatch(joint_src_bkg_fit, "results_spec/20160728_src_bkg_o-mg", free_elements=['O', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
+    # Time: 2.8 hrs on statler
+    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_ne-mg", free_elements=['Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
+    # Time: 2.9 hrs on statler
+    stopwatch(joint_src_bkg_fit, "results_spec/20160728_src_bkg_mg-fe", free_elements=['Mg', 'Si', 'S', 'Fe'], error=True, error_rerun=True)
+    # Time: 4.1 hrs on statler
+    stopwatch(joint_src_bkg_fit, "results_spec/20160728_src_bkg_o-ne-mg", free_elements=['O', 'Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
+    # Time: 4.1 hrs on cooper
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_vpshock",
-              snr_model='vpshock', error=True, error_rerun=True)
-    # Time: ... on treble (running now)
+    # Duplicate Rakowski+ fit
+    stopwatch(joint_src_bkg_fit, "results_spec/20160729_src_bkg_ne-mg-ar-ca-fe", free_elements=['Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'], error=True, error_rerun=True)
+    # Time: 2.6 hrs on cooper (only 1 error run; rerun not needed. interrupted)
+
+    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_with-ism-nei", snr_model='vnei+nei', error=True, error_rerun=True)
+    # Time: 6.1 hrs on treble
+    stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_o-ne-mg-fe_with-ism-nei", snr_model='vnei+nei', free_elements=['O', 'Ne', 'Mg', 'S', 'Si', 'Fe'], error=True, error_rerun=True)
+    # Time: ... on treble
+    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_vpshock", snr_model='vpshock', error=True, error_rerun=True)
+    # Time: 5.9 hrs on treble
+
+    # Fits with Tau = 1e11 fixed
+    stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_tau-1e11", tau_freeze=1e11, error=True, error_rerun=True)
+    # Time: 2.9 hrs on statler
+    stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_o-ne-mg-fe_tau-1e11", free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], tau_freeze=1e11, error=True, error_rerun=True)
+    # Time: ... on statler
+
+
 
 
     # Annulus fits, all varieties
@@ -889,30 +937,28 @@ if __name__ == '__main__':
 
     stopwatch(annulus_fit, "results_spec/20160725_fourann_stock", four_ann=True, error=True, error_rerun=True)
     # Time: 1 day, 19.5 hrs on treble (with error rerun)
-    # Time: ... on cooper (running now)
+    # Time: 2 days, 7 hrs on cooper (with error rerun, incl norm errors)
 
     stopwatch(annulus_fit, "results_spec/20160725_fourann_all-mg-free", four_ann=True, free_all_elements=["Mg", "Si", "S"], error=True, error_rerun=True)
-    # Time: ... on cooper (running now)
+    # Time: 2 days, 17 hrs on cooper (with error rerun & norm errors)
+    stopwatch(annulus_fit, "results_spec/20160802_fourann_o-ne-mg-fe-free", four_ann=True, free_all_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], error=True, error_rerun=True)
+    # Time: ... on statler
 
     stopwatch(annulus_fit, "results_spec/20160725_fourann_center-mg-free", four_ann=True, free_center_elements=["Mg"], error=True, error_rerun=True)
     # Time: 2 days, 14 hrs on treble (37 minutes without error run)
     # Time: ... on statler (running now)
-
     stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-ne-free", four_ann=True, free_center_elements=["Mg", "Ne"], error=True, error_rerun=True)
     # Time: 2 days, 11 hrs on statler
-
     stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-o-free", four_ann=True, free_center_elements=["Mg", "O"], error=True, error_rerun=True)
     # Time: 1 day, 17.5 hrs on statler
-
     stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-o-ne-free", four_ann=True, free_center_elements=["Mg", "O", "Ne"], error=True, error_rerun=True)
     # Time: 3 days, 2 hrs on cooper
-
     stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-fe-free", four_ann=True, free_center_elements=["Mg", "Fe"], error=True, error_rerun=True)
     # Time: 1 day, 23.75 hrs on cooper
-
     stopwatch(annulus_fit, "results_spec/20160712_fourann_center-mg-o-fe-free", four_ann=True, free_center_elements=["Mg", "O", "Fe"], error=True, error_rerun=True)
     # Time: 2 days, 18.5 hrs on cooper
     # Time without error runs: 34 minutes on treble
+
 
 
     # Nonthermal component source model fits

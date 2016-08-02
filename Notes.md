@@ -10047,8 +10047,12 @@ tongue way better than super-ISM.
 
 New fits running:
 * 4 annulus stock - rerun to get norm errors (cooper)
+    2nd error run found new fit, but negligibly better (chi-squared from 3581.5 -> 3581.4)
+    so, OK
 * 4 annulus Mg free (center only) - rerun to get norm errors (statler)
 * 4 annulus, Mg free in all regions (cooper)
+    verified 2nd error run good (no new best fit found)
+    chi-squared improved noticeably
 * integrated source with O,Ne,Mg,Fe free (statler)
 * integrated source with O,Ne,Mg,Ar,Ca,Fe,Ni free (statler)
 * integrated source with vnei/ejecta + nei/ISM (treble)
@@ -10071,6 +10075,118 @@ Iwamoto+ 1999 http://adsabs.harvard.edu/abs/1999ApJS..125..439I
 
 Badenes 2003 summarizes some WD models
     http://iopscience.iop.org/article/10.1086/376448/pdf
+
+Rederived Sedov solution from Taylor's 1950 papers (not the full closed-form
+solution, see Sedov 1959 and von Neumann for that, but very lucid
+presentation).
+
+
+Thursday-Friday 2016 July 28-29
+===============================
+
+Because fits with lower absorption (weak O, Ne, Fe) may be more compatible with
+distance for an ejecta-dominated remnant, try some new fits to help pin down
+cause of decreased soft emission
+
+* stock src/bkg fit     (cooper)
+* Mg, O free    (statler)
+* Mg, Ne free   (statler)
+* Mg, Fe free   (statler)
+* Mg, O, Ne free (cooper)
+* O, Ne, Mg, (Si, S,) Ar, Ca, Fe    (cooper)    <- replicate Rakowski+ fit
+
+Constructed new manuscript table summarizing integrated fits.
+
+
+Tuesday 2016 August 2
+=====================
+
+Plot all fits (model+spectra) of interest.
+New script `replot_src_bulk` supersedes `replot_src`, `replot_cxrb`.
+
+Run additional fits:
+* source fit with Si,S,O,Ne,Mg,Fe and additional ISM NEI component
+* source fit with Si,S only and Tau frozen to 1e11
+* source fit with Si,S,O,Ne,Mg,Fe and Tau frozen to 1e11
+* annulus fit with O, Ne, Mg, Si, S, Fe free in ALL rings
+
+    (NOTE: annulus fit depends on assumed x-ray background, so it may make
+     more sense to use XRB values from src fit with O/Ne/Mg/Fe free, or use
+     "unbiased" values from background-region-only fit.
+     But, the fit should be insensitive to exact x-ray background parameters;
+     as we previously showed, fit to background region alone is same as fit to
+     background + source, within error.
+     Probably worth re-running with different parameters, though.)
+
+todo: discuss ISM NEI component and vpshock fit.
+vsedov pending.
+
+Various questions being tackled and/or nailed down:
+- distance / age? (pending)
+- ISM/solar
+
+Need to plot NEI ism contribution.
+
+Systematics -- do the cstat thing.
+
+Pure metal plasma as fitted by Rakowski+ nets quite different emission measure.
+Non-trivial to set up in XSPEC, since abundances are only meaningful relative
+to H abundance.
+
+Fits run so far:
+
+    20160701_fiveann.qdp
+    20160625_fiveann_center-mg-free.qdp     # Used old XRB params
+    20160701_fiveann_center-mg-fe-free.qdp
+
+    20160725_fourann_stock.qdp              # Rerun for norm errs
+    20160725_fourann_all-mg-free.qdp
+    # Fit with O,Ne,Mg,Si,S,Fe free in all annuli pending
+
+    20160725_fourann_center-mg-free.qdp     # Rerun for norm errs
+    20160708_fourann_center-mg-o-free.qdp
+    20160708_fourann_center-mg-fe-free.qdp
+    20160708_fourann_center-mg-ne-free.qdp
+    20160708_fourann_center-mg-o-ne-free.qdp
+    20160712_fourann_center-mg-o-fe-free.qdp
+
+    20160729_src_bkg_stock.qdp              # Rerun for norm errs
+    20160713_src_bkg_mg.qdp
+
+    20160728_src_bkg_o-mg.qdp
+    20160728_src_bkg_ne-mg.qdp
+    20160728_src_bkg_mg-fe.qdp
+    20160728_src_bkg_o-ne-mg.qdp
+    20160726_src_bkg_o-ne-mg-fe.qdp
+    20160729_src_bkg_ne-mg-ar-ca-fe.qdp
+    20160726_src_bkg_o-ne-mg-ar-ca-fe-ni.qdp
+
+    20160726_src_bkg_vpshock.qdp
+    20160726_src_bkg_with-ism-nei.qdp
+    20160802_src_bkg_tau-1e11.qdp
+
+    20160630_src_powerlaw_nonsolar.qdp
+        20160630_src_powerlaw_nonsolar_powerlaw-only.qdp
+        20160630_src_powerlaw_nonsolar_vnei-only.qdp
+    20160630_src_srcutlog_nonsolar.qdp
+        20160630_src_srcutlog_nonsolar_srcutlog-only.qdp
+        20160630_src_srcutlog_nonsolar_vnei-only.qdp
+    20160630_src_powerlaw_solar.qdp
+        20160630_src_powerlaw_solar_powerlaw-only.qdp
+        20160630_src_powerlaw_solar_vnei-only.qdp
+
+Removed old fits that have since been re-run:
+* `20160708_fourann_center-mg-free` products are identical
+  to newer `20160725_fourann_center-mg-free` stuff (verified by diff of XSPEC
+  .log and .qdp dumps)
+* `20160706_fourann_stock` fits differ slightly because a new best fit is found
+  during vnei norm error runs.  (parameters were same up to that point).
+  But the resulting fit is basically unchanged; absolute chi-squared changes
+  from 3581.39 to 3581.34 (change of 0.05).
+* `20160701_src_bkg` fits are basically the same (verified by diff of XSPEC
+  .log and error log dumps)
+* old sub-region fits dating from March 2016, that are no longer useful.
+  April 2016 versions kept around (even though out-of-date as well).
 
 
 Standing questions and TODOs
