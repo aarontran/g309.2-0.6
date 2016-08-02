@@ -40,6 +40,9 @@ def main():
     parser.add_argument('--ylim', nargs=2, type=float,
                         help=("Plot y limits (default 1e-4, 1). Both low/high limits required."),
                         metavar=('LOW', 'HIGH'))
+    parser.add_argument('--delchi-ylim', nargs=2, type=float,
+                        help=("Plot delchi y limits (default -4, +4). Both low/high limits required.  Only relevant if --residuals in use."),
+                        metavar=('LOW', 'HIGH'))
     parser.add_argument('--labels', nargs='*',
                         help=("Subplot labels"),
                         metavar='LABEL')
@@ -70,6 +73,7 @@ def main():
     opt_residuals = args.residuals
     plot_labels = args.labels
     opt_ylim = args.ylim
+    opt_delchi_ylim = args.delchi_ylim
     opt_outstem = args.out
     opt_no_x_labels = args.no_x_labels
 
@@ -92,6 +96,8 @@ def main():
 
     if not opt_ylim:
         opt_ylim = (1e-4, 1.0)  # Appropriate for small G309 regions
+    if not opt_delchi_ylim:
+        opt_delchi_ylim = (-4, 4)
 
     # Plot data and models
     fig, axes = plt.subplots(n, sharex=True, figsize=(6.5, n*1.75))
@@ -224,7 +230,7 @@ def main():
             ax.set_xticks([0.5, 1, 2, 5, 10])
             ax.xaxis.set_major_formatter(mpl.ticker.StrMethodFormatter('{x:g}'))
 
-            ax.set_ylim(-4, 4)  # Appropriate for residual ratio plot
+            ax.set_ylim(*opt_delchi_ylim)  # Appropriate for residual ratio plot
 
             ax.set_ylabel(r'$\Delta\chi$')
             if plot_lab:

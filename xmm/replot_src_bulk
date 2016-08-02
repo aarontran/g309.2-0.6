@@ -1,0 +1,59 @@
+#!/bin/bash
+
+if [[ -z "$XMM_PATH" ]]; then
+  echo "Source sasinit before running this program"
+  exit 1
+fi
+
+names=("20160729_src_bkg_stock" \
+       "20160713_src_bkg_mg" \
+       "20160728_src_bkg_o-mg" \
+       "20160728_src_bkg_ne-mg" \
+       "20160728_src_bkg_mg-fe" \
+       "20160728_src_bkg_o-ne-mg" \
+       "20160726_src_bkg_o-ne-mg-fe" \
+       "20160726_src_bkg_o-ne-mg-ar-ca-fe-ni" \
+       "20160729_src_bkg_ne-mg-ar-ca-fe" \
+       "20160726_src_bkg_vpshock" \
+       "20160726_src_bkg_with-ism-nei" \
+       "20160802_src_bkg_tau-1e11")
+
+for ((i=0;i<${#names[@]};++i)); do
+
+  name="${names[$i]}"
+
+  cd "$XMM_PATH/results_spec"
+  xs_wdata_split.pl -i ${name}.qdp -o ${name}_spec
+
+  # Must cd back to get access to matplotlibrc
+  cd "$XMM_PATH"
+
+  xs_replotter.py "${XMM_PATH}/results_spec/${name}_spec_01.dat" \
+                  "${XMM_PATH}/results_spec/${name}_spec_02.dat" \
+                  "${XMM_PATH}/results_spec/${name}_spec_03.dat" \
+                  "${XMM_PATH}/results_spec/${name}_spec_04.dat" \
+                  "${XMM_PATH}/results_spec/${name}_spec_05.dat" \
+                  --components "CXRB" "SP" "Remnant" "Instr. lines" \
+                  --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
+                  --labels "0087940201 MOS1" "0087940201 MOS2" "0087940201 PN" \
+                           "0551000201 MOS1" "0551000201 MOS2" \
+                  --ylim '1e-3' '3.0' \
+                  --delchi-ylim '-6' '6' \
+                  --residual \
+                  --out "$XMM_PATH/results_plots/fig_${name}_src-allexps"
+
+  xs_replotter.py "${XMM_PATH}/results_spec/${name}_spec_06.dat" \
+                  "${XMM_PATH}/results_spec/${name}_spec_07.dat" \
+                  "${XMM_PATH}/results_spec/${name}_spec_08.dat" \
+                  "${XMM_PATH}/results_spec/${name}_spec_09.dat" \
+                  "${XMM_PATH}/results_spec/${name}_spec_10.dat" \
+                  --components "CXRB" "SP" "Instr. lines" \
+                  --colors "#4daf4a" "#f781bf" "#999999" \
+                  --labels "0087940201 MOS1" "0087940201 MOS2" "0087940201 PN" \
+                           "0551000201 MOS1" "0551000201 MOS2" \
+                  --ylim '1e-3' '1.5' \
+                  --delchi-ylim '-6' '6' \
+                  --residual \
+                  --out "$XMM_PATH/results_plots/fig_${name}_bkg-allexps"
+done
+
