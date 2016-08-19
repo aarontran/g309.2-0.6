@@ -1,0 +1,10 @@
+README
+
+Spitzer IRAC GLIMPSE survey mosaics
+
+GLM_30950-0065_mosaic_I1.fits   = PI Whitney, Deep GLIMPSE, 3.6 micron (IRAC1)
+GLM_30950-0065_mosaic_I2.fits   = PI Whitney, Deep GLIMPSE, 4.5 micron (IRAC2)
+GLM_30950-0075_mosaic_I1.fits   = PI Churchwell, SIRTF Gal. Pl. Survey, 3.6 micron (IRAC1)
+GLM_30950-0075_mosaic_I2.fits   = PI Churchwell, SIRTF Gal. Pl. Survey, 4.5 micron (IRAC2)
+GLM_30950-0075_mosaic_I3.fits   = PI Churchwell, SIRTF Gal. Pl. Survey, 5.8 micron (IRAC3)
+GLM_30950-0075_mosaic_I4.fits   = PI Churchwell, SIRTF Gal. Pl. Survey, 8.0 micron (IRAC4)

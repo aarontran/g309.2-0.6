@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [[ -z "$XMM_PATH" ]]; then
+  echo "Source sasinit before running this program"
+  exit 1
+fi
+
+xs_replotter.py $XMM_PATH/results_spec/20160726_src_bkg_with-ism-nei_spec_01.dat \
+                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" "black" \
+                --labels 'Source (0--400\mbox{$^{\prime\prime}$}) VNEI+NEI, with ISM NEI contribution' \
+                --ylim '1e-3' '2.0' \
+                --augment $XMM_PATH/results_spec/20160726_src_bkg_with-ism-nei_nei-only_spec_01.dat \
+                --augment-cols 7
+#                --out "$XMM_PATH/results_plots/fig_src_powerlaw_0087940201-mos1"
+#                --components "CXRB" "SP" "SNR" "Instr. lines" "Power law"\
+
+xs_replotter.py $XMM_PATH/results_spec/20160726_src_bkg_with-ism-nei_spec_01.dat \
+                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" "black" \
+                --labels 'Source (0--400\mbox{$^{\prime\prime}$}) VNEI+NEI, with ejecta VNEI contribution' \
+                --ylim '1e-3' '2.0' \
+                --augment $XMM_PATH/results_spec/20160726_src_bkg_with-ism-nei_vnei-only_spec_01.dat \
+                --augment-cols 7
+#                --out "$XMM_PATH/results_plots/fig_src_srcutlog_0087940201-mos1"
+#                --components "CXRB" "SP" "SNR" "Instr. lines" "srcutlog"\

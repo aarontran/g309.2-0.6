@@ -23,27 +23,40 @@ fi
 #                --labels 'O,Ne,Mg,Si,S,Fe' \
 #                --ylim '1e-3' '2.0' \
 #                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-mos1_pt3"
+#
+xs_replotter.py $XMM_PATH/results_spec/20160726_src_bkg_o-ne-mg-ar-ca-fe-ni_spec_01.dat \
+                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
+                --labels 'O,Ne,Mg,Si,S,Ar,Ca,Fe,Ni' \
+                --ylim '1e-3' '2.0' \
+                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-mos1_pt4"
+
 # Omit --components to remove legend
 # --components "CXRB" "SP" "Instr. lines" \
 
 # Not using --no-x-labels temporarily because it makes direct
 # eyeball comparison more difficult...
 
-xs_replotter.py $XMM_PATH/results_spec/20160729_src_bkg_stock_spec_03.dat \
-                --components "CXRB" "SP" "Remnant" "Instr. lines" \
-                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
-                --labels 'Si,S' \
-                --ylim '1e-2' '3.0' \
-                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-pn_pt1"
+#xs_replotter.py $XMM_PATH/results_spec/20160729_src_bkg_stock_spec_03.dat \
+#                --components "CXRB" "SP" "Remnant" "Instr. lines" \
+#                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
+#                --labels 'Si,S' \
+#                --ylim '1e-2' '3.0' \
+#                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-pn_pt1"
+#
+#xs_replotter.py $XMM_PATH/results_spec/20160713_src_bkg_mg_spec_03.dat \
+#                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
+#                --labels 'Mg,Si,S' \
+#                --ylim '1e-2' '3.0' \
+#                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-pn_pt2"
+#
+#xs_replotter.py $XMM_PATH/results_spec/20160726_src_bkg_o-ne-mg-fe_spec_03.dat \
+#                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
+#                --labels 'O,Ne,Mg,Si,S,Fe' \
+#                --ylim '1e-2' '3.0' \
+#                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-pn_pt3"
 
-xs_replotter.py $XMM_PATH/results_spec/20160713_src_bkg_mg_spec_03.dat \
+xs_replotter.py $XMM_PATH/results_spec/20160726_src_bkg_o-ne-mg-ar-ca-fe-ni_spec_03.dat \
                 --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
-                --labels 'Mg,Si,S' \
-                --ylim '1e-2' '3.0' \
-                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-pn_pt2"
-
-xs_replotter.py $XMM_PATH/results_spec/20160726_src_bkg_o-ne-mg-fe_spec_03.dat \
-                --colors "#4daf4a" "#f781bf" "#e41a1c" "#999999" \
-                --labels 'O,Ne,Mg,Si,S,Fe' \
-                --ylim '1e-2' '3.0' \
-                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-pn_pt3"
+                --labels 'O,Ne,Mg,Si,S,Ar,Ca,Fe,Ni' \
+                --ylim '1e-3' '3.0' \
+                --out "$XMM_PATH/results_plots/fig_src_varabund_0087940201-pn_pt4"

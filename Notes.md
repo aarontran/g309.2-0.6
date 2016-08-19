@@ -10101,6 +10101,9 @@ Constructed new manuscript table summarizing integrated fits.
 Tuesday 2016 August 2
 =====================
 
+Actions (plots and fits)
+------------------------
+
 Plot all fits (model+spectra) of interest.
 New script `replot_src_bulk` supersedes `replot_src`, `replot_cxrb`.
 
@@ -10109,71 +10112,15 @@ Run additional fits:
 * source fit with Si,S only and Tau frozen to 1e11
 * source fit with Si,S,O,Ne,Mg,Fe and Tau frozen to 1e11
 * annulus fit with O, Ne, Mg, Si, S, Fe free in ALL rings
+  (NOTE: annulus fit depends on assumed x-ray background, so it may make
+   more sense to use XRB values from src fit with O/Ne/Mg/Fe free, or use
+   "unbiased" values from background-region-only fit.
+   But, the fit should be insensitive to exact x-ray background parameters;
+   as we previously showed, fit to background region alone is same as fit to
+   background + source, within error.
+   Probably worth re-running with different parameters, though.)
 
-    (NOTE: annulus fit depends on assumed x-ray background, so it may make
-     more sense to use XRB values from src fit with O/Ne/Mg/Fe free, or use
-     "unbiased" values from background-region-only fit.
-     But, the fit should be insensitive to exact x-ray background parameters;
-     as we previously showed, fit to background region alone is same as fit to
-     background + source, within error.
-     Probably worth re-running with different parameters, though.)
-
-todo: discuss ISM NEI component and vpshock fit.
-vsedov pending.
-
-Various questions being tackled and/or nailed down:
-- distance / age? (pending)
-- ISM/solar
-
-Need to plot NEI ism contribution.
-
-Systematics -- do the cstat thing.
-
-Pure metal plasma as fitted by Rakowski+ nets quite different emission measure.
-Non-trivial to set up in XSPEC, since abundances are only meaningful relative
-to H abundance.
-
-Fits run so far:
-
-    20160701_fiveann.qdp
-    20160625_fiveann_center-mg-free.qdp     # Used old XRB params
-    20160701_fiveann_center-mg-fe-free.qdp
-
-    20160725_fourann_stock.qdp              # Rerun for norm errs
-    20160725_fourann_all-mg-free.qdp
-    # Fit with O,Ne,Mg,Si,S,Fe free in all annuli pending
-
-    20160725_fourann_center-mg-free.qdp     # Rerun for norm errs
-    20160708_fourann_center-mg-o-free.qdp
-    20160708_fourann_center-mg-fe-free.qdp
-    20160708_fourann_center-mg-ne-free.qdp
-    20160708_fourann_center-mg-o-ne-free.qdp
-    20160712_fourann_center-mg-o-fe-free.qdp
-
-    20160729_src_bkg_stock.qdp              # Rerun for norm errs
-    20160713_src_bkg_mg.qdp
-
-    20160728_src_bkg_o-mg.qdp
-    20160728_src_bkg_ne-mg.qdp
-    20160728_src_bkg_mg-fe.qdp
-    20160728_src_bkg_o-ne-mg.qdp
-    20160726_src_bkg_o-ne-mg-fe.qdp
-    20160729_src_bkg_ne-mg-ar-ca-fe.qdp
-    20160726_src_bkg_o-ne-mg-ar-ca-fe-ni.qdp
-
-    20160726_src_bkg_vpshock.qdp
-    20160726_src_bkg_with-ism-nei.qdp
-    20160802_src_bkg_tau-1e11.qdp
-
-    20160630_src_powerlaw_nonsolar.qdp
-        20160630_src_powerlaw_nonsolar_powerlaw-only.qdp
-        20160630_src_powerlaw_nonsolar_vnei-only.qdp
-    20160630_src_srcutlog_nonsolar.qdp
-        20160630_src_srcutlog_nonsolar_srcutlog-only.qdp
-        20160630_src_srcutlog_nonsolar_vnei-only.qdp
-    20160630_src_powerlaw_solar.qdp
-        20160630_src_powerlaw_solar_powerlaw-only.qdp
-        20160630_src_powerlaw_solar_vnei-only.qdp
+Rerun `src_bkg_stock` fit (accidentally overwrote).
 
 Removed old fits that have since been re-run:
 * `20160708_fourann_center-mg-free` products are identical
@@ -10189,30 +10136,540 @@ Removed old fits that have since been re-run:
   April 2016 versions kept around (even though out-of-date as well).
 
 
+Misc. remarks
+-------------
+What part of the spectrum does Ni abundance affect?
+Very broad line (L shell?) emission around 1-1.5 keV.
+But only has effect around abundance ~100.  Abundance 1 vs. 0 makes very
+little difference.
+
+In best source fit, changing ionization age 1e10 to 1e11 (preserving all else)
+upsets the line ratios.  Model increases Si Ly-alpha/beta emission, decreases
+He-alpha/beta.  Similar story for Mg, S lines.
+Decrease in soft emission around 0.7-1 keV possibly tied to decreased Fe L
+emission.
+Note that this behavior hinges in our particular best fit temperature and
+absorption (`N_H = 2.1e22 cm^{-3}`, `kT = 2.4 keV`).
+
+
+Can we constrain Ar, Ca abundances?
+-----------------------------------
+
+Are free super-solar Ar,Ca abundances allowed in integrated source fit?
+Appears to improve the fit.  Standard likelihood ratio test (F test),
+comparing integrated source fit (1) with Si,S,Mg,O,Ne,Fe free, and
+(2) with Si,S,Mg,O,Ne,Ar,Ca,Fe,Ni free, yields:
+
+    XSPEC12>ftest 4347.54 3761 4421.49 3764
+     F statistic value = 21.3244 and probability 1.07949e-13
+
+So yes, appears significant.
+(F-statistic follows F-distribution under null hypothesis that
+expanded [new] model is not significantly better than nested [old] model.
+If probability of computed F-statistic is very low, then we disfavor the
+null hypothesis.)
+
+As usual, nothing will save you from garbage in / garbage out.
+By eye, I think the residuals clearly improve in all five exposures (the
+effective stacked signal, across 5 exposures, is decent).
+
+More fits to consider presence of Ar, Ca emission:
+* source fit with Si,S,O,Ne,Mg,Fe,Ar,Ca (no Ni)
+* annulus fit with Si,S,O,Ne,Mg,Fe,Ar,Ca free in all rings
+
+Working plan, meeting notes
+---------------------------
+
+Defer further sub-region investigation until I have a better handle on what
+global remnant evolution models predict as far as plasma parameters and
+physical sizes go.
+
+X-ray background: unsurprising that EM is high, galactic plane should be
+dominated by ridge emission, not halo (and absorption for these components
+would be different).  See papers by Ebisawa on diffuse galactic ridge X-ray
+emission.
+
+Density: Pat angled for estimating ambient density as 1/4th of vnei-inferred
+density.  The vnei-inferred density is a lower bound (assumes homogeneous
+sphere), so ambient density should be at LEAST 0.025 cm^{-3} based on our
+calculation, which is not a strong bound.  Does HI emission give any bound on
+ambient density along LOS?
+
+Pure metal plasma as fitted by Rakowski+ nets quite different emission measure.
+Non-trivial to set up in XSPEC, since abundances are only meaningful relative
+to H abundance.
+Some old code by Hughes & others exists to fit pure metal plasmas.
+Pat has some notes to this effect...
+
+
+
+Thursday-Friday 2016 August 11-12
+=================================
+
+Hiatus, working on MP and other tasks.
+Doing some reading about SNR typing and modeling.
+
+Chandra G309 image (15ks)
+-------------------------
+
+Can see SNR line emission and remnant morphology in Chandra data.
+The resolving of point sources is beautiful.
+
+4554: 15ks ACIS-S image
+8929,10834-10836: 150ks ACIS-S HETG
+
+Chandra background rates from POG:
+- 0.3-10 keV background: 0.32 counts/chip/sec
+-   5-10 keV background: 0.18 counts/chip/sec
+Translates to ~ 0.02-0.03 counts/sec/keV, which is ~10x better than XMM.
+
+The grating observation is not readily usable.
+Effective exposure for 0th order image is about ~20-40ks (for comparison to
+Chandra ACIS imaging), due to reduced effective area.
+ACIS-I effective area: 200-400 cm^2 @ 1-2 keV. (POG Figure 1.3)
+HETG ACIS-S effective area (0th order image): 30-100 cm^2 (POG Figure 8.11)
+
+Reprocessed 4554 for a quick look.  Can get a decent VNEI plasma fit to start
+with, using just background subtraction.  But data are noisy and not clear they
+offer anything over XMM data at this time.
+
+    specextract "repro/acisf04554_repro_evt2.fits[sky=region(../blob_s2.reg)]" \
+        bkgfile="repro/acisf04554_repro_evt2.fits[sky=region(../bkg_s2.reg)]" \
+        outroot="blob_s2"
+
+
+Monday 2016 August 15 - more writing/cleaning
+=============================================
+
+Ingested hand-edits into text.
+
+
+Estimate galactic ridge & halo contributions to sky x-ray background
+--------------------------------------------------------------------
+
+### Background/motivation
+
+Are the fluxes in our X-ray background model consistent with the literature
+estimates for ridge and halo emission?
+I previously flagged XRB halo normalization for comparison against Henley &
+Shelton (2013) as my emission measure was much higher than their values.
+Pat noted that galactic ridge emission (of which I was not cognizant) should
+contribute much more than the faint halo at this latitude.
+
+References: papers by Ebisawa+ and Revnivtsev+ (2000-present) with interesting
+back-and-forth on origin (diffuse ISM emission or unresolved point sources).
+Literature often presents flux or surface brightness in 2-10 keV band as
+measurement of ridge emission.
+
+### Procedure
+
+1. Load "standard" joint source + background fit with background parameters
+frozen (values determined from fit with Si,S free).
+No energy ranges set; all channels noticed.
+Compute 0.5-2 keV and 2-10 keV band fluxes for each background component using
+XSPEC.
+
+2. Check that fluxes are detector/data independent (i.e., only depends on
+   model).  Below are the 0.5-2 keV fluxes for total XRB model:
+
+    In [10]: xs.AllModels.calcFlux("0.5 2")
+     Spectrum Number: 1 Source 1
+     Model Flux 0.00050192 photons (7.6817e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 2 Source 1
+     Model Flux 0.00049675 photons (7.6025e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 3 Source 1
+     Model Flux 0.00046402 photons (7.1501e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 4 Source 1
+     Model Flux 0.00044437 photons (6.8009e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 5 Source 1
+     Model Flux 0.00049278 photons (7.5418e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 6 Source 1
+     Model Flux 0.0005106 photons (7.8146e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 7 Source 1
+     Model Flux 0.00052357 photons (8.013e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 8 Source 1
+     Model Flux 0.00047444 photons (7.3108e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 9 Source 1
+     Model Flux 0.00057782 photons (8.8434e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+     Spectrum Number: 10 Source 1
+     Model Flux 0.00063296 photons (9.6872e-13 ergs/cm^2/s) range (0.50000 - 2.0000 keV)
+
+Check that model flux variation is only due to area-scaling constant prefactor
+(all other parameters are identical).
+
+                Constant        Flux/constant (ergs/cm^3/s)
+    Spectrum 1  1               7.6817e-13
+    Spectrum 2  0.989693        7.6817e-13
+    Spectrum 3  0.934572        7.6507e-13          <-- ?! (disagreement 0.4%)
+    Spectrum 4  0.885340        7.6817e-13
+    Spectrum 5  0.981783        7.6817e-13
+    Spectrum 6  1.01730         7.6817e-13
+    Spectrum 7  1.04313         7.6817e-13
+    Spectrum 8  0.955569        7.6507e-13          <-- ?!
+    Spectrum 9  1.15122         7.6818e-13
+    Spectrum 10 1.26107         7.6817e-13
+
+What.  Difference is a mere 0.5%, but I expect the results to be identical.
+Try again with 2-10 keV band for entire XRB model as above.
+
+    In [11]: xs.AllModels.calcFlux("2 10")
+     Spectrum Number: 1 Source 1
+     Model Flux 0.00013379 photons (8.9865e-13 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 2 Source 1
+     Model Flux 0.00013241 photons (8.8938e-13 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 3 Source 1
+     Model Flux 0.00012438 photons (8.3765e-13 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 4 Source 1
+     Model Flux 0.00011845 photons (7.9561e-13 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 5 Source 1
+     Model Flux 0.00013135 photons (8.8227e-13 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 6 Source 1
+     Model Flux 0.0001361 photons (9.1419e-13 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 7 Source 1
+     Model Flux 0.00013956 photons (9.374e-13 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 8 Source 1
+     Model Flux 0.00012717 photons (8.5647e-13 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 9 Source 1
+     Model Flux 0.00015402 photons (1.0345e-12 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+     Spectrum Number: 10 Source 1
+     Model Flux 0.00016872 photons (1.1333e-12 ergs/cm^2/s) range (2.0000 - 10.000 keV)
+
+Rescale 2-10 keV fluxes using constant prefactors:
+
+                Constant        Flux/constant (ergs/cm^3/s)
+    Spectrum 1  1               8.9865e-13
+    Spectrum 2  0.989693        8.9864e-13
+    Spectrum 3  0.934572        8.9629e-13  (disagreement: 0.26%)
+        photon disagreement: 0.52%
+    Spectrum 4  0.885340
+    Spectrum 5  0.981783
+    Spectrum 6  1.01730         8.9864e-13
+    Spectrum 7  1.04313
+    Spectrum 8  0.955569        8.9629e-13
+    Spectrum 9  1.15122
+    Spectrum 10 1.26107
+
+I further constructed a simpler example -- simply load 0087940201 spectra from
+MOS1, MOS2, PN, and also load a Chandra spectrum for kicks.
+Result: fluxes are identical for all except PN, which shows about the same
+discrepancy.
+
+- MOS1/MOS2/ACIS-S agree (should not be detector dependent)
+- 0087940201, 0551000201 agree (not a function of area, chips, bad
+  columns/pixels, energy binning)
+- fluxes from different region spectra agree (0-100" annulus and 0-400" source)
+  again binning should be a non-issue
+
+So this is really weird.  Investigation TBD.
+
+3. Now, assess each components' contribution to my modeled X-ray background.
+   Using XSPEC fluxes for MOS1 source (0-400 arcsec) spectrum; sky area is
+   about 0.0388 deg^2.
+   I also add typical Henley/Shelton (2013) halo values, using kT = 0.3 keV
+   and norm 1.7e-4 (from EM 2e-3 cm^{-6} pc with typical FOV 400 arcmin^2; see
+   Table 1 of their paper).
+
+    ============================================================
+                     Flux (ergs/cm^2/s)     Surf. Brightness [1]
+                    --------------------    --------------------
+                    0.5-2 keV   2-10 keV    0.5-2 keV   2-10 keV
+                    ---------   --------    ---------   --------
+    Absorbed apec   4.00e-13    1.39e-13    1.03e-11    3.58e-12
+    Powerlaw        7.28e-14    7.59e-13    1.88e-12    1.96e-11
+    Local apec      2.96e-13    3.06e-16    7.63e-12    7.89e-15
+    ------------------------------------------------------------
+    Total           7.68e-13    8.99e-13    1.98e-11    2.32e-11
+    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    HS13 halo       7.08e-15    3.29e-16    1.82e-13    8.48e-15
+    HS13 halo-noabs 1.79e-13    4.29e-16    4.61e-12    1.11e-14
+    ============================================================
+    [1] Surface brightness units: ergs/cm^2/s/degrees^2
+    [2] HS13 halo-noabs is same as HS13 halo, but seen through only 0.01e22
+    (1e20) cm^{-2} of absorption as is typical for HS13 sightlines.
+
+### Conclusions
+
+Galactic halo emission with HS13 parameters does not contribute significantly
+to our modeled fluxes.
+We could add a factor ~2-8x to the fluxes because of (1) halo `r^{-3/2}`
+density profile, since our sightline is closer to galactic center (GC), and (2)
+longer sightline closer to GC.
+But, even allowing for 10x higher halo emission, we're still looking at fluxes
+2e-12 in 0.5-2 keV and 1e-13 in 2-10 keV bands; at most 1-10% contribution in
+soft band, and no more than 1% contribution in hard band.
+All assumes HS13 parameters are reasonable to apply here.
+
+Absorbed apec is most representative of galactic ridge emission.
+And, in fact, I'm not certain that absorbed apec is the correct model component
+to use given that ridge emission is a continuum of unresolved point sources
+(accreting WDs, CVs, ...).
+
+Our absorbed apec flux of 3.58e-12 is around 10x lower than values reported in
+the literature at other fields.
+
+* Ebisawa+ 2008 (PASJ, Suzaku) get ridge surface brightness `4.8e-11 ergs/cm^2/s/deg^2`
+  after removing extragalactic background + bright point sources;
+  they use `1.3e-11 ergs/cm^2/s/deg^2` for extragalactic power law background.
+  Their field is at `l=28.5 deg., b=-0.2`.
+* Revnivtsev+ 2009 (Nature, Chandra) find 2-10 keV ridge brightness `7.1e-11 erg/s/cm^2/deg^2`
+  with CXB contribution `1.5e-11 erg/s/cm^2/deg^2` (down from 2.2e-11, because
+  of absence of brightest sources which account for ~31% of extragalactic CXB)
+  Field is at l = 0.08, b = -1.42 deg.
+* we are much farther out at l=-51, b=-0.6, but ridge emission should
+  still be significant.  RXTE/PCA map (Revnivtsev+ 2006, Fig. 1) suggests x-ray
+  background flux around 4e-11 erg/s/cm^2/deg^2 (over band 3-20 keV);
+  this seems compatible with observed flux 2.3e-11 in 2-10 keV band.
+
+Comparing total brightness, we have flux ~2.3e-11 vs. 6.1e-11 and 8.6e-11 from
+Ebisawa+ and Revnivtsev+.
+IF our extragalactic power law normalization is wrong and should be lowered to,
+say, `1e-11` (any lower is probably unrealistic), assuming new fit would
+attribute all hard flux to the apec component, this yields ridge brightness
+`1.3e-11` (3x larger).  This ridge brightness is still kind of low.
+But I don't really have any better basis for comparison, so I think we're OK.
+  
+
+### XSPEC commands used
+
+XSPEC setup for these commands is:
+
+    from g309_fits import *
+    prep_xs(with_xs=True)
+    out = g309.load_data_and_models("src", "bkg", snr_model='vnei')
+
+    # No channels ignored at this point
+
+    # Index 3*6 gets correct flux in erg/{...} for spectrum #1
+    # (each source = 6 numbers -- flux with +/- errs and photon ct with +/- errs
+    #  so flux appears at indices 0, 6, 12, ...)
+    xs.AllModels.calcFlux("0.5 2")
+    xs.AllModels.calcFlux("2 10")
+    xs.AllData(1).flux[3*6]
+
+    xrb = xs.AllModels(1,'xrb')
+    xs.Xset.chatter = 5
+
+    xs.AllModels.calcFlux("0.5 2"); xs.AllData(1).flux[3*6]
+    xs.AllModels.calcFlux("2 10"); xs.AllData(1).flux[3*6]
+    # and so on...
+
+Flux calculations:
+
+    In [40]: xrb.apec.norm=0
+    In [41]: xrb.powerlaw.norm=0
+    In [42]: xs.AllModels.calcFlux("0.5 2"); xs.AllData(1).flux[3*6]
+    Out[42]: 3.9954653144300204e-13
+    In [43]: xs.AllModels.calcFlux("2 10"); xs.AllData(1).flux[3*6]
+    Out[43]: 1.3936074931482049e-13
+    ...
+    In [46]: xrb.apec_5.norm=0
+    In [48]: xrb.powerlaw.norm=1.22929E-04
+    In [49]: xs.AllModels.calcFlux("0.5 2"); xs.AllData(1).flux[3*6]
+    Out[49]: 7.279167857089727e-14
+    In [50]: xs.AllModels.calcFlux("2 10"); xs.AllData(1).flux[3*6]
+    Out[50]: 7.58980025610644e-13
+    ...
+    In [52]: xrb.powerlaw.norm=0
+    In [53]: xrb.apec.norm=2.98000E-04
+    In [54]: xs.AllModels.calcFlux("0.5 2"); xs.AllData(1).flux[3*6]
+    Out[54]: 2.95834068123059e-13
+    In [55]: xs.AllModels.calcFlux("2 10"); xs.AllData(1).flux[3*6]
+    Out[55]: 3.0604734277824076e-16
+
+To compare to Henley & Shelton (2013),
+adopt norm 1.7e-4 and kT 0.3 keV, seen through the same effective absorption.
+
+    In [58]: xrb.apec.norm=0
+    In [63]: xrb.apec_5.norm=1.7e-4
+    In [64]: xrb.apec_5.kT=0.3
+    In [66]: xs.AllModels.calcFlux("0.5 2"); xs.AllData(1).flux[3*6]
+    Out[66]: 7.082686240965006e-15
+    In [67]: xs.AllModels.calcFlux("2 10"); xs.AllData(1).flux[3*6]
+    Out[67]: 3.2912931524665113e-16
+
+
+Tuesday 2016 August 16
+======================
+
+Cleaned up my notes.  Wrapping up X-ray background twiddling.
+
+Should we refine our X-ray background model?
+--------------------------------------------
+
+Possible improvements:
+1. adjust metallicity or abundances of apec plasma for ridge emision
+2. use separate absorbing components for ridge and extragalactic background
+3. adjust normalization of extragalactic background to account for point source
+   removal above some threshold
+
+Our apec fit usually yields kT=0.74 keV, already quite close to expected ~0.8
+keV from other studies.
+
+### Abundances and multi-temperature ridge models
+
+How do other workers approach abundances?
+
+* Auchettl+ (2015, MSH 11-61A) use a low-temperature apec model with subsolar
+  abundance from Kaneda+ (1997).
+* Kaneda+ (1997, ApJ) favor a two-temperature NEI plasma model (paper Table 2).
+  Soft plasma: `kT = 0.8 (+0.3/-0.1) keV`, `log(n_e t) = 9.1 cm^{-3} s`, 
+   overall abundance `Z = 0.6 +/- 0.3`.
+  Hard plasma: `kT = 7 (+3/-1) keV`, `log(n_e t) = 10.6 +/- 0.2`,
+   overall abundance `Z = 0.8 +/- 0.2`
+* Revnivtsev+ (2009, Nature) describe the spectrum as a ~10^8 K (~13 keV)
+  thermal plasma with strong Fe K line emission.
+
+Do we need both components?
+
+* Kaneda+ (1997) fits show hard component is important at >~ 2 keV.
+* Ebisawa+ (2005, ApJ 635) also show that hard component figures at >~ 2 keV.
+  Soft: kT ~ 0.9 (fixed abundance = 0.11), kT ~ 0.6 (free Ne,Mg,Si abundances)
+  Hard: kT ~ 6.5 -- 5 ish (depending on overall abundance, Fe abundance assumption)
+* Yuasa+ (2012, ApJ 753) construct a more complex model -- of note, they
+  include a foreground plasma model, as we have done, which helps explain some
+  soft (0.5-2 keV) emission.  So it might be easier to compare to our work.
+  In this case, the hard plasma component of GRXE does not figure until ~4 keV.
+
+  Yuasa+ (2012) Figure 10 appears to re-confirm the results of Kaneda+ (1997).
+  But, their Figure 11a fit appears to change the behavior of these CIE
+  components dramatically.
+  This appears to be driven by the broadband fitting, which requires the high
+  temperature component to be REALLY hot to cover the 20-50 keV continuum.
+  Then soft CIE component also must be hotter (kT ~ 1.3-1.7 keV)
+  with free abundances to cover S, Ar, Fe lines.
+  Also, their fitted absorptions are rather high.
+
+  Hard to say that any one specific model makes sense.
+  Yuasa+ spectra look quite different than those of Kaneda+, especially the
+  S/Ar lines (possibly due to better CCD resolution though).
+
+Kind of uncertain, and the CIE is only an ad hoc model anyways that happens to
+fit the point source population spectrum decently.
+Conditions may also vary from pointing to pointing.
+
+Verdict: forget it, just stick to low-temperature apec with normal abundances.
+Mention ridge models in passing and/or in appendix.
+Cite auchettl+, kaneda+, ebisawa+, yuasa+, regarding abundance tweaking.
+Basically, exact model is kind of questionable and not necessarily physically
+meaningful anyways.
+
+
+### Extragalactic background correction for bright source removal
+
+To adjust normalization of extragalactic background, we need to know the
+dimmest point source that we removed in 0-700" region of our XMM data.
+We used ESAS cheese with rate=1.0 and energy range 0.4-7.2 keV.
+The rate=1.0 implies point source threshold at `1e-14 erg cm^{-2} s^{-1}`.
+Work done in Mathematica notebook `moretti_2003_lognlogs.nb`.
+
+I compute that ~39% of sources are excluded by our point source removal
+(and simply picking a piece of the sky with no very bright extragalactic
+sources).  Therefore we add a scaling factor of 0.61 to our power law
+normalization.
+
+
+### Add separate absorption components for extragalactic and ridge components
+
+Added new `tbnew_gas` component on the end to maintain backwards compatibility.
+From fiddling in XSPEC (play fits): new component appears to be pretty well
+constrained.  Error on the extragalactic power law absorption will be rather
+large (little effect on fit since power law mostly contributes at high energy).
+
+Warning
+-------
+Will need to regenerate all fits.  Begin hitting other systematics I have been
+putting off.
+
+
+
+Wednesday-Friday 2016 August 17-19
+==================================
+
+Remark: error runs for annulus fits with multiple elements free are still going
+(it's been like 2 weeks).
+
+XSPEC fit tweaks (settings; unbinned fit statistics)
+----------------------------------------------------
+Does using delayed gratification in Levenberg-Marquardt method help fits?
+Supposed to decrease number of Jacobian evaluations with about equal success
+rate in fitting.  Try out in PyXSPEC:
+
+    xs.Fit.method = "leven delay"
+
+Seems to work fine -- actually converges to a different (better) best fit; as
+described, it's supposed to perform better in the canyons of chi^2 space.
+Will need to vet this with some longer error runs.
+
+Change parallel setting to 4 to help expedite fits and error runs.
+Also set cross sections to "vern" -- already in use for tbnew model, but not
+sure if set globally.  Just do so for consistency.
+After quick test, not clear if parallel made a difference.  Revisit later.
+
+Reference:
+[slides on LM optimization](mads.lanl.gov/presentations/Leif_LM_presentation_m.pdf)
+
+
+Reviewed how XSPEC errors work in detail.  Wrote up a short note on this.
+Use `statistic pgstat`.
+
+
+
 Standing questions and TODOs
 ============================
 
-New fits TBA:
-* Run fits for various subregions (not yet implemented)
+IN WORK NOW (!!!!!)
 
-Huge todo -- review how my spectrum error bars were computed.
-This dictates error calculations and cannot be neglected.
+[ ] Plot dumps: use setplot comp to show individual additive model components (WAY easier
+than multidump / append hack I set up)
 
+[ ] Fits: Cstat (unbinned) spectra
+    effect of spectrum binning
+    fits without binning & fits with single-count binning & C statistic
 
-TODO: FWC fit code needs to be updated to work with new XSPEC utils.
+[ ] Fits: re-visit error bar calculations for Cstat and my binning (assumed gaussian...)
+[ ] Fit: A new statistic, pgstat, has been added for the case of Poisson-distributed
+  data
+  with a Gaussian-distributed background. The whittle statistic can
+  now be used when fitting averaged power density functions by
+  appending an integer (so eg whittle5 is the statistic to use when
+  fitting a pdf constructed by averaging those from 5 observations).
+
+[ ] Fit: Merge MOS1/2 spectra, yielding 3 spectra to fit
+
+[ ] FWC fit code needs to be updated to work with new XSPEC utils.
     (ff_fit.py, g309_models.py)
     basically, when I next regenerate spectra from scratch, this shall be
     addressed.
 
-Cash statistic...
+[ ] Calculation: use HI brightness profiles along line-of-sight to try to set some
+    upper bounds on ambient density.
 
-Make a giant list of possible systematics.
+[ ] Read: CR-hydro-NEI modeling, outputs, key results -- n.b. update your bibdesk notes, checklists...
+[ ] Read: 3-D modeling inputs, outputs, key results
 
-Misc. XSPEC has a "delayed gratification" option for levenberg-marquardt
-fitting
-http://mads.lanl.gov/presentations/Leif_LM_presentation_m.pdf
-http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/XSmethod.html
-Test this out...
+[ ] For self: assemble list of similar young SNRs
+
+[ ] Plots: shrink some less important plots to single-column size
+
+[ ] Fit: Investigate weird XSPEC discrepancy (PN flux is different...)
+    Speculation -- could be tied to PN energy binning (energies command).
+    check this out.
+
+[ ] Fits: sub-region investigation, TBD (this should be last)
+
+[ ] Fits: clarify filling factor 1.4x factor.
+
+List of possible systematics:
+* X-ray background spectrum assumptions and variation.
+  (XSPEC error bars don't include X-ray background model uncertainty)
+  Could run fits w/ X-ray background at error ranges.
+  Could run fits w/ X-ray background parameters from fit to XRB alone.
+  (parameters agree within error, so expect little change.
+   but should factor into systematic error assessment, if necessary)
+* Instrumental line offsets/errors could slightly bias vnei line fits
+* Soft proton contamination: broken power law effect on fits?
+* Energy range cuts: what if use more conservative energy bounds on MOS/PN spectra?
+
 
 List of standard text checks:
 [ ] equations correct (check units and plug in numbers)
@@ -10227,8 +10684,6 @@ List of standard text checks:
   (do try this -- may reduce backgrounds in image. but your data are so noisy
   anyways that it may not have much effect).
 
-Suggestion -- can we combine the MOS1/2 spectra from each obsid?
-    results in three spectra / region to fit.
 
 Is HD 119682 introducing light curve noise?
 compute FOV lightcurve _without_ point sources.
@@ -10236,18 +10691,6 @@ https://arxiv.org/abs/astro-ph/0205278
 http://adsabs.harvard.edu/abs/2015ApJ...799...84S
 http://adsabs.harvard.edu/abs/2015ApJ...806..177M
 
-List of assumptions to test.  How do the (KEY) fits above change if I:
-* run vpshock/vsedov for integrated source or subregion (partially done)
-* truncate the low/high energy ranges (cut MOS/PN off at 1keV, 7keV)
-  (do separately to illustrate effects)
-* change x-ray background fit parameters
-* use x-ray background fit parameters from fitting XRB alone?
-    (partially addressed.  parameters agree within uncertainty.
-     but, see how fit results change to get a handle on systematics)
-
-* SANITY CHECK: if I change soft proton background to BROKEN POWER LAW, e.g. in
-  combined fit alone, how do parameters change if at all?
-  Double check this in case XRB fit results may change.
 
 Standing TODOs:
 * Re-run everything from a clean slate to ensure your pipeline is good.
@@ -10280,9 +10723,6 @@ Standing ESAS questions:
 Standing low priority questions:
 * Castro+2011, why use evselect,merge,eexpmap,emosaic?
   Seems like merge is not needed.
-* for region conversion, are PN/MOS1/MOS2 all offset exactly 90 degrees?
-  Seems like an OK assumption, <1 degree error will not affect results much.
-  More than 1 degree error and I'd worry about shoddy build quality.
 
 Reminders (caveats and loose threads):
 * source region differs slightly between exposures; therefore combined fit is

@@ -1,0 +1,12 @@
+README
+
+MIPSGAL 24 micron mosaic products downloaded from:
+http://irsa.ipac.caltech.edu/data/SPITZER/MIPSGAL/index_cutouts.html
+
+From http://irsa.ipac.caltech.edu/data/SPITZER/MIPSGAL/images/README
+
+> The mosaics file names have formats:
+>      MGLLLL{p,n}BBB_024.fits for the mosaics
+>      MGLLLL{p,n}BBB_std_024.fits for the uncertainty mosaics
+>      MGLLLL{p,n}BBB_covg_024.fits for the coverage maps
+>      MGLLLL{p,n}BBB_maskcube_024.fits for the mask cubes
