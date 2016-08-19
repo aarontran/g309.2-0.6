@@ -4,7 +4,9 @@ results-interm
 
 ms/aastex
 ms/refs-snr.bib
-ms/textNotes.bib
+ms/*Notes.bib
+xspec_count_errs/refs-snr.bib
+xspec_count_errs/*Notes.bib
 
 # Keep only READMEs or supporting files for radio, optical, other data
 most/G309.2-0.6.ps

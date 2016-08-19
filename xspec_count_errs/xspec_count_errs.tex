@@ -1,0 +1,273 @@
+\documentclass[onecolumn,tighten]{aastex6}
+
+\shorttitle{XSPEC Counting Errors}
+\slugcomment{Draft, \today}
+
+\usepackage{amsmath}
+%\usepackage{hyperref}
+
+% My "standard" TeX aliases
+\newcommand*{\mt}{\mathrm}
+\newcommand*{\code}{\texttt}
+
+\begin{document}
+
+\title{XSPEC Counting Errors in Plots and Fits}
+
+\author{Aaron Tran}
+\affil{Smithsonian Astrophysical Observatory,
+60 Garden St. MS-70, Cambridge, MA 02138, USA}
+\email{atran@cfa}
+
+\begin{abstract}
+XSPEC defaults datum errors to \code{STAT\_ERR} if available, Poisson standard
+deviations $\sqrt{N}$ otherwise.
+Non-default weights or rebin error propagation override \emph{both} source
+and background PHA \code{STAT\_ERR} columns.
+Default XSPEC settings work well for fits to Poisson spectra with Poisson
+backgrounds (with \code{statistic cstat}) or high-significance binned spectra
+with approximately Gaussian errors \citep[but cf.][]{humphrey2009}.
+Plotting Poisson spectra with Gaussian error backgrounds may require kludging
+to plot correctly propagated errors.
+Correct choice of fit statistic generally prevents incorrect error propagation
+in most spectrum fitting cases relevant to photon-counting astronomers.
+\end{abstract}
+
+\section{Introduction}
+
+XSPEC must calculate sensible errors for plotted error bars, parameter
+estimation (fitting), and goodness-of-fit assessment (hypothesis testing),
+based on the input spectra keywords and columns, and user settings.
+The XSPEC manual descriptions are accurate but terse, and it takes time to
+verify that errors are calculated as expected.
+
+Errors must be propagated when:
+\begin{itemize}
+    \item weighting fits to background-subtracted spectra
+    \item plotting errors for background-subtracted spectra
+    \item binning data for plotting purposes
+\end{itemize}
+
+This writeup considers errors on data, \emph{not} error calculations (confidence
+intervals) for model parameters from XSPEC's error command.
+I also do not consider:
+\begin{itemize}
+  \item spectra binned using the GROUPING column
+  \item goodness-of-fit assessment
+  \item SYS\_ERR usage
+  \item inconsistent FITS keywords (e.g. POISSERR=T when STAT\_ERR is given)
+\end{itemize}
+
+For general background, please see the XSPEC manual\footnote{\href{http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/manual.html}{http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/manual.html}},
+\citet{cash1979}, and \citet{arnaud2011}.
+
+\paragraph{Procedure}
+I construct source and background spectra with \code{EXPOSURE = AREASCAL =
+BACKSCAL = 1} so that plotted and fitted data are integer counts,
+then vary XSPEC settings and check that count error bars and fit statistics
+change according to the manual and my intuition.
+All work is done in XSPEC v12.9.0d.
+I have not personally checked all use cases described in this document, but
+made some inferences based on XSPEC's behavior in a simple case.
+
+
+\section{Errors in unbinned spectra}
+
+Suppose you have source spectrum $X_i \pm \xi_{x,i}$ with background
+$B_i \pm \xi_{b,i}$ representing counts per channel $i$ with optional
+statistical errors $\xi_{x,b}$ from \code{STAT\_ERR}.
+For each spectrum, \code{POISSERR=Y} is set if no \code{STAT\_ERR} column is
+present.
+No \code{GROUPING} column is present in the source spectrum.
+We wish to fit both spectra using XSPEC's background handling; i.e., the
+background spectrum is linked via the \code{BACKFILE} keyword or XSPEC's
+\code{background} command.
+From here out, I drop the channel subscript $i$ for clarity.
+
+Each datum has an ``internal'' weight, or error, $\varepsilon$ set by XSPEC's \code{weight} command.
+\begin{itemize}
+  \item \code{weight standard} sets $\varepsilon_{x,b} = \xi_{x,b}$ if statistical errors are present, else sets $\varepsilon_{x,b} = \{\sqrt{x}, \sqrt{b}\}$
+  \item \code{weight gehrels} sets $\varepsilon_{x,b} = 1 + \sqrt{ \{X,B\} + 0.75 }$, \emph{ignoring any statistical errors provided}.
+\end{itemize}
+
+The fit statistic, set by XSPEC's \code{statistic} command,
+is usually a log-likelihood massaged to asymptote to a $\chi^2$ distribution.
+\begin{itemize}
+  \item \code{statistic chi} takes $\sqrt{ \varepsilon_x^2 + \varepsilon_b^2 }$ as its weighting (or just $\varepsilon_x$ if no background is present).
+  \item \code{statistic cstat} ignores $\varepsilon_{x,b}$ entirely.  The Poisson distribution is defined by just one parameter, model count rate $m_i$, so variance is already folded into the likelihood function.
+      Standard versus Gehrels weighting is irrelevant.
+In comparison, a Gaussian distribution requires model counts $M_i$ and variance $\sigma_i$.
+\footnote{It seems funny that, in our likelihood for Gaussian-distributed data, the model variance $\sigma_i$ is determined by the observed error $\varepsilon$.
+  This is something I should understand better.  In a Bayesian context this
+  makes more sense; a datum's error translates into spread in allowed model
+  parameters, versus the frequentist's sampling from a monolithic model that
+  is, seemingly arbitrarily, weighted by our observed error.}
+  \item \code{statistic pgstat} takes $\varepsilon_b$ for the background gaussian error and ignores $\varepsilon_x$.
+\end{itemize}
+The \code{statistic} command does not change datum weights $\varepsilon_{x,b}$,
+but it incorporates or ignore weights depending on the chosen statistic.
+The \code{statistic} command \emph{does not check whether the current weighting
+is appropriate for your data}.
+For example, \code{statistic pgstat} used with \code{weight gehrels} will
+\emph{incorrectly} use $\varepsilon_b = 1 + \sqrt{B + 0.75}$ in the Gaussian
+likelihood calculation.
+
+Finally, plotted error bars are controlled by XSPEC's \code{setplot rebin} command.
+I ignore the binning parameters for now and focus on the error calculation for source and background.
+\begin{itemize}
+  \item \code{setplot rebin , , , quad} plots errors as $\sqrt{ \varepsilon_{x}^2 + \varepsilon_{b}^2 }$, where $\varepsilon_{x,b}$ is set by the weight command.
+  \item \code{setplot rebin , , , sqrt} plots errors as $\sqrt{ X + B }$
+  \item \code{setplot rebin , , , poiss-1} plots errors as $\sqrt{ \left( 1 + \sqrt{X + 0.75} \right)^2 + \left( 1 + \sqrt{B + 0.75} \right)^2 }$
+\end{itemize}
+Likewise for \code{poiss-2}, \code{poiss-3}.
+Like the weight command, \code{setplot rebin} ignores statistical error unless
+\code{setplot rebin , , , quad} is used.
+The \code{setplot rebin} command also does not modify datum weights $\varepsilon_{x,b}$.
+If the data are rebinned for plotting, then the error calculation is as above,
+with the addition that counts are summed, or statistical errors added in
+quadrature, following the manual.
+
+So, the precedence of XSPEC commands for error calculation is:
+\begin{itemize}
+    \item Plotting: \code{setplot rebin} $>$ \code{weight} $>$ \code{PHA file keywords, columns}
+    \item Fitting: \code{statistic} $>$ \code{weight} $>$ \code{PHA file keywords, columns}
+\end{itemize}
+Error calculations and weights are applied identically to both source and
+background spectra, for both fits and plots, before source and background
+errors are combined in quadrature.
+
+
+\section{Example}
+
+Suppose you have a Poisson-error spectrum and a Gaussian-error background.
+This is relevant to XMM analysis with subtraction of ESAS generated QPB spectra.
+From one paper I saw in passing, this can be applied to Fermi-LAT data as well.
+%In truth the QPB spectrum is derived from Poisson count data, but it seems
+%there are enough filter-wheel closed data so that the errors are roughly
+%Gaussian.  And, part of the spectrum is a continuum interpolation that does not
+%come with well-defined errors (or, at least, I think ESAS does not provide any
+%errors for the interpolated channels).
+The best approach, I think, is to fit using:
+\begin{verbatim}
+weight standard
+statistic pgstat
+setplot rebin , , , quad
+\end{verbatim}
+The \code{pgstat} fits will correctly incorporate provided background errors
+while folding Poisson probability into the likelihood for low count spectrum
+channels, preventing biased parameter estimates.
+
+The plotted error bars are $\sqrt{ X + \varepsilon_{b}^2 }$.
+This is OK, but $\sqrt{X}$ underestimates the $1$-$\sigma$ error for small $X$.
+To apply the Gehrels approximation for plotted error bars \citep{gehrels1986},
+you cannot change error bars with \code{weight} or \code{setplot rebin} because
+incorrect background errors will be used in fits and plots respectively.
+
+One way is to write a new \code{STAT\_ERR} column, containing the Gehrels
+approximate errors, to your source PHA file.
+With \code{pgstat}, the \code{STAT\_ERR} column should be used only for
+plotting.
+I believe that \code{pgstat} will warn, but should proceed nominally and
+ignore the \code{STAT\_ERR} column.
+\emph{TODO: I should be testing this soon.}
+% TODO TODO test this ni my own code -- fit with / without stat_err column
+But, if you use \code{setplot rebin ..., quad} to rebin the data for display,
+the Gehrels errors from multiple source channels added in quadrature will be
+too large; i.e.:
+\[
+    1 + \sqrt{ \Sigma_i X_i + 0.75}
+    <
+    \sqrt{ \sum_i \left( 1 + \sqrt{X_i + 0.75} \right)^2 }
+\]
+This can be shown by squaring the left side:
+\begin{align*}
+    \left( 1 + \sqrt{ \Sigma_i X_i + 0.75} \right)^2
+        &= 1 + \Sigma_i X_i + 0.75 + 2 \sqrt{ \Sigma_i X_i + 0.75 } \\
+%        &< \sum_i \left( 1 + X_i + 0.75 \right) + 2 \sqrt{ \sum_i \left( X_i + 0.75 \right) } \\
+        &< \sum_i \left( 1 + X_i + 0.75 \right) + 2 \sum_i \sqrt{ X_i + 0.75 }
+        = \sum_i \left( 1 + \sqrt{X_i + 0.75} \right)^2
+\end{align*}
+using the inequality $\sqrt{ \strut\Sigma_i x_i } < \sum_i \sqrt{x_i}$ for
+$x_i \in \mathbb{R}^{+}$.
+Using \code{setplot rebin ..., poiss-1} will yield the correct Gehrels error
+for the binned source data, but would incorrectly ignore your background
+spectrum's Gaussian errors as noted before; the error remains overestimated.
+
+Alternatively, one can rebin to enough counts such that the Gehrels
+approximation is unnecessary; i.e., $\sqrt{X}$ is close enough to the
+$1$-$\sigma$ error for your needs.
+The discrepancy is $26\%$ for $n=10$ and $13\%$ at $n=50$.
+The true confidence limits and approximations thereto are given by
+\citep[Table 4]{gehrels1986}.
+
+The best would be simply to plot asymmetric, correct error bars in XSPEC.
+But that doesn't seem possible at this time.
+
+
+\section{XSPEC (internal) rebinning}
+
+The \code{weight} command affects rebinning behavior.
+XSPEC rebins data to a minimum significance per bin, and I believe that the
+significance is simply the plotted $1$-$\sigma$ error.
+
+
+\section{Errors in externally binned spectra}
+
+
+How does XSPEC deal with the \code{GROUPING} column?
+Often one simply bins to get up to an approximately Gaussian regime, fits using
+chi, and moves on with life.
+Since life is finite, that is fine in most cases.
+But, I would like to understand how XSPEC handles errors for \code{GROUPING} column as
+well, to confirm that things work in high and middling count rate cases, and in
+cases where the data are not Poisson.
+
+For starters, from an old CIAO website\footnote{\href{http://cxc.harvard.edu/sherpa3.4/faq/xspec_errs.html}{cxc.harvard.edu/sherpa3.4/faq/xspec\_errs.html}}:
+\begin{quote}
+If the data are grouped then XSPEC calculates the
+$\code{GRP\_STAT\_ERR} = \sqrt{\sum \code{STAT\_ERR}^2}$ over the group.
+This gives an error which is much larger than the correct one calculated from
+the counts in the group.
+\end{quote}
+
+\section{Resources}
+
+Most of this work, other than XSPEC finagling, is derived from continuous
+re-reading of the XSPEC manual pages and various other web pages.
+
+\begin{itemize}
+    \item \href{http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/XSsetplot.html}{XSPEC setplot manpage}
+    \item \href{http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/XSstatistic.html}{XSPEC statistic manpage}
+    \item \href{http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/XSweight.html}{XSPEC weight manpage}
+    \item \href{http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/manual/XSappendixStatistics.html}{XSPEC fit statistics appendix}
+    \item \href{http://heasarc.gsfc.nasa.gov/docs/xanadu/xspec/wstat.ps}{More
+        detailed notes on wstat}, found from a \href{https://github.com/sherpa/sherpa/pull/94}{Sherpa thread}
+    \item \href{http://hesperia.gsfc.nasa.gov/~schmahl/cash/cash_oddities.html}{Cash statistic simulations}
+\end{itemize}
+
+%\acknowledgments
+
+\facility{XMM (EPIC)}
+\software{XSPEC}
+
+% ==========
+% References
+% ==========
+\bibliographystyle{aasjournal}
+\bibliography{refs-snr}
+
+% ========
+% Appendix
+% ========
+%\clearpage  % Use \clearpage over \newpage
+%\appendix
+%
+%\setcounter{table}{0}
+%\renewcommand{\thetable}{A\arabic{table}}
+%\setcounter{figure}{0}
+%\renewcommand{\thefigure}{A\arabic{figure}}
+%
+%\section{}
+
+
+\end{document}

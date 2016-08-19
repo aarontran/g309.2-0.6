@@ -1,0 +1,1 @@
+../ms/aastex6.cls
