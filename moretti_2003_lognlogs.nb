@@ -1,0 +1,2842 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.4' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[    103817,       2834]
+NotebookOptionsPosition[     99614,       2691]
+NotebookOutlinePosition[    100250,       2715]
+CellTagsIndexPosition[    100207,       2712]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[TextData[{
+ "Moretti+ 2003 ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{
+     SubscriptBox["Log", "10"], "(", "N", ")"}], "-", 
+    RowBox[{
+     SubscriptBox["Log", "10"], "(", "S", ")"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " relation: manipulation, verification, application"
+}], "Section",
+ CellChangeTimes->{{3.6803679799116087`*^9, 3.680367982332398*^9}, {
+  3.68037751721463*^9, 3.6803775375813427`*^9}, {3.6803776566249113`*^9, 
+  3.6803776618369637`*^9}, {3.680377751747053*^9, 3.680377782925058*^9}}],
+
+Cell["\<\
+Aaron Tran, 2016 August 16.  Trying to refine sky X-ray background model for \
+G309 spectrum fits, and better comprehend unresolved/resolved source flux \
+calculation.\
+\>", "Text",
+ CellChangeTimes->{{3.680377548597538*^9, 3.680377599663251*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Relation", "Section",
+ CellChangeTimes->{{3.680377689593359*^9, 3.68037769587367*^9}}],
+
+Cell["\<\
+Functional form for integral source flux distribution N(>S), from equation \
+(2) of Moretti+ (2003).  Basically, a broken power law smoothly joined at S=S0.
+Compare result to Moretti+ (2003) Figure 4, upper panel.\
+\>", "Text",
+ CellChangeTimes->{{3.6803681020150623`*^9, 3.680368127687958*^9}, {
+  3.680368249387888*^9, 3.680368269467393*^9}, {3.680371914087083*^9, 
+  3.680371930635253*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"integralSFD", "[", 
+    RowBox[{"S_", ",", "\[Alpha]_", ",", "\[Beta]_", ",", "S0_", ",", "N0_"}],
+     "]"}], ":=", 
+   RowBox[{"N0", "*", 
+    RowBox[{
+     SuperscriptBox[
+      RowBox[{"(", 
+       RowBox[{"2", "\[Times]", 
+        SuperscriptBox["10", 
+         RowBox[{"-", "15"}]]}], ")"}], "\[Alpha]"], "/", 
+     RowBox[{"(", 
+      RowBox[{
+       SuperscriptBox["S", "\[Alpha]"], "+", 
+       RowBox[{
+        SuperscriptBox["S0", 
+         RowBox[{"\[Alpha]", "-", "\[Beta]"}]], "\[Times]", 
+        SuperscriptBox["S", "\[Beta]"]}]}], ")"}]}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"hardN", "[", "S_", "]"}], ":=", 
+   RowBox[{"integralSFD", "[", 
+    RowBox[{"S", ",", "1.57", ",", "0.44", ",", 
+     RowBox[{"4.5", " ", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "15"}]]}], ",", "5300"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"softN", "[", "S_", "]"}], ":=", 
+   RowBox[{"integralSFD", "[", 
+    RowBox[{"S", ",", "1.82", ",", "0.60", ",", 
+     RowBox[{"1.48", "\[Times]", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "14"}]]}], ",", "6150"}], "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.680367984113557*^9, 3.680368085759975*^9}, {
+  3.68036813423248*^9, 3.680368245590003*^9}, {3.680368300524692*^9, 
+  3.680368354901927*^9}, {3.680368468305031*^9, 3.680368540922758*^9}, {
+  3.6803686187815657`*^9, 3.680368729316299*^9}, {3.680374531731529*^9, 
+  3.6803745317893133`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"LogLogPlot", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"hardN", "[", "x", "]"}], ",", 
+     RowBox[{"softN", "[", "x", "]"}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "17"}]], ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "11"}]]}], "}"}], ",", 
+   RowBox[{"PlotRange", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        SuperscriptBox["10", 
+         RowBox[{"-", "17"}]], ",", 
+        SuperscriptBox["10", 
+         RowBox[{"-", "11"}]]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{
+        SuperscriptBox["10", 
+         RowBox[{"-", "3"}]], " ", ",", 
+        SuperscriptBox["10", "4"]}], "}"}]}], "}"}]}], ",", 
+   "\[IndentingNewLine]", 
+   RowBox[{"PlotLegends", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"\"\<Hard (2-10 keV)\>\"", ",", "\"\<Soft (1-2 keV)\>\""}], 
+     "}"}]}], ",", "\[IndentingNewLine]", 
+   RowBox[{"FrameLabel", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+     "\"\<S [erg \!\(\*SuperscriptBox[\(cm\), \(-2\)]\) \!\(\*SuperscriptBox[\
+\(s\), \(-1\)]\)]\>\"", ",", 
+      "\"\<N(>S)/\!\(\*SuperscriptBox[\(deg\), \(2\)]\)\>\""}], "}"}]}], ",", 
+   
+   RowBox[{"Frame", "\[Rule]", "True"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.680368359859992*^9, 3.6803684460405083`*^9}, {
+  3.680368544691579*^9, 3.680368579891821*^9}, {3.680368740362152*^9, 
+  3.6803687405036783`*^9}, {3.6803688383709917`*^9, 3.68036889844821*^9}, {
+  3.680368928501532*^9, 3.680368945525519*^9}, {3.680368976078617*^9, 
+  3.68036906061591*^9}, {3.680369102793537*^9, 3.680369119210628*^9}, {
+  3.68036924391788*^9, 3.680369244099737*^9}, {3.680369303870871*^9, 
+  3.68036932702334*^9}}],
+
+Cell[BoxData[
+ TemplateBox[{GraphicsBox[{{{{}, {}, {
+        Directive[
+         Opacity[1.], 
+         RGBColor[0.368417, 0.506779, 0.709798], 
+         AbsoluteThickness[1.6]], 
+        LineBox[CompressedData["
+1:eJwBIQTe+yFib1JlAgAAAEEAAAACAAAAP74KTKaxQsAWVbW7sWsiQFgL99J2
+lkLANu6wneI6IkC6JnwoXHFCwDzo0VXC9yFA8yOh4r9OQsBPYFqohbghQC0e
+NSs4KULAELfR7gVzIUA++mjYLgZCwCjGZcf2MCFA3mss+NXjQcDx4PQeuO4g
+QIDaXqaRvkHAnv+Hvp6kIED4KjG5y5tBwOcTKE63XCBAcXhyWhp2QcBC1sa0
+ywogQHpbQ24ZUUHAkTzWzEdqH0BZILTmli5BwB9n+cmevh5AOuKT7SgJQcC7
+meQIVfQdQPGFE1k55kDA3bJEqmIlHUCqJgJTXsBAwK1U9/wrLhxA8lyAvzOb
+QMDKhgRXnCEbQBF1npCHeEDAzzmzZZYOGkAxiivw71JAwCI0lk6ByRhAKIFY
+tNYvQMDp5I7ow4EXQK4NFettDUDAVmgtsa0rFkBsLoFgM9A/wK92tncppBRA
+KQUYtIeKP8DYogT8nSYTQOnVjCQFPz/AWYmidL96EUDI0SB64/Q+wPpSEvBl
+lg9AVJH0mL6vPsBjx6eweGEMQONKptTCZD7AfFnxbf7ZCEAfyJfZwx4+wGax
+Vt82hQVAenCowyXaPcBj0MZdoDoCQNgSl8qwjz3AliTex6JF/T/jeMWaOEo9
+wLdNFhKPifY/8NjRh+n+PMDu7e2Y2GzuP6r8HT6XuDzAmD251Xi24D+DS4nZ
+pXM8wOMurp25+Lk/X5TSkd0oPMDPwF7qHcLWv+igWxMS4zvAbYs8SckK6b90
+p8Kxb5c7wCEukO7f7fO/H9lINS5NO8D+lZ6ivjT7v3fODoLpBzvA1nYAKY7/
+AMDSvbLrzbw6wEDCvm9BrgTA2nCWHq92OsAnZDY7hh4IwAFPmTbxMTrAQycl
+M5p9C8ArJ3prXOc5wIDAsgAXJg/AAsOaacShOcCLmYoVAkgRwCSpj6mNoDnA
+Ib7kRKFPEcBFj4TpVp85wHkPsXRAVxHAiFtuaemcOcC0yJ3VfmYRwA/0QWkO
+mDnAT7a2nPuEEcAcJeloWI45wDgyYj/1wRHANoc3aOx6OcCqs6bS6DsSwFht
+LKi1eTnAgn8nD4hDEsB5UyHofng5wHt8CEwnSxLAvB8LaBF2OcBE/OjGZVoS
+wEO43mc2cTnALtwVweJ4EsBQ6YVngGc5wOalr8bctRLAcs96p0lmOcBGXfcI
+fL0SwJO1b+cSZTnAXl+XSxvFEsDWgVlnpWI5wEth3tFZ1BLAXBotZ8pdOcDn
+T3vi1vISwH4AIqeTXDnA90t4J3b6EsCf5hbnXFs5wK/eyWwVAhPA4rIAZ+9Y
+OcDn+Wj4UxETwASZ9aa4VznA5py1PvMYE8Amf+rmgVY5wIILVYWSIBPASGXf
+JktVOcCC1EbMMSgTwGlL1GYUVDnATYeKE9EvE8AYWfzP
+         "]]}, {
+        Directive[
+         Opacity[1.], 
+         RGBColor[0.880722, 0.611041, 0.142051], 
+         AbsoluteThickness[1.6]], 
+        LineBox[CompressedData["
+1:eJwVxX0w1GkAB3DkJW9bqM3+vOxuL5sijfFyHi+7z+5OjbiSStZZiUvrpSI5
+sd2Fk9tyRcVZvdzRXFH0IsdMSu23tmtUSi8qq9KcnXYtGXS6k3Rzd3985sNP
+yVqXamFmZrbyP/9/tLuiZkguBTu27drlzPl0ozogYW6kFDmJTRkFwvkUTe6R
+7wVSRMt7vOcN8Wl7bFVToaUUboP7aZyaT1unlSf4byRYEh2/5sdwPi0tNR8T
+d0jQrvIJaTHxqMz+7yd51RIccsi+cKucR68KvvWS75QgL8myMyWQR/9ccGpA
+s0YCo7Ug6Z6WS5d5BnoHL5HA8U5+sIzFpcKptF5fawn8tHQid4sn7c/0mXym
+F6Psqj1bct2DFvVtqj9yQ4yrX8/kP7X2oJNL/drvnxAjJiAmRprgTnfm53zF
+5IkxyQ3YTWvdqDJBuoMTI8YfCdw7d/UMjee1Gqp9xVhPnHjJfgwNGagc8bIV
+Y4SRPi/K4NDxUpd4YqDo/i5jhkOjK20UWKzfBIpeY8nLgu559L28SON/gqLL
+7s60cphNnb755bAqn6JkSM5KsWFTvzLvsdF1FJ9PVy7w+TSHehXLWp8vp1ip
+SrwYZ3KhFx3nDm93pHg7aqvQa53pNt/izf6PRJDZbCdShRNdYuXaqioT4bQs
+kdtrOZuanh1caCUS4VoVayKwy4F2PuYp9RNCeLyIq96aaks3HJmouXFJiOnm
+yMUqR2uqj6zvubVFiDLjycDPKywot1Ot03oKQTZ/SNom+SxSZp/VLuoLx56P
+/ro97z+Iep3V95orwrGB1VU71TEs0uf/fjw4Mhw5cdasnne9orHexyrTP2HQ
+/WPW7zPzpqZx2kOovhKGEa/0GUGf9JqSqAO6M7vCsMUwGftlx7gmqerJkdde
+YRgMqBk8vXRKM1iX4OKsD4U2TH2fZ2OO3IZbl7PUoTC9eHMoK9oKXF1EoO/q
+ULzSNh8ILLXF7oes7002oSCC15+KdzniyfWW4QcdIfDOzF5+/uVs9GVXe17K
+C8EFHau2UucM8+hjQeN+IWiwPyz5+cEceC9WZsqNBHuS7/qJ37FhoT2efvsU
+wW/CRKfLBlcsPFdx7lAdwUHHwvIfRl2xomKfaWMtgbbttoN80hX7E3akm04S
+HO5rdbCx42DWhDidVUNQOPWRk7iMA/dFpjRZOcGjc01ptrkcBKm+SHunJIi2
+77yfYs5Att3nbFsBQd1fazOC7RgUrOcP7s0ncM7tsmW5MOjg2qc55RFoKn6K
+al/IQHqlXxG0k6C6flXfrAgGa02liiIFwYqHdguulzPI6VY2rNpKsLqU8+io
+mkFlW5bROZXAMtlqb1odg+fF8YozKQTsrKxXLi0M5Mwyxb1Egoim9F8znjHY
+aza/oVJO0CwSxtF+BrUGtlGeQJA+9daebWQw0GKmGJUR+Fs37r45ycDy2If6
+K3EE+0a0vmpzNwgKhwzFGwmqFp83bLNzQ0TqG0FULMF4SXKtxMUN6VE9W+ds
+IBh7OiBzdXfDv63jD7c=
+         "]]}}}, {}}, {Ticks -> {
+       Charting`ScaledTicks[{Log, Exp}], 
+       Charting`ScaledTicks[{Log, Exp}]}, GridLines -> {None, None}, 
+     FrameTicks -> {{
+        Charting`ScaledTicks[{Log, Exp}], 
+        Charting`ScaledFrameTicks[{Log, Exp}]}, {
+        Charting`ScaledTicks[{Log, Exp}], 
+        Charting`ScaledFrameTicks[{Log, Exp}]}}, 
+     AxesOrigin -> {-39.14394658089878, -6.907755278982137}, 
+     PlotRange -> {{-39.14394658089878, -25.328436022934504`}, \
+{-6.907755278982137, 9.210340371976184}}, DisplayFunction -> Identity, 
+     Method -> {
+      "DefaultBoundaryStyle" -> Automatic, "DefaultMeshStyle" -> 
+       AbsolutePointSize[6], "ScalingFunctions" -> None}, DisplayFunction -> 
+     Identity, DisplayFunction -> Identity, 
+     PlotRangePadding -> {{0, 0}, {0, 0}}, PlotRangeClipping -> True, 
+     ImagePadding -> All, DisplayFunction -> Identity, 
+     Method -> {
+      "DefaultBoundaryStyle" -> Automatic, "DefaultMeshStyle" -> 
+       AbsolutePointSize[6], "ScalingFunctions" -> None, 
+       "ClippingRange" -> {{{-39.14394629894958, -25.3284363048837}, \
+{-6.77743662723968, 
+        9.9893666613138}}, {{-39.14394629894958, -25.3284363048837}, \
+{-6.77743662723968, 9.210340371976184}}}}, DisplayFunction -> Identity, 
+     AspectRatio -> NCache[GoldenRatio^(-1), 0.6180339887498948], 
+     Axes -> {True, True}, AxesLabel -> {None, None}, AxesOrigin -> {-38., 0},
+      CoordinatesToolOptions -> {"DisplayFunction" -> ({
+         Exp[
+          Part[#, 1]], 
+         Exp[
+          Part[#, 2]]}& ), "CopiedValueFunction" -> ({
+         Exp[
+          Part[#, 1]], 
+         Exp[
+          Part[#, 2]]}& )}, DisplayFunction :> Identity, 
+     Frame -> {{True, True}, {True, True}}, FrameLabel -> {{
+        FormBox[
+        "\"N(>S)/\\!\\(\\*SuperscriptBox[\\(deg\\), \\(2\\)]\\)\"", 
+         TraditionalForm], None}, {
+        FormBox[
+        "\"S [erg \\!\\(\\*SuperscriptBox[\\(cm\\), \\(-2\\)]\\) \
+\\!\\(\\*SuperscriptBox[\\(s\\), \\(-1\\)]\\)]\"", TraditionalForm], None}}, 
+     FrameTicks -> {{Automatic, Automatic}, {Automatic, Automatic}}, 
+     GridLines -> {None, None}, GridLinesStyle -> Directive[
+       GrayLevel[0.5, 0.4]], 
+     Method -> {
+      "DefaultBoundaryStyle" -> Automatic, "DefaultMeshStyle" -> 
+       AbsolutePointSize[6], "ScalingFunctions" -> None}, 
+     PlotRange -> {{-39.14394658089878, -25.328436022934504`}, \
+{-6.907755278982137, 9.210340371976184}}, PlotRangeClipping -> True, 
+     PlotRangePadding -> {{Automatic, Automatic}, {Automatic, Automatic}}, 
+     Ticks -> {Automatic, Automatic}}],FormBox[
+    FormBox[
+     TemplateBox[{"\"Hard (2-10 keV)\"", "\"Soft (1-2 keV)\""}, "LineLegend", 
+      DisplayFunction -> (FormBox[
+        StyleBox[
+         StyleBox[
+          PaneBox[
+           TagBox[
+            GridBox[{{
+               TagBox[
+                GridBox[{{
+                   GraphicsBox[{{
+                    Directive[
+                    EdgeForm[
+                    Directive[
+                    Opacity[0.3], 
+                    GrayLevel[0]]], 
+                    PointSize[0.5], 
+                    Opacity[1.], 
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    AbsoluteThickness[1.6]], {
+                    LineBox[{{0, 10}, {20, 10}}]}}, {
+                    Directive[
+                    EdgeForm[
+                    Directive[
+                    Opacity[0.3], 
+                    GrayLevel[0]]], 
+                    PointSize[0.5], 
+                    Opacity[1.], 
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    AbsoluteThickness[1.6]], {}}}, AspectRatio -> Full, 
+                    ImageSize -> {20, 10}, PlotRangePadding -> None, 
+                    ImagePadding -> Automatic, 
+                    BaselinePosition -> (Scaled[0.1] -> Baseline)], #}, {
+                   GraphicsBox[{{
+                    Directive[
+                    EdgeForm[
+                    Directive[
+                    Opacity[0.3], 
+                    GrayLevel[0]]], 
+                    PointSize[0.5], 
+                    Opacity[1.], 
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    AbsoluteThickness[1.6]], {
+                    LineBox[{{0, 10}, {20, 10}}]}}, {
+                    Directive[
+                    EdgeForm[
+                    Directive[
+                    Opacity[0.3], 
+                    GrayLevel[0]]], 
+                    PointSize[0.5], 
+                    Opacity[1.], 
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    AbsoluteThickness[1.6]], {}}}, AspectRatio -> Full, 
+                    ImageSize -> {20, 10}, PlotRangePadding -> None, 
+                    ImagePadding -> Automatic, 
+                    BaselinePosition -> (Scaled[0.1] -> Baseline)], #2}}, 
+                 GridBoxAlignment -> {
+                  "Columns" -> {Center, Left}, "Rows" -> {{Baseline}}}, 
+                 AutoDelete -> False, 
+                 GridBoxDividers -> {
+                  "Columns" -> {{False}}, "Rows" -> {{False}}}, 
+                 GridBoxItemSize -> {"Columns" -> {{All}}, "Rows" -> {{All}}},
+                  GridBoxSpacings -> {
+                  "Columns" -> {{0.5}}, "Rows" -> {{0.8}}}], "Grid"]}}, 
+             GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+             AutoDelete -> False, 
+             GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{1}}, "Rows" -> {{0}}}], 
+            "Grid"], Alignment -> Left, AppearanceElements -> None, 
+           ImageMargins -> {{5, 5}, {5, 5}}, ImageSizeAction -> 
+           "ResizeToFit"], LineIndent -> 0, StripOnInput -> False], {
+         FontFamily -> "Arial"}, Background -> Automatic, StripOnInput -> 
+         False], TraditionalForm]& ), 
+      InterpretationFunction :> (RowBox[{"LineLegend", "[", 
+         RowBox[{
+           RowBox[{"{", 
+             RowBox[{
+               RowBox[{"Directive", "[", 
+                 RowBox[{
+                   RowBox[{"Opacity", "[", "1.`", "]"}], ",", 
+                   InterpretationBox[
+                    ButtonBox[
+                    TooltipBox[
+                    GraphicsBox[{{
+                    GrayLevel[0], 
+                    RectangleBox[{0, 0}]}, {
+                    GrayLevel[0], 
+                    RectangleBox[{1, -1}]}, {
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    RectangleBox[{0, -1}, {2, 1}]}}, AspectRatio -> 1, Frame -> 
+                    True, FrameStyle -> 
+                    RGBColor[
+                    0.24561133333333335`, 0.3378526666666667, 
+                    0.4731986666666667], FrameTicks -> None, PlotRangePadding -> 
+                    None, ImageSize -> 
+                    Dynamic[{
+                    Automatic, 1.35 CurrentValue["FontCapHeight"]/
+                    AbsoluteCurrentValue[Magnification]}]], 
+                    "RGBColor[0.368417, 0.506779, 0.709798]"], Appearance -> 
+                    None, BaseStyle -> {}, BaselinePosition -> Baseline, 
+                    DefaultBaseStyle -> {}, ButtonFunction :> 
+                    With[{Typeset`box$ = EvaluationBox[]}, 
+                    If[
+                    Not[
+                    AbsoluteCurrentValue["Deployed"]], 
+                    SelectionMove[Typeset`box$, All, Expression]; 
+                    FrontEnd`Private`$ColorSelectorInitialAlpha = 1; 
+                    FrontEnd`Private`$ColorSelectorInitialColor = 
+                    RGBColor[0.368417, 0.506779, 0.709798]; 
+                    FrontEnd`Private`$ColorSelectorUseMakeBoxes = True; 
+                    MathLink`CallFrontEnd[
+                    FrontEnd`AttachCell[Typeset`box$, 
+                    FrontEndResource["RGBColorValueSelector"], {
+                    0, {Left, Bottom}}, {Left, Top}, 
+                    "ClosingActions" -> {
+                    "SelectionDeparture", "ParentChanged", 
+                    "EvaluatorQuit"}]]]], BaseStyle -> Inherited, Evaluator -> 
+                    Automatic, Method -> "Preemptive"], 
+                    RGBColor[0.368417, 0.506779, 0.709798], Editable -> False,
+                     Selectable -> False], ",", 
+                   RowBox[{"AbsoluteThickness", "[", "1.6`", "]"}]}], "]"}], 
+               ",", 
+               RowBox[{"Directive", "[", 
+                 RowBox[{
+                   RowBox[{"Opacity", "[", "1.`", "]"}], ",", 
+                   InterpretationBox[
+                    ButtonBox[
+                    TooltipBox[
+                    GraphicsBox[{{
+                    GrayLevel[0], 
+                    RectangleBox[{0, 0}]}, {
+                    GrayLevel[0], 
+                    RectangleBox[{1, -1}]}, {
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    RectangleBox[{0, -1}, {2, 1}]}}, AspectRatio -> 1, Frame -> 
+                    True, FrameStyle -> 
+                    RGBColor[
+                    0.587148, 0.40736066666666665`, 0.09470066666666668], 
+                    FrameTicks -> None, PlotRangePadding -> None, ImageSize -> 
+                    Dynamic[{
+                    Automatic, 1.35 CurrentValue["FontCapHeight"]/
+                    AbsoluteCurrentValue[Magnification]}]], 
+                    "RGBColor[0.880722, 0.611041, 0.142051]"], Appearance -> 
+                    None, BaseStyle -> {}, BaselinePosition -> Baseline, 
+                    DefaultBaseStyle -> {}, ButtonFunction :> 
+                    With[{Typeset`box$ = EvaluationBox[]}, 
+                    If[
+                    Not[
+                    AbsoluteCurrentValue["Deployed"]], 
+                    SelectionMove[Typeset`box$, All, Expression]; 
+                    FrontEnd`Private`$ColorSelectorInitialAlpha = 1; 
+                    FrontEnd`Private`$ColorSelectorInitialColor = 
+                    RGBColor[0.880722, 0.611041, 0.142051]; 
+                    FrontEnd`Private`$ColorSelectorUseMakeBoxes = True; 
+                    MathLink`CallFrontEnd[
+                    FrontEnd`AttachCell[Typeset`box$, 
+                    FrontEndResource["RGBColorValueSelector"], {
+                    0, {Left, Bottom}}, {Left, Top}, 
+                    "ClosingActions" -> {
+                    "SelectionDeparture", "ParentChanged", 
+                    "EvaluatorQuit"}]]]], BaseStyle -> Inherited, Evaluator -> 
+                    Automatic, Method -> "Preemptive"], 
+                    RGBColor[0.880722, 0.611041, 0.142051], Editable -> False,
+                     Selectable -> False], ",", 
+                   RowBox[{"AbsoluteThickness", "[", "1.6`", "]"}]}], "]"}]}],
+              "}"}], ",", 
+           RowBox[{"{", 
+             RowBox[{#, ",", #2}], "}"}], ",", 
+           RowBox[{"LegendMarkers", "\[Rule]", "None"}], ",", 
+           RowBox[{"LabelStyle", "\[Rule]", 
+             RowBox[{"{", "}"}]}], ",", 
+           RowBox[{"LegendLayout", "\[Rule]", "\"Column\""}]}], "]"}]& ), 
+      Editable -> True], TraditionalForm], TraditionalForm]},
+  "Legended",
+  DisplayFunction->(GridBox[{{
+      TagBox[
+       ItemBox[
+        PaneBox[
+         TagBox[#, "SkipImageSizeLevel"], Alignment -> {Center, Baseline}, 
+         BaselinePosition -> Baseline], DefaultBaseStyle -> "Labeled"], 
+       "SkipImageSizeLevel"], 
+      ItemBox[#2, DefaultBaseStyle -> "LabeledLabel"]}}, 
+    GridBoxAlignment -> {"Columns" -> {{Center}}, "Rows" -> {{Center}}}, 
+    AutoDelete -> False, GridBoxItemSize -> Automatic, 
+    BaselinePosition -> {1, 1}]& ),
+  Editable->True,
+  InterpretationFunction->(RowBox[{"Legended", "[", 
+     RowBox[{#, ",", 
+       RowBox[{"Placed", "[", 
+         RowBox[{#2, ",", "After"}], "]"}]}], "]"}]& )]], "Output",
+ CellChangeTimes->{
+  3.680368899060959*^9, 3.6803689464296503`*^9, {3.6803689816895943`*^9, 
+   3.680369061270034*^9}, {3.680369103785555*^9, 3.680369119519928*^9}, {
+   3.680369226914928*^9, 3.680369245361905*^9}, 3.680369328662739*^9, 
+   3.680369517347644*^9, 3.680369776237444*^9, {3.680372802706847*^9, 
+   3.680372826250259*^9}, 3.6803745363982687`*^9, 3.680374624704692*^9, 
+   3.680382128702793*^9, 3.680385161715392*^9, 3.6803852019976397`*^9, 
+   3.6803857872431192`*^9}]
+}, Open  ]],
+
+Cell["", "PageBreak",
+ PageBreakBelow->True]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Manipulation", "Section",
+ CellChangeTimes->{{3.6803777253300962`*^9, 3.680377726266499*^9}}],
+
+Cell["\<\
+Check form of dN(>S)/dS against Moretti+ (2003) Figure 4, lower panel.\
+\>", "Text",
+ CellChangeTimes->{{3.6803681020150623`*^9, 3.680368127687958*^9}, {
+   3.680368249387888*^9, 3.680368269467393*^9}, {3.680371914087083*^9, 
+   3.6803719525761967`*^9}, {3.680372008904963*^9, 3.680372051971252*^9}, 
+   3.6803777223383303`*^9, {3.680382638528246*^9, 3.6803826393514643`*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"LogLogPlot", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "5"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "16"}]], ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "11"}]]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.6803696594149237`*^9, 3.680369675727456*^9}, {
+  3.6803697447382717`*^9, 3.6803697516170797`*^9}, {3.6803698350065327`*^9, 
+  3.680369835579219*^9}, {3.680369867105617*^9, 3.6803698699129457`*^9}, {
+  3.680370469067401*^9, 3.680370469297813*^9}, {3.680371971530109*^9, 
+  3.680371981914475*^9}}],
+
+Cell[BoxData[
+ GraphicsBox[{{{}, {}, 
+    {RGBColor[0.368417, 0.506779, 0.709798], AbsoluteThickness[1.6], Opacity[
+     1.], LineBox[CompressedData["
+1:eJwVi3041AccwImr1VMipqTktO5YR6tbv/O71+/vXm3eOq0lkrnKy0k8hLkV
+FarnUpHKRXuKhSyRdeuZl/g25rXsKJ5aqCzu9MZ6QWWZ/fF5Ps/njw9dFRuw
+c5aZmZnvDP+7obGuuipajEU7C40+GxSw7EUFTTjT0f3au5f8FaCxL1S2q8Wo
+DzA0Ws70l1GZI4NRYpTSksvqfBVwycrPwS5SjPZJ6hyWtwJObnn4fdKOmf/Y
+xZ75cgWEj5p78kLE2FmfLPiTpwArR8X1Jj8xJg5XfgxmKmBg1P1u5Boxcqsb
+Gt0/yOGxWf6Y8yIxEgztetduOfRtd1286y2Ff5mPGNb+LIdAqW2oVy+FA9FM
+x9VpcpgTll7sWU1hELFYs3mzHDgf/BfUnKWwIDOGoWXJYZtRmNapoTDsaLes
+d5Ycflt4bXQ8hMKHE/SMFX0yyP01/cBVIYVddo2DjF9kUJh33yaVTmH73sob
+eq0MSjuU5QOWFC6vc8P47TLw2MeINAwBDvlIB2s4MjCp97v0tgLqWk4Nhy+Q
+wcpe4uOuMsDjb91T/fqlsCl34ZMzWsBKdsAXoZelUJMV03o3BjDsHEWz0kjh
+goVr509+gAWV6rehlBSqr0d0H1oL6JwFNfFzpbDRaDH53gbwmHXJ8/I2CbTd
+yfC3HBZhw8VZXQ5HJBCgnF/OLRehyDDKzvGSQH+bj3dujAiPBEYnJZpLoLMm
+z2jLFqHg3+YSnxtiqPBn6mreCZH+7HbI0hQxZD+MPZpeK8Qp1qG0Pncx3DP+
+/sOeA0LU0eOhapgCl2edFYfFQtxtmd9Tq6Mg+OSKcbQU4s0l7DytNwXvqzRc
+lw4BYkZt7KcWFBTcOn6zOEuAxOPs2U56gKLQKzJlgADN7KcFTmoA3RnrARcH
+AUYM6VTb6ADZraxq+wd8DGQeNqReFMHL+I056wr5mLkwgZ5nLQK/JezyOBUf
+2Wp15CdxQrAjljf1MvkoGV499eq+ANomvMdUL3noestHWiUXwH49O9TmKg/r
+h6aY/SV8+HFkVYcxkYfj3lYJ5234UOfQlfKI4OHsRNPTnlgetL9A/vQkFyPK
+x8JeG7gg5NZOyRq46Po37YqezwX9gd3TFfu5OOjcNDJaQMIJijUtknOxfyuN
+d4dGQlCxh+3EfC4uDd6TWhLvCUzLp1GGThINThHrxrs5sOVB5Y2uUySGKc00
+/wg40C5Ttnbmkvg15WsdyOMA/+qr7o6TJDpOppTUe3LAKXO96Y9sEj18E7qP
+sjnwxKN2UU0WicknRlwZbhzYfbA5oiiDxOYGC0OQHQfS3fptEvaQqJ14NKfp
+KQFvclOXxSWQ+NWAOv9zEwHhH1cwY+JJ7Oi5x8oZIsDrjoofEUeiV1KYctsj
+Aqz2mcKDd5FoM+Z6drKHAJ3hda1kB4li0+WV7jcJmMs73QzbSVRqMvW59QRo
+iokugYpE83ky2ftaAkI0KcOc70hs0CWFt1wnwOWzaWvWVhKLykpKw8oJOHX8
+gqNbMImFodc4rWUE0N5RDEYQibenSlo8Sgkw3c7gOQeSSAuVGD8UErDFkyFf
+vplE49bnSarzBLQXtWxY+i2Jpdf2zm47RwB/QVTw4k0k7kh7c3pNPgFXkueF
+231Dom3fxlVn8gj4D6c0PUQ=
+      "]]}}, {}},
+  AspectRatio->NCache[GoldenRatio^(-1), 0.6180339887498948],
+  Axes->{True, True},
+  AxesLabel->{None, None},
+  AxesOrigin->{-37.41700773765748, 21.390374185497162`},
+  CoordinatesToolOptions:>{"DisplayFunction" -> ({
+      Exp[
+       Part[#, 1]], 
+      Exp[
+       Part[#, 2]]}& ), "CopiedValueFunction" -> ({
+      Exp[
+       Part[#, 1]], 
+      Exp[
+       Part[#, 2]]}& )},
+  DisplayFunction->Identity,
+  Frame->{{False, False}, {False, False}},
+  FrameLabel->{{None, None}, {None, None}},
+  FrameTicks->{{
+     Charting`ScaledTicks[{Log, Exp}], 
+     Charting`ScaledFrameTicks[{Log, Exp}]}, {
+     Charting`ScaledTicks[{Log, Exp}], 
+     Charting`ScaledFrameTicks[{Log, Exp}]}},
+  GridLines->{None, None},
+  GridLinesStyle->Directive[
+    GrayLevel[0.5, 0.4]],
+  ImagePadding->All,
+  Method->{
+   "DefaultBoundaryStyle" -> Automatic, "DefaultMeshStyle" -> 
+    AbsolutePointSize[6], "ScalingFunctions" -> None},
+  PlotRange->{{-37.41700773765748, -24.75278977318176}, {21.390374185497162`, 
+   47.82910755619889}},
+  PlotRangeClipping->True,
+  PlotRangePadding->{{
+     Scaled[0.02], 
+     Scaled[0.02]}, {
+     Scaled[0.05], 
+     Scaled[0.05]}},
+  Ticks->FrontEndValueCache[{
+     Charting`ScaledTicks[{Log, Exp}], 
+     Charting`ScaledTicks[{Log, Exp}]}, {{{-36.841361487904734`, 
+       FormBox[
+        TemplateBox[{"10", 
+          RowBox[{"-", "16"}]}, "Superscript", SyntaxForm -> SuperscriptBox], 
+        TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {-34.538776394910684`, 
+       FormBox[
+        TemplateBox[{"10", 
+          RowBox[{"-", "15"}]}, "Superscript", SyntaxForm -> SuperscriptBox], 
+        TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {-32.23619130191664, 
+       FormBox[
+        TemplateBox[{"10", 
+          RowBox[{"-", "14"}]}, "Superscript", SyntaxForm -> SuperscriptBox], 
+        TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {-29.933606208922594`, 
+       FormBox[
+        TemplateBox[{"10", 
+          RowBox[{"-", "13"}]}, "Superscript", SyntaxForm -> SuperscriptBox], 
+        TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {-27.631021115928547`, 
+       FormBox[
+        TemplateBox[{"10", 
+          RowBox[{"-", "12"}]}, "Superscript", SyntaxForm -> SuperscriptBox], 
+        TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {-25.328436022934504`, 
+       FormBox[
+        TemplateBox[{"10", 
+          RowBox[{"-", "11"}]}, "Superscript", SyntaxForm -> SuperscriptBox], 
+        TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {-39.14394658089878, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-38.45079940033883, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-38.04533429223067, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-37.75765221977888, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-37.534508668464674`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-37.35218711167072, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-37.19803643184346, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-37.06450503921894, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-36.946722003562556`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-36.14821430734479, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-35.74274919923662, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-35.45506712678484, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-35.23192357547063, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-35.04960201867667, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-34.89545133884942, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-34.76191994622489, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-34.64413691056851, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-33.84562921435074, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-33.44016410624258, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-33.1524820337908, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-32.92933848247659, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-32.74701692568263, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-32.59286624585537, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-32.45933485323085, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-32.34155181757447, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-31.543044121356694`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-31.13757901324853, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-30.84989694079675, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-30.626753389482538`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-30.444431832688586`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-30.290281152861326`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-30.156749760236803`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-30.03896672458042, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-29.240459028362647`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-28.834993920254483`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-28.547311847802703`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-28.324168296488494`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-28.14184673969454, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-27.98769605986728, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-27.85416466724276, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-27.736381631586376`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-26.937873935368604`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-26.53240882726044, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-26.244726754808656`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-26.021583203494448`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-25.839261646700493`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-25.685110966873236`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-25.551579574248713`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-25.43379653859233, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-24.635288842374557`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-24.229823734266393`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-23.942141661814613`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-23.7189981105004, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-23.536676553706446`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-23.38252587387919, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-23.248994481254666`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-23.131211445598282`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-23.025850929940457`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-22.620385821832294`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-22.33270374938051, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {-22.1095601980663, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}}, {{23.025850929940457`, 
+       FormBox[
+        TemplateBox[{"10", "10"}, "Superscript", SyntaxForm -> 
+         SuperscriptBox], TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {27.631021115928547`, 
+       FormBox[
+        TemplateBox[{"10", "12"}, "Superscript", SyntaxForm -> 
+         SuperscriptBox], TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {32.23619130191664, 
+       FormBox[
+        TemplateBox[{"10", "14"}, "Superscript", SyntaxForm -> 
+         SuperscriptBox], TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {36.841361487904734`, 
+       FormBox[
+        TemplateBox[{"10", "16"}, "Superscript", SyntaxForm -> 
+         SuperscriptBox], TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {41.44653167389282, 
+       FormBox[
+        TemplateBox[{"10", "18"}, "Superscript", SyntaxForm -> 
+         SuperscriptBox], TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {46.051701859880914`, 
+       FormBox[
+        TemplateBox[{"10", "20"}, "Superscript", SyntaxForm -> 
+         SuperscriptBox], TraditionalForm], {0.01, 0.}, {
+        AbsoluteThickness[0.1]}}, {18.420680743952367`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {20.72326583694641, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {25.328436022934504`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {29.933606208922594`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {34.538776394910684`, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {39.14394658089878, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {43.74911676688687, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {48.35428695287496, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {50.65687204586901, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {51.06233715397717, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}, {51.35001922642895, 
+       FormBox[
+        InterpretationBox[
+         StyleBox[
+          
+          GraphicsBox[{}, ImageSize -> {0., 0.}, BaselinePosition -> 
+           Baseline], "CacheGraphics" -> False], 
+         Spacer[{0., 0.}]], TraditionalForm], {0.005, 0.}, {
+        AbsoluteThickness[0.1]}}}}]]], "Output",
+ CellChangeTimes->{
+  3.680369677609949*^9, 3.680369752339424*^9, 3.680369836177956*^9, 
+   3.6803698798666763`*^9, 3.6803700533553553`*^9, 3.6803704702243557`*^9, {
+   3.6803719752483187`*^9, 3.680371982968478*^9}, 3.680372829142885*^9, 
+   3.680374538298428*^9, 3.680382128895451*^9, 3.680385162831485*^9, 
+   3.680385202527755*^9, 3.6803857876359043`*^9}]
+}, Open  ]],
+
+Cell["\<\
+Troubleshooting Mathematica integration (Integrate[...] returns funky results).
+If I break the integration steps apart (don\[CloseCurlyQuote]t introduce \
+floating point numbers until the last minute, the results seem best matched \
+to results from NIntegrate[...] rather than Integrate[...].
+I am having trouble getting Integrate[...] to work correctly, so I\
+\[CloseCurlyQuote]ll just use NIntegrate[...].\
+\>", "Text",
+ CellChangeTimes->{{3.6803766783916807`*^9, 3.6803767575166492`*^9}, {
+  3.68038264459204*^9, 3.680382670801116*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"Integrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"2.1", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "16"}]]}], ",", 
+     RowBox[{"8", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "12"}]]}]}], "}"}]}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"2.1", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "16"}]]}], ",", 
+     RowBox[{"8", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "12"}]]}]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}], ",", 
+   RowBox[{"PrecisionGoal", "\[Rule]", "10"}]}], "]"}]}], "Input"],
+
+Cell[BoxData["0.`"], "Output",
+ CellChangeTimes->{3.680376776676797*^9, 3.680382130584002*^9, 
+  3.680385224466464*^9, 3.680385788696114*^9}],
+
+Cell[BoxData["1.7348341321698963`*^-11"], "Output",
+ CellChangeTimes->{3.680376776676797*^9, 3.680382130584002*^9, 
+  3.680385224466464*^9, 3.680385788749926*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"intres", "=", 
+  RowBox[{"Integrate", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "S"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"N0", "*", 
+        RowBox[{
+         SuperscriptBox[
+          RowBox[{"(", 
+           RowBox[{"2", "\[Times]", 
+            SuperscriptBox["10", 
+             RowBox[{"-", "15"}]]}], ")"}], "\[Alpha]"], "/", 
+         RowBox[{"(", 
+          RowBox[{
+           SuperscriptBox["S", "\[Alpha]"], "+", 
+           RowBox[{
+            SuperscriptBox["S0", 
+             RowBox[{"\[Alpha]", "-", "\[Beta]"}]], "\[Times]", 
+            SuperscriptBox["S", "\[Beta]"]}]}], ")"}]}]}], ",", "S"}], 
+      "]"}]}], ",", "S"}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.6803724657561913`*^9, 3.680372503350321*^9}, {
+  3.680372567393372*^9, 3.680372614673202*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   SuperscriptBox["500000000000000", 
+    RowBox[{"-", "\[Alpha]"}]], " ", "N0", " ", "S", " ", 
+   SuperscriptBox["S0", "\[Beta]"], " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"-", 
+      FractionBox["1", 
+       RowBox[{
+        RowBox[{
+         SuperscriptBox["S", "\[Beta]"], " ", 
+         SuperscriptBox["S0", "\[Alpha]"]}], "+", 
+        RowBox[{
+         SuperscriptBox["S", "\[Alpha]"], " ", 
+         SuperscriptBox["S0", "\[Beta]"]}]}]]}], "+", 
+     FractionBox[
+      RowBox[{
+       SuperscriptBox["S", 
+        RowBox[{"-", "\[Beta]"}]], " ", 
+       SuperscriptBox["S0", 
+        RowBox[{"-", "\[Alpha]"}]], " ", "\[Alpha]"}], 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"-", "1"}], "+", "\[Beta]"}], ")"}], " ", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"-", "\[Alpha]"}], "+", "\[Beta]"}], ")"}]}]]}], ")"}]}], 
+  "-", 
+  FractionBox[
+   RowBox[{
+    SuperscriptBox["500000000000000", 
+     RowBox[{"-", "\[Alpha]"}]], " ", "N0", " ", 
+    SuperscriptBox["S", 
+     RowBox[{"1", "-", "\[Beta]"}]], " ", 
+    SuperscriptBox["S0", 
+     RowBox[{
+      RowBox[{"-", "\[Alpha]"}], "+", "\[Beta]"}]], " ", 
+    RowBox[{"(", 
+     RowBox[{"\[Alpha]", "+", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"-", "\[Alpha]"}], "+", "\[Beta]"}], ")"}], " ", 
+       RowBox[{"Hypergeometric2F1", "[", 
+        RowBox[{"1", ",", 
+         FractionBox[
+          RowBox[{
+           RowBox[{"-", "1"}], "+", "\[Beta]"}], 
+          RowBox[{
+           RowBox[{"-", "\[Alpha]"}], "+", "\[Beta]"}]], ",", 
+         RowBox[{"1", "+", 
+          FractionBox[
+           RowBox[{
+            RowBox[{"-", "1"}], "+", "\[Beta]"}], 
+           RowBox[{
+            RowBox[{"-", "\[Alpha]"}], "+", "\[Beta]"}]]}], ",", 
+         RowBox[{
+          RowBox[{"-", 
+           SuperscriptBox["S", 
+            RowBox[{"\[Alpha]", "-", "\[Beta]"}]]}], " ", 
+          SuperscriptBox["S0", 
+           RowBox[{
+            RowBox[{"-", "\[Alpha]"}], "+", "\[Beta]"}]]}]}], "]"}]}]}], 
+     ")"}]}], 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"-", "1"}], "+", "\[Beta]"}], ")"}], " ", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"-", "\[Alpha]"}], "+", "\[Beta]"}], ")"}]}]]}]], "Output",
+ CellChangeTimes->{
+  3.680372484924604*^9, {3.6803725614123707`*^9, 3.6803726154168577`*^9}, 
+   3.680372843724627*^9, 3.680374541432426*^9, 3.680376784361396*^9, 
+   3.680382131126954*^9, 3.6803852255166893`*^9, 3.6803857890118513`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"lb", "=", 
+   RowBox[{"intres", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\[Alpha]", "\[Rule]", "1.57"}], ",", 
+      RowBox[{"\[Beta]", "\[Rule]", "0.44"}], ",", 
+      RowBox[{"S0", "\[Rule]", "4.5*^-15"}], ",", 
+      RowBox[{"N0", "\[Rule]", "5300"}], ",", 
+      RowBox[{"S", "\[Rule]", "2.1*^-16"}]}], "}"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"hb", "=", 
+   RowBox[{"intres", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\[Alpha]", "\[Rule]", "1.57"}], ",", 
+      RowBox[{"\[Beta]", "\[Rule]", "0.44"}], ",", 
+      RowBox[{"S0", "\[Rule]", "4.5*^-15"}], ",", 
+      RowBox[{"N0", "\[Rule]", "5300"}], ",", 
+      RowBox[{"S", "\[Rule]", "8*^-12"}]}], "}"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"hb", "-", "lb"}]}], "Input",
+ CellChangeTimes->{{3.680372616320035*^9, 3.680372734912772*^9}, {
+   3.6803727790290537`*^9, 3.680372785352377*^9}, 3.680382116100564*^9}],
+
+Cell[BoxData["1.7348341321698565`*^-11"], "Output",
+ CellChangeTimes->{{3.680372654127342*^9, 3.6803727358210373`*^9}, 
+   3.680372787856505*^9, 3.680372844778211*^9, 3.680374542043107*^9, 
+   3.680376793628639*^9, {3.680382116767891*^9, 3.680382131483767*^9}, 
+   3.680385225679826*^9, 3.680385789145352*^9}]
+}, Open  ]],
+
+Cell["", "PageBreak",
+ PageBreakBelow->True]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Verification", "Section",
+ CellChangeTimes->{{3.6803777307382307`*^9, 3.6803777317943907`*^9}}],
+
+Cell["\<\
+Check integrated flux values against different workers\[CloseCurlyQuote] \
+results (compare Mathematica\[CloseCurlyQuote]s plain Integrate vs. \
+NIntegrate as well).  First, check the integrated fluxes from Moretti+ (2003).\
+\>", "Text",
+ CellChangeTimes->{{3.680371843553955*^9, 3.68037186458477*^9}, {
+   3.68037546862479*^9, 3.680375503689747*^9}, {3.6803763109918957`*^9, 
+   3.680376336807295*^9}, 3.6803780304236803`*^9, 3.680382066417345*^9, {
+   3.6803827906274967`*^9, 3.680382791988109*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[TextData[{
+ "Moretti+ (2003, Sec. 7.2) obtain integrated 2-10 keV flux of ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"1.75", "\[PlusMinus]", "0.11"}], ")"}], "\[Times]", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "11"}]]}],
+    FontWeight->"Bold"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["deg", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", from their flux interval ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2.1", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "16"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " to ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"7.79", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "12"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ "."
+}], "Text",
+ CellChangeTimes->{{3.6803764491616297`*^9, 3.6803766340567923`*^9}, {
+  3.68037701164421*^9, 3.680377011995757*^9}, {3.6803783194195137`*^9, 
+  3.680378319906498*^9}},
+ Background->RGBColor[1, 0.9, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"2.1", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "16"}]]}], ",", 
+     RowBox[{"7.79", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "12"}]]}]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}], ",", 
+   RowBox[{"PrecisionGoal", "\[Rule]", "10"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.680369405890976*^9, 3.680369491962611*^9}, {
+   3.680369595845715*^9, 3.680369616277711*^9}, {3.680369854853838*^9, 
+   3.6803698553713083`*^9}, {3.680369887032723*^9, 3.6803699246134033`*^9}, {
+   3.680369997032406*^9, 3.680369998387179*^9}, {3.680370060104817*^9, 
+   3.680370100434998*^9}, {3.680370183318974*^9, 3.6803703625122757`*^9}, {
+   3.6803709895444927`*^9, 3.680370998670596*^9}, {3.680371046194676*^9, 
+   3.680371062810277*^9}, {3.680371112691512*^9, 3.680371116515593*^9}, {
+   3.6803711616397953`*^9, 3.6803711896387672`*^9}, {3.68037122069412*^9, 
+   3.680371273511895*^9}, {3.680372131741571*^9, 3.680372178527573*^9}, {
+   3.680372408915819*^9, 3.6803724370061407`*^9}, {3.680376662529923*^9, 
+   3.68037666318683*^9}, 3.680377953833374*^9, {3.680378167006235*^9, 
+   3.6803781864628057`*^9}, {3.680378321907361*^9, 3.6803783222743196`*^9}}],
+
+Cell[BoxData["1.7344396208121905`*^-11"], "Output",
+ CellChangeTimes->{{3.680369410896762*^9, 3.680369472057473*^9}, 
+   3.680369518645615*^9, {3.680369626789744*^9, 3.680369628971273*^9}, {
+   3.680369905364802*^9, 3.680369945866955*^9}, {3.680370071659953*^9, 
+   3.680370103799965*^9}, {3.6803701871031523`*^9, 3.680370215143423*^9}, {
+   3.680370276516761*^9, 3.680370363518277*^9}, 3.680371005275549*^9, {
+   3.680371043166889*^9, 3.6803710635727777`*^9}, 3.680371117399819*^9, {
+   3.6803711823729477`*^9, 3.6803711905151463`*^9}, {3.680371229701024*^9, 
+   3.6803712632080393`*^9}, 3.680372440311761*^9, 3.6803728761909924`*^9, 
+   3.6803766651032877`*^9, 3.680377955856773*^9, {3.6803781683560753`*^9, 
+   3.680378187041644*^9}, 3.680378322993787*^9, 3.680382131640615*^9, 
+   3.680385226418391*^9, 3.680385789203554*^9}]
+}, Open  ]],
+
+Cell[TextData[{
+ "Moretti+ (2003, Sec. 7.1) obtain integrated 0.5-2 keV flux of ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"6.85", "\[PlusMinus]", "0.3"}], ")"}], "\[Times]", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "12"}]]}],
+    FontWeight->"Bold"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["deg", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " over flux interval ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2.44", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "17"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " to ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["10", 
+    RowBox[{"-", "11"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ".\nNote the use of softN[...] rather than hardN[...] above."
+}], "Text",
+ CellChangeTimes->{{3.680376956494772*^9, 3.680377105244596*^9}, {
+  3.680378307747004*^9, 3.6803783077470503`*^9}},
+ Background->RGBColor[1, 0.9, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"softN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"2.44", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "17"}]]}], ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "11"}]]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.680372868487649*^9, 3.6803729135049887`*^9}, {
+   3.680372945625122*^9, 3.680372952161327*^9}, 3.680373128586153*^9, {
+   3.680375260437764*^9, 3.680375274433467*^9}, {3.680377088299817*^9, 
+   3.680377092338685*^9}, 3.680378309170537*^9}],
+
+Cell[BoxData["6.857100395526915`*^-12"], "Output",
+ CellChangeTimes->{
+  3.6803729741307487`*^9, 3.680373134933514*^9, 3.680374551697879*^9, 
+   3.680374642081098*^9, {3.6803752655169086`*^9, 3.6803752773390493`*^9}, 
+   3.680377093022478*^9, 3.6803781972386723`*^9, 3.680378310222288*^9, 
+   3.680382131832939*^9, 3.680385226861555*^9, 3.680385789266129*^9}]
+}, Open  ]],
+
+Cell["Now check computed values from other papers for sanity.", "Text",
+ CellChangeTimes->{{3.6803780061379128`*^9, 3.680378021721788*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[TextData[{
+ "Bulbul+ (2016, ApJ 818) compute unresolved point source flux in 2-10 keV \
+band: ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["F", "CXB"], "=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"1.20", "\[PlusMinus]", "0.43"}], ")"}], "\[Times]", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "11"}]]}], "=", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{"2.18", "\[PlusMinus]", "0.13"}], ")"}], "\[Times]", 
+       SuperscriptBox["10", 
+        RowBox[{"-", "11"}]]}], "-", 
+      RowBox[{"\[Integral]", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"S", "\[Times]", 
+          RowBox[{"dN", "/", "dS"}]}], ")"}], " ", "dS"}]}]}]}]}], 
+   TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", so integral should be ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{"0.98", "\[Times]", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "11"}]]}],
+    FontWeight->"Bold"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["deg", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " (for limits: ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"1.3", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "14"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " to ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"8", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "12"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ").\n",
+ StyleBox["I get a closer result if I modify the limits from those stated by \
+Bulbul+.  ",
+  FontWeight->"Bold"],
+ "Ask Scott about this..."
+}], "Text",
+ CellChangeTimes->{{3.6803755085454807`*^9, 3.680375536701474*^9}, {
+   3.6803756191332693`*^9, 3.6803759379887543`*^9}, {3.680376014847259*^9, 
+   3.6803760291998568`*^9}, {3.68037636399161*^9, 3.6803763924831553`*^9}, {
+   3.6803769027895613`*^9, 3.680376934410245*^9}, 3.680378251520855*^9, {
+   3.6803806590709343`*^9, 3.680380665087322*^9}, {3.680382803084786*^9, 
+   3.680382803636445*^9}, {3.680382884374061*^9, 3.68038289226265*^9}},
+ Background->RGBColor[1, 0.9, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"1.3", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "14"}]]}], ",", 
+     RowBox[{"8", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "12"}]]}]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "14"}]], ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "8"}]]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.680369405890976*^9, 3.680369491962611*^9}, {
+   3.680369595845715*^9, 3.680369616277711*^9}, {3.680369854853838*^9, 
+   3.6803698553713083`*^9}, {3.680369887032723*^9, 3.6803699246134033`*^9}, {
+   3.680369997032406*^9, 3.680369998387179*^9}, {3.680370060104817*^9, 
+   3.680370100434998*^9}, {3.680370183318974*^9, 3.6803703625122757`*^9}, {
+   3.6803709895444927`*^9, 3.680370998670596*^9}, {3.680371046194676*^9, 
+   3.680371062810277*^9}, {3.680371112691512*^9, 3.680371116515593*^9}, {
+   3.6803711616397953`*^9, 3.6803711896387672`*^9}, {3.68037122069412*^9, 
+   3.680371273511895*^9}, {3.680372131741571*^9, 3.680372353537314*^9}, {
+   3.6803753269531107`*^9, 3.6803754047316923`*^9}, {3.680375962204239*^9, 
+   3.680375971534588*^9}, 3.680376803127692*^9, 3.680376923520769*^9, {
+   3.680380585588417*^9, 3.680380667416445*^9}, {3.680380738608693*^9, 
+   3.680380741888465*^9}}],
+
+Cell[BoxData["8.391928450601038`*^-12"], "Output",
+ CellChangeTimes->{{3.680372180951022*^9, 3.680372250544804*^9}, 
+   3.680372355360372*^9, 3.6803728484908037`*^9, {3.6803753240283203`*^9, 
+   3.680375405884038*^9}, 3.680375943088167*^9, 3.680375973578801*^9, 
+   3.680376803846958*^9, {3.680380604314909*^9, 3.680380631791185*^9}, 
+   3.680380669441722*^9, {3.680380739234893*^9, 3.680380759139069*^9}, 
+   3.6803821319661493`*^9, 3.6803852273801527`*^9, 3.680385789328454*^9}],
+
+Cell[BoxData["9.620449384918723`*^-12"], "Output",
+ CellChangeTimes->{{3.680372180951022*^9, 3.680372250544804*^9}, 
+   3.680372355360372*^9, 3.6803728484908037`*^9, {3.6803753240283203`*^9, 
+   3.680375405884038*^9}, 3.680375943088167*^9, 3.680375973578801*^9, 
+   3.680376803846958*^9, {3.680380604314909*^9, 3.680380631791185*^9}, 
+   3.680380669441722*^9, {3.680380739234893*^9, 3.680380759139069*^9}, 
+   3.6803821319661493`*^9, 3.6803852273801527`*^9, 3.6803857893353357`*^9}]
+}, Open  ]],
+
+Cell[TextData[{
+ "Walker+ (2012, MNRAS 422) use the same procedure as Bulbul+ (2016); the \
+integral should be ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{"0.31", "\[Times]", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "11"}]]}],
+    FontWeight->"Bold"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " = ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2.18", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "11"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " - ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"1.87", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "11"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["deg", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", for 2-10 keV band.\nThey state lower flux bound of ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["10", 
+    RowBox[{"-", "13"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " , but don\[CloseCurlyQuote]t explicitly give ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["S", "max"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", so that might be either Moretti\[CloseCurlyQuote]s flux bound ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"8", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "12"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " or just +\[Infinity] (or the bright source correction from Moretti Sec. 3)."
+}], "Text",
+ CellChangeTimes->{{3.6803759875021257`*^9, 3.6803760059189157`*^9}, {
+  3.680376125657735*^9, 3.680376212036561*^9}, {3.6803763826243*^9, 
+  3.6803763853839197`*^9}, {3.68037682358712*^9, 3.680376874637455*^9}, {
+  3.680378219047455*^9, 3.6803782374215097`*^9}, {3.6803808147781343`*^9, 
+  3.680380829490328*^9}},
+ Background->RGBColor[1, 0.9, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "13"}]], ",", 
+     RowBox[{"8", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "12"}]]}]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "13"}]], ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "8"}]]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.680374857386389*^9, 3.6803748659467688`*^9}, {
+   3.680374956468066*^9, 3.6803749810975513`*^9}, {3.6803750447914667`*^9, 
+   3.680375054223028*^9}, {3.680375284289102*^9, 3.680375320719816*^9}, 
+   3.68037616492303*^9, 3.680376249938057*^9, 3.680376809646456*^9}],
+
+Cell[BoxData["2.8285413922318204`*^-12"], "Output",
+ CellChangeTimes->{
+  3.680374967593978*^9, {3.680375294786982*^9, 3.680375321954472*^9}, 
+   3.6803762510856256`*^9, 3.680376810222913*^9, 3.680382132070603*^9, 
+   3.680385227560289*^9, 3.680385789398178*^9}],
+
+Cell[BoxData["3.082393548069013`*^-12"], "Output",
+ CellChangeTimes->{
+  3.680374967593978*^9, {3.680375294786982*^9, 3.680375321954472*^9}, 
+   3.6803762510856256`*^9, 3.680376810222913*^9, 3.680382132070603*^9, 
+   3.680385227560289*^9, 3.680385789404748*^9}]
+}, Open  ]],
+
+Cell[TextData[{
+ "Henley & Shelton (2013) obtain integrated 0.5-2 keV flux of faint sources",
+ StyleBox[" ",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2.97", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "12"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Bold"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["deg", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " for flux range ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2.5", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "17"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " to ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["10", 
+    RowBox[{"-", "14"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ".\nNote the use of softN[...] rather than hardN[...] above."
+}], "Text",
+ CellChangeTimes->{{3.680377386257873*^9, 3.680377485710045*^9}},
+ Background->RGBColor[1, 0.9, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"softN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"2.5", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "17"}]]}], ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "14"}]]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.680374175592567*^9, 3.6803741987287893`*^9}, {
+  3.680377488198985*^9, 3.680377495543453*^9}}],
+
+Cell[BoxData["2.9718137102997833`*^-12"], "Output",
+ CellChangeTimes->{3.680374220296433*^9, 3.680374547173369*^9, 
+  3.6803746341786413`*^9, 3.680377496158807*^9, 3.6803821324314632`*^9, 
+  3.680385227766714*^9, 3.680385789471425*^9}]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Application", "Section",
+ CellChangeTimes->{{3.680377796949306*^9, 3.680377798044121*^9}}],
+
+Cell[TextData[{
+ "The nominal source flux threshold from the ESAS \
+\[OpenCurlyDoubleQuote]cheese\[CloseCurlyDoubleQuote] task is ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["10", 
+    RowBox[{"-", "14"}]], TraditionalForm]]],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]]],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]]],
+ " over the 0.4-7.2 keV band. Assuming typical point source photon index \
+\[CapitalGamma]=1.4, this translates to flux ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"9.16", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "15"}]]}], TraditionalForm]]],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]]],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]]],
+ " in the 2-10 keV band.  With ",
+ StyleBox["absorbing column ~",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2", "\[Times]", 
+    SuperscriptBox["10", "22"], " ", 
+    SuperscriptBox["cm", 
+     RowBox[{"-", "2"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", the actual threshold is ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"1.59", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "14"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " in the 0.4-7.2 keV band, or ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"1.46", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "14"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Bold"],
+ " in the 2-10 keV band.\n(computed using XSPEC commands:\n    data \
+(...anything...)\n    abund wilm\n    lmod absmodel ../../../../absmodel/\n   \
+ xset POW_EMIN 0.4\n    xset POW_EMAX 7.2\n    mo tbnew_gas*powerlaw\n    2\n \
+   1.4\n    1e-2\n    flux 0.4 7.2  # How much was the flux attenuated by \
+absorption\n    newpar 4 1.5895e-2  # Rescale normalization so that absorbed \
+flux is 1e-14\n    flux 0.4 7.2  # Confirm that absorbed flux is now 1e-14\n  \
+  newpar 1 0  # Reset absorption\n    flux 2 10  # Confirm that unabsorbed \
+flux threshold now is 1.46e-14 (same linear scaling)\n)\n\nThe flux threshold \
+is still a bit higher than I state because:\n1. point source removal is not \
+as effective for sources \
+\[OpenCurlyDoubleQuote]within\[CloseCurlyDoubleQuote] the remnant, but I \
+neglect this effect."
+}], "Text",
+ CellChangeTimes->{{3.680377801252041*^9, 3.680377926992268*^9}, {
+  3.680378126694683*^9, 3.680378134157393*^9}, {3.680378440677525*^9, 
+  3.6803785125282297`*^9}, {3.680378678226955*^9, 3.680378714476169*^9}, {
+  3.680380456440666*^9, 3.680380536930675*^9}, {3.680382719322174*^9, 
+  3.680382719890476*^9}, {3.6803849572114*^9, 3.6803851215589314`*^9}, {
+  3.6803853979981403`*^9, 3.68038561550003*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"1.46", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "14"}]]}], ",", 
+     RowBox[{"8", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "12"}]]}]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.680371307487196*^9, 3.680371309591673*^9}, {
+   3.680371404422332*^9, 3.680371405115254*^9}, {3.680371444108367*^9, 
+   3.680371445948069*^9}, {3.680378059775701*^9, 3.68037808922194*^9}, {
+   3.6803785303450117`*^9, 3.680378553664053*^9}, {3.6803799070737343`*^9, 
+   3.680379910428504*^9}, 3.68038027193478*^9, {3.680380366703046*^9, 
+   3.680380377088869*^9}, 3.6803804478266973`*^9, 3.680380541816807*^9, {
+   3.680385147991579*^9, 3.680385152527679*^9}}],
+
+Cell[BoxData["7.970087760861951`*^-12"], "Output",
+ CellChangeTimes->{
+  3.680371311075904*^9, 3.680371405547388*^9, {3.680371450425932*^9, 
+   3.6803714525273857`*^9}, 3.680373138509345*^9, {3.680378066282732*^9, 
+   3.6803780897502003`*^9}, {3.680378543606509*^9, 3.680378554418503*^9}, 
+   3.6803799125182657`*^9, 3.680380272587418*^9, {3.680380371945294*^9, 
+   3.680380377890884*^9}, 3.6803804537482*^9, {3.680380540366997*^9, 
+   3.68038054226046*^9}, 3.680382132572214*^9, 3.6803851544814043`*^9, 
+   3.6803852279375257`*^9, 3.680385789537739*^9}]
+}, Open  ]],
+
+Cell[TextData[{
+ "To extrapolate to higher flux sources in 2-10 keV band, Moretti+ (2003, \
+Sec. 3) use HEAO-1 A2 survey, which yields brightness ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"4.28", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "13"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["deg", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " for all sources with flux > ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"3.1", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "11"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " ergs ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ "; for the gap from ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"8", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "12"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " to ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"3.1", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "11"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " ergs ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Plain"],
+ ", Moretti+ interpolate their fitted source distribution. The \
+\[OpenCurlyDoubleQuote]correct\[CloseCurlyDoubleQuote] integrated flux that I \
+removed by excluding point sources is thus:"
+}], "Text",
+ CellChangeTimes->{{3.680380081334113*^9, 3.680380262083296*^9}, {
+   3.680380320717639*^9, 3.680380409983584*^9}, {3.680380555427664*^9, 
+   3.6803805561955223`*^9}, 3.680380919756522*^9, {3.680382711226585*^9, 
+   3.680382714722096*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"excludedHardBrightness", "=", 
+  RowBox[{"4.28*^-13", "+", 
+   RowBox[{"NIntegrate", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", "x"}], "*", 
+       RowBox[{"D", "[", 
+        RowBox[{
+         RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+      RowBox[{"{", 
+       RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", 
+       RowBox[{"1.46", "*", 
+        SuperscriptBox["10", 
+         RowBox[{"-", "14"}]]}], ",", 
+       RowBox[{"3.1", "*", 
+        SuperscriptBox["10", 
+         RowBox[{"-", "11"}]]}]}], "}"}], ",", 
+     RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.680380276739729*^9, 3.680380291180084*^9}, {
+   3.6803804030025797`*^9, 3.680380414297133*^9}, {3.6803809983197937`*^9, 
+   3.680381005415531*^9}, {3.680381052185362*^9, 3.680381060808272*^9}, 
+   3.680385262899651*^9}],
+
+Cell[BoxData["8.537023061215195`*^-12"], "Output",
+ CellChangeTimes->{
+  3.680380415410494*^9, 3.680380543590239*^9, 3.68038100591217*^9, {
+   3.6803810529547586`*^9, 3.680381061613109*^9}, 3.680382132869623*^9, 
+   3.6803852656613007`*^9, 3.68038578961094*^9}]
+}, Open  ]],
+
+Cell["\<\
+As expected, this is not too far off from value obtained by extrapolating \
+Moretti\[CloseCurlyQuote]s distribution to high flux:\
+\>", "Text",
+ CellChangeTimes->{{3.6803804177349*^9, 3.680380441160603*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"NIntegrate", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "x"}], "*", 
+     RowBox[{"D", "[", 
+      RowBox[{
+       RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+    RowBox[{"{", 
+     RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"1.46", "*", 
+      SuperscriptBox["10", 
+       RowBox[{"-", "14"}]]}], ",", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "8"}]]}], "}"}], ",", 
+   RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.680380276739729*^9, 3.680380291180084*^9}, {
+   3.6803804030025797`*^9, 3.680380414297133*^9}, 3.680385279339663*^9}],
+
+Cell[BoxData["8.223939916703857`*^-12"], "Output",
+ CellChangeTimes->{
+  3.680380292446289*^9, 3.680382133014525*^9, {3.680385276074658*^9, 
+   3.680385281224688*^9}, 3.680385789669232*^9}]
+}, Open  ]],
+
+Cell[TextData[{
+ "Now use this to rescale our X-ray background.\nThe Hickox/Markevitch (2006) \
+power law has photon index \[CapitalGamma]=1.4, normalization 10.9 photons ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]]],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]]],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["keV", 
+    RowBox[{"-", "1"}]], TraditionalForm]]],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sr", 
+    RowBox[{"-", "1"}]], TraditionalForm]]],
+ " = 0.00332 photons ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]]],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]]],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["keV", 
+    RowBox[{"-", "1"}]], TraditionalForm]]],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["deg", 
+    RowBox[{"-", "2"}]], TraditionalForm]]],
+ " AT 1 keV.\n(units are surprisingly tricky to work out).\nThe flux from \
+2-10 keV (and 1-2, 2-8 keV fluxes for validation -- agree with both XSPEC \
+flux command and Hickox/Markevitch):"
+}], "Text",
+ CellChangeTimes->{{3.680378423747856*^9, 3.6803784333243427`*^9}, {
+   3.680378586144228*^9, 3.6803786689067*^9}, {3.680378726816289*^9, 
+   3.680378727829465*^9}, {3.680378836430929*^9, 3.6803788973845673`*^9}, 
+   3.680378951818018*^9, {3.680379705525445*^9, 3.680379707413671*^9}, {
+   3.6803797386350327`*^9, 3.680379747902172*^9}, {3.680379979314695*^9, 
+   3.680379991124716*^9}, {3.6803809446691313`*^9, 3.680380980390057*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[CapitalGamma]", "=", "1.4"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"kev2erg", "=", 
+   RowBox[{"1.6021766", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "9"}]]}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"CXBTotalBrightness", "=", 
+  RowBox[{
+   RowBox[{"Integrate", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"(", "en", ")"}], "*", "10.9", "*", 
+      SuperscriptBox[
+       RowBox[{"(", 
+        RowBox[{"180", "/", "\[Pi]"}], ")"}], 
+       RowBox[{"-", "2"}]], "*", 
+      SuperscriptBox[
+       RowBox[{"(", "en", ")"}], 
+       RowBox[{"-", "\[CapitalGamma]"}]]}], ",", 
+     RowBox[{"{", 
+      RowBox[{"en", ",", "2", ",", "10"}], "}"}]}], "]"}], "*", 
+   "kev2erg"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Integrate", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", "en", ")"}], "*", "10.9", "*", 
+     SuperscriptBox[
+      RowBox[{"(", 
+       RowBox[{"180", "/", "\[Pi]"}], ")"}], 
+      RowBox[{"-", "2"}]], "*", 
+     SuperscriptBox[
+      RowBox[{"(", "en", ")"}], 
+      RowBox[{"-", "\[CapitalGamma]"}]]}], ",", 
+    RowBox[{"{", 
+     RowBox[{"en", ",", "1", ",", "2"}], "}"}]}], "]"}], "*", 
+  "kev2erg"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Integrate", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", "en", ")"}], "*", "10.9", "*", 
+     SuperscriptBox[
+      RowBox[{"(", 
+       RowBox[{"180", "/", "\[Pi]"}], ")"}], 
+      RowBox[{"-", "2"}]], "*", 
+     SuperscriptBox[
+      RowBox[{"(", "en", ")"}], 
+      RowBox[{"-", "\[CapitalGamma]"}]]}], ",", 
+    RowBox[{"{", 
+     RowBox[{"en", ",", "2", ",", "8"}], "}"}]}], "]"}], "*", 
+  "kev2erg"}]}], "Input",
+ CellChangeTimes->{{3.68037897008148*^9, 3.6803790928216133`*^9}, {
+   3.680379157386263*^9, 3.680379173175785*^9}, {3.680379203640896*^9, 
+   3.680379206938301*^9}, {3.6803792687942266`*^9, 3.6803793560045757`*^9}, {
+   3.680379410415904*^9, 3.680379426064455*^9}, {3.680379460807197*^9, 
+   3.680379484111629*^9}, {3.680379546273638*^9, 3.680379547305258*^9}, {
+   3.6803796668604717`*^9, 3.680379686198107*^9}, {3.680379734991485*^9, 
+   3.680379736486286*^9}, 3.6803798536826153`*^9, {3.680380955461424*^9, 
+   3.680380955617956*^9}, {3.680381017386806*^9, 3.680381029087605*^9}}],
+
+Cell[BoxData["2.1858474851954346`*^-11"], "Output",
+ CellChangeTimes->{
+  3.68037909434659*^9, {3.680379174681601*^9, 3.680379204066162*^9}, {
+   3.6803793088498173`*^9, 3.6803793217440434`*^9}, 3.680379356689332*^9, {
+   3.680379411040278*^9, 3.680379426619487*^9}, {3.68037947146763*^9, 
+   3.680379484779029*^9}, {3.680379550016995*^9, 3.680379561106019*^9}, 
+   3.680379688022027*^9, 3.680379790968348*^9, 3.680379994923975*^9, {
+   3.680380935142082*^9, 3.680380959201975*^9}, 3.6803810299450903`*^9, 
+   3.680382133296324*^9, 3.680385284446323*^9, 3.680385789807335*^9}],
+
+Cell[BoxData["4.572476160275995`*^-12"], "Output",
+ CellChangeTimes->{
+  3.68037909434659*^9, {3.680379174681601*^9, 3.680379204066162*^9}, {
+   3.6803793088498173`*^9, 3.6803793217440434`*^9}, 3.680379356689332*^9, {
+   3.680379411040278*^9, 3.680379426619487*^9}, {3.68037947146763*^9, 
+   3.680379484779029*^9}, {3.680379550016995*^9, 3.680379561106019*^9}, 
+   3.680379688022027*^9, 3.680379790968348*^9, 3.680379994923975*^9, {
+   3.680380935142082*^9, 3.680380959201975*^9}, 3.6803810299450903`*^9, 
+   3.680382133296324*^9, 3.680385284446323*^9, 3.680385789923492*^9}],
+
+Cell[BoxData["1.743536955324857`*^-11"], "Output",
+ CellChangeTimes->{
+  3.68037909434659*^9, {3.680379174681601*^9, 3.680379204066162*^9}, {
+   3.6803793088498173`*^9, 3.6803793217440434`*^9}, 3.680379356689332*^9, {
+   3.680379411040278*^9, 3.680379426619487*^9}, {3.68037947146763*^9, 
+   3.680379484779029*^9}, {3.680379550016995*^9, 3.680379561106019*^9}, 
+   3.680379688022027*^9, 3.680379790968348*^9, 3.680379994923975*^9, {
+   3.680380935142082*^9, 3.680380959201975*^9}, 3.6803810299450903`*^9, 
+   3.680382133296324*^9, 3.680385284446323*^9, 3.680385790039521*^9}]
+}, Open  ]],
+
+Cell["\<\
+Therefore, we should scale down the normalization by a factor:\
+\>", "Text",
+ CellChangeTimes->{{3.6803798627744513`*^9, 3.680379877489398*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"excludedHardBrightness", "/", "CXBTotalBrightness"}]], "Input",
+ CellChangeTimes->{{3.6803810116771173`*^9, 3.6803810347274313`*^9}}],
+
+Cell[BoxData["0.39055895340529245`"], "Output",
+ CellChangeTimes->{{3.680381035142078*^9, 3.6803810640673037`*^9}, 
+   3.680382133853957*^9, 3.680385286108952*^9, 3.68038579011768*^9}]
+}, Open  ]],
+
+Cell["", "PageBreak",
+ PageBreakBelow->True]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Extra validation", "Section",
+ CellChangeTimes->{{3.680381110753113*^9, 3.680381112472856*^9}}],
+
+Cell[TextData[{
+ "This seems like a high scale-down factor (looked higher before I added \
+absorption correction).  Compare to Revnivtsev+ (2009, Nature, pg. 1142, 2nd \
+column, 2nd full paragraph).  They state that 31% of flux comes from sources \
+brighter than ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "14"}]]}], TraditionalForm]]],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FontWeight->"Plain"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FontWeight->"Plain"],
+ ".  Confirm their numbers, with and without Moretti+ (2003, Sec. 3) \
+re-addition of brightest source flux.\nNote that they provide 2-10 keV total \
+CXB flux of ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2.19", "\[Times]", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "11"}]]}], TraditionalForm]]],
+ " erg ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["cm", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FontWeight->"Plain"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["sec", 
+    RowBox[{"-", "1"}]], TraditionalForm]],
+  FontWeight->"Plain"],
+ " ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["deg", 
+    RowBox[{"-", "2"}]], TraditionalForm]],
+  FontWeight->"Plain"],
+ " , which agrees with our calculation (as expected)."
+}], "Text",
+ CellChangeTimes->{{3.68038111444086*^9, 3.680381147731583*^9}, {
+  3.680381209571089*^9, 3.6803812494690104`*^9}, {3.680381402224774*^9, 
+  3.680381471820569*^9}, {3.680381566460947*^9, 3.680381642910593*^9}, {
+  3.680382514171032*^9, 3.680382544454117*^9}, {3.68038529303519*^9, 
+  3.680385300852251*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"Print", "[", 
+  RowBox[{"\"\<Min excluded flux: \>\"", ",", 
+   RowBox[{"NIntegrate", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", "x"}], "*", 
+       RowBox[{"D", "[", 
+        RowBox[{
+         RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+      RowBox[{"{", 
+       RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", 
+       RowBox[{"2", "*", 
+        SuperscriptBox["10", 
+         RowBox[{"-", "14"}]]}], ",", 
+       RowBox[{"8", "*", 
+        SuperscriptBox["10", 
+         RowBox[{"-", "12"}]]}]}], "}"}], ",", 
+     RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]}], 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Print", "[", 
+  RowBox[{"\"\<Max excluded flux: \>\"", ",", 
+   RowBox[{"4.28*^-13", "+", 
+    RowBox[{"NIntegrate", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{
+        RowBox[{"-", "x"}], "*", 
+        RowBox[{"D", "[", 
+         RowBox[{
+          RowBox[{"hardN", "[", "s", "]"}], ",", "s"}], "]"}]}], "/.", 
+       RowBox[{"{", 
+        RowBox[{"s", "\[Rule]", "x"}], "}"}]}], ",", 
+      RowBox[{"{", 
+       RowBox[{"x", ",", 
+        RowBox[{"2", "*", 
+         SuperscriptBox["10", 
+          RowBox[{"-", "14"}]]}], ",", 
+        RowBox[{"3.1", "*", 
+         SuperscriptBox["10", 
+          RowBox[{"-", "11"}]]}]}], "}"}], ",", 
+      RowBox[{"AccuracyGoal", "\[Rule]", "Infinity"}]}], "]"}]}]}], 
+  "]"}]}], "Input",
+ CellChangeTimes->{{3.680381163523004*^9, 3.680381165458672*^9}, {
+  3.6803812665655403`*^9, 3.680381313289756*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Min excluded flux: \"\>", "\[InvisibleSpace]", 
+   "6.873525311553902`*^-12"}],
+  SequenceForm["Min excluded flux: ", 6.873525311553902*^-12],
+  Editable->False]], "Print",
+ CellChangeTimes->{{3.680381281166196*^9, 3.6803813138929977`*^9}, 
+   3.680381645190929*^9, 3.680382133970058*^9, 3.680385303062051*^9, 
+   3.6803857902036037`*^9}],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Max excluded flux: \"\>", "\[InvisibleSpace]", 
+   "7.440460611904678`*^-12"}],
+  SequenceForm["Max excluded flux: ", 7.440460611904678*^-12],
+  Editable->False]], "Print",
+ CellChangeTimes->{{3.680381281166196*^9, 3.6803813138929977`*^9}, 
+   3.680381645190929*^9, 3.680382133970058*^9, 3.680385303062051*^9, 
+   3.680385790216051*^9}]
+}, Open  ]]
+}, Open  ]],
+
+Cell["\<\
+Yes, it works out if brightest sources are not accounted for.  But, even if \
+added, it\[CloseCurlyQuote]s only a 10% effect, which is negligible for their \
+study.\
+\>", "Text",
+ CellChangeTimes->{{3.680381655966446*^9, 3.6803817314488993`*^9}},
+ Background->RGBColor[0.87, 0.94, 1]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"Print", "[", 
+  RowBox[{"\"\<Min excluded fraction: \>\"", ",", 
+   RowBox[{"6.87*^-12", "/", 
+    RowBox[{"(", "2.19*^-11", ")"}]}]}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Print", "[", 
+  RowBox[{"\"\<Min excluded fraction: \>\"", ",", 
+   RowBox[{"7.44*^-12", "/", 
+    RowBox[{"(", "2.19*^-11", ")"}]}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.680381182521988*^9, 3.680381197691304*^9}, {
+   3.680381349104601*^9, 3.680381399027421*^9}, 3.6803814838282137`*^9}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Min excluded fraction: \"\>", "\[InvisibleSpace]", 
+   "0.3136986301369863`"}],
+  SequenceForm["Min excluded fraction: ", 0.3136986301369863],
+  Editable->False]], "Print",
+ CellChangeTimes->{{3.6803813786105347`*^9, 3.680381399684572*^9}, 
+   3.680381484424719*^9, 3.680381647628419*^9, 3.680382134489037*^9, 
+   3.6803853044155207`*^9, 3.680385790227737*^9}],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Min excluded fraction: \"\>", "\[InvisibleSpace]", 
+   "0.33972602739726027`"}],
+  SequenceForm["Min excluded fraction: ", 0.33972602739726027`],
+  Editable->False]], "Print",
+ CellChangeTimes->{{3.6803813786105347`*^9, 3.680381399684572*^9}, 
+   3.680381484424719*^9, 3.680381647628419*^9, 3.680382134489037*^9, 
+   3.6803853044155207`*^9, 3.680385790229104*^9}]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1711, 973},
+WindowMargins->{{Automatic, 1}, {Automatic, 24}},
+PrintingCopies->1,
+PrintingPageRange->{Automatic, Automatic},
+PrintingOptions->{"PaperOrientation"->"Portrait",
+"PaperSize"->{Automatic, Automatic},
+"PostScriptOutputFile"->"",
+"PrintCellBrackets"->False,
+"PrintMultipleHorizontalPages"->False,
+"PrintRegistrationMarks"->False,
+"PrintingMargins"->36},
+FrontEndVersion->"10.4 for Linux x86 (64-bit) (April 11, 2016)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 543, 14, 67, "Section"],
+Cell[1126, 38, 257, 5, 33, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[1420, 48, 92, 1, 65, "Section"],
+Cell[1515, 51, 441, 8, 71, "Text"],
+Cell[1959, 61, 1525, 42, 92, "Input"],
+Cell[CellGroupData[{
+Cell[3509, 107, 1743, 46, 86, "Input"],
+Cell[5255, 155, 15692, 313, 243, "Output"]
+}, Open  ]],
+Cell[20962, 471, 44, 1, 1, "PageBreak",
+ PageBreakBelow->True]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[21043, 477, 99, 1, 65, "Section"],
+Cell[21145, 480, 424, 7, 49, "Text"],
+Cell[CellGroupData[{
+Cell[21594, 491, 788, 21, 38, "Input"],
+Cell[22385, 514, 28342, 707, 234, "Output"]
+}, Open  ]],
+Cell[50742, 1224, 587, 10, 93, "Text"],
+Cell[CellGroupData[{
+Cell[51354, 1238, 1169, 38, 65, "Input"],
+Cell[52526, 1278, 141, 2, 32, "Output"],
+Cell[52670, 1282, 162, 2, 32, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[52869, 1289, 835, 24, 38, "Input"],
+Cell[53707, 1315, 2540, 77, 61, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[56284, 1397, 963, 25, 77, "Input"],
+Cell[57250, 1424, 309, 4, 32, "Output"]
+}, Open  ]],
+Cell[57574, 1431, 44, 1, 1, "PageBreak",
+ PageBreakBelow->True]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[57655, 1437, 101, 1, 65, "Section"],
+Cell[57759, 1440, 549, 9, 49, "Text"],
+Cell[58311, 1451, 1633, 61, 49, "Text"],
+Cell[CellGroupData[{
+Cell[59969, 1516, 1526, 32, 38, "Input"],
+Cell[61498, 1550, 829, 11, 32, "Output"]
+}, Open  ]],
+Cell[62342, 1564, 1597, 59, 71, "Text"],
+Cell[CellGroupData[{
+Cell[63964, 1627, 821, 22, 38, "Input"],
+Cell[64788, 1651, 359, 5, 32, "Output"]
+}, Open  ]],
+Cell[65162, 1659, 177, 2, 49, "Text"],
+Cell[65342, 1663, 2687, 91, 97, "Text"],
+Cell[CellGroupData[{
+Cell[68054, 1758, 2028, 50, 65, "Input"],
+Cell[70085, 1810, 480, 6, 32, "Output"],
+Cell[70568, 1818, 482, 6, 32, "Output"]
+}, Open  ]],
+Cell[71065, 1827, 2099, 68, 71, "Text"],
+Cell[CellGroupData[{
+Cell[73189, 1899, 1376, 40, 65, "Input"],
+Cell[74568, 1941, 262, 4, 32, "Output"],
+Cell[74833, 1947, 261, 4, 32, "Output"]
+}, Open  ]],
+Cell[75109, 1954, 1505, 57, 71, "Text"],
+Cell[CellGroupData[{
+Cell[76639, 2015, 675, 20, 38, "Input"],
+Cell[77317, 2037, 235, 3, 32, "Output"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[77601, 2046, 96, 1, 65, "Section"],
+Cell[77700, 2049, 2891, 78, 489, "Text"],
+Cell[CellGroupData[{
+Cell[80616, 2131, 1069, 26, 38, "Input"],
+Cell[81688, 2159, 554, 8, 32, "Output"]
+}, Open  ]],
+Cell[82257, 2170, 2570, 91, 71, "Text"],
+Cell[CellGroupData[{
+Cell[84852, 2265, 943, 25, 38, "Input"],
+Cell[85798, 2292, 261, 4, 32, "Output"]
+}, Open  ]],
+Cell[86074, 2299, 255, 5, 49, "Text"],
+Cell[CellGroupData[{
+Cell[86354, 2308, 698, 20, 38, "Input"],
+Cell[87055, 2330, 189, 3, 32, "Output"]
+}, Open  ]],
+Cell[87259, 2336, 1682, 52, 115, "Text"],
+Cell[CellGroupData[{
+Cell[88966, 2392, 2257, 61, 135, "Input"],
+Cell[91226, 2455, 576, 8, 32, "Output"],
+Cell[91805, 2465, 575, 8, 32, "Output"],
+Cell[92383, 2475, 575, 8, 32, "Output"]
+}, Open  ]],
+Cell[92973, 2486, 192, 4, 49, "Text"],
+Cell[CellGroupData[{
+Cell[93190, 2494, 157, 2, 32, "Input"],
+Cell[93350, 2498, 184, 2, 32, "Output"]
+}, Open  ]],
+Cell[93549, 2503, 44, 1, 1, "PageBreak",
+ PageBreakBelow->True]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[93630, 2509, 101, 1, 65, "Section"],
+Cell[93734, 2512, 1742, 55, 93, "Text"],
+Cell[CellGroupData[{
+Cell[95501, 2571, 1583, 47, 65, "Input"],
+Cell[CellGroupData[{
+Cell[97109, 2622, 387, 8, 23, "Print"],
+Cell[97499, 2632, 385, 8, 23, "Print"]
+}, Open  ]]
+}, Open  ]],
+Cell[97911, 2644, 294, 6, 49, "Text"],
+Cell[CellGroupData[{
+Cell[98230, 2654, 495, 10, 55, "Input"],
+Cell[CellGroupData[{
+Cell[98750, 2668, 409, 8, 23, "Print"],
+Cell[99162, 2678, 412, 8, 23, "Print"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

@@ -345,13 +345,25 @@ def load_cxrb(model_n, model_name, extracted_spectra):
         extr.spec.multiresponse[model_n - 1].arf = extr.arf()
 
     # Initialize XRB model with reasonable "global" parameters
-    xrb = xs.Model("constant * (apec + tbnew_gas*(powerlaw + apec))", model_name, model_n)
+    xrb = xs.Model("constant * (apec + tbnew_gas*powerlaw + apec*tbnew_gas)", model_name, model_n)
 
     # Hickox and Markevitch (2006) norm
     # convert 10.9 photons cm^-2 s^-1 sr^-1 keV^-1 to photons cm^-2 s^-1 keV^-1
     # sr^-1 --> XMM detector pixels (backscal unit, 0.05 arcsec^2)
-    exrb_norm = 10.9 * (180/pi)**-2 * 60**-4 * (1/0.05)**-2 * ExtractedSpectrum.FIDUCIAL_BACKSCAL
+    #
+    # The prefactor 0.61 comes from removing point sources brighter than
+    # 1e-14 erg cm^-2 s^-1 in 0.4-7.2 keV band.  After accounting for
+    # absorption + rescaling to 2-10 keV band, the point source threshold is
+    # ~1.46e-14 erg cm^-2 sec^-1 in 2-10 keV band.
+    # I integrate the distribution of Moretti+ (2003) to get the excluded
+    # surface brightness, which is 39% of the total EXRB surf. brightness
+    # in 2-10 keV, based on Hickox/Markevitch (2006) model.
+    # Therefore, scale down EXRB normalization from 10.9 --> (1-0.39)*10.9
+    exrb_norm = 0.61 * 10.9 * (180/pi)**-2 * 60**-4 * (1/0.05)**-2 * ExtractedSpectrum.FIDUCIAL_BACKSCAL
 
+    # TODO TODO TODO TODO TODO TODO need a new set of parameters
+    # Temporarily fix both absorption parameters to same value,
+    # unchanged from before
     # NOTE HARDCODED -- best fit values from src/bkg combined fit
     # after error runs on some parameters of interest
     # Corresponds to: 20160624_src_bkg_nohack_rerun.log outputs
@@ -361,7 +373,9 @@ def load_cxrb(model_n, model_name, extracted_spectra):
                  xrb.tbnew_gas.nH.index : 1.321,  # Galactic absorption
                  xrb.apec_5.kT.index : 0.744,  # Absorbed apec (galactic halo)
                  xrb.apec.norm.index : 2.98e-4,
-                 xrb.apec_5.norm.index : 2.19e-3})
+                 xrb.apec_5.norm.index : 2.19e-3,
+                 xrb.tbnew_gas_6.nH.index : 1.321}  # Halo absorption
+                )
 
     xs_utils.freeze_model(xrb)
 

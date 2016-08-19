@@ -1,6 +1,6 @@
 #!/usr/local/bin/python
 """
-Run fits -- tightly coupled to "g309_models.py".
+Run fits.  Code is tightly coupled to "g309_models.py".
 Must be run in a sasinit-sourced environment
 
 Outputs: user-choice.  nominally can produce plots, data dumps,
@@ -180,10 +180,16 @@ def stopwatch(function, *args, **kwargs):
 
 def prep_xs(with_xs=False):
     """Apply standard XSPEC settings for G309"""
+
     xs.Xset.abund = "wilm"
+    xs.Xset.xsect = "vern"
     xs.AllModels.lmod("absmodel", dirPath=os.environ['XMM_PATH'] + "/../absmodel")
     xs.AllModels.lmod("srcutlog", dirPath=os.environ['XMM_PATH'] + "/../srcutlog")
+
     xs.Fit.query = "yes"
+    xs.Xset.parallel.leven = 4  # could set using nproc command
+    xs.Xset.parallel.error = 4
+
     if with_xs:
         xs.Plot.device = "/xs"
     xs.Plot.xAxis = "keV"
@@ -781,7 +787,7 @@ def annulus_fit(output, error=False, error_rerun=False,
 
 
 
-def bkg_only_fit(output, error=False):
+def bkg_only_fit(output, steppar=False, error=False):
     """
     Fit bkg region alone to XRB model
     """
@@ -808,11 +814,11 @@ def bkg_only_fit(output, error=False):
     if xs.Plot.device == "/xs":
         xs.Plot("ldata delchi")
 
-    xs.Fit.steppar("xrb:{:d} 0.1 0.5 20".format(xs_utils.par_num(xrb, xrb.apec.kT)))
-    xs.Fit.steppar("xrb:{:d} 0.4 0.8 20".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
-
-    if xs.Plot.device == "/xs":
-        xs.Plot("ldata delchi")
+    if steppar:
+        xs.Fit.steppar("xrb:{:d} 0.1 0.5 20".format(xs_utils.par_num(xrb, xrb.apec.kT)))
+        xs.Fit.steppar("xrb:{:d} 0.4 0.8 20".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
+        if xs.Plot.device == "/xs":
+            xs.Plot("ldata delchi")
 
     if error:
 
@@ -857,7 +863,7 @@ if __name__ == '__main__':
     # Integrated source fits
     # ----------------------
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160729_src_bkg_stock",
+    stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_stock",
               error=True, error_rerun=True)
     # Time: 2.6 hrs on statler
 
@@ -877,6 +883,11 @@ if __name__ == '__main__':
             error=True, error_rerun=True)
     # Time: 9.5 hrs on statler
 
+    stopwatch(joint_src_bkg_fit, "results_spec/20160803_src_bkg_o-ne-mg-ar-ca-fe",
+            free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'],
+            error=True, error_rerun=True)
+    # Time: ... on statler
+
     stopwatch(joint_src_bkg_fit, "results_spec/20160728_src_bkg_o-mg", free_elements=['O', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
     # Time: 2.8 hrs on statler
     stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_ne-mg", free_elements=['Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
@@ -889,6 +900,7 @@ if __name__ == '__main__':
     # Duplicate Rakowski+ fit
     stopwatch(joint_src_bkg_fit, "results_spec/20160729_src_bkg_ne-mg-ar-ca-fe", free_elements=['Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'], error=True, error_rerun=True)
     # Time: 2.6 hrs on cooper (only 1 error run; rerun not needed. interrupted)
+
 
     stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_with-ism-nei", snr_model='vnei+nei', error=True, error_rerun=True)
     # Time: 6.1 hrs on treble
@@ -942,6 +954,8 @@ if __name__ == '__main__':
     stopwatch(annulus_fit, "results_spec/20160725_fourann_all-mg-free", four_ann=True, free_all_elements=["Mg", "Si", "S"], error=True, error_rerun=True)
     # Time: 2 days, 17 hrs on cooper (with error rerun & norm errors)
     stopwatch(annulus_fit, "results_spec/20160802_fourann_o-ne-mg-fe-free", four_ann=True, free_all_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], error=True, error_rerun=True)
+    # Time: ... on statler
+    stopwatch(annulus_fit, "results_spec/20160803_fourann_o-ne-mg-ar-ca-fe-free", four_ann=True, free_all_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'], error=True, error_rerun=True)
     # Time: ... on statler
 
     stopwatch(annulus_fit, "results_spec/20160725_fourann_center-mg-free", four_ann=True, free_center_elements=["Mg"], error=True, error_rerun=True)
