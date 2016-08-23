@@ -1,9 +1,10 @@
 README for analysis of XMM obsids 0087940201, 0551000201
 ========================================================
 
-Uses SAS build version: xmmsas_20160201_1833-15.0.0
-Requires PyXSPEC version 1.1.0 (Parameter.index() function in particular)
-and tbabs_new version 2.3.2
+SAS build version `xmmsas_20160201_1833-15.0.0`
+PyXSPEC version 1.1.0 (needs Parameter.index() function in particular)
+Absorption model `tbabs_new` version 2.3.2
+XSPEC version 12.9.0d
 
 Setup and data reduction / fitting
 ----------------------------------
@@ -13,28 +14,28 @@ MOS1, MOS2, PN), run from this top-level directory (xmm/):
 
     make all
 
-This will download and unpackage data for obsids 0087940201 and 0551000201, and
-run XMM-SAS odfingest and cifbuild (via script sasrepro).
+to download and reprocess data for obsids 0087940201, 0551000201; 
+download ESAS filter-wheel-closed data, diagonal RMFs for MOS1, MOS2, and PN.
 To reprocess manually after downloading from XMM data archive, run
     
     source sasinit ${obsid}
     source sasrepro ${obsid}
 
-To set-up an interactive environment for SAS/ESAS, run:
+To set an interactive environment for SAS/HEASOFT tools, run:
 
     source sasinit ${obsid}
 
-of note, this sets the environment variable ${XMM_PATH} to help resolve links
-in scripts etc.
-Running `source sasinit` alone also sets up the XMM SAS and HEASOFT
-environment, but does not set obsid-specific parameters for SAS analysis (so
-evselect works, odfingest may not).
+`sasinit` sets environment variable `$XMM_PATH` which is referenced
+extensively.
+Running `source sasinit` alone loads the SAS/HEASOFT environment but does not
+set obsid-specific parameters for SAS analysis (so evselect works, odfingest
+may not).
 
 All working files should reside in:
 
     ${XMM_PATH}/${OBSID}/odf/repro
 
-To pass data through the processing pipeline, run:
+Create filtered, OOT-event subtracted event lists and point source masks:
 
     source sasinit ${obsid}
     chainfilter_0551000201

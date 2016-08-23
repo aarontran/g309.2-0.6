@@ -41,12 +41,12 @@ xs.Fit.query = "yes"
 # inputs
 xmm_path = os.environ['XMM_PATH']
 spec_dir = xmm_path + "/{obsid}/odf/repro".format(obsid=obsid)
-f_spec = "{exp}-{reg}-ff-key.pi".format(exp=exp, reg=reg)
+f_spec = "{exp}-{reg}-ff.pi".format(exp=exp, reg=reg)
 
 # outputs
-f_plot = "{exp}-{reg}-ff-key-fit".format(exp=exp, reg=reg)
-f_log = "{exp}-{reg}-ff-key-fit.log".format(exp=exp, reg=reg)
-f_fit = "{exp}-{reg}-ff-key-fit.json".format(exp=exp, reg=reg)
+f_plot = "{exp}-{reg}-ff-fit".format(exp=exp, reg=reg)
+f_log = "{exp}-{reg}-ff-fit.log".format(exp=exp, reg=reg)
+f_fit = "{exp}-{reg}-ff-fit.json".format(exp=exp, reg=reg)
 
 
 # Set up FWC models

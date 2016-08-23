@@ -16,29 +16,20 @@
 # Argument parsing and configuration parameters
 # ---------------------------------------------
 
+OBSID=$1
+RSTEM=$2  # region label (src, bkg, etc)
+
 if [[ "$#" -ne 2 ]]; then
     echo "ERROR: two arguments (obsid, region label) required"
     exit 1
 fi
-
-## TODO (low priority) take required options using named parameters
-
-OBSID=$1
-RSTEM=$2  # region label (src, bkg, etc)
 if [[ "$OBSID" != "$SAS_OBSID" ]]; then
   echo "ERROR: obsid $OBSID does not match SASINIT value ($SAS_OBSID)"
   exit 1
 fi
-# Note: use $OBSID over $SAS_OBSID throughout script
 
 RDIR="${XMM_PATH}/regs/${OBSID}"
 CALDB="${XMM_PATH}/caldb"
-
-# ------------------------
-# ESAS spectrum extraction
-# ------------------------
-
-cd "${XMM_PATH}/${OBSID}/odf/repro"
 
 ##### TODO elow and ehigh set energy band for IMAGE -- why 0.3-1.25 keV?
 ##### images currently not used.  may have to rerun if used later.
@@ -67,11 +58,14 @@ else
   exit 1
 fi
 
+# ------------------------
+# ESAS spectrum extraction
+# ------------------------
+
+cd "${XMM_PATH}/${OBSID}/odf/repro"
 
 echo "Extracting spectra and QPB for $OBSID, region ${RSTEM}"
 
-# PLEASE NOTE: loop "continues" prematurely for 0551000201 PNS003
-# code is not spaghetti yet, but starting to look like udon...
 for ((i=0;i<${#exps[@]};++i)); do
 
   # Setup
@@ -95,27 +89,26 @@ for ((i=0;i<${#exps[@]};++i)); do
     exit 1
   fi
 
+  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
+    echo "  Skipping extraction for $OBSID $exp (no observation corner data)"
+    # mv commands for -back.pi and -obj-os.pi will fail, this is OK
+    continue
+  fi
+
   # Extraction
   # ----------
 
   echo "  Running ${exe_spec} prefix=${exp_n}..."
   ${exe_spec} prefix=${exp_n} region="${f_region}" caldb="${CALDB}" \
       mask=${mask} elow=${elow} ehigh=${ehigh} ${ccd_str} \
-    >& "${exe_spec}_${exp}_${RSTEM}.log"
+    &> "${exe_spec}_${exp}_${RSTEM}.log"
   mv command.csh "${exe_spec}_${exp}_${RSTEM}_cmd.csh"
 
-  # Handle exposure exclusions (QPB cannot be generated for 0551000201 PN)
-  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
-    echo "  Skipping extraction for $OBSID $exp (no observation corner data)"
-    # mv commands for -back.pi and -obj-os.pi will fail, this is OK
-    # preferable to littering code with conditionals.
-  else
-    echo "  Running ${exe_qpb} prefix=${exp_n}..."
-    ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
-        elow=${elow} ehigh=${ehigh} ${ccd_str} \
-      >& "${exe_qpb}_${exp}_${RSTEM}.log"
-    # diag=2 creates more diagnostic output files (.qdp plots)
-  fi
+  echo "  Running ${exe_qpb} prefix=${exp_n}..."
+  ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
+      elow=${elow} ehigh=${ehigh} ${ccd_str} \
+    &> "${exe_qpb}_${exp}_${RSTEM}.log"
+  # diag=2 creates more diagnostic output files (.qdp plots)
 
   echo "  Rename, bin, and keyword spectra (map ${exp} to ${exp}-${RSTEM})"
 
@@ -137,34 +130,40 @@ for ((i=0;i<${#exps[@]};++i)); do
   if [[ "$exp" =~ "pn" ]]; then
     mv "${exp}-obj-ff-oot.pi" "${exp}-${RSTEM}-ff-oot.pi"
     mv "${exp}-dmap.rmf"      "${exp}-${RSTEM}-dmap.rmf"
+    mv "${exp}-ff-dmap.rmf"      "${exp}-${RSTEM}-ff-dmap.rmf"
   fi
 
-  # Set keywords for FWC object spectra
-  # NOTE that we are not using OOT-subtracted spectra for PN
-  grppha infile="${exp}-${RSTEM}-ff.pi" outfile="!${exp}-${RSTEM}-ff-key.pi" \
+  # NOTE that PN FWC spectra are not OOT-subtracted
+  grppha infile="${exp}-${RSTEM}-ff.pi" outfile="!${exp}-${RSTEM}-ff.pi" \
     comm="chkey BACKFILE NONE & \
           chkey RESPFILE ${exp}-${RSTEM}-ff.rmf & \
           chkey ANCRFILE ${exp}-${RSTEM}-ff.arf & \
           exit"
 
-  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
-    echo "  Skipping grppha for 0551000201 pnS003 (no observation corner data)"
-    continue
-  fi
-
-  # Bin and set keywords for observation object spectra
   os=""
   if [[ "$exp" =~ "pn" ]]; then
     # Use OOT-subtracted spectrum for PN
     os="-os"
   fi
-  grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}-grp50.pi" \
+
+  grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}.pi" \
       comm="chkey BACKFILE ${exp}-${RSTEM}-qpb.pi & \
             chkey RESPFILE ${exp}-${RSTEM}.rmf & \
             chkey ANCRFILE ${exp}-${RSTEM}.arf & \
-            group min 50 & exit" \
+            exit" \
       chatter=10 \
-    >& "grppha_${exp}-${RSTEM}${os}.log"
+    &> "grppha_${exp}-${RSTEM}${os}.log"
+  # First grppha should clobber any existing log
+
+  grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}-grp01.pi" \
+      comm="group min 1 & exit" \
+      chatter=10 \
+    &>> "grppha_${exp}-${RSTEM}${os}.log"
+
+  grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}-grp50.pi" \
+      comm="group min 50 & exit" \
+      chatter=10 \
+    &>> "grppha_${exp}-${RSTEM}${os}.log"
 
 done
 

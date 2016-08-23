@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#! /usr/local/bin/perl -w
 
 use SAS;
 require "esas_parameters_init.pl";
@@ -684,6 +684,9 @@ $author="S. L. Snowden, based on the mos-spectra code";
     " detmaptype=dataset detmaparray=".$dmap;
   &run_and_print($comm);
 
+  # Because RMFs with/without detector map are using default energy grid
+  # (specified by CAL), no need to generate a new ARF.
+
 # END customization (variant, use detector map for RMF)
 #########################################################
 
@@ -785,6 +788,10 @@ $author="S. L. Snowden, based on the mos-spectra code";
   &run_and_print($comm);
 
   # Force $specfile temporarily; cannot use FWC spectrum for RMF/ARF extraction
+  # Both rmfgen, arfgen tasks fail with error "blockNotFound":
+  # "Could not find block with qualified name
+  # '/proj/xmm/ccf/EMOS1_FILTERTRANSX_0014.CCF:FILTER-CLOSED' in dataset with
+  # name '/proj/xmm/ccf/EMOS1_FILTERTRANSX_0014.CCF'"
   $specfile="pn".$prefix."-obj.pi";
 
 #  Generate the RMF
@@ -793,7 +800,7 @@ $author="S. L. Snowden, based on the mos-spectra code";
     " spectrumset=".$specfile." threshold=1.0e-6 ";
   &run_and_print($comm);
 
-#  Generate the ARF, use a FWC detector map
+# FWC detector map for RMF and ARF (mostly for ARF)
   $detmap_ff="detmap_ff.ds";
   $comm="evselect table=".$fwcfile.":EVENTS withfilteredset=yes ".
     "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$areasel."' ".
@@ -802,6 +809,13 @@ $author="S. L. Snowden, based on the mos-spectra code";
     "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=60 ximagemax=19500 ".
     "ximagemin=-19499 ycolumn='DETY' yimagesize=60 yimagemax=19500 ".
     "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
+  &run_and_print($comm);
+
+#  Variant: detector-mapped RMF for FWC spectrum
+  $rmffile_ff_dmap="pn".$prefix."-ff-dmap.rmf";
+  $comm="rmfgen format=var rmfset=".$rmffile_ff_dmap.
+    " spectrumset=".$specfile." threshold=1.0e-6 ".
+    " detmaptype=dataset detmaparray=".$detmap_ff;
   &run_and_print($comm);
 
   $arffile_ff="pn".$prefix."-ff.arf";

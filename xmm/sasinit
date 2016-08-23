@@ -48,6 +48,8 @@ echo "setenv SAS_CCFPATH $SAS_CCFPATH"
 setenv XMM_PATH /data/mpofls/atran/research/g309/xmm
 echo "setenv XMM_PATH $XMM_PATH"
 set path = ($XMM_PATH $path)
+set path = ($XMM_PATH/bin_snippets $path)
+set path = ($XMM_PATH/bin_unused $path)
 
 set obsid = $1
 if ( $obsid != "") then

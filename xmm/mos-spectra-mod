@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#! /usr/local/bin/perl -w
 
 use SAS;
 require "esas_parameters_init.pl";
@@ -172,10 +172,10 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     $delxf=(13180 - $cflim)/2.0;
     $xfave=13180-$delxf;
     print "cflim, xfave, delxf: $cflim $xfave $delxf \n";
-    if(($revo>2382) and ($c[4] eq 1) and (4 gt $cc)){
-      $ccddef=$ccddef."&&!((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0))";
-      print "cflim, xfave, delxf: $cflim $xfave $delxf \n";
-    }
+#    if(($revo>2382) and ($c[4] eq 1) and (4 gt $cc)){
+#      $ccddef=$ccddef."&&!((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0))";
+#      print "cflim, xfave, delxf: $cflim $xfave $delxf \n";
+#    }
 
 # Set the selection for MOS2
 
@@ -319,7 +319,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 
 # Out of date, should be corrected, Was Corrected
 
-    if($revo<2383){
+#    if($revo<2383){
       $corndef="&&!(((DETX,DETY) in CIRCLE(100,-200,17700))".
                "||((DETX,DETY) in CIRCLE(834,135,17100))".
                "||((DETX,DETY) in CIRCLE(770,-803,17100))".
@@ -337,29 +337,29 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       $fulldef="&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))".
                 "||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))".
                 "||((DETX,DETY) IN circle(97,-172,17152)))";
-    } else {
-      $corndef="&&!(((DETX,DETY) in CIRCLE(100,-200,17700))".
-               "||((DETX,DETY) in CIRCLE(834,135,17100))".
-               "||((DETX,DETY) in CIRCLE(770,-803,17100))".
-               "||((DETX,DETY) in BOX(-20,-17000,6500,500,0))".
-               "||((DETX,DETY) in BOX(5880,-20500,7500,1500,10))".
-               "||((DETX,DETY) in BOX(-5920,-20500,7500,1500,350))".
-               "||((DETX,DETY) in BOX(-20,-20000,5500,500,0))".
-               "||((DETX,DETY) in BOX(80,18600,150,1300,0))".
-               "||((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0)))";
-      @chipdef=("((DETX,DETY) in BOX(20,-60,6610,6570,0))", 
-               "((DETX,DETY) in BOX(6550,-13572,6590,6599,0))",
-               "((DETX,DETY) in BOX(13280,-306,6610,6599,0))",
-               "(((DETX,DETY) in BOX(6700,13070,6530,6560,0))&&!".
-               "((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0)))",
-               "((DETX,DETY) in BOX(-6410,13130,6570,6560,0))",
-               "((DETX,DETY) in BOX(-13169,-105,6599,6599,0))",
-               "((DETX,DETY) in BOX(-6540,-13438,6570,6599,0))");
-      $fulldef="&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))".
-               "||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))".
-               "||((DETX,DETY) IN circle(97,-172,17152)))".
-               "&&!((DETX,DETY) IN BOX(".$xfave.",13005,".$delxf.",6575,0))";
-    }
+#    } else {
+#      $corndef="&&!(((DETX,DETY) in CIRCLE(100,-200,17700))".
+#               "||((DETX,DETY) in CIRCLE(834,135,17100))".
+#               "||((DETX,DETY) in CIRCLE(770,-803,17100))".
+#               "||((DETX,DETY) in BOX(-20,-17000,6500,500,0))".
+#               "||((DETX,DETY) in BOX(5880,-20500,7500,1500,10))".
+#               "||((DETX,DETY) in BOX(-5920,-20500,7500,1500,350))".
+#               "||((DETX,DETY) in BOX(-20,-20000,5500,500,0))".
+#               "||((DETX,DETY) in BOX(80,18600,150,1300,0))".
+#               "||((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0)))";
+#      @chipdef=("((DETX,DETY) in BOX(20,-60,6610,6570,0))", 
+#               "((DETX,DETY) in BOX(6550,-13572,6590,6599,0))",
+#               "((DETX,DETY) in BOX(13280,-306,6610,6599,0))",
+#               "(((DETX,DETY) in BOX(6700,13070,6530,6560,0))&&!".
+#               "((DETX,DETY) in BOX(".$xfave.",13005,".$delxf.",6575,0)))",
+#               "((DETX,DETY) in BOX(-6410,13130,6570,6560,0))",
+#               "((DETX,DETY) in BOX(-13169,-105,6599,6599,0))",
+#               "((DETX,DETY) in BOX(-6540,-13438,6570,6599,0))");
+#      $fulldef="&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))".
+#               "||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))".
+#               "||((DETX,DETY) IN circle(97,-172,17152)))".
+#               "&&!((DETX,DETY) IN BOX(".$xfave.",13005,".$delxf.",6575,0))";
+#    }
   } else {
     $corndef="&&!(((DETX,DETY) IN CIRCLE(435,1006,17100))".
              "||((DETX,DETY) IN CIRCLE(-34,68,17700))".
@@ -404,18 +404,18 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   }
-  if(($det eq "mos1") and ($revo>2382)) {
-    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-      "expression='(PATTERN<=12)".$ccddef."&&(((FLAG & 0x766a0f63) == 0)".
-      "||((FLAG & 0x766a0763) == 0))".$corndef.
-      "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
-      "filterexposure=yes filteredset=".$eventfile;
-  } else {
+#  if(($det eq "mos1") and ($revo>2382)) {
+#    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+#      "expression='(PATTERN<=12)".$ccddef."&&(((FLAG & 0x766a0f63) == 0)".
+#      "||((FLAG & 0x766a0763) == 0))".$corndef.
+#      "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
+#      "filterexposure=yes filteredset=".$eventfile;
+#  } else {
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
       "expression='(PATTERN<=12)".$ccddef."&&((FLAG & 0x766a0f63) == 0)".$corndef.
       "' filtertype=expression keepfilteroutput=yes updateexposure=yes ".
       "filterexposure=yes filteredset=".$eventfile;
-  }
+#  }
   print JUNK_HNDL "$comm\n";
   print JUNK_HNDL "   \n";
   print "$comm\n";
@@ -431,16 +431,16 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     if($clobber==1) {
       print "clobber the existing file\n";
       print "   \n";
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
-          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-          $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
-          "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-          "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
-          "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
-          "yimagemin=3401 updateexposure=yes filterexposure=yes";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+#          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#          $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
+#          "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+#          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+#          "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+#          "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+#          "yimagemin=3401 updateexposure=yes filterexposure=yes";
+#      } else {
         $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
           "'(PATTERN<=12)&&(FLAG == 0)".
           $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
@@ -449,7 +449,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
           "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
           "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
           "yimagemin=3401 updateexposure=yes filterexposure=yes";
-      }
+#      }
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
       print "$comm\n";
@@ -457,16 +457,16 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       system "$comm";
     }    
   } else {
-    if(($det eq "mos1") and ($revo>2382)) {
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
-        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-        $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
-        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-        "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
-        "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
-        "yimagemin=3401 updateexposure=yes filterexposure=yes";
-    } else {
+#    if(($det eq "mos1") and ($revo>2382)) {
+#      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+#        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#        $ccddefa.$maskitsky."&&(PI in [300:8000])' ".
+#        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+#        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+#        "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+#        "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+#        "yimagemin=3401 updateexposure=yes filterexposure=yes";
+#    } else {
       $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
         "'(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitsky."&&(PI in [300:8000])' ".
         "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
@@ -474,7 +474,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
         "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
         "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
         "yimagemin=3401 updateexposure=yes filterexposure=yes";
-    }
+#    }
     print JUNK_HNDL "$comm\n";
     print JUNK_HNDL "   \n";
     print "$comm\n";
@@ -493,16 +493,16 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     if($clobber==1) {
       print "clobber the existing file\n";
       print "   \n";
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
-          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))"
-          .$fulldef.$ccddef.$maskitdet.$FOVdef."' ".
-          "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
-          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
-          "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+#          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))"
+#          .$fulldef.$ccddef.$maskitdet.$FOVdef."' ".
+#          "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+#          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+#          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+#          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+#          "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+#      } else {
         $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
           "'(PATTERN<=12)&&(FLAG == 0)".$fulldef.$ccddef.$maskitdet.$FOVdef."' ".
           "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
@@ -510,7 +510,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
           "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
           "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
           "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-      }
+#      }
       print "   \n";
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
@@ -519,16 +519,16 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       system "$comm";
     }
   } else {
-    if(($det eq "mos1") and ($revo>2382)) {
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
-        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-        $fulldef.$ccddef.$maskitdet.$FOVdef."' ".
-        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
-        "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
-        "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-    } else {
+#    if(($det eq "mos1") and ($revo>2382)) {
+#      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+#        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#        $fulldef.$ccddef.$maskitdet.$FOVdef."' ".
+#        "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+#        "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+#        "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+#        "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+#        "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+#    } else {
       $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
         "'(PATTERN<=12)&&(FLAG == 0)".$fulldef.$ccddef.$maskitdet.$FOVdef."' ".
         "filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
@@ -536,7 +536,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
         "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
         "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
         "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-    }
+#    }
     print "   \n";
     print JUNK_HNDL "$comm\n";
     print JUNK_HNDL "   \n";
@@ -549,52 +549,52 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 # Now create an expsore map in detector coordiantes for MOS1 data
 # after the loss of CCD#3
 
-  if(($det eq "mos1") and ($revo>2382) and ($cflim>0) and ($elow>0)) {
-    $imfile="mos".$prefix."-exp-im-det.fits";
-    if(-r $imfile) {
-      print "Exposure map file already exists: $imfile\n";
-      print "   \n";
-      if($clobber==1) {
-        print "clobber the existing file\n";
-        print "   \n";
-        $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
-          "expimageset=".$imfile." imageset=mos".$prefix."-obj-im-sp-det.fits ".
-          "pimax=8000 pimin=300 withdetcoords=yes" ;
-        print JUNK_HNDL "$comm\n";
-        print JUNK_HNDL "   \n";
-        print "$comm\n";
-        print "   \n";
-        system "$comm";
-        print "   \n";
-      }
-    } else {
-      $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
-        "expimageset=".$imfile." imageset=mos".$prefix."-obj-im-sp-det.fits ".
-        "pimax=8000 pimin=300 withdetcoords=yes" ;
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
-      print "   \n";
-    }
-    $comm="rot-im-det-sky prefix=".$prefix." mask=0 elow=".$cflim. #xflim
-      " ehigh=0 mode=4";
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
-    print "   \n";
-    $comm="rot-im-det-sky prefix=".$prefix." mask=0 elow=".$elow.
-      " ehigh=".$ehigh." mode=5";
-    print JUNK_HNDL "$comm\n";
-    print JUNK_HNDL "   \n";
-    print "$comm\n";
-    print "   \n";
-    system "$comm";
-    print "   \n";
-  }
+#  if(($det eq "mos1") and ($revo>2382) and ($cflim>0) and ($elow>0)) {
+#    $imfile="mos".$prefix."-exp-im-det.fits";
+#    if(-r $imfile) {
+#      print "Exposure map file already exists: $imfile\n";
+#      print "   \n";
+#      if($clobber==1) {
+#        print "clobber the existing file\n";
+#        print "   \n";
+#        $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+#          "expimageset=".$imfile." imageset=mos".$prefix."-obj-im-sp-det.fits ".
+#          "pimax=8000 pimin=300 withdetcoords=yes" ;
+#        print JUNK_HNDL "$comm\n";
+#        print JUNK_HNDL "   \n";
+#        print "$comm\n";
+#        print "   \n";
+#        system "$comm";
+#        print "   \n";
+#      }
+#    } else {
+#      $comm="eexpmap attitudeset=atthk.fits eventset=".$detpref.":EVENTS ".
+#        "expimageset=".$imfile." imageset=mos".$prefix."-obj-im-sp-det.fits ".
+#        "pimax=8000 pimin=300 withdetcoords=yes" ;
+#      print JUNK_HNDL "$comm\n";
+#      print JUNK_HNDL "   \n";
+#      print "$comm\n";
+#      print "   \n";
+#      system "$comm";
+#      print "   \n";
+#    }
+#    $comm="rot-im-det-sky prefix=".$prefix." mask=0 elow=".$cflim. #xflim
+#      " ehigh=0 mode=4";
+#    print JUNK_HNDL "$comm\n";
+#    print JUNK_HNDL "   \n";
+#    print "$comm\n";
+#    print "   \n";
+#    system "$comm";
+#    print "   \n";
+#    $comm="rot-im-det-sky prefix=".$prefix." mask=0 elow=".$elow.
+#      " ehigh=".$ehigh." mode=5";
+#    print JUNK_HNDL "$comm\n";
+#    print JUNK_HNDL "   \n";
+#    print "$comm\n";
+#    print "   \n";
+#    system "$comm";
+#    print "   \n";
+#  }
 
 # Extract the entire FOV region and band from observation data into an 
 # image in detector coords
@@ -607,18 +607,18 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       if($clobber==1) {
         print "clobber the existing file\n";
         print "   \n";
-        if(($det eq "mos1") and ($revo>2382)) {
-          $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-             "filtertype=expression expression=".
-            "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-            $ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
-            $fulldef.$FOVdef."' ".
-            "imagebinning='imageSize' imagedatatype='Int32' ".
-            "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-            "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
-            "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
-            "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-        } else {
+#        if(($det eq "mos1") and ($revo>2382)) {
+#          $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+#             "filtertype=expression expression=".
+#            "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#            $ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
+#            $fulldef.$FOVdef."' ".
+#            "imagebinning='imageSize' imagedatatype='Int32' ".
+#            "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+#            "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+#            "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+#            "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+#        } else {
           $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
             "filtertype=expression expression=".
             "'(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
@@ -628,7 +628,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
             "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
             "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
             "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-        }
+#        }
         print JUNK_HNDL "$comm\n";
         print JUNK_HNDL "   \n";
         print "$comm\n";
@@ -637,18 +637,18 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
         print "   \n";
       }
     } else {
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-          "filtertype=expression expression=".
-          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-          $ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
-          $fulldef.$FOVdef."' ".
-          "imagebinning='imageSize' imagedatatype='Int32' ".
-          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
-          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
-          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
-          "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+#          "filtertype=expression expression=".
+#          "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#          $ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
+#          $fulldef.$FOVdef."' ".
+#          "imagebinning='imageSize' imagedatatype='Int32' ".
+#          "imageset=".$imfile." squarepixels=yes ignorelegallimits=yes ".
+#          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+#          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+#          "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+#      } else {
         $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
           "filtertype=expression expression=".
           "'(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitdet."&&(PI in [".$elow.":".$ehigh."])".
@@ -658,7 +658,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
           "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
           "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
           "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-      }
+#      }
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
       print "$comm\n";
@@ -746,22 +746,22 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   }
-  if(($det eq "mos1") and ($revo>2382)) {
-    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
-      "expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-      $FOVdef.$ccddef.$maskitdet.$fulldef."' ".
-      "filtertype=expression".
-      " keepfilteroutput=no updateexposure=yes filterexposure=yes ".
-      "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
-      "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
-  } else {
+#  if(($det eq "mos1") and ($revo>2382)) {
+#    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
+#      "expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#      $FOVdef.$ccddef.$maskitdet.$fulldef."' ".
+#      "filtertype=expression".
+#      " keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+#      "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+#      "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
+#  } else {
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ". 
       "expression='(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$ccddef.$maskitdet.$fulldef."' ".
       "filtertype=expression".
       " keepfilteroutput=no updateexposure=yes filterexposure=yes ".
       "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
       "spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
-  }
+#  }
   print JUNK_HNDL "$comm\n";
   print JUNK_HNDL "   \n";
   print "$comm\n";
@@ -787,17 +787,17 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   }
-  if(($det eq "mos1") and ($revo>2382)) {
-    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-      "filtertype=expression expression=".
-      "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))"
-      .$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
-      "imagebinning='imageSize' imagedatatype='Int32' ".
-      "imageset=detmap.ds squarepixels=yes ignorelegallimits=no ".
-      "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
-      "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
-      "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-  } else {
+#  if(($det eq "mos1") and ($revo>2382)) {
+#    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+#      "filtertype=expression expression=".
+#      "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))"
+#      .$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+#      "imagebinning='imageSize' imagedatatype='Int32' ".
+#      "imageset=detmap.ds squarepixels=yes ignorelegallimits=no ".
+#      "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
+#      "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
+#      "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+#  } else {
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
       "filtertype=expression expression=".
       "'(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
@@ -806,7 +806,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
       "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
       "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-  }
+#  }
   print JUNK_HNDL "$comm\n";
   print JUNK_HNDL "   \n";
   print "$comm\n";
@@ -831,17 +831,17 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     print " BUT, regenerating file anyways! (hacky modification)\n";
     print "   \n";
   }
-  if(($det eq "mos1") and ($revo>2382)) {
-    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-      "filtertype=expression expression=".
-      "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-      $FOVdef.$fulldef.$ccddef.$maskitdet."' ".
-      "imagebinning='imageSize' imagedatatype='Int32' ".
-      "imageset=detmap.ds squarepixels=yes ignorelegallimits=no ".
-      "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
-      "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
-      "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-  } else {
+#  if(($det eq "mos1") and ($revo>2382)) {
+#    $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+#      "filtertype=expression expression=".
+#      "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#      $FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+#      "imagebinning='imageSize' imagedatatype='Int32' ".
+#      "imageset=detmap.ds squarepixels=yes ignorelegallimits=no ".
+#      "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
+#      "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
+#      "yimagemin=-19499 updateexposure=yes filterexposure=yes";
+#  } else {
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
       "filtertype=expression expression=".
       "'(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
@@ -850,7 +850,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=120 ximagemax=19500 ".
       "ximagemin=-19499 ycolumn='DETY' yimagesize=120 yimagemax=19500 ".
       "yimagemin=-19499 updateexposure=yes filterexposure=yes";
-  }
+#  }
   print JUNK_HNDL "$comm\n";
   print JUNK_HNDL "   \n";
   print "$comm\n";
@@ -870,16 +870,16 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
   print "   \n";
 
   if($ehigh > 0) {
-    if(($det eq "mos1") and ($revo>2382)) {
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
-        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".$ccddefa.$maskitsky."&&".
-        "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
-        " filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-        "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh.".fits squarepixels=yes ".
-        "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
-        "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
-        "yimagemin=3401 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
-    } else {
+#    if(($det eq "mos1") and ($revo>2382)) {
+#      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
+#        "'(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".$ccddefa.$maskitsky."&&".
+#        "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
+#        " filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+#        "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh.".fits squarepixels=yes ".
+#        "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
+#        "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
+#        "yimagemin=3401 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+#    } else {
       $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
         "'(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitsky."&&".
         "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
@@ -888,7 +888,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
         "withxranges=yes withyranges=yes xcolumn='X' ximagesize=900 ximagemax=48400 ".
         "ximagemin=3401 ycolumn='Y' yimagesize=900 yimagemax=48400 ".
         "yimagemin=3401 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
-    }
+#    }
     print JUNK_HNDL "$comm\n";
     print JUNK_HNDL "   \n";
     print "$comm\n";
@@ -967,6 +967,10 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 
   # Here, $specfile is guaranteed to be -obj.pi
   # Cannot use FWC spectrum for RMF/ARF extraction
+  # Both rmfgen, arfgen tasks fail with error "blockNotFound":
+  # "Could not find block with qualified name
+  # '/proj/xmm/ccf/EMOS1_FILTERTRANSX_0014.CCF:FILTER-CLOSED' in dataset with
+  # name '/proj/xmm/ccf/EMOS1_FILTERTRANSX_0014.CCF'"
 
 #  Generate the RMF, use a FWC detector map
   $rmffile_ff="mos".$prefix."-ff.rmf";
@@ -1002,21 +1006,21 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 
     $specfile="mos".$prefix."-".$chip."ff.pi";
 
-    if(($det eq "mos1") and ($revo>2382)) {
-      $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
-        "withfilteredset=yes expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-        "&&".$tempchip.$ccddef.$maskitdet.$fulldef.$FOVdef."' ".
-        "withspectrumset=yes ".
-        "spectrumset=mos".$prefix."-".$chip."ff.pi energycolumn=PI spectralbinsize=5 ".
-        "withspecranges=yes specchannelmin=0 specchannelmax=11999";
-    } else {
+#    if(($det eq "mos1") and ($revo>2382)) {
+#      $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
+#        "withfilteredset=yes expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#        "&&".$tempchip.$ccddef.$maskitdet.$fulldef.$FOVdef."' ".
+#        "withspectrumset=yes ".
+#        "spectrumset=mos".$prefix."-".$chip."ff.pi energycolumn=PI spectralbinsize=5 ".
+#        "withspecranges=yes specchannelmin=0 specchannelmax=11999";
+#    } else {
       $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
         "withfilteredset=yes expression='(PATTERN<=12)&&(FLAG == 0)".
         "&&".$tempchip.$ccddef.$maskitdet.$fulldef.$FOVdef."' ".
         "withspectrumset=yes ".
         "spectrumset=mos".$prefix."-".$chip."ff.pi energycolumn=PI spectralbinsize=5 ".
         "withspecranges=yes specchannelmin=0 specchannelmax=11999";
-    }
+#    }
     print JUNK_HNDL "$comm\n";
     print JUNK_HNDL "   \n";
     print "$comm\n";
@@ -1041,17 +1045,17 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 #  Need to take care of the window mode case for the central CCD
 #  First make an image of the observation data for the central chip
 
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-          "expression='".$tempchip."&&(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-          $ccddefa.$maskitdet."&&".
-          "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
-          " filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
-          "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh."-ccd1.fits squarepixels=yes ".
-          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
-          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
-          "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+#          "expression='".$tempchip."&&(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#          $ccddefa.$maskitdet."&&".
+#          "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
+#          " filtertype=expression imagebinning='imageSize' imagedatatype='Int32' ".
+#          "imageset=mos".$prefix."-obj-im-".$elow."-".$ehigh."-ccd1.fits squarepixels=yes ".
+#          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+#          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+#          "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+#      } else {
         $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
           "expression='".$tempchip."&&(PATTERN<=12)&&(FLAG == 0)".$ccddefa.$maskitdet."&&".
           "(PI in [".$elow.":".$ehigh."])".$fulldef.$FOVdef."' ".
@@ -1060,7 +1064,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
           "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
           "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
           "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
-      }
+#      }
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
       print "$comm\n";
@@ -1095,18 +1099,18 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 
 #  Make an image of the fwc data in a band for the central chip
 
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
-          "withfilteredset=yes ".
-          "expression='(PATTERN <= 12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-          $FOVdef.$fulldef.$ccddef.$maskitdet."&&".
-          $tempchip."&&(PI in [".$elow.":".$ehigh."])' imagebinning='imageSize' ".
-          "imagedatatype='Int32' ".
-          "imageset=mos".$prefix."-im".$chip."-".$elow."-".$ehigh.".fits squarepixels=yes ".
-          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
-          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
-          "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
+#          "withfilteredset=yes ".
+#          "expression='(PATTERN <= 12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#          $FOVdef.$fulldef.$ccddef.$maskitdet."&&".
+#          $tempchip."&&(PI in [".$elow.":".$ehigh."])' imagebinning='imageSize' ".
+#          "imagedatatype='Int32' ".
+#          "imageset=mos".$prefix."-im".$chip."-".$elow."-".$ehigh.".fits squarepixels=yes ".
+#          "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
+#          "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
+#          "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
+#      } else {
         $comm="evselect table=".$caldb."/".$det."-fwc.fits.gz:EVENTS ".
           "withfilteredset=yes ".
           "expression='(PATTERN <= 12)&&(FLAG == 0)".$FOVdef.$fulldef.$ccddef.$maskitdet."&&".
@@ -1116,7 +1120,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
           "withxranges=yes withyranges=yes xcolumn='DETX' ximagesize=780 ximagemax=19500 ".
           "ximagemin=-19499 ycolumn='DETY' yimagesize=780 yimagemax=19500 ".
           "yimagemin=-19499 updateexposure=yes filterexposure=yes ignorelegallimits=yes ";
-      }
+#      }
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
       print "$comm\n";
@@ -1153,17 +1157,17 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 
     $specfile="mos".$prefix."-".$chip."obj.pi";
 
-    if(($det eq "mos1") and ($revo>2382)) {
-      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-        "expression='".$tempchip."&&".
-        "(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-        $FOVdef.$fulldef.$ccddef.$maskitdet."' ".
-        "filtertype=expression keepfilteroutput=no updateexposure=yes ".
-        "filterexposure=yes withspectrumset=yes ".
-        "spectrumset=mos".$prefix."-".$chip."obj.pi energycolumn=PI ".
-        "spectralbinsize=5 withspecranges=yes ".
-        "specchannelmin=0 specchannelmax=11999";
-    } else {
+#    if(($det eq "mos1") and ($revo>2382)) {
+#      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+#        "expression='".$tempchip."&&".
+#        "(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#        $FOVdef.$fulldef.$ccddef.$maskitdet."' ".
+#        "filtertype=expression keepfilteroutput=no updateexposure=yes ".
+#        "filterexposure=yes withspectrumset=yes ".
+#        "spectrumset=mos".$prefix."-".$chip."obj.pi energycolumn=PI ".
+#        "spectralbinsize=5 withspecranges=yes ".
+#        "specchannelmin=0 specchannelmax=11999";
+#    } else {
       $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
         "expression='".$tempchip."&&".
         "(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$fulldef.$ccddef.$maskitdet."' ".
@@ -1172,7 +1176,7 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
         "spectrumset=mos".$prefix."-".$chip."obj.pi energycolumn=PI ".
         "spectralbinsize=5 withspecranges=yes ".
         "specchannelmin=0 specchannelmax=11999";
-    }
+#    }
     print JUNK_HNDL "$comm\n";
     print JUNK_HNDL "   \n";
     print "$comm\n";
@@ -1230,22 +1234,22 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 
       $specfile="mos".$prefix."-".$chip."obj.pi";
 
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
-          "expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
-          $FOVdef.$fulldef."&&".$tempchip.
-          $ccddef.$maskitdet."' filtertype=expression ".
-          "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
-          "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
-          " spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
+#          "expression='(PATTERN<=12)&&((FLAG == 0)||((FLAG & 0x800) != 0))".
+#          $FOVdef.$fulldef."&&".$tempchip.
+#          $ccddef.$maskitdet."' filtertype=expression ".
+#          "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
+#          "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
+#          " spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
+#      } else {
         $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
           "expression='(PATTERN<=12)&&(FLAG == 0)".$FOVdef.$fulldef."&&".$tempchip.
           $ccddef.$maskitdet."' filtertype=expression ".
           "keepfilteroutput=no updateexposure=yes filterexposure=yes ".
           "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI ".
           " spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999";
-      }
+#      }
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
       print "$comm\n";
@@ -1266,19 +1270,19 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 # Determine the rate
 
       system "rm temp_events.fits";
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
-          "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
-          "&&".$tempchip."&&(PI in [300:10000])' ".
-          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
-          "updateexposure=yes filterexposure=yes ";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+#          "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
+#          "&&".$tempchip."&&(PI in [300:10000])' ".
+#          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+#          "updateexposure=yes filterexposure=yes ";
+#      } else {
         $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
           "expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)".
           "&&".$tempchip."&&(PI in [300:10000])' ".
           "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
           "updateexposure=yes filterexposure=yes ";
-      }
+#      }
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
       print "$comm\n";
@@ -1296,19 +1300,19 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
 
 # Determine the hardness ratio
 
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
-          "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
-          "&&".$tempchip."&&(PI in [500:800])' ".
-          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
-          "updateexposure=yes filterexposure=yes ";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+#          "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
+#          "&&".$tempchip."&&(PI in [500:800])' ".
+#          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+#          "updateexposure=yes filterexposure=yes ";
+#      } else {
         $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
           "expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)".
           "&&".$tempchip."&&(PI in [500:800])' ".
           "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
           "updateexposure=yes filterexposure=yes ";
-      }
+#      }
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
       print "$comm\n";
@@ -1319,19 +1323,19 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       chomp($lowe);
       system "rm temp_events.fits";
 
-      if(($det eq "mos1") and ($revo>2382)) {
-        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
-           "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
-           "&&".$tempchip."&&(PI in [2500:5000])' ".
-          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
-          "updateexposure=yes filterexposure=yes ";
-      } else {
+#      if(($det eq "mos1") and ($revo>2382)) {
+#        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+#           "expression='(PATTERN<=12)&&(((FLAG & 0x766a0f63)==0)||((FLAG & 0x766a0763)==0))".
+#           "&&".$tempchip."&&(PI in [2500:5000])' ".
+#          "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
+#          "updateexposure=yes filterexposure=yes ";
+#      } else {
         $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
            "expression='(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)".
            "&&".$tempchip."&&(PI in [2500:5000])' ".
           "filtertype=expression filteredset=temp_events.fits keepfilteroutput=yes ".
           "updateexposure=yes filterexposure=yes ";
-      }
+#      }
       print JUNK_HNDL "$comm\n";
       print JUNK_HNDL "   \n";
       print "$comm\n";

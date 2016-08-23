@@ -10612,12 +10612,176 @@ Reference:
 Reviewed how XSPEC errors work in detail.  Wrote up a short note on this.
 Use `statistic pgstat`.
 
+Pipeline cleanup
+----------------
+Attempt to clean up pipeline.
+
+* Tidy some documentation, remove unneeded intermediate files
+  (e.g. apply keywords to as-created spectra).
+* Constructed and ran one-off scripts to set keywords and rebin spectra to
+  bins of >=1 and >=50 counts.
+* Create variant PN FWC spectrum RMFs with detector map
+* Reviewed all changes to ESAS mos-spectra and pn-spectra between 
+  `xmmsas_20141104_1833` and `xmmsas_20160201_1833` releases.
+  Merged all changes into my modified scripts.
+  - changes to mos-spectra disable use of cflim parameter
+    and remove all special handling of MOS1 CCD4.
+  - only one change to pn-spectra (use `/usr/local/bin` instead of `/usr/bin`)
+  My old notes on possible cflim bug (2015 December 23) may no longer apply if
+  the cflim cut has been deprecated.
+
+
+Monday 2016 August 22 - cheese investigation
+============================================
+
+Goal is to merge point source exclusion lists together (taking the union of
+exclusions, effectively) to be able to generate new spectra and images.
+
+Review how cheese works and determine where to merge point source lists.
+
+cheese constituent calls
+------------------------
+
+Create full FOV images, exposure maps, masks.
+(filter pattern for image is `(PATTERN<=12)&&(FLAG==0)&&(PI in [elow:ehigh])`)
+
+    mos1S001-obj-im.fits, mos1S001-exp-im.fits, mos1S001-mask-im.fits
+
+Run detection tasks (eboxdetect, esplinemap, eboxdetect, emldetect).
+The key output is `emllist.fits`, a detailed tabulation of detected sources.
+Each source has multiple entries for each EPIC instrument.
+
+    boxlist.fits                # 1st round src detection
+    mos1S001-bkgimage.fits      # spline background map w/ 1st round src cut
+    boxlist-f.fits              # 2nd round detection
+    emllistout.fits             # raw output from emldetect
+    emllist.fits                # cleaned (removed some NULLs)
+
+Reformat source detections to FITS table of exclusions.
+NOTE: the region creation call differs for -det vs. -sky !!
+This could be a huge issue.
+
+    mos1S001-bkg_region-det.fits, mos1S001-bkg_region-sky.fits
+
+Create mask images by mapping region exclusions onto image mask
+
+    mos1S001-cheese.fits
+
+
+How can I get cheese to merge exclusion lists for spectra and images
+--------------------------------------------------------------------
+
+1. Create a table in `emllist.fits` format and re-run the `region`, `make_mask`
+   commands in cheese:
+
+       region eventset=mos1S001-clean.fits operationstyle=global
+           srclisttab=extern_emllist.fits:SRCLIST
+           bkgregionset=mos1S001-bkg_region-det.fits
+           energyfraction=0.85 radiusstyle=enfrac outunit=detxy verbosity=1
+       region eventset=mos1S001-clean.fits operationstyle=global
+           srclisttab=extern_emllist.fits:SRCLIST
+           bkgregionset=mos1S001-bkg_region-sky.fits
+           energyfraction=0.85 radiusstyle=enfrac outunit=xy verbosity=1
+       make_mask inimage=mos1S001-obj-im.fits
+           inmask=mos1S001-mask-im.fits
+           outmask=mos1S001-stinky-cheese.fits
+           reglist=mos1S001-bkg_region-sky.fits
+
+   But, `emllist.fits` contains a lot of information and multi-band detections.
+   And we will need to merge/reconcile nearby sources that are separately
+   identified in processing for 0087940201 and 0551000201.
+
+2. Merge the `*-bkg_region-{det,sky}.fits` outputs.
+   These follow the ASC-FITS-REGION-1.0 spec by J. McDowell and A. Rots.
+   Once merged, these can be straightforwardly used in spectrum pipeline
+   and cheese image creation.
+
+   But, need to transform 0087940201 DET <-> sky <-> 0551000201 DET.
+   Merging SKY regions is not straightforward; need to wrangle
+   with pointing transformation in FITS headers.
+
+3. ESAS task `merge_source_list`.  Very simple.  In sample call below I have
+   tuned the parameters to match the cheese call more closely
+   (40 arcsec separation, PSF threshold scale)
+
+       merge_source_list dirfile=dirlist.dat maxlikelim=15.0 clobber=0
+       cd ../0087940201/odf/repro
+       make_mask_merge prefix=1S001 inmask=mos1S001-mask-im.fits \
+         srclist=../../../cheese_merge/merged-source-list.fits \
+         flimtot=1.0 flimsoft=0.0 flimhard=0.0 \
+         scale=0.5 seper=40 maxlikelim=15.0 \
+         clobber=0
+
+ESAS point source merge tasks
+-----------------------------
+
+Clearly, staying within ESAS framework is easiest.
+The task `merge_source_list` merges sources within 2 arcsec. and discards the
+lower flux detection.
+
+0087940201 emllist.fits has 272/4 = 68
+0551000201 emllist.fits has 172/4 = 43 source detections
+Total: 111; total unique: 71, according to `merge_source_list`.
+(seems kind of low since the pointings are so different).
+
+SAS `region` call doesn't work.
+If used with radiusstyle=enfrac, requires `ID_INST`, `ID_BAND` columns.
+The output from `merge_source_list` appears to take `ID_INST=0` entries
+from `emllist.fits` and so I can easily spoof those columns (although I don't
+know if there are associated dependencies / assumptions...)
+If used with radiusstyle=contour, requires a lot more information on pointing
+etc. that is not provided via `merge_source_list`.
+See: http://xmm-tools.cosmos.esa.int/external/sas/current/doc/region/node13.html
+
+So, might be feasible if I can tune the settings for radiusstyle=enfrac.
+
+
+Region exclusion discrepancy
+----------------------------
+
+The files `*-bkg_region-det.fits` vs. `*-bkg_region-sky.fits`
+do NOT represent the same source exclusions.
+The calls to SAS task `region` are completely different!  Argh.
+
+Verified, my source exclusion with `-bkg_region-det.fits` is completely wrong.
+The bright point source is not removed at all.  This will change fits.
+Comparison of spectra is at `results-interm/20160823_cheese_wrong_excl.png`.
+Going from 28131 to 25071 counts in the main source region (0-400 arcsec).
+
+I tested and found that spectra could be created with the sky coordinate
+regions, which challenged my somehow-embedded belief that we had to work with
+regions only in detector coordinates for some reason.
+Partial answer from ESAS cookbook footnote:
+
+> The use of detector coordinates, DETX and DETY, is required for the selection
+> expression. While inconvenient, it is forced by the usage of certain SAS
+> tasks.  In practice the use of detector coordinates rather than sky
+> coordinates is not a problem because of the very good pointing stability and
+> the lack of a programmed wobble.
+
+Unfortunately I will need to test the pipeline through and see if the sky
+coordinates are usable.
+If not, I think I can construct my own region exclusion manually
+and merge it with the actual source extraction region...
+
+
+
+
+
+
+
 
 
 Standing questions and TODOs
 ============================
 
 IN WORK NOW (!!!!!)
+
+[ ] Currently not using detector mapped RMF for PN (neither observation nor FWC
+fits), pending query...
+
+[ ] Why is spectralbinsize in use with evselect for object spectra?...
+Difference between spectralbinsize=1,5?
 
 [ ] Plot dumps: use setplot comp to show individual additive model components (WAY easier
 than multidump / append hack I set up)
@@ -10657,7 +10821,7 @@ than multidump / append hack I set up)
 
 [ ] Fits: sub-region investigation, TBD (this should be last)
 
-[ ] Fits: clarify filling factor 1.4x factor.
+[ ] Text: clarify filling factor 1.4x factor.
 
 List of possible systematics:
 * X-ray background spectrum assumptions and variation.
@@ -10976,6 +11140,58 @@ Review of mos-filter (any functionality I should incorporate?):
 	AND THAT'S IT!
 
 Basically a giant wrapper for espfilt, that generates a lot of diagnostic output.  Kind of useful.
+
+## cheese synopsis
+
+- For each MOS,PN exposure:
+    * create full FOV image (PATTERN<=12)&&(FLAG==0)&&(PI in [elow:ehigh])
+        -> mos1S001-obj-im.fits
+    * create exposure map for full FOV image
+        mos1S001-obj-im.fits -> mos1S001-exp-im.fits
+    * create full FOV mask image (basically, f(x) = (x > 1 ? 1 : 0))
+        -> mos1S001-mask-im.fits
+- First pass box detection over all MOS,PN FOV {masks, exposure maps, images}
+  using `eboxdetect` in local detection mode.
+  Parameters:
+    nruns=3
+    boxsize=5   5x5 box
+    likemin=8   min detection likelihood (default 10, range 1-50, recommend 8)
+    ecf="1.2 1.2 3.2"       1e-11 cts cm^2 /erg  (roughly convert cts to flux)
+  Outputs first source detection list
+    -> boxlist.fits
+- For each MOS,PN exposure:
+    * create spline background map of image, w/ first-round sources removed,
+      using esplinemap.
+        -> mos1S001-bkgimage.fits
+- Second pass box detection over all MOS,PN FOV {masks, exposure maps, images}
+  WITH addition of esplinemap images, using `eboxdetect` in map detection mode.
+    -> boxlist-f.fits
+- Fit detected sources to PSF model, accounting for vignetting, OOT events, bad
+  pixels/columns, chip gaps, mildly extended sources.
+    -> emllistout.fits
+- Fill null values in emllist.fits
+    -> emllist.fits
+- For each MOS,PN exposure:
+    * Reformat source detections from emllist.fits to FITS table of exclusions
+        -> mos1S001-bkg_region-det.fits
+        -> mos1S001-bkg_region-sky.fits
+    * Create mask images by mapping region exclusions onto image mask
+      mos1S001-{obj-im, mask-im, bkg_region-sky}.fits
+        -> mos1S001-cheese.fits
+      Modifies image to attach source exclusions (? not sure about this yet)
+        -> mos1S001-obj-im.fits redux
+    * Edge case: if no emllist.fits is produced (no detections?),
+      copy nominal masks to cheese masks.
+
+In short, feed images, exposure maps, and masks into eboxdetect, esplinemap,
+eboxdetect, emllist to create a list of candidate sources.
+Then create useful source exclusion products.
+
+Region FITS files (`*-bkg_region-det.fits`, `*-bkg_region-sky.fits`) are used
+to mask point sources in subsequent processing.
+The output `emllist.fits` and `-cheese.fits` can be used in interactive work.
+They might factor into imaging pipeline.
+
 
 ## mos-spectra synopsis
 

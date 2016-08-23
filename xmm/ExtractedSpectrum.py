@@ -82,5 +82,5 @@ class ExtractedSpectrum:
     # FWC instrumental line handling
 
     def fwc_fit(self):
-        fjson = self.repro_dir() + "/{exp}-{reg}-ff-key-fit.json".format(exp=self.exp, reg=self.reg)
+        fjson = self.repro_dir() + "/{exp}-{reg}-ff-fit.json".format(exp=self.exp, reg=self.reg)
         return xs_utils.load_dict(fjson)
