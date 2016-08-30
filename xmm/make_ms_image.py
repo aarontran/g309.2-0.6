@@ -79,10 +79,10 @@ def main(fig_num):
         f.recenter(ra2deg(13,46,30), -62.9, width=28./60, height=28./60)
         f.show_colorscale(vmin=1e-5, stretch='log',cmap='hot')
         f.show_regions('regs/ann_000_100.reg')
-        f.show_regions('regs/circ_200.reg')
-        f.show_regions('regs/circ_300.reg')
+        f.show_regions('regs-plot/circ_200.reg')
+        f.show_regions('regs-plot/circ_300.reg')
         f.show_regions('regs/src.reg')  # Equivalent to circ_400, but changed color/width
-        f.show_regions('regs/circ_500.reg')
+        f.show_regions('regs-plot/circ_500.reg')
         f.show_regions('regs/bkg.reg')  # Yes, do show background
 
         most = fits.open(XMMPATH + '/../most/G309.2-0.6.fits')

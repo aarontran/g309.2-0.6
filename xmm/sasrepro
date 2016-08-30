@@ -6,9 +6,10 @@
 #     $XMM_PATH/$obsid
 #     $XMM_PATH/$obsid/odf
 #     $XMM_PATH/$obsid/pps
-#     $XMM_PATH/$obsid/odf/repro
+#     $XMM_PATH/$obsid/repro
 #
 # Requires SAS environment with XMM_PATH env variable set
+# If run with "source", user environment should be ready for SAS reduction
 #
 # A. Tran, 2015 Nov 13
 
@@ -20,14 +21,14 @@ if (! $?XMM_PATH) then
 endif
 
 # Set up directory structure
+setenv SAS_OBSID $obsid
 setenv SAS_ODF $XMM_PATH/$obsid/odf  # For cifbuild run before odfingest
-set repro = $XMM_PATH/$obsid/odf/repro
-mkdir -p $repro
-cd $repro
+setenv SAS_REPRO $XMM_PATH/$obsid/repro
+mkdir -p $SAS_REPRO
+cd $SAS_REPRO
 
 cifbuild >& cifbuild.log # outputs ccf.cif in current directory
-setenv SAS_CCF $XMM_PATH/$obsid/odf/repro/ccf.cif
+setenv SAS_CCF $SAS_REPRO/ccf.cif
 
 odfingest >& odfingest.log # outputs $(REV)_$(OBSID)_SCX00000SUM.SAS in current directory
-setenv SAS_ODF $XMM_PATH/`ls -1 *SUM.SAS`
-
+setenv SAS_ODF `ls -1 $SAS_REPRO/*SUM.SAS`

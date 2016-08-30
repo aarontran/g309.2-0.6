@@ -98,6 +98,15 @@ for ((i=0;i<${#exps[@]};++i)); do
   # Extraction
   # ----------
 
+  # NOTE: {mos,pn}-spectra apply (PATTERN<={12,4})&&(FLAG==0)
+  # when extracting object spectra (-obj.pi, -obj-oot.pi)
+  # FLAG==0 for MOS is stricter than recommended #XMMEA_EM
+  #
+  # mos*-clean.fits (or, -clean-ori.fits) was filtered with:
+  #  '(PATTERN<=12)&&((FLAG & 0x766a0f63)==0)'
+  # pn*-clean.fits (or, -clean-ori.fits) was filtered with:
+  #  '(PATTERN<= 4)&&((FLAG & 0x766a0f63)==0)'
+
   echo "  Running ${exe_spec} prefix=${exp_n}..."
   ${exe_spec} prefix=${exp_n} region="${f_region}" caldb="${CALDB}" \
       mask=${mask} elow=${elow} ehigh=${ehigh} ${ccd_str} \

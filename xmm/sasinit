@@ -10,36 +10,31 @@
 # If obsid provided, environment variables SAS_ODF and SAS_CCF set
 # (requires cifbuild, odfingest already run)
 #
-# This script is NOT portable.  If moving to replicate on other computers,
-# you must change paths for setsas.csh, CCFPATH, heainit, XMM_PATH,
-# etc.
+# Paths to HEASOFT, SAS installs must be updated if ported to other computers
 #
 # A. Tran, 2015 Sep 21
 
-# Set heainit for CfA/HEAD linux computers, from default ~/.cshrc.user
-set path = (/soft/saord/bin $path)
-# $path is a special variable in tcsh for some weird reason
-# $PATH and $path show the same list, but delimit with colon/space respectively
-# moreover, set path = (... $path) updates the environment variable
+# WARNING: $PATH and $path are the same list, respectively colon/space
+# delimited, but `set path = (... $path)` updates the environment variable
 # whereas this is not the case for $PATH...
-# something weird specific to HEAD machines
+# something weird specific to HEAD machines?...
+
+set path = (/soft/saord/bin $path)
+
+set MACHINE = `uname -m`
 switch ($MACHINE)
   case i686
-        alias heainit ' \
-              setenv HEADAS /soft/lheasoft/headas/i686-pc-linux; \
-              source $HEADAS/headas-init.csh'
+    setenv HEADAS /soft/lheasoft/headas/i686-pc-linux
+    source $HEADAS/headas-init.csh
   breaksw
   case x86_64
-        alias heainit ' \
-              setenv HEADAS /soft/lheasoft/headas/x86_64-pc-linux; \
-              source $HEADAS/headas-init.csh'
+    setenv HEADAS /soft/lheasoft/headas/x86_64-pc-linux
+    source $HEADAS/headas-init.csh
   breaksw
 endsw
 
-heainit
 source /soft/XMM/xmmsas/setsas.csh
 
-# Cfa/HEAD specific path
 setenv SAS_CCFPATH /proj/xmm/ccf
 echo "setenv SAS_CCFPATH $SAS_CCFPATH"
 
@@ -53,17 +48,19 @@ set path = ($XMM_PATH/bin_unused $path)
 
 set obsid = $1
 if ( $obsid != "") then
-    setenv SAS_ODF `ls -1 $XMM_PATH/$obsid/odf/repro/*SUM.SAS`
-    setenv SAS_CCF $XMM_PATH/$obsid/odf/repro/ccf.cif
     setenv SAS_OBSID $obsid
+    setenv SAS_REPRO $XMM_PATH/$obsid/repro
+    setenv SAS_CCF $SAS_REPRO/ccf.cif
+    setenv SAS_ODF `ls -1 $SAS_REPRO/*SUM.SAS`
+    echo "setenv SAS_OBSID $SAS_OBSID"
+    echo "setenv SAS_REPRO $SAS_REPRO"
     echo "setenv SAS_CCF $SAS_CCF"
     echo "setenv SAS_ODF $SAS_ODF"
-    echo "setenv SAS_OBSID $obsid"
     echo ""
     if ($SAS_ODF != "") then
 	echo "XMM SAS ready for $obsid"
     else
-    	echo "ERROR: $obsid/odf/repro/*SUM.SAS not found!"
+    	echo "ERROR: $SAS_REPRO/*SUM.SAS not found!"
     	echo "       Did you run sasrepro?"
 	exit 1
     endif

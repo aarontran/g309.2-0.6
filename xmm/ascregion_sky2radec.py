@@ -11,6 +11,7 @@ from __future__ import division
 import argparse
 from datetime import datetime
 import numpy as np
+import os
 import re
 import warnings
 from warnings import warn
@@ -74,12 +75,10 @@ def main():
         radius = table.data['R'][:,0] * abs(scale) * 60  # arcminutes
 
         srcs[fname] = {}
-        srcs[fname]['shape'] = table.data['SHAPE']
         srcs[fname]['ra'] = ra
         srcs[fname]['dec'] = dec
         srcs[fname]['radius'] = radius
 
-    shape_merged = srcs[FILES[0]]['shape']
     ra_merged = srcs[FILES[0]]['ra']
     dec_merged = srcs[FILES[0]]['dec']
     radius_merged = srcs[FILES[0]]['radius']
@@ -100,7 +99,6 @@ def main():
             ra_add = srcs[fname]['ra'][i_add]
             dec_add = srcs[fname]['dec'][i_add]
             radius_add = srcs[fname]['radius'][i_add]
-            shape_add = srcs[fname]['radius'][i_add]
 
             j_match = None
             sep_match = None
@@ -119,7 +117,6 @@ def main():
                 ra_merged = np.append(ra_merged, ra_add)
                 dec_merged = np.append(dec_merged, dec_add)
                 radius_merged = np.append(radius_merged, radius_add)
-                shape_merged = np.append(shape_merged, shape_add)
 
                 print "    New source: RA, dec ({}, {}), r = {} arcmin".format(
                             ra_add, dec_add, radius_add)
@@ -135,7 +132,6 @@ def main():
                     ra_merged[j_match] = ra_add
                     dec_merged[j_match] = dec_add
                     radius_merged[j_match] = radius_add
-                    shape_merged[j_match] = shape_add
                     diag += "; replacing (r_old {:.2f}\", r_new {:.2f}\")".format(r1 * 60, r2 * 60)
                 else:  # note change in order of r1,r2
                     diag += "; no change (r_old {:.2f}\", r_new {:.2f}\")".format(r2 * 60, r1 * 60)
@@ -150,40 +146,44 @@ def main():
                     print "\tMatched sources do not fully overlap; merged radius is {:.2f}\"".format(radius_merged[j_match] * 60)
 
 
+    shape_merged = np.full_like(ra_merged, '!CIRCLE', dtype='|S16')
+    rotang_merged = np.full_like(ra_merged, '0')
+    component_merged = np.full_like(ra_merged, '1', dtype='int')
+
     # Construct output FITS file
     # ESAS task conv-region expects: SHAPE, RA, Dec, R, ROTANG, COMPONENT
     # then converts stuff.
-    celestial_bhdu = fits.BinTableHDU.from_columns(
+    bhdu = fits.BinTableHDU.from_columns(
         [fits.Column(name='SHAPE', format=table.columns['SHAPE'].format,
                      array=shape_merged),
          fits.Column(name='RA', format='E', array=ra_merged, unit="deg"),
          fits.Column(name='Dec', format='E', array=dec_merged, unit="deg"),
          fits.Column(name='R', format='E', array=radius_merged, unit="arcmin"),
-         fits.Column(name='ROTANG', format=table.columns['ROTANG'].format,
-                     array=table.data['ROTANG'], unit="deg"),
+         fits.Column(name='ROTANG', format='E', array=rotang_merged, unit="deg"),
          fits.Column(name='COMPONENT', format=table.columns['COMPONENT'].format,
                      array=table.data['COMPONENT'])
          ]
         )
-    celestial_bhdu.name = 'REGION'
-    celestial_bhdu.header['MTYPE1'] = 'pos'
-    celestial_bhdu.header['MFORM1'] = 'RA,DEC'
+    bhdu.name = 'REGION'
+    bhdu.header['MTYPE1'] = 'pos'
+    bhdu.header['MFORM1'] = 'RA,DEC'
 
     # Loosely following ASC-REGION-FITS spec
-    celestial_bhdu.header['HDUCLASS'] = 'ASC'
-    celestial_bhdu.header['HDUCLAS1'] = 'REGION'
-    celestial_bhdu.header['HDUCLAS2'] = 'STANDARD'
-    celestial_bhdu.header['HDUVERS'] = '1.2.0'
-    celestial_bhdu.header['HDUDOC'] = 'ASC-FITS-REGION-1.2: Rots, McDowell'
+    bhdu.header['HDUCLASS'] = 'ASC'
+    bhdu.header['HDUCLAS1'] = 'REGION'
+    bhdu.header['HDUCLAS2'] = 'STANDARD'
+    bhdu.header['HDUVERS'] = '1.2.0'
+    bhdu.header['HDUDOC'] = 'ASC-FITS-REGION-1.2: Rots, McDowell'
 
-    celestial_phdu = fits.PrimaryHDU()
+    phdu = fits.PrimaryHDU()
     # RFC3339/ISO8601 date as used by XMM tools; add 'Z' to indicate timezone
-    celestial_phdu.header['DATE'] = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%Sz')
-    celestial_phdu.header['CREATOR'] = 'ascregion_sky2radec.py (atran@cfa)'
-    celestial_phdu.header['HISTORY'] = ('Created by ascregion_sky2radec.py at '
-                                        + celestial_phdu.header['DATE'])
+    phdu.header['DATE'] = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%Sz')
+    # Convenient way to get program name
+    phdu.header['CREATOR'] = '{} (atran@cfa)'.format(os.path.basename(__file__))
+    phdu.header['HISTORY'] = 'Created by {} at {}'.format(
+                    phdu.header['CREATOR'], phdu.header['DATE'])
 
-    f_out = fits.HDUList([celestial_phdu, celestial_bhdu])
+    f_out = fits.HDUList([phdu, bhdu])
     f_out.writeto(F_OUT, clobber=True)
 
 

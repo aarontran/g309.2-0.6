@@ -32,6 +32,7 @@ xmm/xmmsas_20141104_1833
 xmm/caldb/**
 xmm/*/pps
 xmm/*/PPS
+xmm/*/odf
 xmm/*/catalogue
 MANIFEST.*
 *.ASC
@@ -47,10 +48,10 @@ chandra/8929/
 chandra/out/
 
 # Logging output, etc
-xmm/*/odf/**/*gti*.txt
-xmm/*/odf/**/command.csh
-xmm/*/odf/**/*cmd.csh
-xmm/*/odf/**/*/*cmd.csh
+xmm/*/repro/*gti*.txt
+xmm/*/repro/command.csh
+xmm/*/repro/*cmd.csh
+xmm/*/repro/*/*cmd.csh
 # cfa head lan git is 1.7.1 so ** doesn't work quite right...
 # just add a special case
 

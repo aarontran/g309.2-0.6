@@ -1,7 +1,7 @@
 README for analysis of XMM obsids 0087940201, 0551000201
 ========================================================
 
-SAS build version `xmmsas_20160201_1833-15.0.0`
+SAS version `xmmsas_20160201_1833-15.0.0`
 PyXSPEC version 1.1.0 (needs Parameter.index() function in particular)
 Absorption model `tbabs_new` version 2.3.2
 XSPEC version 12.9.0d
@@ -9,13 +9,11 @@ XSPEC version 12.9.0d
 Setup and data reduction / fitting
 ----------------------------------
 
-To download data (including ESAS filterwheel closed data + diagonal RMFs for
-MOS1, MOS2, PN), run from this top-level directory (xmm/):
+Use Makefile to download and reprocess data for obsids 0087940201, 0551000201;
+download ESAS CALDB with filter-wheel-closed data, diagonal RMFs:
 
     make all
 
-to download and reprocess data for obsids 0087940201, 0551000201; 
-download ESAS filter-wheel-closed data, diagonal RMFs for MOS1, MOS2, and PN.
 To reprocess manually after downloading from XMM data archive, run
     
     source sasinit ${obsid}
@@ -25,37 +23,38 @@ To set an interactive environment for SAS/HEASOFT tools, run:
 
     source sasinit ${obsid}
 
-`sasinit` sets environment variable `$XMM_PATH` which is referenced
-extensively.
-Running `source sasinit` alone loads the SAS/HEASOFT environment but does not
-set obsid-specific parameters for SAS analysis (so evselect works, odfingest
-may not).
+Omitting obsid loads the SAS/HEASOFT environment but does not set environment
+variables for SAS analysis (evselect works, odfingest will not).
+Obsid is also required to use this pipeline (several environment variables read
+by various scripts and tasks).
+From here out, execution in a sasinit-executed environment is assumed.
 
-All working files should reside in:
+Create filtered, OOT-event subtracted event lists and point source masks.
+Repeat this for EACH obsid of interest.
 
-    ${XMM_PATH}/${OBSID}/odf/repro
+    chainfilter
+    # use lightcurve_check.py to inspect GTI filtering
 
-Create filtered, OOT-event subtracted event lists and point source masks:
+Merge point source lists, replace __incorrect__ detector coordinate masks for
+spectrum extraction:
 
-    source sasinit ${obsid}
-    chainfilter_0551000201
-    chainfilter_0087940201
+    merge_point_source.sh
 
-Inspect data, create regions in DS9, and create corresponding XMM detector
-regions with:
+Inspect data, create appropriate regions in DS9 and save to
 
-    make_xmmregions (calls reg2xmmdets.pl)
-    check_xmmregions
+    regs/*.reg
 
 Extract observation and FWC spectra with
 
     specextract.tcsh, which is a wrapper script for:
-        make_xmmregions
+        make_xmmregions  (itself a wrapper for reg2xmmdets.pl)
         specbackgrp $obsid $region
         ff_fit.py
 
 Spectrum fits: you'll have to configure a lot of stuff by hand unfortunately.
 Still working on it.
+In short use `import * from g309_fits` in iPython and work in an interactive
+environment.
 
     g309_models.py
     g309_fits.py (replaces fitter.tcsh, but still in works), wrapper for
@@ -66,10 +65,9 @@ Still working on it.
     xspec_utils.py
     nice_tables.py
 
-Alternative, background subtraction and fit (not well-tested or explored):
+Alternative, background subtraction and fit (exploratory, not maintained):
 
-    spec_subtract
-    snr_sbkg.xcm
+    bin_unused/spec_subtract
 
 Image creation (not too tidy yet):
 

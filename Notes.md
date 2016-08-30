@@ -11036,7 +11036,40 @@ Tuesday 2016 August 30 - pipeline plumbing
 
 Make some bug-fixes and add verbose reporting to `ascregion_sky2radec.py`.
 
-I will reconfigure directory structure to start from scratch.
+* Start using new directory structure for simplicity.  Shorten paths + fresh
+  start for spectrum generation, without overwriting old files.
+* Check de Luca & Molendi (2004) soft proton contamination criterion, using
+  script by de Luca, Molendi, Leccardi, Read available at:
+
+    http://xmm2.esac.esa.int/external/xmm_sw_cal/background/epic_scripts.shtml
+
+  Outputs basically confirm observations in fits.
+  Obsid 0087940201 is severely contaminated by residual soft protons;
+    (ratios, MOS1: 3.33 +/- 0.11; MOS2: 3.45 +/- 0.11, PN: 1.94 +/- 0.06)
+  Obsid 0551000201 is not quite as bad off.
+    (ratios, MOS1: 1.21 +/- 0.04; MOS2: 1.12 +/- 0.03; PN no corner data)
+  The observed count rates and model normalizations basically support this
+  (especially farther away from FOV).
+  (e.g., norm for 0551000201 MOS2 SP power law is a factor 2-3x lower than the
+  others; MOS1 is skewed a bit by chip removal).
+
+  Nothing we can do about this, except possibly report the numbers and be very
+  aware of the contamination in our images and spectra.
+  From looking at de Luca & Molendi (2004) this appears to be an empirical
+  criterion.  Appendices A & B usefully characterize the XMM background signal.
+
+* Removed unneeded manual filtering evselect calls in `chainfilter_*` tasks,
+  cleaned up some comments
+* Change script execution style to simply use `SAS_REPRO` and `SAS_OBSID`
+  environment variables.  Allows more flexibility in execution.
+  Taking a page out of CXCDS group's style manual...
+* Relocated `circ_*` regs because these are used only for plotting.
+* Lots of script troubleshooting
+
+
+Started screen sessions on statler and cooper to run chainfilter.
+Miscellaneous shell script troubleshooting ensues.
+
 
 
 Standing questions and TODOs
@@ -11111,12 +11144,14 @@ List of standard text checks:
   (do try this -- may reduce backgrounds in image. but your data are so noisy
   anyways that it may not have much effect).
 
+    vim -R xmmsas_20141104_1833/packages/esas/src/proton_mod.f90 
 
-Is HD 119682 introducing light curve noise?
-compute FOV lightcurve _without_ point sources.
-https://arxiv.org/abs/astro-ph/0205278
-http://adsabs.harvard.edu/abs/2015ApJ...799...84S
-http://adsabs.harvard.edu/abs/2015ApJ...806..177M
+
+Q: Is HD 119682 introducing light curve noise?
+Answer: maybe, but definitely not by factors of 10x.
+Variation is ~ factors of 2-3x (see: Torrejon+ 2015).
+And masking this source only removed ~3000 counts (10%) of the MOS1 spectrum.
+So, basically, don't sweat it.
 
 
 Standing TODOs:
@@ -11127,10 +11162,6 @@ Standing TODOs:
   could contaminate soft emission near the aimpoint, which might look like SNR
   emission...  (partially helped by choice of energy bands for imaging,
   though, as at least it should not confuse sharp features).
-* check the filtering threshold of de Luca and Molendi on the corner data.
-  (see sec. 3.3 of de luca/molendi 2003) as a sanity check -- was our GTI
-  filtering sufficient?
-  http://xmm2.esac.esa.int/external/xmm_sw_cal/background/epic_scripts.shtml
 * Re-perform SWCX spectrum cut but using ENTIRE FOV (mask out point sources and
   remnant) -- previously took emission from remnant only
 
@@ -11140,47 +11171,23 @@ Standing questions:
   about "NoExpoExt" (no exposure extension found)???
 
 Standing ESAS questions:
-* QUESTION: line 581 of mos-spectra, why is elow set to cflim?...
-    rot-im-det-sky mode=4, mode=5 are NOT documented on ESAS cookbook
-    Similarly passing mode=4,5 to rot-det-sky is not documented either.
 * Why does ESAS cookbook recommend PN line at 7.11 keV?
   I haven't seen any evidence for this particular line
   If anything, we should be modeling another line at around 5.3 keV (Cr line?)
 
-Standing low priority questions:
-* Castro+2011, why use evselect,merge,eexpmap,emosaic?
-  Seems like merge is not needed.
-
 Reminders (caveats and loose threads):
-* source region differs slightly between exposures; therefore combined fit is
-  not completely "true" due to uneven sampling.
-  Expect small effect for the integrated spectrum.
-  May affect spectra small sub-regions of source (might require discarding 1-2
-  exposures or adjusting sub-region selection)
+* source region differs slightly between exposures; combined fit is not
+  completely "true" due to uneven sampling.  Main effect due to missing
+  0551000201 MOS1 CCD.  May also affect spectra small sub-regions of source
+  (might require discarding 1-2 exposures or adjusting sub-region selection)
 * background region also differs slightly between exposures.
   XRB prefactors accounts for this, assuming uniform XRB.
   Free norms for instrumental lines and SP power laws accounts for the rest.
   Expect power law indices to differ slightly for MOS1/2, but they should not
   be far apart, so it simplifies fit to tie values together.
-
-
-Standing TO-DOs
-===============
-vim -R xmmsas_20141104_1833/packages/esas/src/proton_mod.f90 
-
-PENDING QUESTIONS
-* PN - perform fit with and without detmapped RMF
-  (why is it not detmapped in ESAS?)
-
-REMINDER TO SELF:
 * PNS003 filterwheel fit does NOT include OOT correction!
-* (background subtraction fits) fitting binned spectra in XSPEC, with
-  POISSERR = true, __underestimates__ the true error.
-  The opposite approach of letting XSPEC adding all errors in quadrature will
-  strongly overestimate the error.
 
-ESAS: vet and submit bug fix for MOS1 CCD4 strip removal; inquire about
-detector map for PN RMF...
+
 
 1. check temporal variation of instrumental lines in (a) FWC data or (b) corner
    data from DB of public observations
@@ -11211,15 +11218,6 @@ detector map for PN RMF...
 
 * Explicitly note relative sizes of backgrounds for different instruments, and
   obsids.
-
-Low-priority TO-DO (defer to later): remove pt sources within SNR region, and
-merge pt source lists from each obsid.  Use ESAS region task to make
-"stinky-cheese" masks with manually specified point sources.
-
-Low-priority: in mos-spectra, rev>2382 also allows ((FLAG & 0x800) != 0)... I
-don't know whether this is whats desired but OK.  Worried it would let events
-with 0x800 + OTHER flags through.
-
 
 
 
