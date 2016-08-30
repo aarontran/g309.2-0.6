@@ -1,0 +1,166 @@
+#!/bin/bash
+
+# BEFORE RUNNING SCRIPT: set up SAS environment, including SAS_CCFPATH
+
+OBSID="0087940201"
+export XMM_PATH=`pwd`
+
+echo "Processing $XMM_PATH/$OBSID/"
+
+# Download observation and CALDB files
+
+#curl --verbose --user anonymous:-curl@ -o esas-caldb-sasv13.tar.gz \
+#  "ftp://xmm.esac.esa.int/pub/ccf/constituents/extras/esas_caldb/esas-caldb-sasv13.tar.gz"
+#mkdir caldb
+#tar -xzf esas-caldb-sasv13.tar.gz --directory caldb
+
+#curl -o "files_${OBSID}.tar" \
+#  "http://nxsa.esac.esa.int/nxsa-sl/servlet/data-action-aio?obsno=$OBSID"
+#tar -xf "files_${OBSID}.tar"
+#tar -xzf ${OBSID}/odf/${OBSID}.tar.gz --directory=${OBSID}/odf
+#tar -xf ${OBSID}/odf/*_${OBSID}.TAR --directory=${OBSID}/odf
+#mkdir ${OBSID}/repro
+
+# Standard processing up to cheese mask creation
+
+cd ${OBSID}/repro
+
+export SAS_ODF="$XMM_PATH/$OBSID/odf"  # For cifbuild run before odfingest
+
+#cifbuild &> cifbuild.log # outputs ccf.cif in current directory
+export SAS_CCF="$XMM_PATH/$OBSID/repro/ccf.cif"
+#odfingest &> odfingest.log # outputs $(REV)_$(OBSID)_SCX00000SUM.SAS in current directory
+export SAS_ODF=$(ls -1 $XMM_PATH/$OBSID/repro/*SUM.SAS)
+
+#epchain withoutoftime=true &> epchain_oot.log
+#epchain &> epchain.log  # cannot use epreject for 0087940201
+#emchain &> emchain.log
+#
+#mos-filter &> mos-filter.log
+#mv command.csh mos-filter_cmd.csh
+#pn-filter &> pn-filter.log
+
+cheese prefixm="1S001 2S002" prefixp="S003" \
+  scale=0.25 rate=1.0 dist=40.0 clobber=1 elow=400 ehigh=7200 \
+  &> cheese.log
+mv command.csh cheese_cmd.csh
+
+# =======================================================
+# Generate variant cheese masks by changing
+# 1. SAS region radiusstyle={enfrac,contour}
+# 2. SAS region energyfraction=$scale, bkgfraction=$scale
+# commands minimally modified from xmmsas_20160201_1833/bin/cheese
+# and can be pulled from cheese.log
+# =======================================================
+
+# Show that enfrac vs. contour yields very different results,
+# and that cheese's scale parameter acts differently
+# for radiusstyle=enfrac energyfraction=$scale,
+# vs. radiusstyle=contour bkgfraction=$scale
+
+# sky, enfrac (DET settings in SKY coordinates)
+region eventset=mos1S001-clean.fits operationstyle=global \
+    srclisttab=emllist.fits:SRCLIST \
+    expression='(FLUX >= 1e-14)&&(ID_INST == 0)&&(ID_BAND == 0)&&(DIST_NN >= 40.0)&&(DET_ML >= 15)' \
+    bkgregionset=mos1S001-bkg_region-sky_enfrac.fits \
+    energyfraction=0.25 radiusstyle=enfrac outunit=xy verbosity=1 \
+  &> cheese_variant_masks.log
+
+# sky, contour, bkgfraction=0.85
+region eventset=mos1S001-clean.fits operationstyle=global \
+    srclisttab=emllist.fits:SRCLIST \
+    expression='(FLUX >= 1e-14)&&(ID_INST == 0)&&(ID_BAND == 0)&&(DIST_NN >= 40.0)&&(DET_ML >= 15)' \
+    bkgregionset=mos1S001-bkg_region-sky_contour-frac0.85.fits \
+    radiusstyle=contour bkgratestyle=col nosrcellipse=yes \
+    bkgfraction=0.85 outunit=xy verbosity=1 \
+  &>> cheese_variant_masks.log
+
+# sky, enfrac, energyfraction=0.85
+region eventset=mos1S001-clean.fits operationstyle=global \
+    srclisttab=emllist.fits:SRCLIST \
+    expression='(FLUX >= 1e-14)&&(ID_INST == 0)&&(ID_BAND == 0)&&(DIST_NN >= 40.0)&&(DET_ML >= 15)' \
+    bkgregionset=mos1S001-bkg_region-sky_enfrac-frac0.85.fits \
+    energyfraction=0.85 radiusstyle=enfrac outunit=xy verbosity=1 
+  &>> cheese_variant_masks.log
+
+# sky, enfrac (DET settings in SKY coordinates)
+make_mask inimage=mos1S001-obj-im.fits inmask=mos1S001-mask-im.fits \
+    reglist=mos1S001-bkg_region-sky_enfrac.fits \
+    outmask=mos1S001-cheese_enfrac.fits
+  &>> cheese_variant_masks.log
+
+# sky, contour, bkgfraction=0.85
+make_mask inimage=mos1S001-obj-im.fits inmask=mos1S001-mask-im.fits \
+    reglist=mos1S001-bkg_region-sky_contour-frac0.85.fits \
+    outmask=mos1S001-cheese_contour-frac0.85.fits
+  &>> cheese_variant_masks.log
+
+# sky, enfrac, energyfraction=0.85
+make_mask inimage=mos1S001-obj-im.fits inmask=mos1S001-mask-im.fits \
+    reglist=mos1S001-bkg_region-sky_enfrac-frac0.85.fits \
+    outmask=mos1S001-cheese_enfrac-frac0.85.fits
+  &>> cheese_variant_masks.log
+
+# ds9 mos1S001-cheese.fits mos1S001-cheese_enfrac.fits mos1S001-cheese_contour-frac0.85.fits mos1S001-cheese_enfrac-frac0.85.fits
+
+# ==============================================================
+# Extra commands to generate spectra for comparison;
+# commands should be almost identical to mos-spectra runs
+# (not tested yet)
+# ==============================================================
+
+#  # Source region is:
+#  # &&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))
+#  
+#  # Create "default" spectra (identical to 2016 March call)
+#  evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes \
+#    expression='(PATTERN<=12)&&(FLAG == 0)&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))&&region(mos1S001-bkg_region-det.fits)&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))' \
+#    filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes withspectrumset=yes \
+#    energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 \
+#    spectrumset=mos1S001-obj.pi
+#  # Corresponding "default" image
+#  evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes \
+#    expression='(PATTERN<=12)&&(FLAG == 0)&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))&&region(mos1S001-bkg_region-det.fits)&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))' \
+#    filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes \
+#    squarepixels=yes ignorelegallimits=yes withxranges=yes withyranges=yes \
+#    xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \
+#    ycolumn='Y' yimagesize=900 yimagemax=48400 yimagemin=3401 \
+#    imageset=mos1S001-obj_image.fits
+#  
+#  # Use sky regions w/enfrac method (same as "default", verify that detector/sky coordinates make no substantial difference)
+#  evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes \
+#    expression='(PATTERN<=12)&&(FLAG == 0)&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))&&region(mos1S001-bkg_region-sky_enfrac.fits)&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))' \
+#    filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes withspectrumset=yes \
+#    energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 \
+#    spectrumset=mos1S001-obj_sky-enfrac.pi
+#  # Corresponding "default" image with sky coordinate exclusions
+#  evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes \
+#    expression='(PATTERN<=12)&&(FLAG == 0)&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))&&region(mos1S001-bkg_region-sky_enfrac.fits)&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))' \
+#    filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes \
+#    squarepixels=yes ignorelegallimits=yes withxranges=yes withyranges=yes \
+#    xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \
+#    ycolumn='Y' yimagesize=900 yimagemax=48400 yimagemin=3401 \
+#    imageset=mos1S001-obj_sky-enfrac_image.fits
+#  
+#  # Use sky regions w/contour method
+#  evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes \
+#    expression='(PATTERN<=12)&&(FLAG == 0)&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))&&region(mos1S001-bkg_region-sky.fits)&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))' \
+#    filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes withspectrumset=yes \
+#    energycolumn=PI spectralbinsize=5 withspecranges=yes specchannelmin=0 specchannelmax=11999 \
+#    spectrumset=mos1S001-obj_sky-contour.pi
+#  # Corresponding "default" image with sky coordinate exclusions
+#  evselect table=mos1S001-clean.fits:EVENTS withfilteredset=yes \
+#    expression='(PATTERN<=12)&&(FLAG == 0)&&((DETX,DETY) IN circle(-5846.5,-2782.0,8000))&&region(mos1S001-bkg_region-sky.fits)&&(((DETX,DETY) IN box(-2683.5,-15917,2780.5,1340,0))||((DETX,DETY) IN box(2743.5,-16051,2579.5,1340,0))||((DETX,DETY) IN circle(97,-172,17152)))' \
+#    filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes \
+#    squarepixels=yes ignorelegallimits=yes withxranges=yes withyranges=yes \
+#    xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \
+#    ycolumn='Y' yimagesize=900 yimagemax=48400 yimagemin=3401 \
+#    imageset=mos1S001-obj_sky-contour_image.fits
+#  
+#  
+#  grppha infile="mos1S001-obj.pi" outfile="\!mos1S001-obj.pi" \
+#    comm="chkey BACKFILE NONE & chkey RESPFILE mos1S001-src.rmf & chkey ANCRFILE mos1S001-src.arf & exit"
+#  grppha infile="mos1S001-obj_sky-enfrac.pi" outfile="\!mos1S001-obj_sky-enfrac.pi" \
+#    comm="chkey BACKFILE NONE & chkey RESPFILE mos1S001-src.rmf & chkey ANCRFILE mos1S001-src.arf & exit"
+#  grppha infile="mos1S001-obj_sky-contour.pi" outfile="\!mos1S001-obj_sky-contour.pi" \
+#    comm="chkey BACKFILE NONE & chkey RESPFILE mos1S001-src.rmf & chkey ANCRFILE mos1S001-src.arf & exit"

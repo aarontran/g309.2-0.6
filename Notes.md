@@ -10764,12 +10764,279 @@ coordinates are usable.
 If not, I think I can construct my own region exclusion manually
 and merge it with the actual source extraction region...
 
+(added 2016 Aug 29) RELATED: Ewan O'Sullivan hit this in 2012...
+http://xmm2.esac.esa.int/xmmhelp/Backgrounds?id=51197;expression=cheese;user=guest
+
+(added 2016 Aug 30) added bash script `cheese_debug_demo` to repo; use this as
+a stand-alone script (including download, cifbuild, odfingest) to quickly
+compare sky and detector cheese masks and demonstrate discrepancy
 
 
+Tuesday 2016 August 23
+======================
+
+Meeting notes:
+* Reviewed pipeline fixes (ridge, extragalactic XRB changes)
+  and recent cheese snag.  Rather odd.
+  - Does stuff work with cheese-bands?
+  - Can use SAS task conv-reg to do conversion
+* Think about iron. Understand why we are not seeing Fe-K (or Fe-L)?
+  E.g. Yang+ (2013, ApJ 766) Figure 2 shows Suzaku spectra of 6 bright
+  young ED SNRs with clear Fe emission detections.
+  Why do our ionization age, temperature, abundance, etc. disfavor Fe
+  detection?
+  Stratification / incomplete shocking?
+* Discussed thought of fitting hydro-model spectra to "typical" vnei, apec,
+  whatever models.  How do we translate abundance fitting to real physics?
+  Not sure if anyone has tried 1-D model + fit approach for ED remnants.
+  See Dan's work on CC SNR modeling.
+  Castro+ used this approach to ask, how does particle acceleration affect
+  spectrum fits for middle-aged (ST) SNRs?  Result: subenergetic.
+* Fix some references (Pat suggested some papers I'd missed)
+
+Some useful thoughts to work with here.
+
+Fiddled with commands for pgstat fitting.  This should be straightforward.
+Will be interesting to see what comes out of fits at the end of this all.
+
+    from g309_fits import *
+    prep_xs(with_xs=True)
+    out = g309.load_data_and_models("src", "bkg", snr_model='vnei', suffix="grp01")
+    xs.Fit.statMethod = 'pgstat'
+    xs.Plot.setRebin(minSig=5, maxBins=1000, groupNum=-1)
 
 
+Thursday-Monday 2016 August 25-29 - cheese curdling (coordinate conversion)
+===========================================================================
+
+Cheese sky coordinate de-projection
+-----------------------------------
+
+Consolidated cheese investigation into a stand-alone example script.
+Created annotated images to show cheese issue, and, unrelatedly, compare PN
+RMFs with and without detector maps (visible but minor difference):
+
+    results_interm/20160823_cheese_wrong_excl.png
+    results_interm/20160825_cheese_sky_vs_det.png
+    results_interm/20160825_pn_rmf_detmap_difference.png
+
+How to apply region exclusions?  I think the simplest approach is to merge -sky
+region files.  Unfortunately, this is NOT trivial.
+`*bkg_region-sky.fits` file X,Y coordinates are LINKED to WCS keywords in
+header, namely RA-TAN and DEC-TAN.
+
+In `mos1S001-bkg_region-sky.fits`, we have (following McDowell/Rots
+ASC-FITS-REGION-1.0 specification and OGIP/94-006 for pixel list FITS file
+headers):
+http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/general/ogip_94_006/ogip_94_006.html
+
+    TCTYP2 = RA---TAN
+    TCRPX2 = 25921                  / Reference pixel
+    TCRVL2 = 206.704208333333       / RA at reference pixel
+    TCUNI2 = deg
+    TCDLT2 = -1.388888... x 10^{-5} / Increment per pixel (deg)
+    TCTYP3 = DEC--TAN
+    TCRPX3 = 25921                  / Reference pixel
+    TCRVL3 = -62.84125              / DEC at referenec pixel
+    TCUNI3 = deg
+    TCDLT3 = -1.388888... x 10^{-5} / Increment per pixel (deg)
+
+Brightest source in the field (0087940201 MOS1S001) has:
+
+    x = 28147.59    (right of proj center; smaller RA)
+    y = 19987.26    (below proj center; smaller DEC)
+    radius 1304.511
+
+Naively converting (linear rescale, no projection correction), this yields:
+
+    RA  = (28147.59 - 25921) * (1.3888888889e-5) / cos(dec) + 206.70420833333333
+        = 206.63626807388161
+    dec = (19987.26 - 25921) * (1.3888888889e-5) + -62.84125
+        = -62.92366305555622
+    radius = 1304.511 * 1.38888888889e-5
+           = 0.018118208333347825 deg = 65.2255 arcsec
+
+In DS9, the mask has parameters:
+
+    RA = 13:46:32.704 = 206.63626666... deg
+    dec = -62:55:25.13 = -62.9236472222... deg
+    radius = 65.2255 arcseconds = 0.01811819444... deg
+
+Final discrepancy in the linear rescaling, vs. DS9 de-projection, is:
+
+    delta-RA = 0.005 arcsec
+    delta-dec = 0.06 arcsec
+
+Basically negligible: 1 pixel off in declination, and round-off error in RA.
+
+Slightly better conversion (assume gnomonic tangent plane projection),
+stolen from http://lambda.gsfc.nasa.gov/product/iras/coordproj.cfm
+cuts the error down to:
+
+    delta-RA = 0.005 arcsec
+    delta-dec = 0.001 arcsec
+
+which is fabulous.
+
+So, in summary, we can merge the lists.  But they need to be re-projected onto
+the same tangent plane.
+
+Converting `bkg_region-sky.fits` to RA/dec, then to detector coordinates
+------------------------------------------------------------------------
+
+Reprojection: two approaches
+1. write circles in RA/dec as ds9 regions; convert to detector coordinates for
+   explicit expressions
+2. write circles to ASC region fits file (overwrite -det file)
+   The latter seems more elegant and is less likely to cause the evselect
+   filtering expression to overflow.
+
+First, build tool `ascregion_sky2radec.py` to manually deproject sky
+coordinates and back out point source.
+Decided to write out RA/dec (and then DET coordinates) to ASC-REGION-FITS
+formatted table for use with conv\_reg.
+
+Now, what's the best way to convert RA/dec exclusions into DET coordinates?
+
+Note that projection from sky RA/dec to DET involves some distortion,
+which I neglect (and I think the ESAS tools do as well).  See:
+http://xmm-tools.cosmos.esa.int/external/sas/current/doc/region/node7.html
+
+Two tools in ESAS.
+* conv\_reg converts SKY coordinates to DETX,DETY coordinates.
+  Input:
+    region(s) (FITS xor ASCII xor command line params) file
+    image file (mos1S001-obj-image-sky.fits)
+  Output:
+    same region(s) in (FITS, ASCII, plaintext?) in detector coordinates
+* conv-region converts SKY coordinates to DETX,DETY for all instruments, for
+  all obsids in a list.  Also creates ASCII files usable for mos/pn-spectra.
+* SAS task cxc2ds9 does NOT handle reprojection, so not immediately helpful.
+
+conv-region notes:
+
+* obsid list: provided as list of SAS files to set SAS_CCF and SAS_ODF for each
+  obsid being processed
+* SAS file and CIF file must be located in repro directory
+* $targ_file MUST be located TWO directories up.
+  Basically, assumes directory structure:
+
+    ${XMM_PATH}/obsid_list.txt
+    ${XMM_PATH}/det-targ.fits
+    ${XMM_PATH}/0087940201/repro/*.SAS
+    ${XMM_PATH}/0087940201/repro/ccf.cif
+
+* One internal comment states that radius should be in arcmin
+  Elsewhere it states radius should be in arcseconds.
+  (answer: it should be in arcseconds.  Scale of 0.05 is hardcoded)
+
+OK, the prospect of re-arranging my entire directory structure is a big
+turn-off.
+
+conv_reg notes:
+
+- ESAS cookbook description is old; "detector" parameter not in use
+  (conv_reg reads INSTRUME keyword from FITS image file instead)
+- conv_reg chokes on primary header copy when writing output to a new file.
+  An empty file is instantiated (as if 'touch'ed) and the tool errors out.
+  If the file doesn't exist, it runs:
+      ftgiou(lunout,status)
+      open(unit=lunout, status='new', form='formatted', file=trim(outputfile),
+           IOSTAT=status)
+  Otherwise, it clobbers the file and calls:
+      ftgiou(lunout, status)
+      open(unit=lunout, status='replace', form='formatted', file=trim(outputfile))
+  Beyond my scope to fix...
+- dumps output from esky2det to intermediate file detpos.txt that does NOT get
+  cleaned up.
+- Aside: conv_reg code has changed between SAS releases (14->15) since some of
+  the -V 10 messages are fixed.  So I'm not sure how representative the SAS v14
+  source code is.  I think most is the same...
+
+conv_reg requirements (deduced from trial and error):
+
+- ROTANG and COMPONENT columns must be present (ASC-REGION-FITS fmt)
+  + ROTANG is actually read in but not used; output forces rotang to 0
+  + COMPONENT is not read at all, but because the output FITS file
+    is a copy of the input file, there must be six columns in the input file
+- BINTABLE header keywords TTYPE2, TTYPE3, MFORM1 must be present
+  (all will be ignored and overwritten).
+  conv_reg_mod.f90 uses subroutine ftmkys which modifies existing keyword,
+  but does not allow for adding new keywords.
+- conv_reg is NOT sensitive to columns in 4E vs. E format.
+  The fitsio routine "ftgcve" merely takes the first element of each column,
+  doesn't matter if 1 or 4.  In any case, ASC-REGION-FITS spec does not specify
+  vector length.
+- imagefile parameter does not really need to be an image.
+  I was able to run conv_reg using the cleaned events list.
+  The image file is used to:
+  -- get pointing angle (PA_PNT)
+  -- get instrument (INSTRUME: EMOS1,EMOS2,EPN)
+  -- supply esky2det calinfoset parameter
+  and I don't see any other purpose for it.
+
+What is the purpose of the MTYPE and MFORM keywords?
+
+http://fits.gsfc.nasa.gov/registry/region/region_fitsbits_mail.txt
+No official definition, but XMM expression (via select library) does use MFORM1
+to parse out correct coordinates to use.
+http://xmm-tools.cosmos.esa.int/external/sas/current/doc/selectlib/node20.html
+Therefore important to supply MFORM1 at minimum.
+
+After much review of conv_reg FORTRAN code and FITSIO calls, and trial and
+error with header keywords, I finally got it to work.
+Applied my converted detector-coordinate FITS exclusions to evselect images and
+spectra, and found that they differed by only 4 counts vs. direct application
+using sky-coordinate regions.
+Also confirmed that rmfgen, arfgen, etc. worked correctly.
 
 
+Merging point sources?
+----------------------
+
+Do point source exclusions differ between camera exposures (MOS1, MOS2, PN)?
+Answer: yes, very slightly.  Locations (RA,dec) are the same, but radii differ.
+Why?  Speculating, background noise, vignetting, PSF/optics, instrument
+response, telescope fluorescent lines, etc. may differ slightly between
+cameras.  As a result, the local background used for SAS task `region`
+indeed should differ from instrument to instrument.
+
+Background contour method then operates a bit differently.
+0087940201 MOS1 vs. MOS2,PN amounts to ~6% difference at most (mean: 3%)
+Similar numbers for MOS2 vs. PN.
+This is not a big effect, admittedly.
+
+There is some practical rationale for applying different masks.
+Simply, point sources are masked to a level at which they should not matter,
+for each exposure; that level differs between exposures.
+
+But, it is ideal to mask all sky regions evenly, for more consistent spectral
+extraction.  We allow varied background noise in our model, and already account
+for instrument response, but our remnant emission model -- aside from first
+order area (backscal) correction -- assumes uniform extraction regions.
+
+Wrote and tested code.  Works nicely.
+
+
+Point source masking threshold?
+-------------------------------
+
+Also, how is the cheese flux threshold applied to filter point sources?
+Many sources are flagged in `emllist.fits` but are not masked by cheese.
+Answer: it is passed directly to SAS 'region' task where it filters the
+detected sources from `emllist.fits`
+
+OK, it works as expected since there is a PSF model being applied.
+But, the % masking means that the actual mask differs depending on local
+background.  So, that's fine.
+
+
+Tuesday 2016 August 30 - pipeline plumbing
+==========================================
+
+Make some bug-fixes and add verbose reporting to `ascregion_sky2radec.py`.
+
+I will reconfigure directory structure to start from scratch.
 
 
 Standing questions and TODOs
@@ -10790,13 +11057,8 @@ than multidump / append hack I set up)
     effect of spectrum binning
     fits without binning & fits with single-count binning & C statistic
 
-[ ] Fits: re-visit error bar calculations for Cstat and my binning (assumed gaussian...)
-[ ] Fit: A new statistic, pgstat, has been added for the case of Poisson-distributed
-  data
-  with a Gaussian-distributed background. The whittle statistic can
-  now be used when fitting averaged power density functions by
-  appending an integer (so eg whittle5 is the statistic to use when
-  fitting a pdf constructed by averaging those from 5 observations).
+[x] Fits: re-visit error bar calculations for Cstat and my binning (assumed gaussian...)
+[ ] Fit: set up for pgstat use
 
 [ ] Fit: Merge MOS1/2 spectra, yielding 3 spectra to fit
 
@@ -10820,6 +11082,7 @@ than multidump / append hack I set up)
     check this out.
 
 [ ] Fits: sub-region investigation, TBD (this should be last)
+[ ] Fits: explore shifts in line centroids in subregions
 
 [ ] Text: clarify filling factor 1.4x factor.
 
