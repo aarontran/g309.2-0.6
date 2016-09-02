@@ -16,7 +16,7 @@ from subprocess import call
 
 import xspec as xs
 
-from xspec_utils import dump_fit_log, dump_fit_dict
+from xspec_utils import dump_fit_log, fit_dict, dump_dict
 
 # Set up paths, XSPEC params
 # --------------------------
@@ -35,12 +35,12 @@ instr_id = exp.split('S')[0]  # one of: mos1, mos2, pn
 
 # "Global" settings
 xs.Xset.chatter = 0
-xs.Xset.abund = "wilm"
+xs.Xset.abund = "wilm"  # irrelevant
 xs.Fit.query = "yes"
 
 # inputs
 xmm_path = os.environ['XMM_PATH']
-spec_dir = xmm_path + "/{obsid}/odf/repro".format(obsid=obsid)
+sas_repro = os.environ['SAS_REPRO']
 f_spec = "{exp}-{reg}-ff.pi".format(exp=exp, reg=reg)
 
 # outputs
@@ -78,7 +78,7 @@ conti.bknpower.PhoIndx2 = 0.2
 # Set and freeze instrumental line energies,widths
 for cname, en in zip(instr.componentNames, lines):
     # cnames are gaussian, gaussian_2, ..., gaussian_6
-    comp = eval('instr.'+cname)
+    comp = instr.__getattribute__(cname)
     comp.LineE = en
     comp.Sigma = 0
     comp.LineE.frozen = True
@@ -101,6 +101,7 @@ xs.Plot("ldata resid delchi")
 call(["ps2pdf", f_plot, f_plot + ".pdf"])
 call(["rm", f_plot])
 
-dump_fit_dict(f_fit, instr)
+# Save current XSPEC state
+dump_dict(fit_dict(), f_fit)
 dump_fit_log(f_log)
 

@@ -11065,23 +11065,206 @@ Make some bug-fixes and add verbose reporting to `ascregion_sky2radec.py`.
   Taking a page out of CXCDS group's style manual...
 * Relocated `circ_*` regs because these are used only for plotting.
 * Lots of script troubleshooting
+* Re-organized some bin tasks.  However, stuff after spectrum extraction
+  needs to remain together because Python dependencies will not resolve.
+
+SWCX cut check on 0087940201
+----------------------------
+
+Updated SWCX cut check to use full FOV with better point source exclusions.
+Re-ran and plotted spectra.  See:
+
+    results-interm/20160830_swcx_cut_fullfov.png
+
+By eye, I see no obvious different in soft X-rays (<1 keV).
+The first 8ks of observation appears to show more SP contamination (maybe
+factor <~ 2x norm) than the latter 16ks; but hard to say for sure without
+modeling or fitting.
+
+Attempt to merge MOS1/2 spectra together for plotting
+-----------------------------------------------------
+
+Following http://www.cosmos.esa.int/web/xmm-newton/sas-thread-epic-merging,
+run merger commands and inspect resulting spectra:
+
+    # grppha complains about invalid keywords, but still writes them
+    grppha infile=mos1S001-src-qpb.pi outfile=mos1S001-src-qpb-tlminmax.pi \
+        comm="chkey TLMIN1 0 & chkey TLMAX1 2399 & exit"
+    grppha infile=mos2S002-src-qpb.pi outfile=mos2S002-src-qpb-tlminmax.pi \
+        comm="chkey TLMIN1 0 & chkey TLMAX1 2399 & exit"
+    epicspeccombine \
+        pha="mos1S001-src.pi mos2S002-src.pi" \
+        bkg="mos1S001-src-qpb-tlminmax.pi mos2S002-src-qpb-tlminmax.pi" \
+        rmf="mos1S001-src.rmf mos2S002-src.rmf" \
+        arf="mos1S001-src.arf mos2S002-src.arf" \
+        filepha="mosmerge-src.pi" \
+        filebkg="mosmerge-src-qpb.pi" \
+        filersp="mosmerge-src.rmf"
+
+From a quick (incomplete) fit, the spectrum results do look consistent with
+previous results.  It looks feasible to use merged spectrum.  Some catches:
+* need to merge RMF/ARF files for instrumental lines,
+  because epicspeccombine sticks RMF+ARF together into a mega-ARF
+* need to merge or otherwise average diagonal RMFs for soft proton power law.
+
+The approach is to basically sum the RMFs / ARFs, weighted by exposure time.
+Unfortunately `epicspeccombine` merges RMFs / ARFs together, which is kind of
+inconvenient.
+Alternative is to use individual HEASARC FTOOLS:
+- CIAO combine_spectra, addresp
+- addspec (combine PHA files)
+- addrmf (merge arf files)
+- addarf (merge arf files)
+
+Go ahead and add commands to `specbackgrp`.  Merging is not too time-intensive,
+may as well generate products to allow direct comparison in fits.
+
+I got hung up on some response matrix weighting questions here.
+Addressed over next 1-2 days; see my following and paper notes.
+
+Comment: do RMF/ARFs change over time?  Which we might want to account for in
+FWC fits.
+Answer (Sep. 1 2016): depends on how SAS task rmfgen determines what
+time-stamped calibration data to use.
+Assuming instrumental line spectrum doesn't change over time,
+if both "mos1S001-src.rmf" and "mos1S001-src-ff.rmf" are created assuming the
+same observation time, then the bias should be folded into our fitted
+instrumental line ratio (which we don't care about anyways) and not impact our
+fit.  See my paper notes.
+
+In terms of detector mapping: I should be using FWC RMF for fits of
+instrumental lines in observation data (more reasonable flux mapping).
+This also helps deal with the bias issue (preceding paragraph).
+
+Would be nice to deal with 0551000201 exposure missing CCD
+for annulus spectra -- makes results somewhat less accurate.
 
 
-Started screen sessions on statler and cooper to run chainfilter.
-Miscellaneous shell script troubleshooting ensues.
+Wednesday, Thursday 2016 August 31 to September 01 -- MOS merging continued
+===========================================================================
+
+More RMF and ARF clarification
+------------------------------
+
+I keep coming back to this.
+
+* Diagonal MOS RMFs are identical.  Only difference I see is in HEADER keywords
+  (and, oddly, MOS2 diagonal RMF uses '2I' vs. 'I', but contents look the
+  same).  So, no need to merge; just use either MOS file.
+* Does using FWC-flux-weighted RMF vs. observation-weighted RMF matter?
+
+    RMF -- totally minuscule difference (compare source region using
+    sky/observation ARF).
+    Not visible by eye on plot.  Chi-squared changed by 0.01 (13737.22 to 13737.23)
+    ARF -- cannot tell if there's any change in weighting.
+    Effect is DOMINATED by effective area removal, so irrelevant.
+    Flux weighting probably not important (although cannot assess directly)
+    because expect ARF variation from quantum efficiency
+
+* Merger process:
+* Source + sky is easy...
+  I already showed that detector map makes completely minimal difference for Pn.
+* Instrumental line merger... yeah, just use FWC RMF for simplicity
+
+After substantial finagling, finally got merger script into a clean form.
+Tested out process (`specbackgrp src`), ran smoothly.
+Fixed up `merge_exps.pl` script to NOT depend on par file.
+But still to be safe don't run tasks in parallel, even on different obsids...
+Began specextract run for all regions, obid 0087940201, early Thursday morning.
+
+Clarify RMF/ARF flux-weighting and how to merge RMF/ARFs
+--------------------------------------------------------
+
+In my paper notes: more mulling (or idly spinning wheels?) over RMF/ARF
+details.  Main takeaways:
+1. to create merged RMFs for merged spectra, it is correct to merge RMF/ARF
+   files for each observation, before combining merged-RMF-ARF files with
+   exposure weights.  So `epicspeccombine` does this correctly.
+2. try generating ARFs with and without detector maps for x-ray background,
+   and see how fits are affected.
+
+Some checks:
+- instrumental ARF/RMF flux-weightings are incorrect, but so long as they are
+  incorrect in both FWC and observation fits, that should be OK (error in true
+  instrumental line norms/ratios is not important to us)
+- accept that RMF is relatively uniform over CCDs, and should not strongly
+  affect results.
+
+New additions to pipeline (`specbackgrp`):
+- modify mos-spectra-mod, pn-spectra-mod to create observation RMF,ARFs with NO
+  detector mapping (use for XRB)
+    (mos1S001-src.flatrmf, mos1S001-src.flatarf)
+- modify pn-spectra-mod to create detector mapped RMFs outright (more
+  consistent behavior)
+- remove dmap.rmf file shuffling in `specbackgrp`
+
+New additions to pipeline (`merge_exps.pl`):
+- multiplied observation RMF,ARF
+    (mos1S001-src.marfrmf)
+- multiplied FWC RMF,ARF
+    (mos1S001-src-ff.marfrmf)
+- merged __obs__-exposure-time weighted __obs__ multiplied-RMF-ARF files
+    (mosmerge-src.marfrmf)
+- merged __FWC__-exposure-time weighted __FWC__ multiplied-RMF-ARF files
+    (mosmerge-src-ff.marfrmf)
+- merged __obs__-exposure-time weighted __FWC__ multiplied-RMF-ARF files
+    (mosmerge-src-ff-instr.marfrmf)
+- note nomenclature change for merged FWC rmf/arf files with obs exposure
+  weighting (from "-instr.rmf,arf" to "-ff-instr.rmf,arf")
+
+Plan: create all these new ARF/RMF files for "src" region (both 0087940201 and
+0551000201), then run and document some manual fits (use chi-squared, grp 50
+for expediency) to assess:
+1. check for detector mapping bias (we may over-estimate effective area because
+   detector map is not corrected for exposure/vignetting)
+2. merged vs. unmerged MOS spectra - check differences in fit parameters
+3. compare merged MOS RMF/ARFs (separate) vs. merging weighted
+   multipled-RMF-ARF files
+
+WARNING: live script changes may have messed up (currently running) spectrum
+generation for `src_SE_dark, src_SE_ridge_dark, src_SW_lobe`.
+All the regions I currently care about (`src, bkg, ann_*`) are already created,
+so all good.  Will be regenerating all shortly anyways.
+Yes, spectrum generation is breaking.  Hitting various glitches.
+
+
+OK, restart just running for src region (~8pm)
+
+Then proceed to `ff_fit.py`...
+
+
+Friday 2016 September 02 -- ...
+===============================
 
 
 
 Standing questions and TODOs
 ============================
 
-IN WORK NOW (!!!!!)
+[ ] Quick look at detmap vs. no detmap suggests NO substantial difference.
+    But this is for a really small region.  See what happens with src/bkg
 
-[ ] Currently not using detector mapped RMF for PN (neither observation nor FWC
-fits), pending query...
+[ ] question: how does rmfgen account for time-dependence in RMF?
+    1. where does it deduce observation time from?
+    2. what observation time is assumed for FWC spectrum RMF?
 
-[ ] Why is spectralbinsize in use with evselect for object spectra?...
-Difference between spectralbinsize=1,5?
+[ ] use cstat in ff-fit.py
+
+[ ] Investigate mysterious MOS1S001 0-100" annulus high energy uptick bug!
+    (in 0551000201)
+    hopefully resolved w/ new spectra.... dunno what happened...
+
+[ ] TODO: post-hoc spot test of spectrum extraction with new pt source exclusions.
+
+[x] arfgen documentation claims to handle OOT smearing for PN detector.
+    Does this conflict with ESAS OOT-event subtraction setup?
+    Answer: OK.  ESAS disables OOT correction when creating ARFs.
+
+[x] Use detector mapped RMF for PN (both observation and FWC)
+
+[x] Why is spectralbinsize in use with evselect for object spectra?...
+    Difference between spectralbinsize=1,5?
+    Answer: bin size = 5 eV.  This is already very fine; 10 eV is default.
 
 [ ] Plot dumps: use setplot comp to show individual additive model components (WAY easier
 than multidump / append hack I set up)
@@ -11093,7 +11276,7 @@ than multidump / append hack I set up)
 [x] Fits: re-visit error bar calculations for Cstat and my binning (assumed gaussian...)
 [ ] Fit: set up for pgstat use
 
-[ ] Fit: Merge MOS1/2 spectra, yielding 3 spectra to fit
+[x] Fit: Merge MOS1/2 spectra, yielding 3 spectra to fit
 
 [ ] FWC fit code needs to be updated to work with new XSPEC utils.
     (ff_fit.py, g309_models.py)
@@ -11116,6 +11299,8 @@ than multidump / append hack I set up)
 
 [ ] Fits: sub-region investigation, TBD (this should be last)
 [ ] Fits: explore shifts in line centroids in subregions
+
+[ ] Fits: general concern.  Implications of centroid fitting tension, evidenced in residuals.
 
 [ ] Text: clarify filling factor 1.4x factor.
 
@@ -11140,30 +11325,26 @@ List of standard text checks:
 [ ] all quantities (numbers, magnitudes, prefixes) checked
 
 
-* use proton to extrapolate power law indices based on energy-/space- dependent vignetting?
-  (do try this -- may reduce backgrounds in image. but your data are so noisy
-  anyways that it may not have much effect).
+Misc. process questions
+[ ] Does thick vs. medium optical blocking filter affect X-ray data analysis?
+    I believe answer is no: attentuation of sky photons is accounted for by ARF
+    matrices.
 
-    vim -R xmmsas_20141104_1833/packages/esas/src/proton_mod.f90 
-
-
-Q: Is HD 119682 introducing light curve noise?
-Answer: maybe, but definitely not by factors of 10x.
-Variation is ~ factors of 2-3x (see: Torrejon+ 2015).
-And masking this source only removed ~3000 counts (10%) of the MOS1 spectrum.
-So, basically, don't sweat it.
 
 
 Standing TODOs:
 * Re-run everything from a clean slate to ensure your pipeline is good.
+  (in works)
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures
   for image scripts.
-* Images -- subtract soft proton contamination a la ESAS?  The sharp vignetting
+* Images -- subtract SP contamination with ESAS proton task?  Sharp vignetting
   could contaminate soft emission near the aimpoint, which might look like SNR
   emission...  (partially helped by choice of energy bands for imaging,
   though, as at least it should not confuse sharp features).
-* Re-perform SWCX spectrum cut but using ENTIRE FOV (mask out point sources and
-  remnant) -- previously took emission from remnant only
+* check temporal variation of instrumental line ratios in (a) FWC data or (b)
+  corner data from DB of public observations.
+  in practice, we are seeing that instrumental line fits are reasonable,
+  so not a strong impetus to verify this.  but do so anyways.
 
 Standing questions:
 * Why did exposure maps for PN generate so fast, relative to MOS maps???
@@ -11186,22 +11367,31 @@ Reminders (caveats and loose threads):
   Expect power law indices to differ slightly for MOS1/2, but they should not
   be far apart, so it simplifies fit to tie values together.
 * PNS003 filterwheel fit does NOT include OOT correction!
+  This is OK, but just needs to be kept in mind.
 
+Resolved nagging questions:
 
+* SWCX cut using entire FOV + new point source mask: done 2016 Aug. 30
+  Q: can we pick out SWCX emission by time cut on 0087940201 exposure?
+  Again, no (by-eye) difference visible in soft X-rays, looking at MOS1 alone.
+  It does look like 1st half of observation has more soft proton contamination,
+  spectrum looks just barely harder @ high X-rays (maybe factor 2x or less)
 
-1. check temporal variation of instrumental lines in (a) FWC data or (b) corner
-   data from DB of public observations
+* Q: Is HD 119682 introducing light curve noise?
+  A: Maybe, but definitely not by factors of 10x.  Variation is ~ factors of
+  2-3x (see: Torrejon+ 2015).  And masking this source only removed ~3000
+  counts (10%) of the MOS1 spectrum.
 
-2. check surrounding observations for 0551000201 to see how stable (or not) the
-   PN QPB is in time.  If it looks stable we can use those obsids to extract PN
-   corner spectra.  If not, skip.
+* check surrounding observations for 0551000201 to see how stable (or not) the
+  PN QPB is in time.  If it looks stable we can use those obsids to extract PN
+  corner spectra.  If not, skip.
 
    Adjacent obsids are (searching revolutions 1691-1694):
    * 0554600401 (SGR 1806-20) -- PN full frame, good
        (2009-03-03 15:34:01 to 2009-03-04 02:54:15) -- 41ks
    * 0551851301 (RX J0647.7+7015) -- PN ext full frame, good
        (2009-03-04 05:03:54 to 2009-03-05 02:15:19) -- 76ks
-   * (before) 0552800201 (XTE J1810-197) -- PN large window
+   * 0552800201 (XTE J1810-197) -- PN large window
    * 0551000201 (2009-03-06 10:55:31 to 2009-03-07 02:50:01)
    * radzone
    * 0604940101 (CTA1) -- PN small window
@@ -11213,11 +11403,20 @@ Reminders (caveats and loose threads):
    * 0551761001 (3C153) -- full frame, good
        (2009-03-10 20:13:55 to 2009-03-11 02:37:32) -- 23ks
 
-   We have a baseline of about 4 observations within 1 week, centered on the
-   observation of 0551000201.
+  We have a baseline of about 4 observations within 1 week, centered on the
+  observation of 0551000201.
 
-* Explicitly note relative sizes of backgrounds for different instruments, and
-  obsids.
+  Bracketing obsids w/ usable corner data are:
+  0551851301 (ends 2009-03-05 02:15:19); separated by ~33 hrs
+  0553110201 (starts 2009-03-09 15:01:14); separated by ~61 hrs
+
+  Considering that XMM-Newton orbit period is ~48hr, and we know that soft
+  proton contamination is sensitive to spacecraft position wrt. magnetosphere
+  structure, our ability to constrain QPB is questionable.
+
+  Perhaps we could sample observations in similar parts of orbit.
+  But this is a bit time-intensive for <10% improvement in counts.
+  (granted, lower-noise counts...)
 
 
 

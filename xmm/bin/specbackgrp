@@ -16,19 +16,13 @@
 # Argument parsing and configuration parameters
 # ---------------------------------------------
 
-OBSID=$1
-RSTEM=$2  # region label (src, bkg, etc)
-
-if [[ "$#" -ne 2 ]]; then
-    echo "ERROR: two arguments (obsid, region label) required"
-    exit 1
-fi
-if [[ "$OBSID" != "$SAS_OBSID" ]]; then
-  echo "ERROR: obsid $OBSID does not match SASINIT value ($SAS_OBSID)"
+RSTEM=$1  # region label (src, bkg, etc)
+if [[ "$#" -ne 1 ]]; then
+  echo "ERROR: one arguments (region label) required"
   exit 1
 fi
 
-RDIR="${XMM_PATH}/regs/${OBSID}"
+RDIR="${XMM_PATH}/regs/${SAS_OBSID}"
 CALDB="${XMM_PATH}/caldb"
 
 ##### TODO elow and ehigh set energy band for IMAGE -- why 0.3-1.25 keV?
@@ -37,15 +31,16 @@ mask="1"
 elow="300"
 ehigh="1250"
 
-if [[ "$OBSID" == "0087940201" ]]; then
+if [[ "$SAS_OBSID" == "0087940201" ]]; then
 
   exps=("mos1S001" "mos2S002" "pnS003")
   exps_n=("1S001" "2S002" "S003")
   ccd_strs=("ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1" \
             "ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1" \
             "quad1=1 quad2=1 quad3=1 quad4=1")
+  mos_exp_str="mos1S001 mos2S002"  # Kludgey hack for mos merger
 
-elif [[ "$OBSID" == "0551000201" ]]; then
+elif [[ "$SAS_OBSID" == "0551000201" ]]; then
 
   exps=("mos1S001" "mos2S002" "pnS003")
   exps_n=("1S001" "2S002" "S003")
@@ -53,8 +48,9 @@ elif [[ "$OBSID" == "0551000201" ]]; then
   ccd_strs=("ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=0 ccd7=1" \
             "ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=0 ccd6=1 ccd7=1" \
             "quad1=1 quad2=1 quad3=1 quad4=1")
+  mos_exp_str="mos1S001 mos2S002"  # Kludgey hack for mos merger
 else
-  echo "ERROR: unsupported obsid $OBSID (data reduction pipeline not set up)"
+  echo "ERROR: unsupported obsid $SAS_OBSID (pipeline not set up)"
   exit 1
 fi
 
@@ -62,9 +58,11 @@ fi
 # ESAS spectrum extraction
 # ------------------------
 
-cd "${XMM_PATH}/${OBSID}/odf/repro"
+cd $SAS_REPRO
 
-echo "Extracting spectra and QPB for $OBSID, region ${RSTEM}"
+echo "Extracting spectra and QPB for $SAS_OBSID, region ${RSTEM}"
+start_script="Start specbackgrp: $(date)"
+echo $start_script
 
 for ((i=0;i<${#exps[@]};++i)); do
 
@@ -89,9 +87,9 @@ for ((i=0;i<${#exps[@]};++i)); do
     exit 1
   fi
 
-  if [[ "$exp" =~ "pn" ]] && [[ "$OBSID" == "0551000201" ]]; then
-    echo "  Skipping extraction for $OBSID $exp (no observation corner data)"
-    # mv commands for -back.pi and -obj-os.pi will fail, this is OK
+  if [[ "$exp" =~ "pn" ]] && [[ "$SAS_OBSID" == "0551000201" ]]; then
+    echo "  Skipping extraction for $SAS_OBSID $exp (no observation corner data)"
+    # skip entirely - no point in creating spectra that will not be analyzed
     continue
   fi
 
@@ -119,64 +117,71 @@ for ((i=0;i<${#exps[@]};++i)); do
     &> "${exe_qpb}_${exp}_${RSTEM}.log"
   # diag=2 creates more diagnostic output files (.qdp plots)
 
-  echo "  Rename, bin, and keyword spectra (map ${exp} to ${exp}-${RSTEM})"
+  echo "  Rename output files (map ${exp} to ${exp}-${RSTEM})"
 
-  mv "${exp}-obj.pi"  "${exp}-${RSTEM}.pi"
-  mv "${exp}-back.pi" "${exp}-${RSTEM}-qpb.pi"
-  mv "${exp}.rmf"     "${exp}-${RSTEM}.rmf"
-  mv "${exp}.arf"     "${exp}-${RSTEM}.arf"
+  # Move, keyword, bin
+  # ------------------
+
+  # Note: many outputs below are from "-mod" ESAS scripts only:
+  mv "${exp}-obj.pi"      "${exp}-${RSTEM}.pi"
+  mv "${exp}-back.pi"     "${exp}-${RSTEM}-qpb.pi"
+  mv "${exp}.rmf"         "${exp}-${RSTEM}.rmf"
+  mv "${exp}.arf"         "${exp}-${RSTEM}.arf"
+  mv "${exp}.flatrmf"     "${exp}-${RSTEM}.flatrmf"
+  mv "${exp}.flatarf"     "${exp}-${RSTEM}.flatarf"
+  mv "${exp}-obj-ff.pi"   "${exp}-${RSTEM}-ff.pi"
+  mv "${exp}-ff.arf"      "${exp}-${RSTEM}-ff.arf"
+  mv "${exp}-ff.rmf"      "${exp}-${RSTEM}-ff.rmf"
   mv "${exp}-obj-im-sp-det.fits" "${exp}-${RSTEM}-im-sp.fits"
-  if [[ "$exp" =~ "pn" ]]; then
-    mv "${exp}-obj-oot.pi" "${exp}-${RSTEM}-oot.pi"
-    mv "${exp}-obj-os.pi"  "${exp}-${RSTEM}-os.pi"
-  fi
 
-  # Outputs from "-mod" versions of ESAS scripts: FWC object spectra for line
-  # norm extraction and detmapped RMF for pnS003-obj.pi (not for FWC data!)
-  mv "${exp}-obj-ff.pi" "${exp}-${RSTEM}-ff.pi"
-  mv "${exp}-ff.rmf"    "${exp}-${RSTEM}-ff.rmf"
-  mv "${exp}-ff.arf"    "${exp}-${RSTEM}-ff.arf"
   if [[ "$exp" =~ "pn" ]]; then
+    mv "${exp}-obj-oot.pi"    "${exp}-${RSTEM}-oot.pi"
+    mv "${exp}-obj-os.pi"     "${exp}-${RSTEM}-os.pi"
+    # No OOT subtraction for PN FWC spectra (a lot of code to do this, and not
+    # crucial since we're not worried about overall norm)
     mv "${exp}-obj-ff-oot.pi" "${exp}-${RSTEM}-ff-oot.pi"
-    mv "${exp}-dmap.rmf"      "${exp}-${RSTEM}-dmap.rmf"
-    mv "${exp}-ff-dmap.rmf"      "${exp}-${RSTEM}-ff-dmap.rmf"
   fi
 
-  # NOTE that PN FWC spectra are not OOT-subtracted
+  echo "  Set spectra keywords and apply binning"
+
+  os=""
+  if [[ "$exp" =~ "pn" ]]; then
+    # Use OOT-subtracted spectrum for PN observation spectra
+    os="-os"
+  fi
+
+  # PN FWC spectra are not OOT-subtracted, so don't use ${os}
   grppha infile="${exp}-${RSTEM}-ff.pi" outfile="!${exp}-${RSTEM}-ff.pi" \
     comm="chkey BACKFILE NONE & \
           chkey RESPFILE ${exp}-${RSTEM}-ff.rmf & \
           chkey ANCRFILE ${exp}-${RSTEM}-ff.arf & \
-          exit"
-
-  os=""
-  if [[ "$exp" =~ "pn" ]]; then
-    # Use OOT-subtracted spectrum for PN
-    os="-os"
-  fi
+          exit" \
+    &> "grppha_${exp}_${RSTEM}.log"
 
   grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}.pi" \
       comm="chkey BACKFILE ${exp}-${RSTEM}-qpb.pi & \
             chkey RESPFILE ${exp}-${RSTEM}.rmf & \
             chkey ANCRFILE ${exp}-${RSTEM}.arf & \
             exit" \
-      chatter=10 \
-    &> "grppha_${exp}-${RSTEM}${os}.log"
+    &>> "grppha_${exp}_${RSTEM}.log"
   # First grppha should clobber any existing log
 
   grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}-grp01.pi" \
       comm="group min 1 & exit" \
-      chatter=10 \
-    &>> "grppha_${exp}-${RSTEM}${os}.log"
+    &>> "grppha_${exp}_${RSTEM}.log"
 
   grppha infile="${exp}-${RSTEM}${os}.pi" outfile="!${exp}-${RSTEM}${os}-grp50.pi" \
       comm="group min 50 & exit" \
-      chatter=10 \
-    &>> "grppha_${exp}-${RSTEM}${os}.log"
+    &>> "grppha_${exp}_${RSTEM}.log"
 
 done
 
+# WARNING - do NOT quote $mos_exp_str because this is a kludgey hack
+# to feed MOS exposure names as distinct command line args
+echo "Merging MOS1, MOS2 spectra (experimental)"
+merge_exps.pl "${RSTEM}" $mos_exp_str &> "mosmerge_${RSTEM}.log"
 
-echo "Finished extracting all spectra for ${OBSID} region ${RSTEM}!"
-echo ""
+echo "Finished extracting all spectra for $SAS_OBSID region ${RSTEM}!"
+echo $start_script
+echo "Finished specbackgrp: $(date)"
 

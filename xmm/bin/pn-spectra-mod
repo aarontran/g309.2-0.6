@@ -616,30 +616,12 @@ $author="S. L. Snowden, based on the mos-spectra code";
   print JUNK_HNDL "$comm\n";
   system "$comm";
 
-#  Generate the RMF
+#########################################################
+# START customization
+# - use RMF with detector map by default
+# - generate variant RMF,ARF without detector mapping
 
-  $rmffile="pn".$prefix.".rmf";
-  if(-r $rmffile) {
-    print "rmf file already exists: $rmffile\n";
-    print " BUT, regenerating file anyways! (hacky modification)\n";
-    print "   \n";
-  }
-  $comm="rmfgen format=var rmfset=".$rmffile.
-    " spectrumset=pn".$prefix."-obj.pi threshold=1.0e-6 ";
-  print JUNK_HNDL "$comm\n";
-  print JUNK_HNDL "   \n";
-  print "$comm\n";
-  print "   \n";
-  system "$comm"; 
-
-#  Generate the ARF, use a detector map
-
-  $arffile="pn".$prefix.".arf";
-  if(-r $arffile) {
-    print "arf file already exists: $arffile\n";
-    print " BUT, regenerating file anyways! (hacky modification)\n";
-    print "   \n";
-  }
+#  Detector map for ARF and RMF
   if($regsel eq 0){
     $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes ".
       "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".
@@ -658,36 +640,47 @@ $author="S. L. Snowden, based on the mos-spectra code";
       "ximagemin=-19499 ycolumn='DETY' yimagesize=60 yimagemax=19500 ".
       "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
   }
-  print JUNK_HNDL "$comm\n";
-  print JUNK_HNDL "   \n";
-  print "$comm\n";
-  print "   \n";
-  system "$comm";
-
-  $comm="arfgen arfset=pn".$prefix.".arf spectrumset=pn".$prefix."-obj.pi ".
-    "withrmfset=yes rmfset=pn".$prefix.".rmf extendedsource=yes modelee=no ".
-    "withbadpixcorr=no detmaptype=dataset detmaparray=detmap.ds ".
-    " badpixlocation=pn".$prefix."-clean.fits modelootcorr=no ";
-  print JUNK_HNDL "$comm\n";
-  print JUNK_HNDL "   \n";
-  print "$comm\n";
-  print "   \n";
-  system "$comm"; 
-
-#########################################################
-# START customization (variant, use detector map for RMF)
-
-  $rmffile_dmap="pn".$prefix."-dmap.rmf";
-  $dmap="detmap.ds";  # Use file just created for arfgen
-  $comm="rmfgen format=var rmfset=".$rmffile_dmap.
-    " spectrumset=pn".$prefix."-obj.pi threshold=1.0e-6 ".
-    " detmaptype=dataset detmaparray=".$dmap;
   &run_and_print($comm);
 
-  # Because RMFs with/without detector map are using default energy grid
-  # (specified by CAL), no need to generate a new ARF.
+#  Generate the RMF, use a detector map
 
-# END customization (variant, use detector map for RMF)
+  $rmffile="pn".$prefix.".rmf";
+  if(-r $rmffile) {
+    print "rmf file already exists: $rmffile; regenerating anyways!\n";
+  }
+  $comm="rmfgen format=var rmfset=".$rmffile.
+    " spectrumset=pn".$prefix."-obj.pi threshold=1.0e-6 ".
+    " detmaptype=dataset detmaparray=detmap.ds ";
+  &run_and_print($comm);
+
+#  Generate the ARF, use a detector map
+
+  $arffile="pn".$prefix.".arf";
+  if(-r $arffile) {
+    print "arf file already exists: $arffile; regenerating anyways!\n";
+  }
+  $comm="arfgen arfset=".$arffile." spectrumset=pn".$prefix."-obj.pi ".
+    "withrmfset=yes rmfset=".$rmffile." extendedsource=yes modelee=no ".
+    "withbadpixcorr=no detmaptype=dataset detmaparray=detmap.ds ".
+    " badpixlocation=pn".$prefix."-clean.fits modelootcorr=no ";
+  &run_and_print($comm);
+
+#  Generate variant RMF, ARF files WITHOUT detector maps
+
+  $rmffile_flat="pn".$prefix.".flatrmf";
+  $comm="rmfgen format=var rmfset=".$rmffile_flat.
+    " spectrumset=pn".$prefix."-obj.pi threshold=1.0e-6 ".
+    " detmaptype=flat ";
+  &run_and_print($comm);
+
+  $arffile_flat="pn".$prefix.".flatarf";
+  $comm="arfgen arfset=".$arffile_flat." spectrumset=pn".$prefix."-obj.pi ".
+    "withrmfset=yes rmfset=".$rmffile_flat." extendedsource=yes modelee=no ".
+    "withbadpixcorr=no detmaptype=flat ".
+    " badpixlocation=pn".$prefix."-clean.fits modelootcorr=no ";
+  &run_and_print($comm);
+
+# END customization
 #########################################################
 
 #  Make an image for the region and band in sky coords
@@ -794,13 +787,8 @@ $author="S. L. Snowden, based on the mos-spectra code";
   # name '/proj/xmm/ccf/EMOS1_FILTERTRANSX_0014.CCF'"
   $specfile="pn".$prefix."-obj.pi";
 
-#  Generate the RMF
-  $rmffile_ff="pn".$prefix."-ff.rmf";
-  $comm="rmfgen format=var rmfset=".$rmffile_ff.
-    " spectrumset=".$specfile." threshold=1.0e-6 ";
-  &run_and_print($comm);
-
 # FWC detector map for RMF and ARF (mostly for ARF)
+
   $detmap_ff="detmap_ff.ds";
   $comm="evselect table=".$fwcfile.":EVENTS withfilteredset=yes ".
     "expression='(PATTERN <= ".$pattern.")&&(FLAG == 0)".$areasel."' ".
@@ -811,12 +799,15 @@ $author="S. L. Snowden, based on the mos-spectra code";
     "yimagemin=-19499 updateexposure=yes filterexposure=yes ";
   &run_and_print($comm);
 
-#  Variant: detector-mapped RMF for FWC spectrum
-  $rmffile_ff_dmap="pn".$prefix."-ff-dmap.rmf";
-  $comm="rmfgen format=var rmfset=".$rmffile_ff_dmap.
+#  Generate the FWC RMF, using FWC detector map
+
+  $rmffile_ff="pn".$prefix."-ff.rmf";
+  $comm="rmfgen format=var rmfset=".$rmffile_ff.
     " spectrumset=".$specfile." threshold=1.0e-6 ".
     " detmaptype=dataset detmaparray=".$detmap_ff;
   &run_and_print($comm);
+
+#  Generate the FWC ARF, using FWC detector map
 
   $arffile_ff="pn".$prefix."-ff.arf";
   $comm="arfgen arfset=".$arffile_ff." spectrumset=".$specfile." ".
@@ -825,7 +816,6 @@ $author="S. L. Snowden, based on the mos-spectra code";
     "badpixlocation=".$detpref." modelootcorr=no ".
     "modeleffarea=no modelfiltertrans=no ";
   # Do NOT model eff. area or filter trans. for FWC ARF
-  # I don't know if this also removes mirror vignetting from ARF
   &run_and_print($comm);
 
   system "rm -f $detmap_ff";

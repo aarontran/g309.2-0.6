@@ -51,7 +51,7 @@ chandra/out/
 xmm/*/repro/*gti*.txt
 xmm/*/repro/command.csh
 xmm/*/repro/*cmd.csh
-xmm/*/repro/*/*cmd.csh
+xmm/*/repro/detmap.ds
 # cfa head lan git is 1.7.1 so ** doesn't work quite right...
 # just add a special case
 
@@ -81,6 +81,10 @@ chandra/*/00README
 *.rmf
 *.warf
 *.wrmf
+# my own variant files
+*.flatarf
+*.flatrmf
+*.marfrmf
 
 # PDF files
 *.pdf

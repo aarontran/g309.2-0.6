@@ -9,7 +9,7 @@ suffix=$2
 for obsid in $obsids; do
   for exp in $exps; do
 
-    evli="${XMM_PATH}/${obsid}/odf/repro/${exp}-${suffix}"
+    evli="${XMM_PATH}/${obsid}_back/odf/repro/${exp}-${suffix}"
 
     if [[ -f "$evli" ]]; then
       fkeypar $evli $keyword

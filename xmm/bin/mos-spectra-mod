@@ -869,6 +869,25 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
   system "$comm"; 
   print "   \n";
 
+#########################################################
+# START customization
+# - generate variant RMF,ARF without detector mapping
+
+  $rmffile_flat="mos".$prefix.".flatrmf";
+  $comm="rmfgen format=var rmfset=".$rmffile_flat." spectrumset=".$specfile." ".
+    "threshold=1.0e-6 detmaptype=flat";
+  &run_and_print($comm);
+
+  $arffile_flat="mos".$prefix.".flatarf";
+  $comm="arfgen arfset=".$arffile_flat." spectrumset=".$specfile." ".
+    "withrmfset=yes rmfset=".$rmffile_flat." extendedsource=yes modelee=no ".
+    "withbadpixcorr=no detmaptype=flat ".
+    " badpixlocation=".$detpref." modelootcorr=no";
+  &run_and_print($comm);
+
+# END customization
+#########################################################
+
   if($ehigh > 0) {
 #    if(($det eq "mos1") and ($revo>2382)) {
 #      $comm="evselect table=".$detpref.":EVENTS withfilteredset=yes expression=".
@@ -986,7 +1005,6 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
     "badpixlocation=".$fwcfile." modelootcorr=no ".
     "modeleffarea=no modelfiltertrans=no ";
   # Do NOT model eff. area or filter trans. for FWC ARF
-  # I don't know if this also removes mirror vignetting from ARF
   &run_and_print($comm);
 
   system "rm -f $detmap_ff";
