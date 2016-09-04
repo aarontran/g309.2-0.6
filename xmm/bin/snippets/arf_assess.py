@@ -10,7 +10,7 @@ from astropy.io import fits
 
 for obsid in ["0087940201", "0551000201"]:
 
-    subdir = "/data/mpofls/atran/research/g309/xmm/{0}/odf/repro/".format(obsid)
+    subdir = "/data/gas2/atran/g309/xmm/{0}/odf/repro/".format(obsid)
     exposures = ["mos1S001", "mos2S002", "pnS003"]
 
     reg1 = "ann_000_100"

@@ -11229,12 +11229,41 @@ Yes, spectrum generation is breaking.  Hitting various glitches.
 
 
 OK, restart just running for src region (~8pm)
+After a bit more troubleshooting (bug in pn-spectra), now working.
+Set up run for all regions except "src".
 
 Then proceed to `ff_fit.py`...
 
 
-Friday 2016 September 02 -- ...
-===============================
+Friday 2016 September 02 -- spectrum extraction redux
+=====================================================
+
+Spectrum extractions for 0087940201 (all except 'src') from last night failed
+due to lack of space on network drive `/data/mpofls/`.  Cleared several GB of
+files and tried again.  Running in screen session on statler:
+
+    nohup specextract.sh >& ../../20160802_specextract_0551000201_attempt2.log
+    tail -f ../../20160802_specextract_0551000201_attempt2.log
+
+In any case, I can proceed to check effects of detmapping etc.
+
+Detector map for "src" region results in ~6-14% change in effective area.
+Because this is comparable to our statistical (XSPEC-derived) errors, yes,
+detector mapping is significant but not game-changing.
+
+The integrated source region is the area most likely to show significant
+spatial variation in effective area.
+
+
+Saturday 2016 September 03 -- spectrum extraction redux redux...
+================================================================
+
+Spectrum extraction kept failing.  Pat allocated some space on a shared ~1-2TB
+drive which should fix the problem.  A first re-attempt failed for some unknown
+reason (first call to `mos_back` segfaulted).  But, trying again outside of
+screen, everything worked fine.
+
+Currently running `nohup specextract.sh >& {...}.log &` on statler.
 
 
 
@@ -11243,10 +11272,18 @@ Standing questions and TODOs
 
 [ ] Quick look at detmap vs. no detmap suggests NO substantial difference.
     But this is for a really small region.  See what happens with src/bkg
+    Answer (see 2016 Sep 2 notes): "src" region shows ~6-14% increase in
+    effective area if detector map weighting is used (vs. flat map)
 
-[ ] question: how does rmfgen account for time-dependence in RMF?
-    1. where does it deduce observation time from?
-    2. what observation time is assumed for FWC spectrum RMF?
+[x] Question: how does rmfgen account for time-dependence in RMF?
+    Answer: SAS task cifbuild uses observation date stored in observation data
+    file (ODF) to determine which calibration datasets to use.
+    Upshot: our instrumental line modeling is somewhat inconsistent (fitting
+    merged FWC spectra using ARF, RMF files from different times)
+
+    Possible fixes:
+        - free line norms within ~10% of FWC fit
+        - free line energies (less crucial) within ~5% of FWC fit
 
 [ ] use cstat in ff-fit.py
 

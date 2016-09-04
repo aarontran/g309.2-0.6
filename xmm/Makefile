@@ -20,8 +20,8 @@ CCF = %/repro/ccf.cif
 
 # need tcsh to source sasinit/sasrepro; fails in bash/sh
 SHELL = /bin/tcsh
-SASINIT = /data/mpofls/atran/research/g309/xmm/sasinit
-SASREPRO = /data/mpofls/atran/research/g309/xmm/sasrepro
+SASINIT = /data/gas2/atran/g309/xmm/sasinit
+SASREPRO = /data/gas2/atran/g309/xmm/sasrepro
 
 
 .PHONY : all

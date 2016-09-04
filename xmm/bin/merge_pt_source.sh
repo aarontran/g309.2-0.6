@@ -43,7 +43,8 @@ foreach obsid ($OBSIDS)
 
   foreach exp ($EXPS)
 
-    # touch to prevent weird primary header copy error
+    # touch to prevent weird primary header copy error that makes conv_reg
+    # choke if output file doesn't already exist
     touch "${exp}-bkg_region-det.fits"
     conv_reg mode=1 inputfile="$SAS_REPRO_MERGED/all-bkg_region-radec.fits" \
       imagefile="${exp}-obj-im.fits" outputfile="${exp}-bkg_region-det.fits"

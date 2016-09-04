@@ -40,7 +40,7 @@ echo "setenv SAS_CCFPATH $SAS_CCFPATH"
 
 # Project path with obsid folders, e.g. $XMM_PATH/0087940201/odf/repro/
 
-setenv XMM_PATH /data/mpofls/atran/research/g309/xmm
+setenv XMM_PATH /data/gas2/atran/g309/xmm
 echo "setenv XMM_PATH $XMM_PATH"
 set path = ($XMM_PATH $path)
 set path = ($XMM_PATH/bin $path)

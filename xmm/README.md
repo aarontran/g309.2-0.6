@@ -47,8 +47,8 @@ Inspect data, create appropriate regions in DS9 and save to
 Extract observation and FWC spectra with
 
     specextract.tcsh, which is a wrapper script for:
-        make_xmmregions  (itself a wrapper for reg2xmmdets.pl)
-        specbackgrp $obsid $region
+        reg2xmmdets.pl
+        specbackgrp
         ff_fit.py
 
 Spectrum fits: you'll have to configure a lot of stuff by hand unfortunately.
