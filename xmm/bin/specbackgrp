@@ -42,8 +42,9 @@ if [[ "$SAS_OBSID" == "0087940201" ]]; then
 
 elif [[ "$SAS_OBSID" == "0551000201" ]]; then
 
-  exps=("mos1S001" "mos2S002" "pnS003")
-  exps_n=("1S001" "2S002" "S003")
+  # Skip pnS003, large window mode has no corner data to use
+  exps=("mos1S001" "mos2S002")
+  exps_n=("1S001" "2S002")
   # 0551000201 MOS1 CCD6 = 0 (destroyed), MOS2 CCD5 = 0 (anomalous state)
   ccd_strs=("ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=0 ccd7=1" \
             "ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=0 ccd6=1 ccd7=1" \
@@ -85,12 +86,6 @@ for ((i=0;i<${#exps[@]};++i)); do
   else
     echo "ERROR: Got bad exposure string $exp"
     exit 1
-  fi
-
-  if [[ "$exp" =~ "pn" ]] && [[ "$SAS_OBSID" == "0551000201" ]]; then
-    echo "  Skipping extraction for $SAS_OBSID $exp (no observation corner data)"
-    # skip entirely - no point in creating spectra that will not be analyzed
-    continue
   fi
 
   # Extraction

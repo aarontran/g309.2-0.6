@@ -11255,70 +11255,148 @@ The integrated source region is the area most likely to show significant
 spatial variation in effective area.
 
 
-Saturday 2016 September 03 -- spectrum extraction redux redux...
-================================================================
+Saturday-Monday 2016 September 03-05 -- spectrum extraction redux redux...
+==========================================================================
 
 Spectrum extraction kept failing.  Pat allocated some space on a shared ~1-2TB
 drive which should fix the problem.  A first re-attempt failed for some unknown
 reason (first call to `mos_back` segfaulted).  But, trying again outside of
 screen, everything worked fine.
 
-Currently running `nohup specextract.sh >& {...}.log &` on statler.
+Run `nohup specextract.sh >& {...}.log &` on statler for 0551000201 and
+0087940201.
+(now running 0087940201 Sunday morning)
+
+Re-ran FWC line fits, now with Cstat and new `xspec_utils.py` dump format.
+
+Re-built local models (absmodel, srcutlog) to work in new directory (gas2).
+
+Checked weird 0551000201 MOS1 0-100" annulus high energy uptick.
+Does not appear to be an issue in the new spectra.  Unfortunately I deleted the
+old spectra while (futilely) attempting to make space on `/data/mpofls/`, so
+cannot plot direct comparison.  Could have been (1) one-off bug in spectrum
+extraction, (2) some artifact from incorrect point source removal, (3)
+something else???.  But, not a problem now so I remove this special exclusion.
+
+Manually inspected new FWC line fits to ensure they looked reasonable
+for the following regions: `src, bkg, ann_000_100, ann_100_200, ann_200_300,
+ann_300_400, ann_400_500`.  By eye they look fine -- in various cases some
+features are clearly missed, or the line center is slightly off.
+But for our purposes these <10% errors shouldn't pose an issue.
+
+Fit source and background (integrated remnant) using new spectra and FWC line
+fit parameters:
+- grp01, pgstat
+- grp50, chi-squared
+- grp01, pgstat with mos1/2 merged.
+
+
+
+Tuesday 2016 September 06 -- fit setup
+======================================
+
+Inspecting pgstat, chi, mos-merger fits
+---------------------------------------
+
+Realized an error: I forgot to free one (minor) component of XRB (halo
+absorption).  The three fits described above used a slightly incorrect XRB
+model as a result, which is OK for direct comparison.  I will ultimately delete
+and re-run those fits.
+
+Derived fit parameters after many tweaks -- CORRECT removal of point sources,
+trimming extragalactic norm, separate absorption on extragalactic/ridge
+emission, removed energy range cut on 0551000201 MOS1, etc. -- differ slightly
+from previous results.  Comparing old -> new fits to integrated remnant (src,
+bkg):
+    SNR kT 2.3 keV --> 1.58 keV
+    SNR absorption 2.15e22 --> 2.48e22
+    SNR Tau 1.83e10 --> 2.29e10
+
+Comparing pgstat and chi-squared fits, very slight tweaks (<~ 10%), but it
+looks OK.  XRB fit parameters look about the same.
+Interesting that fits changed so much.
+
+MOS merged fit also agrees (initial run hit a bug, code did not correctly set
+energy range cut).
+
+Set up new batches of fits
+--------------------------
+
+Machinery in place to re-run a slew of fits now.
+Will focus on fits with merged MOS spectra from here on.
+
+Lingering question -- how can we characterize fit parameter space?
+What are the best fit parameter distributions.
+1. argue from intuition + some toying around by hand, but don't traverse
+   parameter space closely.  Current best fits are converging in a systematic,
+   reasonable way; depending on free parameters we find either a heavily
+   absorbed hot remnant, or a closer remnant depleted in <~ 1 keV elements (O,
+   Ne, Fe).  We do not preclude the possibility of alternative, better fits,
+   but our fits are by eye, frankly, sufficient; a better fit is an alternative
+   interpretation that does not nullify our results.
+2. do scan parameter space using a fine steppar mesh, and create XSPEC-style
+   contour confidence plot (probably plot absorption vs. temperature kT).
+   If best-fit space has relatively few local minima, this is fine; fit will
+   likely converge to 2-3 such local best fits that we can present and discuss.
+   This may not fully span breadth of possibilities in varying X-ray background
+   parameters, elemental abundances.
+3. more sophisticated approach.
+   - use XSPEC error with MCMC chains.  may just generally help and speed up
+     error runs too
+     https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSchain.html 
+     (see: https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSerror.html)
+     (https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html)
+     Chain runs can be invoked using margin to show multi-dim prob
+     distribution.  See also plot margin, plot integprob
+   - bayesian inference... apply priors to model parameters.
+     I don't really understand how this fits in to XSPEC.
+
+And, how do we discuss or present goodness-of-fit now that we are using pgstat?
+1. XSPEC goodness Monte Carlo calculation.
+   Draw mock spectra from best fit model and fit; see how many fits yield fit
+   statistic better than our data.
+   This is a frequentist take: IF best fit model is true, what is the
+   likelihood that our data are drawn from that model?
+2. ...?... various tests (kolmogorov-smirnov, ...)
+   https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+
+Extra things:
+* FWC spectrum for 0551000201 mos1 may not be excluding the damaged chip.  need
+  to ensure that this is done.
+* plots with "setplot add" work, but need to modify XS replotting software.
+
+
+Friday 2016 September 09 -- ...
+===============================
+
+Re-run spectrum extraction to redo MOS merge FWC fits and apply correct default
+keywords.  Changed merged spectra to use multiplied ARF/RMF files by default.
+
+    nohup specextract.sh > & 20160909_specextract_0087940201_rerun.log &
+    nohup specextract.sh > & 20160909_specextract_{...}_rerun.log &
+
+Two issues: /data/gas2/ went offline over weekend, and I supplied wrong keyword
+to `ff_fit.py` invocation, therefore rerun.
+
+    atran(sas)@statler:~/g309/xmm$ nohup specextract.sh >& 20160912_specextr_rerun_0087940201.log &
+    [1] 16529
 
 
 
 Standing questions and TODOs
 ============================
 
-[ ] Quick look at detmap vs. no detmap suggests NO substantial difference.
-    But this is for a really small region.  See what happens with src/bkg
-    Answer (see 2016 Sep 2 notes): "src" region shows ~6-14% increase in
-    effective area if detector map weighting is used (vs. flat map)
-
-[x] Question: how does rmfgen account for time-dependence in RMF?
-    Answer: SAS task cifbuild uses observation date stored in observation data
-    file (ODF) to determine which calibration datasets to use.
-    Upshot: our instrumental line modeling is somewhat inconsistent (fitting
-    merged FWC spectra using ARF, RMF files from different times)
-
-    Possible fixes:
-        - free line norms within ~10% of FWC fit
-        - free line energies (less crucial) within ~5% of FWC fit
-
-[ ] use cstat in ff-fit.py
-
-[ ] Investigate mysterious MOS1S001 0-100" annulus high energy uptick bug!
-    (in 0551000201)
-    hopefully resolved w/ new spectra.... dunno what happened...
+[ ] TODO: mention #s from de Luca & molendi SP check criterion
 
 [ ] TODO: post-hoc spot test of spectrum extraction with new pt source exclusions.
-
-[x] arfgen documentation claims to handle OOT smearing for PN detector.
-    Does this conflict with ESAS OOT-event subtraction setup?
-    Answer: OK.  ESAS disables OOT correction when creating ARFs.
-
-[x] Use detector mapped RMF for PN (both observation and FWC)
-
-[x] Why is spectralbinsize in use with evselect for object spectra?...
-    Difference between spectralbinsize=1,5?
-    Answer: bin size = 5 eV.  This is already very fine; 10 eV is default.
 
 [ ] Plot dumps: use setplot comp to show individual additive model components (WAY easier
 than multidump / append hack I set up)
 
-[ ] Fits: Cstat (unbinned) spectra
-    effect of spectrum binning
-    fits without binning & fits with single-count binning & C statistic
+[ ] Image: create broadband/line images using MOS exposures only (spatial
+resolution)
 
-[x] Fits: re-visit error bar calculations for Cstat and my binning (assumed gaussian...)
-[ ] Fit: set up for pgstat use
-
-[x] Fit: Merge MOS1/2 spectra, yielding 3 spectra to fit
-
-[ ] FWC fit code needs to be updated to work with new XSPEC utils.
-    (ff_fit.py, g309_models.py)
-    basically, when I next regenerate spectra from scratch, this shall be
-    addressed.
+[ ] Fits: compare fits (1) chi-squared, grp50, (2) pgstat
 
 [ ] Calculation: use HI brightness profiles along line-of-sight to try to set some
     upper bounds on ambient density.
@@ -11360,28 +11438,17 @@ List of standard text checks:
 [ ] all equations, figures, tables referenced in text, __in number order__
 [ ] spell check
 [ ] all quantities (numbers, magnitudes, prefixes) checked
-
-
-Misc. process questions
-[ ] Does thick vs. medium optical blocking filter affect X-ray data analysis?
-    I believe answer is no: attentuation of sky photons is accounted for by ARF
-    matrices.
+[ ] all pipeline-derived numbers rederived from a clean slate
 
 
 
 Standing TODOs:
-* Re-run everything from a clean slate to ensure your pipeline is good.
-  (in works)
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures
   for image scripts.
 * Images -- subtract SP contamination with ESAS proton task?  Sharp vignetting
   could contaminate soft emission near the aimpoint, which might look like SNR
   emission...  (partially helped by choice of energy bands for imaging,
   though, as at least it should not confuse sharp features).
-* check temporal variation of instrumental line ratios in (a) FWC data or (b)
-  corner data from DB of public observations.
-  in practice, we are seeing that instrumental line fits are reasonable,
-  so not a strong impetus to verify this.  but do so anyways.
 
 Standing questions:
 * Why did exposure maps for PN generate so fast, relative to MOS maps???
@@ -11455,6 +11522,66 @@ Resolved nagging questions:
   But this is a bit time-intensive for <10% improvement in counts.
   (granted, lower-noise counts...)
 
+* Q: does thick vs. medium optical blocking filter affect X-ray data analysis?
+  A: no, filter attentuation of sky photons is accounted for by ARF
+
+* arfgen documentation claims to handle OOT smearing for PN detector.
+  Does this conflict with ESAS OOT-event subtraction setup?
+  Answer: OK.  ESAS disables OOT correction when creating ARFs.
+
+* Question: how does rmfgen account for time-dependence in RMF?
+  Answer: SAS task cifbuild uses observation date stored in observation data
+  file (ODF) to determine which calibration datasets to use.
+  Upshot: our instrumental line modeling is somewhat inconsistent (fitting
+  merged FWC spectra using ARF, RMF files from different times)
+
+* should FWC line energies be freed, or non-zero line widths allowed?
+  Because the RMF used to fit FWC data is not entirely consistent...
+  (e.g. instr line #s for 0087940201 norm are fits to FWC data (average of many
+  years, treated with ~2001 RMF, then applied to fit of 2001 lines w/ 2001 RMF)
+  instr line #s for 0551000201 norm are fits to FWC data (average of many
+  years, treated with ~2009 RMF, then applied to fit of 2009 lines w/ 2009
+  RMF)) ...  any systematic bias does NOT entirely fold into the model
+  instrumental line norms.
+
+  Approaches:
+  * ignore FWC data entirely.  Fit gaussians constrained to lie within very
+    tight energy/width limits.
+    Pro: one less source of possible systematics
+    Con: more free parameters to argue with in fits
+  * fit FWC data using Gaussians that lie within energy limits,
+    then allow slight deviations about best-fit in instrumental fits
+  * fit FWC data using Gaussians that lie within energy limits,
+    but use fixed energies in resulting fits
+  * fit FWC data using fixed Gaussians (current approach)
+
+  Note that a FWC fit to source spectrum with line energies free only shows ~1%
+  change in line energies (we're looking at like 5 or 10 eV shifts).
+
+  It may not matter if derived fit #s are far less than calibration uncertainty
+  in line energies and relative normalizations (which amounts to time-evolving
+  uncertainty in effective area function A(E))... now the question is what is te
+  uncertainty in energy redistribution at ~1-2 keV, 6-9 keV (PN)?
+
+  Empirically the assumption of fixed line ratios seems to work really well...
+  but I have not really tested it at all.
+  I need a (hopefully simple) way to show that our results should not depend
+  strongly upon, or be heavily biased by, our assumptions regarding line
+  strengths.
+
+  And this is moving beyond the scope of our work, to worry deeply about
+  instrumental systematics, when we have considerable uncertainty in our plasma
+  model and its interpretation to begin with.
+  So, __leave it be__.
+
+* Q: how much difference does a detector map weighting for ARF make?
+  Answer (see 2016 Sep 2 notes): "src" region shows ~6-14% increase in
+  effective area if detector map weighting is used (vs. flat map)
+
+* Q: Investigate mysterious MOS1S001 0-100" annulus high energy uptick bug
+  (in 0551000201) -- see notes 2016 March 15-22.
+* A: appears resolved as of 2016 Sep 04 spectrum re-extraction.
+  dunno what happened.
 
 
 

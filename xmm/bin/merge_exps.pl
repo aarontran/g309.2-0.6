@@ -13,7 +13,7 @@
 #
 # Example:
 #
-#     mergemos.pl ann_000_100 mos1S001 mos2S002
+#     merge_exps.pl ann_000_100 mos1S001 mos2S002
 #
 # This identifies all appropriately named spectrum files in $SAS_REPRO and
 # dumps a slew of outputs to "mosmerge-*" in the same directory.
@@ -43,8 +43,7 @@ for my $exp (@EXPS) {
     run_and_say("cp ${exp}-${RSTEM}-ff.pi  ${exp}_${RSTEM}_ff.pi");
 }
 
-# Construct expected filenames after having run specbackgrp
-# AND after making temporary files (to compute exposure weights)
+# Expected filenames, with mathpha-compatible temporary copies
 
 my @obj_pha = map { "${_}_${RSTEM}.pi" } @EXPS;  # Note underscores
 my @obj_qpb = map { "${_}_${RSTEM}_qpb.pi" } @EXPS;  # Note underscores
@@ -56,15 +55,6 @@ my @fwc_pha = map { "${_}_${RSTEM}_ff.pi" } @EXPS;  # Note underscores
 my @fwc_rmf = map { "${_}-${RSTEM}-ff.rmf" } @EXPS;
 my @fwc_arf = map { "${_}-${RSTEM}-ff.arf" } @EXPS;
 my @fwc_weights = exposure_weights(@fwc_pha);
-
-if ($#obj_qpb != $#obj_pha
-	|| $#obj_rmf != $#obj_pha
-	|| $#obj_arf != $#obj_pha
-	|| $#fwc_pha != $#obj_pha
-	|| $#fwc_rmf != $#obj_pha
-	|| $#fwc_arf != $#obj_pha) {
-    die "ERROR: inconsistent number of spectrum files";
-}
 
 
 announce("Merging observation pha, qpb, rmf, arf files");
@@ -96,11 +86,32 @@ for my $i (0..$#obj_pha) {
     marfrmf($obj_rmf[$i], $obj_arf[$i], $obj_marfrmf[$i]);
     marfrmf($fwc_rmf[$i], $fwc_arf[$i], $fwc_marfrmf[$i]);
 }
-announce("Merging multiplied rmf,arf files for alternative-weighting fits");
+announce("Merging multiplied rmf,arf files (correct merger weighting)");
 merge_rmf(\@obj_marfrmf, \@obj_weights, "${MERGEXP}-${RSTEM}.marfrmf");
 merge_rmf(\@fwc_marfrmf, \@fwc_weights, "${MERGEXP}-${RSTEM}-ff.marfrmf");
 merge_rmf(\@fwc_marfrmf, \@obj_weights, "${MERGEXP}-${RSTEM}-ff-instr.marfrmf");
 
+announce("Apply standard keywording (use .marfrmf files)");
+run_and_say("grppha infile=\"${MERGEXP}-${RSTEM}.pi\""
+	    . " outfile=\"!${MERGEXP}-${RSTEM}.pi\""
+	    . " comm=\"chkey BACKFILE ${MERGEXP}-${RSTEM}-qpb.pi &"
+	    . " chkey RESPFILE ${MERGEXP}-${RSTEM}.marfrmf &"
+	    . " chkey ANCRFILE NONE &"
+            . " exit\"");
+run_and_say("grppha infile=\"${MERGEXP}-${RSTEM}-ff.pi\""
+	    . " outfile=\"!${MERGEXP}-${RSTEM}-ff.pi\""
+	    . " comm=\"chkey BACKFILE NONE &"
+	    . " chkey RESPFILE ${MERGEXP}-${RSTEM}-ff.marfrmf &"
+	    . " chkey ANCRFILE NONE &"
+            . " exit\"");
+
+announce("Group merged spectra");
+run_and_say("grppha infile=\"${MERGEXP}-${RSTEM}.pi\""
+	    . " outfile=\"!${MERGEXP}-${RSTEM}-grp01.pi\""
+	    . " comm=\"group min 1 & exit\"");
+run_and_say("grppha infile=\"${MERGEXP}-${RSTEM}.pi\""
+	    . " outfile=\"!${MERGEXP}-${RSTEM}-grp50.pi\""
+	    . " comm=\"group min 50 & exit\"");
 
 announce("Remove temporary spectra");
 for my $exp (@EXPS) {

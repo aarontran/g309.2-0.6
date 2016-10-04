@@ -237,7 +237,10 @@ def spectrum_dict(s):
     sdict['fileName'] = s.fileName
     sdict['index'] = s.index
     sdict['dataGroup'] = s.dataGroup
-    sdict['background'] = s.background.fileName
+    try:
+        sdict['background'] = s.background.fileName
+    except:
+        sdict['background'] = None
     sdict['ignoredString'] = s.ignoredString()
 
     # Arguably can get from FITS or compute yourself, but useful to attach

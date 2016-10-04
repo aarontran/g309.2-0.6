@@ -18,7 +18,8 @@ import xspec_utils as xs_utils
 from ExtractedSpectrum import ExtractedSpectrum
 
 
-def load_data_and_models(*regs, **kwargs):
+def load_data_and_models(regs, snr_model='vnei', suffix='grp01',
+                         mosmerge=False, marfrmf=False):
     """
     Load G309.2-0.6 data and initialize responses and models.
 
@@ -35,6 +36,7 @@ def load_data_and_models(*regs, **kwargs):
 
     Keyword arguments:
       snr_model = vnei, vpshock None
+      suffix = grp01, grp50
 
     Output: hash keying each region to 5 ExtractedSpectrum objects,
         one per XMM exposure in use
@@ -46,12 +48,18 @@ def load_data_and_models(*regs, **kwargs):
     # order of regs sets the order of XSPEC datagroup assignment
     extrs_from = {}
     all_extrs = []  # Keep regs ordering for XSPEC datagroup assignment
+
     for reg in regs:
-        extrs = [ ExtractedSpectrum("0087940201", "mos1S001", reg),
-                  ExtractedSpectrum("0087940201", "mos2S002", reg),
-                  ExtractedSpectrum("0087940201", "pnS003",   reg),
-                  ExtractedSpectrum("0551000201", "mos1S001", reg),
-                  ExtractedSpectrum("0551000201", "mos2S002", reg) ]
+        if mosmerge:
+            extrs = [ ExtractedSpectrum("0087940201", "mosmerge", reg, suffix=suffix, marfrmf=marfrmf),
+                      ExtractedSpectrum("0087940201", "pnS003",   reg, suffix=suffix, marfrmf=marfrmf),
+                      ExtractedSpectrum("0551000201", "mosmerge", reg, suffix=suffix, marfrmf=marfrmf) ]
+        else:
+            extrs = [ ExtractedSpectrum("0087940201", "mos1S001", reg, suffix=suffix),
+                      ExtractedSpectrum("0087940201", "mos2S002", reg, suffix=suffix),
+                      ExtractedSpectrum("0087940201", "pnS003",   reg, suffix=suffix),
+                      ExtractedSpectrum("0551000201", "mos1S001", reg, suffix=suffix),
+                      ExtractedSpectrum("0551000201", "mos2S002", reg, suffix=suffix) ]
         extrs_from[reg] = extrs
         all_extrs.extend(extrs)
 
@@ -87,10 +95,10 @@ def load_data_and_models(*regs, **kwargs):
     # SNR model -- distinct source model for each region
     # if "bkg" in regs, source numbering will be discontinuous
     for n_reg, reg in enumerate(regs):
-        if reg == "bkg" or kwargs['snr_model'] is None:
+        if reg == "bkg" or snr_model is None:
             continue
         model_n = 3 + n_reg
-        load_remnant_model(model_n, "snr_" + reg, extrs_from[reg], case=kwargs['snr_model'])
+        load_remnant_model(model_n, "snr_" + reg, extrs_from[reg], case=snr_model)
         for extr in extrs_from[reg]:
             extr.models['snr'] = xs.AllModels(extr.spec.index, "snr_" + reg)
 
@@ -135,19 +143,22 @@ def load_instr(model_n, model_name, extr):
         None.  Global XSPEC objects configured for instrumental lines.
     """
     # Set responses of <xs.Spectrum> objects
-    extr.spec.multiresponse[model_n - 1]     = extr.rmf()
-    extr.spec.multiresponse[model_n - 1].arf = extr.arf_fwc()
+    extr.spec.multiresponse[model_n - 1]     = extr.rmf_instr()
+    extr.spec.multiresponse[model_n - 1].arf = extr.arf_instr()
 
     fit_dict = extr.fwc_fit()
-    instr = xs.Model("constant * (" + fit_dict['expression'] + ")", model_name, model_n)
+    # DEBUGGING...
+    print fit_dict.keys()
+    print fit_dict['1'].keys()
+    instr = xs.Model("constant * (" + fit_dict['1']['instr']['expression'] + ")",
+                     model_name, model_n)
 
     # Set parameters all at once
     parlist = [1]  # Set constant factor to 1
-    fwc_comps = sorted(fit_dict['comps'].values(), key=lambda x: x['LineE']['value'])
-    for i, fwc_comp in enumerate(fwc_comps):
-        parlist.extend([fwc_comp['LineE']['value'],
-                        fwc_comp['Sigma']['value'],
-                        fwc_comp['norm']['value']])
+    for cname in fit_dict['1']['instr']['componentNames']:
+        parlist.extend([fit_dict['1']['instr'][cname]['LineE']['value'],
+                        fit_dict['1']['instr'][cname]['Sigma']['value'],
+                        fit_dict['1']['instr'][cname]['norm']['value']])
     instr.setPars(*parlist)
 
     # Freeze everything except constant prefactor
@@ -345,7 +356,8 @@ def load_cxrb(model_n, model_name, extracted_spectra):
         extr.spec.multiresponse[model_n - 1].arf = extr.arf()
 
     # Initialize XRB model with reasonable "global" parameters
-    xrb = xs.Model("constant * (apec + tbnew_gas*powerlaw + apec*tbnew_gas)", model_name, model_n)
+    xrb = xs.Model("constant * (apec + tbnew_gas*powerlaw + tbnew_gas*apec)",
+                   model_name, model_n)
 
     # Hickox and Markevitch (2006) norm
     # convert 10.9 photons cm^-2 s^-1 sr^-1 keV^-1 to photons cm^-2 s^-1 keV^-1
@@ -371,10 +383,10 @@ def load_cxrb(model_n, model_name, extracted_spectra):
                  xrb.powerlaw.norm.index : exrb_norm,
                  xrb.apec.kT.index : 0.262,  # Unabsorped apec (local bubble)
                  xrb.tbnew_gas.nH.index : 1.321,  # Galactic absorption
-                 xrb.apec_5.kT.index : 0.744,  # Absorbed apec (galactic halo)
+                 xrb.apec_6.kT.index : 0.744,  # Absorbed apec (galactic halo)
                  xrb.apec.norm.index : 2.98e-4,
-                 xrb.apec_5.norm.index : 2.19e-3,
-                 xrb.tbnew_gas_6.nH.index : 1.321}  # Halo absorption
+                 xrb.tbnew_gas_5.nH.index : 1.321,  # Halo absorption
+                 xrb.apec_6.norm.index : 2.19e-3}
                 )
 
     xs_utils.freeze_model(xrb)

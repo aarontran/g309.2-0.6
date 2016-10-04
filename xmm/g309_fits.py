@@ -165,20 +165,21 @@ def stopwatch(function, *args, **kwargs):
     function halts (after Exceptions as well)"""
     started = datetime.now()
     try:
-        function(*args, **kwargs)
+        ret = function(*args, **kwargs)
     finally:
         stopped = datetime.now()
         print function.func_name, "timing"
         print "  Started:", started
         print "  Stopped:", stopped
         print "  Elapsed:", stopped - started
+    return ret
 
 
 ########################
 # Customized fit setup #
 ########################
 
-def prep_xs(with_xs=False):
+def prep_xs(with_xs=False, statMethod='pgstat'):
     """Apply standard XSPEC settings for G309"""
 
     xs.Xset.abund = "wilm"
@@ -187,8 +188,13 @@ def prep_xs(with_xs=False):
     xs.AllModels.lmod("srcutlog", dirPath=os.environ['XMM_PATH'] + "/../srcutlog")
 
     xs.Fit.query = "yes"
+    #xs.Fit.method = "leven delay"
     xs.Xset.parallel.leven = 4  # could set using nproc command
     xs.Xset.parallel.error = 4
+
+    if statMethod not in ['pgstat', 'chi']:
+        raise Exception("Invalid statmethod requested")
+    xs.Fit.statMethod = statMethod
 
     if with_xs:
         xs.Plot.device = "/xs"
@@ -196,6 +202,8 @@ def prep_xs(with_xs=False):
     xs.Plot.xLog = True
     xs.Plot.yLog = True
     xs.Plot.addCommand("rescale y 1e-5 3")  # may need to twiddle
+    if statMethod == 'pgstat':
+        xs.Plot.setRebin(minSig=5, maxBins=50)
 
 
 def set_energy_range(all_extrs):
@@ -204,10 +212,12 @@ def set_energy_range(all_extrs):
     running some fits...
     """
     for extr in all_extrs:
-        if extr.instr == "mos1" or extr.instr == "mos2":
+        if extr.instr in ["mos1", "mos2", "mosmerge"]:
             extr.spec.ignore("**-0.3, 11.0-**")
-        if extr.instr == "pn":
+        elif extr.instr == "pn":
             extr.spec.ignore("**-0.4, 11.0-**")
+        else:
+            raise Exception("Invalid instrument: got {}".format(extr.instr))
 
 def error_str(model, comp, par_names):
     """Construct an error string"""
@@ -253,7 +263,7 @@ def error_str_all_free(model):
 def src_powerlaw_xrbfree(output, error=False):
     """Fit integrated source w/ vnei+powerlaw, XRB free"""
 
-    out = g309.load_data_and_models('src', 'bkg', snr_model='vnei+powerlaw')
+    out = g309.load_data_and_models(['src', 'bkg'], snr_model='vnei+powerlaw')
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
     xs.AllData.ignore('bad')
@@ -262,14 +272,14 @@ def src_powerlaw_xrbfree(output, error=False):
     xrb = xs.AllModels(1, 'xrb')
     xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
                 {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
-                {xrb.apec_5.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
+                {xrb.apec_6.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
                 {xrb.apec.norm.index : 1e-3},
-                {xrb.apec_5.norm.index : 1e-3} )
+                {xrb.apec_6.norm.index : 1e-3} )
     xrb.apec.kT.frozen = True
     xrb.tbnew_gas.nH.frozen = True
-    xrb.apec_5.kT.frozen = True
+    xrb.apec_6.kT.frozen = True
     xrb.apec.norm.frozen = True
-    xrb.apec_5.norm.frozen = True
+    xrb.apec_6.norm.frozen = True
 
     xs.Fit.renorm()
 
@@ -297,9 +307,9 @@ def src_powerlaw_xrbfree(output, error=False):
 
     xrb.apec.kT.frozen = False
     xrb.tbnew_gas.nH.frozen = False
-    xrb.apec_5.kT.frozen = False
+    xrb.apec_6.kT.frozen = False
     xrb.apec.norm.frozen = False
-    xrb.apec_5.norm.frozen = False
+    xrb.apec_6.norm.frozen = False
     xs.Fit.perform()
     xs.Plot("ld delch")
 
@@ -309,7 +319,7 @@ def src_powerlaw_xrbfree(output, error=False):
         xs.Fit.error("xrb:{:d},{:d},{:d}".format(
             xs_utils.par_num(xrb, xrb.apec.kT),
             xs_utils.par_num(xrb, xrb.tbnew_gas.nH),
-            xs_utils.par_num(xrb, xrb.apec_5.kT)))
+            xs_utils.par_num(xrb, xrb.apec_6.kT)))
 
     products(output)
 
@@ -324,7 +334,7 @@ def src_srcutlog(output, region='src', solar=False, error=False):
         error: perform error runs
     """
 
-    out = g309.load_data_and_models(region, snr_model='vnei+srcutlog')
+    out = g309.load_data_and_models([region], snr_model='vnei+srcutlog')
     set_energy_range(out[region])
     xs.AllData.ignore('bad')
 
@@ -399,7 +409,7 @@ def single_fit(output, region='src', free_elements=None, error=False):
     if free_elements is None:
         free_elements = ['Si', 'S']
 
-    out = g309.load_data_and_models(region, snr_model='vnei')
+    out = g309.load_data_and_models([region], snr_model='vnei')
     set_energy_range(out[region])
     xs.AllData.ignore('bad')
 
@@ -449,7 +459,7 @@ def src_powerlaw(output, region='src', solar=False, error=False):
         error: perform error runs
     """
 
-    out = g309.load_data_and_models(region, snr_model='vnei+powerlaw')
+    out = g309.load_data_and_models([region], snr_model='vnei+powerlaw')
     set_energy_range(out[region])
     xs.AllData.ignore('bad')
 
@@ -517,10 +527,9 @@ def src_powerlaw(output, region='src', solar=False, error=False):
 
 
 
-def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
-                      error=False, error_rerun=False,
-                      backscal_ratio_hack=None,
-                      tau_freeze=None):
+def joint_src_bkg_fit(output, free_elements=None, error=False,
+                      error_rerun=False, backscal_ratio_hack=None,
+                      tau_freeze=None, **kwargs):
     """
     Fit source + bkg regions, allowing XRB to float
     backscal_ratio_hack = arbitrary adjustment to 0551000201 MOS1S001
@@ -534,16 +543,21 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
 
     Arguments
         output: file stem string
+        snr_model: snr model expression (and parameter setup) to use
         free_elements: (default) is [Si,S]
             if [], use solar abundances
         error: perform single error run
         backscal_ratio_hack: see above
         tau_freeze: freeze ionization timescale to some value
+        kwargs - options for data/model loader
+            (suffix to set grouping,
+             mosmerge to use merged spectra,
+             marfrmf for pre-multiplied ARF/RMF files)
     """
     if free_elements is None:
         free_elements = ['Si', 'S']
 
-    out = g309.load_data_and_models("src", "bkg", snr_model=snr_model)
+    out = g309.load_data_and_models(["src", "bkg"], **kwargs)
     set_energy_range(out['src'])
     set_energy_range(out['bkg'])
     xs.AllData.ignore("bad")
@@ -556,20 +570,21 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
 
     # Reset XRB to "typical" values, do NOT vary yet
     xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
-                {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
-                {xrb.apec_5.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
+                {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Extragalactic absorption
+                {xrb.tbnew_gas_5.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Ridge absorption
+                {xrb.apec_6.kT.index : "0.5, , 0, 0, 2, 4"},  # Galactic ridge (+ minimal halo maybe)
                 {xrb.apec.norm.index : 1e-3},
-                {xrb.apec_5.norm.index : 1e-3} )
+                {xrb.apec_6.norm.index : 1e-3} )
     xrb.apec.kT.frozen = True
     xrb.tbnew_gas.nH.frozen = True
-    xrb.apec_5.kT.frozen = True
+    xrb.apec_6.kT.frozen = True
     xrb.apec.norm.frozen = True
-    xrb.apec_5.norm.frozen = True
+    xrb.apec_6.norm.frozen = True
 
     xs.Fit.renorm()
 
     # Let SNR model vary
-    if snr_model == 'vnei':
+    if 'snr_model' not in kwargs or kwargs['snr_model'] == 'vnei':
 
         snr.tbnew_gas.nH.frozen=False
         snr.vnei.kT.frozen=False
@@ -583,7 +598,7 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
             comp = snr.vnei.__getattribute__(elem)
             comp.frozen = False
 
-    elif snr_model == 'vpshock':
+    elif kwargs['snr_model'] == 'vpshock':
 
         snr.tbnew_gas.nH.frozen=False
         snr.vpshock.kT.frozen=False
@@ -598,7 +613,7 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
             comp = snr.vpshock.__getattribute__(elem)
             comp.frozen = False
 
-    elif snr_model == 'vnei+nei':
+    elif kwargs['snr_model'] == 'vnei+nei':
 
         snr.tbnew_gas.nH.frozen=False
         snr.vnei.kT.frozen=False
@@ -623,9 +638,9 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
     # (and SNR at default vnei values) tend to run away
     xrb.apec.kT.frozen = False
     xrb.tbnew_gas.nH.frozen = False
-    xrb.apec_5.kT.frozen = False
+    xrb.apec_6.kT.frozen = False
     xrb.apec.norm.frozen = False
-    xrb.apec_5.norm.frozen = False
+    xrb.apec_6.norm.frozen = False
     xs.Fit.perform()
 
     if error:
@@ -653,7 +668,9 @@ def joint_src_bkg_fit(output, free_elements=None, snr_model='vnei',
     print_model(snr, output + "_snr_src.txt")
     print_model(xrb, output + "_xrb.txt")
 
-    if snr_model == 'vnei+nei':
+    # This should not be needed -- basically duplicates setplot addcomp
+    # functionality
+    if 'snr_model' in kwargs and kwargs['snr_model'] == 'vnei+nei':
         # Zero out ejecta vnei component to isolate ISM nei contribution
         norm_vnei = snr.vnei.norm.values[0]
         snr.vnei.norm = 0
@@ -699,14 +716,14 @@ def annulus_fit(output, error=False, error_rerun=False,
     if four_ann:
         regs = ["ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400"]
 
-    out = g309.load_data_and_models(*regs, snr_model='vnei')
+    out = g309.load_data_and_models(regs, snr_model='vnei')
     for reg in regs:
         set_energy_range(out[reg])
 
     xs.AllData.ignore("bad")
     # TODO really weird bug -- regenerate spectrum and see if it persists
-    for extr in out['ann_000_100']:
-        extr.spec.ignore("10.0-**")  # 10-11 keV range messed up
+    #for extr in out['ann_000_100']:
+    #    extr.spec.ignore("10.0-**")  # 10-11 keV range messed up
 
     # Link nH across annuli
     # Each region has 5 spectra (5 exposures)
@@ -791,7 +808,7 @@ def bkg_only_fit(output, steppar=False, error=False):
     """
     Fit bkg region alone to XRB model
     """
-    out = g309.load_data_and_models("bkg", snr_model=None)
+    out = g309.load_data_and_models(["bkg"], snr_model=None)
     set_energy_range(out['bkg'])
     xs.AllData.ignore("bad")
 
@@ -801,14 +818,14 @@ def bkg_only_fit(output, steppar=False, error=False):
     xrb = xs.AllModels(1, 'xrb')
     xrb.setPars({xrb.apec.kT.index : "0.2, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
                 {xrb.tbnew_gas.nH.index : "1.5, , 0.01, 0.1, 5, 10"},  # Galactic absorption
-                {xrb.apec_5.kT.index : "0.7, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
+                {xrb.apec_6.kT.index : "0.7, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
                 {xrb.apec.norm.index : 1e-3},
-                {xrb.apec_5.norm.index : 1e-3} )
+                {xrb.apec_6.norm.index : 1e-3} )
     xrb.apec.kT.frozen = False
     xrb.tbnew_gas.nH.frozen = False
-    xrb.apec_5.kT.frozen = False
+    xrb.apec_6.kT.frozen = False
     xrb.apec.norm.frozen = False
-    xrb.apec_5.norm.frozen = False
+    xrb.apec_6.norm.frozen = False
 
     xs.Fit.perform()
     if xs.Plot.device == "/xs":
@@ -816,7 +833,7 @@ def bkg_only_fit(output, steppar=False, error=False):
 
     if steppar:
         xs.Fit.steppar("xrb:{:d} 0.1 0.5 20".format(xs_utils.par_num(xrb, xrb.apec.kT)))
-        xs.Fit.steppar("xrb:{:d} 0.4 0.8 20".format(xs_utils.par_num(xrb, xrb.apec_5.kT)))
+        xs.Fit.steppar("xrb:{:d} 0.4 0.8 20".format(xs_utils.par_num(xrb, xrb.apec_6.kT)))
         if xs.Plot.device == "/xs":
             xs.Plot("ldata delchi")
 
@@ -828,8 +845,8 @@ def bkg_only_fit(output, steppar=False, error=False):
         xs.Fit.error("xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.kT))
                   + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec.norm))
                   + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.tbnew_gas.nH))
-                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.kT))
-                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_5.norm)))
+                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_6.kT))
+                  + " xrb:{:d}".format(xs_utils.par_num(xrb, xrb.apec_6.norm)))
 
         print "Error run complete:", datetime.now()
 
@@ -863,9 +880,25 @@ if __name__ == '__main__':
     # Integrated source fits
     # ----------------------
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_stock",
-              error=True, error_rerun=True)
+    stopwatch(joint_src_bkg_fit,
+            "results_spec/20160904_src_bkg_stock_newpipeline-pgstat",
+            error=True, error_rerun=True)
+    # new time (pgstat): 6.6 hrs on statler
+    #stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_stock",
+    #          error=True, error_rerun=True)
     # Time: 2.6 hrs on statler
+
+    stopwatch(joint_src_bkg_fit,
+            "results_spec/20160906_src_bkg_stock_newpipeline-grp50-chi",
+            error=True, error_rerun=True, suffix='grp50')
+    # Time: 3.8 hrs on statler (NOTE: must set
+    # prep_xs(with_xs=True, statMethod='chi')
+    # before running)
+    stopwatch(joint_src_bkg_fit,
+            "results_spec/20160906_src_bkg_stock_newpipeline-pgstat-mosmerge",
+            error=True, error_rerun=True, mosmerge=True)
+    # Time: ... uncertain (initial fit failed to apply energy cuts)
+    # expect ~3-4 hrs
 
     stopwatch(joint_src_bkg_fit, "results_spec/20160712_src_bkg_mg",
               free_elements=["Mg", "Si", "S"], error=True)

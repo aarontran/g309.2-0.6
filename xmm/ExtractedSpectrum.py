@@ -7,30 +7,33 @@ from astropy.io import fits
 import xspec_utils as xs_utils
 
 class ExtractedSpectrum:
-    """Contains all parameters needed to uniquely address
-    a G309.2-0.6 spectrum, as created by my data pipeline
-
-    NOTE: as defined, this class should not contain information
-    about XSPEC data loading, etc.
-    Other tools may tack on that information, but it's not part of the "basic"
-    specification.
-    """
+    """Interface to G309.2-0.6 spectrum and ancillary files from my pipeline"""
 
     XMMPATH = os.environ['XMM_PATH']
 
-    temp = fits.open(XMMPATH + "/0087940201/odf/repro/mos1S001-src-grp50.pi",
-                  memmap=True)
+    temp = fits.open(XMMPATH + "/0087940201/repro/mos1S001-src.pi",
+                     memmap=True)
     temp.close()
     FIDUCIAL_BACKSCAL = temp[1].header['backscal']
-    del temp  # This is kind of stupid, but leads to the desired effect
+    del temp  # This is kind of roundabout, but leads to the desired effect
 
-    def __init__(self, obsid, exp, reg):
-        """Create ExtractedSpectrum"""
+    def __init__(self, obsid, exp, reg, suffix="grp01", marfrmf=False):
+        """Create ExtractedSpectrum
+        suffix: specify desired grouping via filename suffix (grp01 or grp50)
+        marfrmf: iff exp="mosmerge", marfrmf=True specifies use of
+            merged pre-multiplied arf/rmf files (which should be a more
+            "correct" weighting)
+        """
         self.obsid = obsid
         self.exp = exp
         self.reg = reg
-        self.instr = exp.split('S')[0]  # mos1, mos2, pn
+        self.instr = exp.split('S')[0]  # mos1, mos2, pn; mosmerge (special case)
+        self.suffix = suffix
         self.spec = None
+        self.marfrmf = marfrmf
+
+        assert obsid in ["0087940201", "0551000201"]
+        assert suffix in ["grp01", "grp50"]
 
     def __repr__(self):
         return "ExtractedSpectrum({}, {:>8s}, {})".format(self.obsid, self.exp,
@@ -43,16 +46,17 @@ class ExtractedSpectrum:
     # since parameters should not be changed (not enforced though)
 
     def repro_dir(self):
-        return self.XMMPATH + "/{obs}/odf/repro".format(obs=self.obsid)
+        # Cannot use SAS_REPRO because that precludes use with multiple obsids
+        return self.XMMPATH + "/{obs}/repro".format(obs=self.obsid)
 
     # Spectrum
 
     def pha(self):
         fpha = self.repro_dir()
-        if self.instr == "mos1" or self.instr == "mos2":
-            fpha += "/{exp}-{reg}-grp50.pi".format(exp=self.exp, reg=self.reg)
+        if self.instr in ["mos1", "mos2", "mosmerge"]:
+            fpha += "/{exp}-{reg}-{suff}.pi".format(exp=self.exp, reg=self.reg, suff=self.suffix)
         elif self.instr == "pn":  # Use OOT substracted spectrum for PN
-            fpha += "/{exp}-{reg}-os-grp50.pi".format(exp=self.exp, reg=self.reg)
+            fpha += "/{exp}-{reg}-os-{suff}.pi".format(exp=self.exp, reg=self.reg, suff=self.suffix)
         return fpha
 
     def qpb(self):
@@ -68,15 +72,39 @@ class ExtractedSpectrum:
     # Response files
 
     def rmf(self):
+        if self.exp == "mosmerge" and self.marfrmf:
+            return self.repro_dir() + "/{exp}-{reg}.marfrmf".format(exp=self.exp, reg=self.reg)
         return self.repro_dir() + "/{exp}-{reg}.rmf".format(exp=self.exp, reg=self.reg)
 
     def arf(self):
+        if self.exp == "mosmerge" and self.marfrmf:
+            return None
         return self.repro_dir() + "/{exp}-{reg}.arf".format(exp=self.exp, reg=self.reg)
 
-    def arf_fwc(self):
+    # RMF/ARF files to fit instrumental lines in observation data
+    # mosmerge should use "-ff-instr" (merger weighted by obs exposure times)
+    # instead of "-ff" (merger weighted by FWC file exposure times)
+
+    def rmf_instr(self):
+        if self.exp == 'mosmerge':
+            if self.marfrmf:
+                return self.repro_dir() + "/{exp}-{reg}-ff-instr.marfrmf".format(exp=self.exp, reg=self.reg)
+            else:
+                return self.repro_dir() + "/{exp}-{reg}-ff-instr.rmf".format(exp=self.exp, reg=self.reg)
+        return self.repro_dir() + "/{exp}-{reg}-ff.rmf".format(exp=self.exp, reg=self.reg)
+
+    def arf_instr(self):
+        if self.exp == 'mosmerge':
+            if self.marfrmf:
+                return None
+            else:
+                return self.repro_dir() + "/{exp}-{reg}-ff-instr.arf".format(exp=self.exp, reg=self.reg)
         return self.repro_dir() + "/{exp}-{reg}-ff.arf".format(exp=self.exp, reg=self.reg)
 
     def rmf_diag(self):
+        if self.instr == "mosmerge":
+            # mos1/mos2 basically same, ok for merged mos
+            return self.XMMPATH + "/caldb/mos1-diag.rsp"
         return self.XMMPATH + "/caldb/{}-diag.rsp".format(self.instr)
 
     # FWC instrumental line handling

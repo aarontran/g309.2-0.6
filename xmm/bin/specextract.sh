@@ -2,14 +2,17 @@
 
 # Convert DS9 to XMM regions, extract spectra, fit FWC closed spectra
 # run after sourcing sasinit for correct obsid
-#
-# In practice, comment in/out what you need (region creation, specbackgrp,
-# ff_fit)...
 
 # WARNING: hardcoded exposure names for obsids 0087940201 and 0551000201,
 # Assumes the presence of files mos1S001-ori.fits, mos2S002-ori.fits,
 # pnS003-ori.fits from successful {mos,pn}-filter runs.
-exposures="mos1S001 mos2S002 pnS003"
+
+if [[ "$SAS_OBSID" == "0087940201" ]]; then
+  exposures="mos1S001 mos2S002 pnS003"
+elif [[ "$SAS_OBSID" == "0551000201" ]]; then
+  exposures="mos1S001 mos2S002"
+fi
+
 f_regions=$(ls -1 ${XMM_PATH}/regs/*.reg)
 
 start_script="Started specextract: $(date)"
@@ -34,13 +37,15 @@ for f_reg in $f_regions; do
   fi
   echo ""
 
-#  # Must do this to resolve python dependencies
-#  cd $XMM_PATH
-#
-#  for exp in $exps; do
-#    echo "Fitting FWC spectrum lines for $reg $exp"
-#    ff_fit.py --obsid=$SAS_OBSID --reg=$reg --exp=$exp
-#  done
+  cd $SAS_REPRO
+
+  for exp in $exposures; do
+    echo "Fitting FWC spectrum lines for $reg $exp"
+    ff_fit.py "${exp}-${reg}-ff.pi" --exp=$exp
+  done
+  # Need to fit FWC data for mosmerge-* spectra as well
+  echo "Fitting FWC spectrum lines for $reg mosmerge"
+  ff_fit.py "mosmerge-${reg}-ff.pi" --exp="mosmerge"
 done
 
 echo "Done!"
