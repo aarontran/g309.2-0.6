@@ -11381,6 +11381,18 @@ to `ff_fit.py` invocation, therefore rerun.
     atran(sas)@statler:~/g309/xmm$ nohup specextract.sh >& 20160912_specextr_rerun_0087940201.log &
     [1] 16529
 
+Also reran 0551000201 spectra.
+
+
+Monday 2016 October 03
+======================
+
+Long hiatus due to MP work in September.  Where did I leave off?
+
+- Logs from last spectrum extraction runs look good.
+  Not sure why 0087940201 run didn't terminate with "Done!" and timestamps.
+- Invert manuscript plot colors for printing
+
 
 
 Standing questions and TODOs
