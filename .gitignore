@@ -85,6 +85,7 @@ chandra/*/00README
 *.flatarf
 *.flatrmf
 *.marfrmf
+*.flatmarfrmf
 
 # PDF files
 *.pdf

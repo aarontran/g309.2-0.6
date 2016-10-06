@@ -38,9 +38,9 @@ chdir($ENV{'SAS_REPRO'});
 
 announce("Create temporary spectra to satisfy mathpha");
 for my $exp (@EXPS) {
-    run_and_say("cp ${exp}-${RSTEM}.pi     ${exp}_${RSTEM}.pi");
-    run_and_say("cp ${exp}-${RSTEM}-qpb.pi ${exp}_${RSTEM}_qpb.pi");
-    run_and_say("cp ${exp}-${RSTEM}-ff.pi  ${exp}_${RSTEM}_ff.pi");
+    run_and_say("cp ${exp}-${RSTEM}.pi     ${exp}_${RSTEM}.pi");   # outputs -> @obj_pha
+    run_and_say("cp ${exp}-${RSTEM}-qpb.pi ${exp}_${RSTEM}_qpb.pi");  # outputs -> @obj_qpb
+    run_and_say("cp ${exp}-${RSTEM}-ff.pi  ${exp}_${RSTEM}_ff.pi");  # outputs -> @fwc_pha
 }
 
 # Expected filenames, with mathpha-compatible temporary copies
@@ -49,11 +49,14 @@ my @obj_pha = map { "${_}_${RSTEM}.pi" } @EXPS;  # Note underscores
 my @obj_qpb = map { "${_}_${RSTEM}_qpb.pi" } @EXPS;  # Note underscores
 my @obj_rmf = map { "${_}-${RSTEM}.rmf" } @EXPS;
 my @obj_arf = map { "${_}-${RSTEM}.arf" } @EXPS;
-my @obj_weights = exposure_weights(@obj_pha);
+my @obj_flatrmf = map { "${_}-${RSTEM}.flatrmf" } @EXPS;
+my @obj_flatarf = map { "${_}-${RSTEM}.flatarf" } @EXPS;
 
 my @fwc_pha = map { "${_}_${RSTEM}_ff.pi" } @EXPS;  # Note underscores
 my @fwc_rmf = map { "${_}-${RSTEM}-ff.rmf" } @EXPS;
 my @fwc_arf = map { "${_}-${RSTEM}-ff.arf" } @EXPS;
+
+my @obj_weights = exposure_weights(@obj_pha);
 my @fwc_weights = exposure_weights(@fwc_pha);
 
 
@@ -62,6 +65,9 @@ merge_pha(\@obj_pha,		    "${MERGEXP}-${RSTEM}.pi");
 merge_pha(\@obj_qpb,		    "${MERGEXP}-${RSTEM}-qpb.pi");
 merge_rmf(\@obj_rmf, \@obj_weights, "${MERGEXP}-${RSTEM}.rmf");
 merge_arf(\@obj_arf, \@obj_weights, "${MERGEXP}-${RSTEM}.arf");
+
+merge_rmf(\@obj_flatrmf, \@obj_weights, "${MERGEXP}-${RSTEM}.flatrmf");
+merge_rmf(\@obj_flatarf, \@obj_weights, "${MERGEXP}-${RSTEM}.flatarf");
 
 announce("Merging FWC pha, rmf, arf files");
 merge_pha(\@fwc_pha,		    "${MERGEXP}-${RSTEM}-ff.pi");
@@ -81,15 +87,17 @@ merge_arf(\@fwc_arf, \@obj_weights, "${MERGEXP}-${RSTEM}-ff-instr.arf");
 announce("Multiplying observation & FWC rmf,arf files");
 my @obj_marfrmf = map { "${_}-${RSTEM}.marfrmf" } @EXPS;;
 my @fwc_marfrmf = map { "${_}-${RSTEM}-ff.marfrmf" } @EXPS;;
+my @obj_flatmarfrmf = map { "${_}-${RSTEM}.flatmarfrmf" } @EXPS;;
 for my $i (0..$#obj_pha) {
-    my $exp = $EXPS[$i];
     marfrmf($obj_rmf[$i], $obj_arf[$i], $obj_marfrmf[$i]);
     marfrmf($fwc_rmf[$i], $fwc_arf[$i], $fwc_marfrmf[$i]);
+    marfrmf($obj_flatrmf[$i], $obj_flatarf[$i], $obj_flatmarfrmf[$i]);
 }
 announce("Merging multiplied rmf,arf files (correct merger weighting)");
 merge_rmf(\@obj_marfrmf, \@obj_weights, "${MERGEXP}-${RSTEM}.marfrmf");
 merge_rmf(\@fwc_marfrmf, \@fwc_weights, "${MERGEXP}-${RSTEM}-ff.marfrmf");
 merge_rmf(\@fwc_marfrmf, \@obj_weights, "${MERGEXP}-${RSTEM}-ff-instr.marfrmf");
+merge_rmf(\@obj_flatmarfrmf, \@obj_weights, "${MERGEXP}-${RSTEM}.flatmarfrmf");
 
 announce("Apply standard keywording (use .marfrmf files)");
 run_and_say("grppha infile=\"${MERGEXP}-${RSTEM}.pi\""
@@ -113,11 +121,16 @@ run_and_say("grppha infile=\"${MERGEXP}-${RSTEM}.pi\""
 	    . " outfile=\"!${MERGEXP}-${RSTEM}-grp50.pi\""
 	    . " comm=\"group min 50 & exit\"");
 
-announce("Remove temporary spectra");
+announce("Remove temporary spectra & exposure-specific multiplied RMF/ARF files");
 for my $exp (@EXPS) {
-    run_and_say("rm ${exp}_${RSTEM}.pi");
-    run_and_say("rm ${exp}_${RSTEM}_qpb.pi");
-    run_and_say("rm ${exp}_${RSTEM}_ff.pi");
+    run_and_say("rm ${exp}_${RSTEM}.pi");  # equivalent to @obj_pha
+    run_and_say("rm ${exp}_${RSTEM}_qpb.pi");  # equivalent to @obj_qpb
+    run_and_say("rm ${exp}_${RSTEM}_ff.pi");  # equivalent to @fwc_pha
+    # These are needed to create merged .marfrmf files, but alone are
+    # equivalent to loading RMF/ARF files separately, so are not needed
+    run_and_say("rm ${exp}-${RSTEM}.marfrmf");  # equivalent to @obj_marfrmf
+    run_and_say("rm ${exp}-${RSTEM}-ff.marfrmf");  # equivalent to @fwc_marfrmf
+    run_and_say("rm ${exp}-${RSTEM}.flatmarfrmf");  # equivalent to @obj_flatmarfrmf
 }
 
 ###############################################################################

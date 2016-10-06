@@ -17,7 +17,7 @@ class ExtractedSpectrum:
     FIDUCIAL_BACKSCAL = temp[1].header['backscal']
     del temp  # This is kind of roundabout, but leads to the desired effect
 
-    def __init__(self, obsid, exp, reg, suffix="grp01", marfrmf=False):
+    def __init__(self, obsid, exp, reg, suffix="grp01", marfrmf=True):
         """Create ExtractedSpectrum
         suffix: specify desired grouping via filename suffix (grp01 or grp50)
         marfrmf: iff exp="mosmerge", marfrmf=True specifies use of
@@ -106,6 +106,16 @@ class ExtractedSpectrum:
             # mos1/mos2 basically same, ok for merged mos
             return self.XMMPATH + "/caldb/mos1-diag.rsp"
         return self.XMMPATH + "/caldb/{}-diag.rsp".format(self.instr)
+
+    def rmf_flat(self):
+        if self.exp == "mosmerge" and self.marfrmf:
+            return self.repro_dir() + "/{exp}-{reg}.flatmarfrmf".format(exp=self.exp, reg=self.reg)
+        return self.repro_dir() + "/{exp}-{reg}.flatrmf".format(exp=self.exp, reg=self.reg)
+
+    def arf_flat(self):
+        if self.exp == "mosmerge" and self.marfrmf:
+            return None
+        return self.repro_dir() + "/{exp}-{reg}.flatarf".format(exp=self.exp, reg=self.reg)
 
     # FWC instrumental line handling
 

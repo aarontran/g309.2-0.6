@@ -1,40 +1,16 @@
 #!/usr/local/bin/python
 """
-Run fits.  Code is tightly coupled to "g309_models.py".
-Must be run in a sasinit-sourced environment
+Run fits.  Loaded in an interactive session, allows one to load data, fit,
+compute parameter errors, etc.  Must be run in a sasinit-sourced environment
 
-Outputs: user-choice.  nominally can produce plots, data dumps,
-fit log dumps, LaTeX table dumps, etc.
+Code is tightly coupled to "g309_models.py", and changes to pipeline will
+require edits to both scripts.
 
-Goal is to sit at interface of scripting + interactive work...
+USAGE (drop the user into a nice interactive session with necessary modules):
 
-As an end user I want to:
-1. run interactive PyXSPEC sessions, but call methods from this script
-   to skip over boilerplate
-   (load tbnew_gas, dump data quickly, etc.)
-2. run script sessions -- call methods from this script, let fits run,
-   dump outputs automatically (specified as method arguments or command line
-   options)
-3. record my interactive work.
-   sometimes, save interactive work.
-
-This would be well covered with the iPython notebook (or Jupyter),
-but the way PyXSPEC works (lots of terminal logging and copious output) doesn't
-play nice with jupyter.
-
-The method I have settled on is to save interactive sessions to methods,
-which essentially serve as a log of my analyses for re-running later.
-
-One possible pitfall is that g309_models and g309_fits have a lot of hard-coded
-pieces.
-E.g., if I change g309_models to use 3 spectra instead of 5 for each region,
-all the old methods will break horribly.
-
-In a lot of cases we are forced to address spectra, models by hand (using XSPEC
-numbering or whatever instead of semantic descriptors).
-
-USAGE (drop the user into a nice interactive session with necessary modules)
     from g309_fits import *
+    prep_xs(with_xs=True, statmethod='pgstat')
+    ...
 """
 
 from __future__ import division
@@ -535,11 +511,11 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
     backscal_ratio_hack = arbitrary adjustment to 0551000201 MOS1S001
         source region backscal ratio.
         This was the smallest geometric w.r.t. 0087940201 MOS1 (ratio 0.88).
-        But, because the missing area (missing chip #6) sampled little of the
-        remnant, I thought that this ratio might be an underestimate of the
-        true sampled remnant flux, and therefore introduced an arbitrary ratio
-        adjustment to 0.95 in some fits.
-        Build in this parameter as a way to explore fit scaling tension.
+        Because the missing area (missing chip #6) sampled little of the
+        remnant, I thought that this ratio might underestimate the sampled
+        remnant flux, so I arbitrary changed the BACKSCAL ratio to 0.95 in some
+        fits.
+        Retain this parameter as a way to explore fit systematics.
 
     Arguments
         output: file stem string
@@ -548,11 +524,9 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
             if [], use solar abundances
         error: perform single error run
         backscal_ratio_hack: see above
-        tau_freeze: freeze ionization timescale to some value
-        kwargs - options for data/model loader
-            (suffix to set grouping,
-             mosmerge to use merged spectra,
-             marfrmf for pre-multiplied ARF/RMF files)
+        tau_freeze: freeze ionization timescale to provided value
+        kwargs - passed to g309_models.load_data_and_models
+            (suffix, mosmerge, marfrmf)
     """
     if free_elements is None:
         free_elements = ['Si', 'S']
@@ -577,6 +551,7 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
                 {xrb.apec_6.norm.index : 1e-3} )
     xrb.apec.kT.frozen = True
     xrb.tbnew_gas.nH.frozen = True
+    xrb.tbnew_gas_5.nH.frozen = True
     xrb.apec_6.kT.frozen = True
     xrb.apec.norm.frozen = True
     xrb.apec_6.norm.frozen = True
@@ -637,7 +612,8 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
     # XRB is not as well constrained as SNR, and fits w/ XRB free
     # (and SNR at default vnei values) tend to run away
     xrb.apec.kT.frozen = False
-    xrb.tbnew_gas.nH.frozen = False
+    xrb.tbnew_gas.nH.frozen = False  # tbnew_gas * powerlaw
+    xrb.tbnew_gas_5.nH.frozen = False  # tbnew_gas_5 * apec_6
     xrb.apec_6.kT.frozen = False
     xrb.apec.norm.frozen = False
     xrb.apec_6.norm.frozen = False

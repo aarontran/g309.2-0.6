@@ -11384,19 +11384,113 @@ to `ff_fit.py` invocation, therefore rerun.
 Also reran 0551000201 spectra.
 
 
-Monday 2016 October 03
-======================
+Monday--Friday 2016 October 03-07
+=================================
 
 Long hiatus due to MP work in September.  Where did I leave off?
 
 - Logs from last spectrum extraction runs look good.
   Not sure why 0087940201 run didn't terminate with "Done!" and timestamps.
 - Invert manuscript plot colors for printing
+- First-pass read of some MCMC papers; background for XSPEC `chain` command
 
+Pat emphasizes that uncertainty in our model, and just plain old noise, are
+such that detailed MCMC sampling will not let us get more insight.  At this
+point, it might just yield faster error runs (and even that is not certain).
+
+Main changes made in last round(s) of work:
+- modify XRB model setup and parameters
+- fix serious errors in point source exclusion
+- set up MOS1/2 merger, hash out RMF/ARF merging and detector map weighting
+- refreshed all FWC data fits for new instrumental line numbers
+
+I reviewed the spectrum and RMF/ARF extraction setup, which generates a slew of
+files.  Now, also create flat RMF/ARF files for merged mos spectra and remove
+unneeded intermediate `.marfrmf` files.  The setup for my modeling is:
+
+    RMF/ARF file                    Detector map    Merger weights (exposure times)
+    -------------------------------------------------------------------------------
+    mosmerge-src.{rmf,arf}          Observation     Observation
+    mosmerge-src-ff.{rmf,arf}       FWC             FWC
+    mosmerge-src-ff-instr.{rmf,arf} FWC             Observation
+    mosmerge-src.flat{rmf,arf}      Flat            Observation
+
+    mosmerge-src.marfrmf            Observation     Observation
+    mosmerge-src-ff.marfrmf         FWC             FWC
+    mosmerge-src-ff-instr.marfrmf   FWC             Observation
+    mosmerge-src.flatmarfrmf        Flat            Observation
+
+
+    Model component     Indiv. exposure RMF,ARF     Merged exposure RMF,ARF
+    -----------------------------------------------------------------------
+    SNR plasma          -src.{rmf,arf}              -src.marfrmf
+    X-ray background    -src.{flatrmf,flatarf}      -src.flatmarfrmf
+    Soft protons        -diag.rsp (no ARF)          -diag.rsp (no ARF)
+    Instr. lines        -ff.{rmf,arf}               -ff-instr.marfrmf
+
+
+    o `.{rmf,arf}`: RMF and ARF files were merged independently.
+    o `.marfrmf`: individual exposures' RMF,ARF files were multiplied together
+      before being merged, which I believe is the formally correct approach
+    o Recall that FWC ARFs disable vignetting and filter corrections
+
+Start up the fitting process again.  Some sample code, fiddling with XSPEC
+chain command.
+
+    # Using grp50 and chi-squared to save time (runtime: ~6 min.)
+    # takes some 7 minutes to load and fit?
+    from g309_fits import *
+    prep_xs(with_xs=True, statMethod='chi')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161006_testing", error=False, mosmerge=True, suffix='grp50')
+
+    snr = xs.AllModels(1, 'snr_src')
+    xrb = xs.AllModels(1, 'xrb')
+
+
+    c = stopwatch(xs.Chain, "test.txt", fileType="ascii", burn=0, runLength=500, algorithm="gw", walkers=10)
+    stopwatch(c.run)  # To add additional chains
+
+    xs.Fit.error(error_str_all_free(snr))
+    xs.Fit.error(error_str_all_free(xrb))
+
+    # Really really cool plots
+    import corner
+    a = np.loadtxt('test.txt',comments='!')
+    corner.corner(a[:,18:23], labels=['nH', 'kT', 'Si', 'S', 'Tau'], quantiles=[0.16,0.5,0.84], bins=10)
+    plt.plot(a[:,18])
+
+
+Had pretty good output with runLength=1000, walkers=500, but I was worried that
+the individual walkers' steps (~2-10 iterations) were not enough to get past
+burn-in.
+But, because the stretch move is coupled to the population's positions, the
+last walker's first move will be "better" than the first walker's first move.
+So maybe the burn-in for an individual walker can be quite short.
+
+Alternative, running with runLength=500 and walkers=10 does not look good at
+all!
+
+Need to run the following fits
+- grp01, pgstat
+- grp50, chi-squared
+- grp01, pgstat with MOS1/2 merged  (usual error + MCMC run)
+- grp50, chi-squared with MOS1/2 merged  (usual error + MCMC run)
+
+Direct comparison of fits is difficult because many details keep changing.
+
+Cannot actually run anything because of downtime; CDP servers will be
+unavailable.  Set these up later tonight, then.
 
 
 Standing questions and TODOs
 ============================
+
+[ ] Think about iron. Understand why we are not seeing Fe-K (or Fe-L)?
+    E.g. Yang+ (2013, ApJ 766) Figure 2 shows Suzaku spectra of 6 bright
+    young ED SNRs with clear Fe emission detections.
+    Why do our ionization age, temperature, abundance, etc. disfavor Fe
+    detection?
+    Stratification / incomplete shocking?
 
 [ ] TODO: mention #s from de Luca & molendi SP check criterion
 

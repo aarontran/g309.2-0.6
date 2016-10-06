@@ -19,7 +19,7 @@ from ExtractedSpectrum import ExtractedSpectrum
 
 
 def load_data_and_models(regs, snr_model='vnei', suffix='grp01',
-                         mosmerge=False, marfrmf=False):
+                         mosmerge=True, marfrmf=True):
     """
     Load G309.2-0.6 data and initialize responses and models.
 
@@ -147,9 +147,6 @@ def load_instr(model_n, model_name, extr):
     extr.spec.multiresponse[model_n - 1].arf = extr.arf_instr()
 
     fit_dict = extr.fwc_fit()
-    # DEBUGGING...
-    print fit_dict.keys()
-    print fit_dict['1'].keys()
     instr = xs.Model("constant * (" + fit_dict['1']['instr']['expression'] + ")",
                      model_name, model_n)
 
@@ -352,8 +349,8 @@ def load_cxrb(model_n, model_name, extracted_spectra):
 
     # Set responses of <xs.Spectrum> objects
     for extr in extracted_spectra:
-        extr.spec.multiresponse[model_n - 1]     = extr.rmf()
-        extr.spec.multiresponse[model_n - 1].arf = extr.arf()
+        extr.spec.multiresponse[model_n - 1]     = extr.rmf_flat()
+        extr.spec.multiresponse[model_n - 1].arf = extr.arf_flat()
 
     # Initialize XRB model with reasonable "global" parameters
     xrb = xs.Model("constant * (apec + tbnew_gas*powerlaw + tbnew_gas*apec)",

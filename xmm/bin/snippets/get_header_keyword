@@ -1,7 +1,7 @@
 #!/bin/bash
 
 obsids="0087940201 0551000201"
-exps="mos1S001 mos2S002 pnS003"
+exps="mos1S001 mos2S002 pnS003 mosmerge"
 
 keyword=$1
 suffix=$2
@@ -9,7 +9,7 @@ suffix=$2
 for obsid in $obsids; do
   for exp in $exps; do
 
-    evli="${XMM_PATH}/${obsid}_back/odf/repro/${exp}-${suffix}"
+    evli="${XMM_PATH}/${obsid}/repro/${exp}-${suffix}"
 
     if [[ -f "$evli" ]]; then
       fkeypar $evli $keyword
