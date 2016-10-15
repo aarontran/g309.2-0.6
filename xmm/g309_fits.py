@@ -505,7 +505,7 @@ def src_powerlaw(output, region='src', solar=False, error=False):
 
 def joint_src_bkg_fit(output, free_elements=None, error=False,
                       error_rerun=False, backscal_ratio_hack=None,
-                      tau_freeze=None, **kwargs):
+                      tau_scan=True, tau_freeze=None, **kwargs):
     """
     Fit source + bkg regions, allowing XRB to float
     backscal_ratio_hack = arbitrary adjustment to 0551000201 MOS1S001
@@ -524,6 +524,7 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
             if [], use solar abundances
         error: perform single error run
         backscal_ratio_hack: see above
+        tau_scan: steppar over plausible Tau values to ensure convergence to "correct" best fit
         tau_freeze: freeze ionization timescale to provided value
         kwargs - passed to g309_models.load_data_and_models
             (suffix, mosmerge, marfrmf)
@@ -544,8 +545,8 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
 
     # Reset XRB to "typical" values, do NOT vary yet
     xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
-                {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Extragalactic absorption
-                {xrb.tbnew_gas_5.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Ridge absorption
+                {xrb.tbnew_gas.nH.index : "1, , 0.1, 0.5, 5, 10"},  # Extragalactic absorption
+                {xrb.tbnew_gas_5.nH.index : "1, , 0.1, 0.5, 5, 10"},  # Ridge absorption
                 {xrb.apec_6.kT.index : "0.5, , 0, 0, 2, 4"},  # Galactic ridge (+ minimal halo maybe)
                 {xrb.apec.norm.index : 1e-3},
                 {xrb.apec_6.norm.index : 1e-3} )
@@ -619,6 +620,21 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
     xrb.apec_6.norm.frozen = False
     xs.Fit.perform()
 
+    # SNR Tau is not well constrained in general fits.
+    # Either converges to ~2-3e10, or runs to 5e13
+    # Grid over (roughly): [1e9, 2e9, 5e9, 1e10, 2e10, 5e10, ... 1e13]
+    if tau_scan:
+        if 'snr_model' not in kwargs or kwargs['snr_model'] in ['vnei', 'vnei+nei']:
+            xs.Fit.steppar("log snr_src:{:d} 1e9 1e13 13".format(
+                                xs_utils.par_num(snr, snr.vnei.Tau)))
+        elif kwargs['snr_model'] == 'vpshock':
+            # Since Tau_u is constrained to be greater than Tau_l
+            # this ensures that both Tau_u and Tau_l traverse a range of values
+            xs.Fit.steppar("log snr_src:{:d} 1e9 1e13 13".format(
+                                xs_utils.par_num(snr, snr.vpshock.Tau_u)))
+        else:
+            raise Exception("Invalid SNR MODEL not configured for tau scan")
+
     if error:
 
         xs.Xset.openLog(output + "_error.log")
@@ -644,9 +660,11 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
     print_model(snr, output + "_snr_src.txt")
     print_model(xrb, output + "_xrb.txt")
 
-    # This should not be needed -- basically duplicates setplot addcomp
-    # functionality
+    # TODO This should not be needed -- basically duplicates setplot addcomp
+    # functionality.  Need to set up xs_replotter to work with distinct
+    # components.
     if 'snr_model' in kwargs and kwargs['snr_model'] == 'vnei+nei':
+        raise Exception("FIX ME!")
         # Zero out ejecta vnei component to isolate ISM nei contribution
         norm_vnei = snr.vnei.norm.values[0]
         snr.vnei.norm = 0
@@ -853,33 +871,52 @@ if __name__ == '__main__':
     # N.B. if you actually run this code, insert clear() between all calls.
     # but best not to run these fits sequentially...
 
-    # Integrated source fits
-    # ----------------------
+    # Integrated source fits - standard setup
+    # ---------------------------------------
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp01_pgstat_mosmerge",
+              error=True, error_rerun=True, mosmerge=True, suffix='grp01')
+    # Time: ? hrs on statler (running now)
 
-    stopwatch(joint_src_bkg_fit,
-            "results_spec/20160904_src_bkg_stock_newpipeline-pgstat",
-            error=True, error_rerun=True)
-    # new time (pgstat): 6.6 hrs on statler
-    #stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_stock",
-    #          error=True, error_rerun=True)
-    # Time: 2.6 hrs on statler
+    prep_xs(with_xs=True, statMethod='chi')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp50_chi_mosmerge",
+              error=True, error_rerun=True, mosmerge=True, suffix='grp50')
+    # Time: ? hrs on statler (running now)
 
-    stopwatch(joint_src_bkg_fit,
-            "results_spec/20160906_src_bkg_stock_newpipeline-grp50-chi",
-            error=True, error_rerun=True, suffix='grp50')
-    # Time: 3.8 hrs on statler (NOTE: must set
-    # prep_xs(with_xs=True, statMethod='chi')
-    # before running)
-    stopwatch(joint_src_bkg_fit,
-            "results_spec/20160906_src_bkg_stock_newpipeline-pgstat-mosmerge",
-            error=True, error_rerun=True, mosmerge=True)
-    # Time: ... uncertain (initial fit failed to apply energy cuts)
-    # expect ~3-4 hrs
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp01_pgstat_nomerge",
+              error=True, error_rerun=True, mosmerge=False, suffix='grp01')
+    # Time: (6.6?) hrs on statler (running now)
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160712_src_bkg_mg",
-              free_elements=["Mg", "Si", "S"], error=True)
-    # Time: 1.5 hrs on statler
-    # Time without error: ~2 minutes (4 minutes on treble)
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp50_chi_nomerge",
+              error=True, error_rerun=True, mosmerge=False, suffix='grp50')
+    # Time: (3.8?) hrs on cooper (running now)
+
+    # Reset stat method - to be safe
+    prep_xs(with_xs=True, statMethod='pgstat')
+
+    # Integrated source fits - varied abundances
+    # ------------------------------------------
+    # Note: snr_model='vnei', mosmerge=True, suffix='grp01' are current
+    # (October 2016) defaults
+
+    # Conservative run: just get clear emission lines
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_mg",
+              free_elements=['Mg', 'Si', 'S'],
+              error=True, error_rerun=True)
+    # Time: ? hrs on cooper (running now)
+    # Time without error: ? hours
+
+    # Conservative run: just get clear emission lines + possible Ar, Ca bumps
+    # around 3-4 keV
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_mg-ar-ca",
+              free_elements=['Mg', 'Si', 'S', 'Ar', 'Ca'],
+              error=True, error_rerun=True)
+    # Time: ? hrs on cooper (running now)
+
+    ##### OLD, NOT YET UPDATED RUNS #####
 
     stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_o-ne-mg-fe",
               free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], error=True,

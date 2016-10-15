@@ -11459,7 +11459,6 @@ chain command.
     corner.corner(a[:,18:23], labels=['nH', 'kT', 'Si', 'S', 'Tau'], quantiles=[0.16,0.5,0.84], bins=10)
     plt.plot(a[:,18])
 
-
 Had pretty good output with runLength=1000, walkers=500, but I was worried that
 the individual walkers' steps (~2-10 iterations) were not enough to get past
 burn-in.
@@ -11470,16 +11469,151 @@ So maybe the burn-in for an individual walker can be quite short.
 Alternative, running with runLength=500 and walkers=10 does not look good at
 all!
 
-Need to run the following fits
-- grp01, pgstat
-- grp50, chi-squared
-- grp01, pgstat with MOS1/2 merged  (usual error + MCMC run)
-- grp50, chi-squared with MOS1/2 merged  (usual error + MCMC run)
-
+Ran the following fits w/ standard brute-force error runs.
 Direct comparison of fits is difficult because many details keep changing.
+- grp01, pgstat, MOS merge      (`20161007_src_bkg_stock_grp01_pgstat_mosmerge`)
+- grp50, chi-squared, MOS merge (`20161007_src_bkg_stock_grp50_chi_mosmerge`)
+- grp01, pgstat, no merge       (`20161007_src_bkg_stock_grp01_pgstat_nomerge`)
+- grp50, chi-squared, no merge  (`20161007_src_bkg_stock_grp50_chi_nomerge`)
 
-Cannot actually run anything because of downtime; CDP servers will be
-unavailable.  Set these up later tonight, then.
+
+Wednesday--Friday 2016 October 12-14
+====================================
+
+Assess fit results to compare parameter estimation w/ different fit setups
+--------------------------------------------------------------------------
+
+I did the following adjustments:
+- repeat grp01, pgstat, MOS merge fit.  After fit converged, manually coaxed
+  to better, "standard" fit with Tau ~2e10 that is formally favored (lower
+  pgstat) over the previously stuck fit with Tau ~ 5e13 (CIE plasma).
+
+    Fit stuck at CIE plasma: pgstat = 14487.9, chisq-red = 1.046, chisq = 13349
+    Fmanual fit: pgstat = 14222.23, chisq-red = 1.028, chisq = 13118
+
+- starting from the result [1] of `20161007_src_bkg_stock_grp01_pgstat_mosmerge`,
+  push the fit to Tau ~ 2e10 and re-run error commands.
+  Output: `20161007_src_bkg_stock_grp01_pgstat_mosmerge_STEPPAR`
+- starting from the result [1] of `20161007_src_bkg_stock_grp50_chi_nomerge`,
+  attempt to force the fit to non-zero powerlaw absorption (expected on
+  physical grounds).  This worked, but the fit was not formally better.
+  When I reran error commands, the fit returned to the stuck state.
+
+Something I don't understand: the "grp50, chi, nomerge" fit has quite high test
+statistic (chi-squared ~ 1.25), whereas all the other fits have chi-squared
+closer to 1 or 1.1.
+
+### Comparison
+
+I generated a plot of parameters for these 4 different fits to compare
+side-by-side.  Most parameters agree within error and have reasonably tight
+spread, but a lot are mutually incompatible.
+So we should be aware of, and concerned about, systematic biases.
+
+I also plotted and inspected SNR and XRB spectra from all fits.
+No obvious, by eye, differences.
+Plotting merged MOS spectra is easier to take in and helps emphasizes features
+of interest.
+
+The fit with grp50/chi & un-merged MOS spectra, which has one unphysical
+XRB absorption component, 
+
+To help fix fits:
+- adjusted XRB parameter bounds (require at least 0.1e22 absorption for both
+  ridge and powerlaw components)
+- initialize SNR VNEI Tau at 1e11 (for single ionization age components)
+- scan (steppar) over plausible Tau values 1e9 to 1e13; do so by default
+
+### Digression
+
+I am not a big fan of this procedure, because it could reinforce experimenter
+bias.  But it seems clear that  we cannot make clear statistical inferences due
+to the unquantified systematics and high background in this study.
+
+We must accept that our fits are manual searchs of likelihood space, if we are
+not going to survey parameter grids carefully.
+Although variation in parameter space is significant, we are already dealing
+with more variation due to our model assumptions (which elemental abundances
+are non-solar, number of NEI components, etc...).
+Best if we can say, we did grid over a few parameters of interest at least 1x
+or 2x.
+MCMC sampling does not solve the multi-mode problem.
+
+Next steps
+----------
+
+Redo all fits, again, due to changed initial parameter values & changed
+parameter bounds.
+Go ahead and throw in varied abundance fits for grp01-pgstat-mosmerge (new
+standard setup) to move things forward.
+
+    # Run "from g309_fits import *" for each session
+
+    # On statler
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp01_pgstat_mosmerge",
+              error=True, error_rerun=True, mosmerge=True, suffix='grp01')
+    prep_xs(with_xs=True, statMethod='chi')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp50_chi_mosmerge",
+              error=True, error_rerun=True, mosmerge=True, suffix='grp50')
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp01_pgstat_nomerge",
+              error=True, error_rerun=True, mosmerge=False, suffix='grp01')
+
+    # On cooper
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp50_chi_nomerge",
+              error=True, error_rerun=True, mosmerge=False, suffix='grp50')
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_mg",
+              free_elements=['Mg', 'Si', 'S'],
+              error=True, error_rerun=True)
+    prep_xs(with_xs=True, statMethod='pgstat')
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_mg-ar-ca",
+              free_elements=['Mg', 'Si', 'S', 'Ar', 'Ca'],
+              error=True, error_rerun=True)
+
+    # Note that default configuration now uses MOS merged spectra, w/ no grouping
+
+TODO: the statMethod setup is a little ugly.
+
+Meanwhile, also setup for MCMC runs of varied length on treble (!) this weekend.
+
+
+Aside on plotted error bars & grouping
+--------------------------------------
+
+Error bars on XSPEC-grouped data, for fits to ungrouped data, are rather small.
+Error bars on grppha-grouped data are quite a bit larger.  Why is this?
+
+Answer: different binning.
+For pgstat, I rebin to minimum significance 5 sigma (max # of bins: 50).
+Whereas with grppha, I rebin to minimum 50 counts/bin.
+
+What does XSPEC's rebinning significance mean?
+
+If significance = probability of detection of counts above zero...
+the sqrt(n) error on 50 counts is ~7.  From Gehrels 1984, 3-sigma = 0.997,
+5-sigma = 0.99999943 (no upper/lower error bounds 5-sigma in Gehrels).
+I'd expect 5-sigma error bounds like 50 --> [15, 85].  At 3-sigma, I'd
+similarly expect 50 --> [30, 70]; the true values are [31, 75] which is about
+right for the lower bound.
+
+So I would think that 50 counts/bin is consistent with 5 sigma significance.
+But, this is clearly not the case; binning to 5 sigma results in many more
+counts/bin in the resulting plot.
+
+
+How to show residuals in a sensible manner?
+-------------------------------------------
+
+With pgstat and no binning, we must group the data for presentation.
+But, because we are fitting to pgstat, chi-squared residuals don't necessarily
+make sense, and may appear to show bias when the fit is actually not at all
+biased.
+
+Paul Plucinsky (E0102 calibration paper, 2016) uses W-stat and plots ratio.
+
 
 
 Standing questions and TODOs
