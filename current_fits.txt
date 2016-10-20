@@ -2,6 +2,45 @@ Standing catalog of useful fits
 ===============================
 Only as good as last commit time.
 
+Integrated remnant
+------------------
+
+20161015_src_bkg_grp01_pgstat_mosmerge.json
+  Variant binning:
+    20161015_src_bkg_grp01_pgstat_nomerge.json
+    20161015_src_bkg_grp50_chi_mosmerge.json
+    20161016_src_bkg_grp50_chi_nomerge.json  # 20161015 version erroneously used pgstat, removed.
+  MCMC foray:
+    20161019_src_bkg_mg_mcmc.json
+  Variant remnant models
+    20161020_src_bkg_vpshock_mg.json
+
+20161015_src_bkg_mg.json
+20161015_src_bkg_mg-ar-ca.json
+
+Annulus fits
+------------
+
+(running now)
+20161019_fiveann.json
+20161019_fiveann_mg.json
+20161019_fourann.json
+20161019_fourann_mg.json
+  Variants -- quick look data to compare results pre/post-error runs.
+    20161019_fourann_NOERR.json
+    20161019_fourann_mg_NOERR.json
+    20161019_fiveann_NOERR.json
+    20161019_fiveann_mg_NOERR.json
+
+Sub-regions
+-----------
+
+tbd
+
+
+Outdated catalog (bad point source removal, cruder XRB model)
+=============================================================
+
 20160701_fiveann
 20160625_fiveann_center-mg-free     # Used old XRB params
 20160701_fiveann_center-mg-fe-free
@@ -44,3 +83,4 @@ Only as good as last commit time.
 20160630_src_powerlaw_solar
     20160630_src_powerlaw_solar_powerlaw-only
     20160630_src_powerlaw_solar_vnei-only
+

@@ -151,7 +151,7 @@ def load_instr(model_n, model_name, extr):
                      model_name, model_n)
 
     # Set parameters all at once
-    parlist = [1]  # Set constant factor to 1
+    parlist = ["1, , 0.1, 0.1, 10, 10"]  # Set constant factor to 1 (range: 0.1-10)
     for cname in fit_dict['1']['instr']['componentNames']:
         parlist.extend([fit_dict['1']['instr'][cname]['LineE']['value'],
                         fit_dict['1']['instr'][cname]['Sigma']['value'],
@@ -208,7 +208,7 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         src.vnei.Si.frozen = True
     elif case == 'vnei+powerlaw':
         # Apply fitting bounds
-        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
                      src.vnei.S.index : "1, , , , 10, 10",  # upper bound only
                      src.vnei.Si.index : "1, , , , 10, 10"} )  # upper bound only
@@ -220,7 +220,7 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         src.vnei.Si.frozen = True
     elif case == 'vnei+srcutlog':
         # Apply fitting bounds
-        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
                      src.vnei.S.index : "1, , , , 10, 10",  # upper bound only
                      src.vnei.Si.index : "1, , , , 10, 10",  # upper bound only
@@ -237,7 +237,7 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         src.srcutlog.__getattribute__('break').frozen = False  # break reserved in Python...
     elif case == 'vnei+nei':
         # Apply fitting bounds
-        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bounds only
                      src.vnei.S.index : "1, , , , 10, 10",
                      src.vnei.Si.index : "1, , , , 10, 10",
@@ -250,10 +250,10 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         src.nei.kT.frozen = True
         src.nei.Tau.frozen = True
     elif case == 'vpshock':
-        src.tbnew_gas.nH = 1
-        src.vpshock.kT = 1
-        src.vpshock.Tau_l = 1e9
-        src.vpshock.Tau_u = 1e11
+        src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained
+                     src.vpshock.kT.index : "1, , , , 10, 10",  # upper bound only
+                     src.vpshock.Tau_l.index : 1e9,     # no bounds, set reasonable initial value
+                     src.vpshock.Tau_u.index : 1e11})  # no bounds, set reasonable initial value
     elif case == 'vsedov':
         raise Exception("Need to test vsedov further, doesn't work")
         #src = xs.Model("constant * tbnew_gas * vsedov", model_name, model_n)
@@ -370,20 +370,17 @@ def load_cxrb(model_n, model_name, extracted_spectra):
     # Therefore, scale down EXRB normalization from 10.9 --> (1-0.39)*10.9
     exrb_norm = 0.61 * 10.9 * (180/pi)**-2 * 60**-4 * (1/0.05)**-2 * ExtractedSpectrum.FIDUCIAL_BACKSCAL
 
-    # TODO TODO TODO TODO TODO TODO need a new set of parameters
-    # Temporarily fix both absorption parameters to same value,
-    # unchanged from before
     # NOTE HARDCODED -- best fit values from src/bkg combined fit
     # after error runs on some parameters of interest
-    # Corresponds to: 20160624_src_bkg_nohack_rerun.log outputs
+    # Corresponds to: 20161015_src_bkg_mg.log outputs
     xrb.setPars({xrb.powerlaw.PhoIndex.index : 1.4,
                  xrb.powerlaw.norm.index : exrb_norm,
-                 xrb.apec.kT.index : 0.262,  # Unabsorped apec (local bubble)
-                 xrb.tbnew_gas.nH.index : 1.321,  # Galactic absorption
+                 xrb.apec.kT.index : 0.265,  # Unabsorped apec (local bubble)
+                 xrb.apec.norm.index : 2.36e-4,
+                 xrb.tbnew_gas.nH.index : 1.12,  # Galactic absorption (for extragal background)
+                 xrb.tbnew_gas_5.nH.index : 1.39,  # Halo absorption
                  xrb.apec_6.kT.index : 0.744,  # Absorbed apec (galactic halo)
-                 xrb.apec.norm.index : 2.98e-4,
-                 xrb.tbnew_gas_5.nH.index : 1.321,  # Halo absorption
-                 xrb.apec_6.norm.index : 2.19e-3}
+                 xrb.apec_6.norm.index : 1.94e-3}
                 )
 
     xs_utils.freeze_model(xrb)

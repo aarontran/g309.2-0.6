@@ -144,7 +144,9 @@ def stopwatch(function, *args, **kwargs):
         ret = function(*args, **kwargs)
     finally:
         stopped = datetime.now()
-        print function.func_name, "timing"
+        # use str(...) instead of .func_name to work with
+        # class initializers
+        print str(function), "timing"
         print "  Started:", started
         print "  Stopped:", stopped
         print "  Elapsed:", stopped - started
@@ -217,16 +219,16 @@ def augment_error_str(err_str, model, comp, par_names):
     return err_str
 
 def error_str_all_free(model):
-    """Construct an error string for all free parameters in a model"""
+    """Construct error string for all free and unlinked parameters in an
+    XSPEC model
+    """
     # Alternative: we could just write 1--len(model.nParameters)
     # but this tends to generate warnings
-
-    # TODO BEHAVIOR WITH LINKED PARAMETERS NOT TESTED
 
     err_str = model.name + ":"
 
     for par in xs_utils.get_all_pars(model):
-        if not par.frozen:
+        if not par.frozen and par.link == '':
             err_str += ",{:d}".format(xs_utils.par_num(model, par))
     err_str = err_str.replace(":,", ":")
 
@@ -681,9 +683,9 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
 
 def annulus_fit(output, error=False, error_rerun=False,
                 free_center_elements=None, free_all_elements=None,
-                four_ann=False):
+                four_ann=False, **kwargs):
     """
-    Fit five annuli simultaneously...
+    Fit radial annuli simultaneously
 
     Arguments:
         output = output products file stem
@@ -696,6 +698,8 @@ def annulus_fit(output, error=False, error_rerun=False,
         free_center_elements = (case-sensitive) additional elements to free in
             central circle (0-100 arcsec)
             Element names much match XSPEC parameter names.
+        kwargs - passed to g309_models.load_data_and_models
+            (suffix, mosmerge, marfrmf)
     Output: n/a
         loads of stuff dumped to output*
         XSPEC session left in fitted state
@@ -710,19 +714,15 @@ def annulus_fit(output, error=False, error_rerun=False,
     if four_ann:
         regs = ["ann_000_100", "ann_100_200", "ann_200_300", "ann_300_400"]
 
-    out = g309.load_data_and_models(regs, snr_model='vnei')
+    out = g309.load_data_and_models(regs, snr_model='vnei', **kwargs)
     for reg in regs:
         set_energy_range(out[reg])
-
     xs.AllData.ignore("bad")
-    # TODO really weird bug -- regenerate spectrum and see if it persists
-    #for extr in out['ann_000_100']:
-    #    extr.spec.ignore("10.0-**")  # 10-11 keV range messed up
 
     # Link nH across annuli
-    # Each region has 5 spectra (5 exposures)
-    # [0] gets 1st of 5 ExtractedSpectra objects
-    # .models['...'] gets corresponding 1st of 5 XSPEC models
+    # Each region has n spectra (n exposures)
+    # [0] gets 1st of n ExtractedSpectra objects
+    # .models['...'] gets corresponding 1st of n XSPEC models
     rings = [out[reg][0].models['snr'] for reg in regs]
     for ring in rings[1:]:  # Exclude center
         ring.tbnew_gas.nH.link = xs_utils.link_name(rings[0], rings[0].tbnew_gas.nH)
@@ -760,27 +760,16 @@ def annulus_fit(output, error=False, error_rerun=False,
 
         print "First error run:", datetime.now()
         for reg, ring in zip(regs, rings):
-            ring_str = error_str(ring, ring.vnei,
-                                 ['kT', 'Tau', 'norm'] + free_all_elements)
-            print "Running", reg, "errors:", ring_str
-            xs.Fit.error(ring_str)
+            print "Running", reg, "errors:", datetime.now()
+            xs.Fit.error(error_str_all_free(ring))
             print reg, "errors complete:", datetime.now()  # Will not appear in error log
-
-        center_str = error_str(rings[0], rings[0].tbnew_gas, ['nH'])
-        center_str = augment_error_str(center_str, rings[0], rings[0].vnei,
-                        free_center_elements)
-        print "Running center errors:", center_str
-        xs.Fit.error(center_str)
 
         if error_rerun:
             print "Second error run:", datetime.now()
             for reg, ring in zip(regs, rings):
-                ring_str = error_str(ring, ring.vnei,
-                                     ['kT', 'Tau', 'norm'] + free_all_elements)
-                print "Running", reg, "errors:", ring_str
-                xs.Fit.error(ring_str)
+                print "Running", reg, "errors:", datetime.now()
+                xs.Fit.error(error_str_all_free(ring))
                 print reg, "errors complete:", datetime.now()  # Will not appear in error log
-            xs.Fit.error(center_str)  # Take advantage of previous work
 
         xs.Xset.closeLog()
         print "Error runs complete:", datetime.now()
@@ -791,10 +780,6 @@ def annulus_fit(output, error=False, error_rerun=False,
     for ring in rings:
         model_log = output + "_{}.txt".format(ring.name)
         print_model(ring, model_log)
-        # Save best fit model parameters to JSON -- includes errors & errorstr
-        # (redundant -- all in giant fit dict, but easier to work with)
-        xs_utils.dump_dict(xs_utils.model_dict(ring),
-                           output + "_{}.json".format(ring.name))
 
 
 
@@ -874,24 +859,24 @@ if __name__ == '__main__':
     # Integrated source fits - standard setup
     # ---------------------------------------
     prep_xs(with_xs=True, statMethod='pgstat')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp01_pgstat_mosmerge",
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp01_pgstat_mosmerge",
               error=True, error_rerun=True, mosmerge=True, suffix='grp01')
-    # Time: ? hrs on statler (running now)
+    # Time: 15.2 hrs on statler
 
     prep_xs(with_xs=True, statMethod='chi')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp50_chi_mosmerge",
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp50_chi_mosmerge",
               error=True, error_rerun=True, mosmerge=True, suffix='grp50')
-    # Time: ? hrs on statler (running now)
+    # Time: 6.0 hrs on statler
 
     prep_xs(with_xs=True, statMethod='pgstat')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp01_pgstat_nomerge",
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp01_pgstat_nomerge",
               error=True, error_rerun=True, mosmerge=False, suffix='grp01')
-    # Time: (6.6?) hrs on statler (running now)
+    # Time: 18.75 hrs on statler
 
     prep_xs(with_xs=True, statMethod='pgstat')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161014_src_bkg_grp50_chi_nomerge",
+    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp50_chi_nomerge",
               error=True, error_rerun=True, mosmerge=False, suffix='grp50')
-    # Time: (3.8?) hrs on cooper (running now)
+    # Time: (?) hrs on cooper (running now)
 
     # Reset stat method - to be safe
     prep_xs(with_xs=True, statMethod='pgstat')
@@ -905,7 +890,7 @@ if __name__ == '__main__':
     stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_mg",
               free_elements=['Mg', 'Si', 'S'],
               error=True, error_rerun=True)
-    # Time: ? hrs on cooper (running now)
+    # Time: 10.0 hrs on cooper
     # Time without error: ? hours
 
     # Conservative run: just get clear emission lines + possible Ar, Ca bumps
@@ -914,7 +899,7 @@ if __name__ == '__main__':
     stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_mg-ar-ca",
               free_elements=['Mg', 'Si', 'S', 'Ar', 'Ca'],
               error=True, error_rerun=True)
-    # Time: ? hrs on cooper (running now)
+    # Time: 37.4 hrs (~1.5 days) on cooper
 
     ##### OLD, NOT YET UPDATED RUNS #####
 
@@ -969,17 +954,17 @@ if __name__ == '__main__':
 
     # FIVE ANNULUS FITS
 
-    stopwatch(annulus_fit, "results_spec/20160701_fiveann", error=True, error_rerun=False)
-    # Rerun error command for center only
-    ring = xs.AllModels(1,'snr_ann_000_100')
-    xs.Xset.openLog("results_spec/20160701_fiveann" + "_error_rerun_manual.log")
-    stopwatch(xs.Fit.error, "snr_ann_000_100:{:d},{:d},{:d},{:d}".format(
-                                    xs_utils.par_num(ring, ring.vnei.kT),
-                                    xs_utils.par_num(ring, ring.vnei.Tau),
-                                    xs_utils.par_num(ring, ring.vnei.Si),
-                                    xs_utils.par_num(ring, ring.vnei.S)))
-    xs.Xset.closeLog()
-    print_model(ring, "results_spec/20160701_fiveann_snr_ann_000_100.txt")
+    stopwatch(annulus_fit, "results_spec/20161019_fiveann", error=True, error_rerun=True)
+#    # Rerun error command for center only
+#    ring = xs.AllModels(1,'snr_ann_000_100')
+#    xs.Xset.openLog("results_spec/20160701_fiveann" + "_error_rerun_manual.log")
+#    stopwatch(xs.Fit.error, "snr_ann_000_100:{:d},{:d},{:d},{:d}".format(
+#                                    xs_utils.par_num(ring, ring.vnei.kT),
+#                                    xs_utils.par_num(ring, ring.vnei.Tau),
+#                                    xs_utils.par_num(ring, ring.vnei.Si),
+#                                    xs_utils.par_num(ring, ring.vnei.S)))
+#    xs.Xset.closeLog()
+#    print_model(ring, "results_spec/20160701_fiveann_snr_ann_000_100.txt")
     # Time: 2 days, 17 hrs on treble
     #   + extra 5 hours for center error rerun
     # (would roughly double to 4 days with full error_rerun)
@@ -993,7 +978,7 @@ if __name__ == '__main__':
 
     # FOUR ANNULUS FITS
 
-    stopwatch(annulus_fit, "results_spec/20160725_fourann_stock", four_ann=True, error=True, error_rerun=True)
+    stopwatch(annulus_fit, "results_spec/20160725_fourann", four_ann=True, error=True, error_rerun=True)
     # Time: 1 day, 19.5 hrs on treble (with error rerun)
     # Time: 2 days, 7 hrs on cooper (with error rerun, incl norm errors)
 

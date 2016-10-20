@@ -11575,9 +11575,11 @@ standard setup) to move things forward.
 
     # Note that default configuration now uses MOS merged spectra, w/ no grouping
 
-TODO: the statMethod setup is a little ugly.
+The statMethod setup is a little ugly.
 
-Meanwhile, also setup for MCMC runs of varied length on treble (!) this weekend.
+MISTAKE: used pgstat for `20161015_src_bkg_grp50_chi_nomerge` by mistake.
+Redo this w/ correct statistic on cooper.
+As `20161016_src_bkg_grp50_chi_nomerge`.
 
 
 Aside on plotted error bars & grouping
@@ -11603,6 +11605,12 @@ So I would think that 50 counts/bin is consistent with 5 sigma significance.
 But, this is clearly not the case; binning to 5 sigma results in many more
 counts/bin in the resulting plot.
 
+Better answer (2016 Oct 19): XSPEC rebinning occurs AFTER (quiescent particle)
+background subtraction, whereas grppha merges spectra to ~50 cts/bin.
+Background-subtracted grppha-merged spectra can have few counts at high-energy
+tail, whereas XSPEC rebinning will still have ~50 cts/bin.
+OK, this makes sense.
+
 
 How to show residuals in a sensible manner?
 -------------------------------------------
@@ -11612,7 +11620,120 @@ But, because we are fitting to pgstat, chi-squared residuals don't necessarily
 make sense, and may appear to show bias when the fit is actually not at all
 biased.
 
-Paul Plucinsky (E0102 calibration paper, 2016) uses W-stat and plots ratio.
+Paul Plucinsky (E0102 calibration paper, 2016) uses W-stat and plots ratio of
+model to data.
+
+
+Weds,Thurs 2016 October 19-20 - review MCMC errors, initial variant fits
+========================================================================
+
+MCMC error inspection
+---------------------
+
+On Sunday (2016 Oct 16) I set up XSPEC MCMC runs of varied length.
+I dumped many intermediate files to see how error bars evolved over the chain
+run, but they aren't needed (easier to inspect by loading chain file into
+python and using `np.percentile`)
+
+    100 walkers, 20000 steps (200 steps/walker) -> 20161015_src_bkg_mcmc_00.txt
+    250 walkers, 20000 steps (80 steps/walker)  -> 20161015_src_bkg_mcmc_01.txt
+    500 walkers, 20000 steps (40 steps/walker)  -> 20161015_src_bkg_mcmc_02.txt
+
+Burn-in time is a real concern.
+Chain with 100 walkers needs burn-in of at least 10000 steps
+Chain with 250 walkers needs burn-in of at least 20000 steps (probably 25000+)
+Chain with 500 walkers is NOT done burning in (probably needs >50000 steps)
+
+If we need to pass ~10 autocorrelation times for each walker,
+each walker needs at least 100-200 steps to be discarded in burn-in.
+
+    a = np.loadtxt('results_spec/20161015_src_bkg_mcmc_01.txt', comments='!')
+
+    corner.corner(a[10000:,18:23], labels=['nH', 'kT', 'Si', 'S', 'Tau'],
+                  quantiles=[0.05,0.5,0.95]); plt.show()
+    corner.corner(a[10000:,0:6], labels=['kT-loc', 'norm-loc', 'nH-cxb', 'nH-grxb',
+                  'kT-gr', 'norm-gr'], quantiles=[0.05,0.5,0.95]); plt.show()
+
+    # Check XRB background norm, which shows largest burn-in effect
+    b = np.reshape(a[:,1].view(), (100, 200),order='F')
+    for x in b:
+        plt.plot(x, '-', alpha=0.5)
+        print acor.acor(x)[0]
+    plt.yscale('log'); plt.show()
+
+Package acor (by J. Goodman at NYU, wrapped into Python by Price-Whelan)
+is able to provide autocorrelation time estimates of ~1-5 (for 250 walkers with
+80 steps) or ~2-20 (for 100 walkers with 200 steps).
+This package is a black box to me, and I should not use it blindly.
+For mathematical exposition, see some
+[notes by A. Sokal](http://www.stat.unc.edu/faculty/cji/Sokal.pdf).
+
+I also have not checked acceptance fractions.
+This is another major concern.
+
+    Aside: since we are using pgstat, how does this error variation procedure work?
+    Is it still working off of delta-chi-squared?
+
+MCMC error bars, based on chains with NO burn-in cut and NO trimming, are
+somewhat different than those inferred from chi-squared variation (i.e., XSPEC
+steppar refitting procedure).  They are broadly comparable in order of
+magnitude, but do not show same symmetries and may be factors of 2-5x smaller
+(SNR kT) or 100x smaller (SNR Tau).  Of note:
+* SNR nH, kT: MCMC error bars rather smaller
+* SNR Tau: MCMC gives error ~0.1%, vs. ~ 10% from XSPEC "re-fit"
+  This is highly suspicious, and I don't understand why MCMC isn't exploring
+  the full parameter space range.
+* XRB local apec norm: MCMC error bars are terribly biased by burn-in
+* extragalactic power law background absorption: MCMC sampling demonstrates a
+  heavy tail towards higher absorbing column, not seen in "re-fit" error bars.
+  Possibly a burn-in side effect too, though I'm not sure.
+
+The MCMC runs started from a different initial best fit, so it's possible that
+we are trapped in the wrong mode of the likelihood function.
+
+OK.  For now stick to the standard error runs.
+But I think this is worth investigating eventually.
+
+
+Varied abundance fits
+---------------------
+
+- Mg, Si, S fit: runs smoothly, converges to "reasonable" values
+  Fit is slightly better than with Si, S alone:
+
+    XSPEC12>ftest 13098.44 12763 13119.60 12764
+     F statistic value = 20.6181 and probability 5.65764e-06
+
+  Caveat: chi-squared and F statistic may not be meaningful away from local
+  minimum (since we are using pgstat).
+
+- Mg, Si, S, Ar, Ca fit: fit runs away.  I manually reset to best Mg, Si, S fit
+  and re-ran error by hand, to find a better fit.
+  Significant amount of Ca required.
+
+- O, Ne, Mg, Si, S, Fe: fit ran away (bad, pgstat higher than Si,S fit) and got
+  stuck for ~3-4 days.  Terminated.
+
+New changes:
+- Bound instrumental line constant to within 0.1-10
+- Set XRB parameters to values derived from Mg,Si,S fit.
+
+Set up fits:
+- 4 annulus, Si S {with/without Mg}, with/without error runs
+- 5 annulus, Si S {with/without Mg}, with/without error runs
+- src, bkg, vpshock {with/without Mg}, with error runs.
+- stock Mg,Si,S with long MCMC chain to generate MCMC-sampled errors for
+  comparison
+
+Pending fits to redo:
+1. ISM component
+2. power law and/or srcutlog component
+3. fine gridding over SNR absorption to check best fit landscape
+   (because we must consider absorption carefully when discussing object distance)
+4. fit with Tau = 1e11
+
+Clean up code to plot fits w/ distinct components (ISM, powerlaw/srcutlog)
+
 
 
 
@@ -11636,7 +11757,7 @@ than multidump / append hack I set up)
 [ ] Image: create broadband/line images using MOS exposures only (spatial
 resolution)
 
-[ ] Fits: compare fits (1) chi-squared, grp50, (2) pgstat
+[x] Fits: compare fits (1) chi-squared, grp50, (2) pgstat
 
 [ ] Calculation: use HI brightness profiles along line-of-sight to try to set some
     upper bounds on ambient density.
