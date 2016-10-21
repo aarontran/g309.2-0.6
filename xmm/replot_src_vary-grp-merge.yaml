@@ -1,0 +1,38 @@
+--- # Compare integrated source fits with different grouping, merging
+subplots:
+
+- file: 'results_spec/20161015_src_bkg_grp01_pgstat_mosmerge_spec_03.dat'
+  name: 'grp01+pgstat, mosmerge'
+  cols: [5, 6, 7, 8]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+  ylim: ['1e-3', '2.0']
+  delchi-ylim: ['-6', '6']
+
+- file: 'results_spec/20161015_src_bkg_grp50_chi_mosmerge_spec_03.dat'
+  name: 'grp50+chi, mosmerge'
+  cols: [5, 6, 7, 8]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+  ylim: ['1e-3', '2.0']
+  delchi-ylim: ['-6', '6']
+
+- file: 'results_spec/20161015_src_bkg_grp01_pgstat_nomerge_spec_04.dat'
+  name: 'grp01+pgstat, MOS1'
+  cols: [5, 6, 7, 8]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+  ylim: ['1e-3', '2.0']
+  delchi-ylim: ['-6', '6']
+
+- file: 'results_spec/20161016_src_bkg_grp50_chi_nomerge_spec_04.dat'
+  name: 'grp50+chi, MOS1'
+  cols: [5, 6, 7, 8]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+  ylim: ['1e-3', '2.0']
+  delchi-ylim: ['-6', '6']
+
+legend: false
+residual: false
+#out: 'results_plots/fig_src_varabund_0551000201-mos'

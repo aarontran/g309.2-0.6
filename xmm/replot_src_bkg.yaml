@@ -1,0 +1,63 @@
+--- # "Standard" source and background fit; 0087940201 MOS
+subplots:
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_01.dat'
+  name: 'Source (0--400\mbox{$^{\prime\prime}$})'
+  cols: [5, 6, 7, 8]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+  ylim: ['1e-3', '3.0']
+  delchi-ylim: ['-6', '6']
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_04.dat'
+  name: 'Background (510--700\mbox{$^{\prime\prime}$})'
+  cols: [5, 6, 7]
+  labels: ['CXRB', 'SP', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#999999']
+  ylim: ['1e-3', '1.5']
+  delchi-ylim: ['-6', '6']
+
+#residual: true
+out: 'results_plots/fig_src_bkg_0087940201-mos'
+--- # "Standard" source and background fit; 0087940201 PN
+subplots:
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_02.dat'
+  name: 'Source (0--400\mbox{$^{\prime\prime}$})'
+  cols: [5, 6, 7, 8]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+  ylim: ['5e-3', '3.0']
+  delchi-ylim: ['-6', '6']
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_05.dat'
+  name: 'Background (510--700\mbox{$^{\prime\prime}$})'
+  cols: [5, 6, 7]
+  labels: ['CXRB', 'SP', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#999999']
+  ylim: ['1e-2', '1.5']
+  delchi-ylim: ['-6', '6']
+
+#residual: true
+out: 'results_plots/fig_src_bkg_0087940201-pn'
+--- # "Standard" source and background fit; 0551000201 MOS
+subplots:
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_03.dat'
+  name: 'Source (0--400\mbox{$^{\prime\prime}$})'
+  cols: [5, 6, 7, 8]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+  ylim: ['1e-3', '3.0']
+  delchi-ylim: ['-6', '6']
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_06.dat'
+  name: 'Background (510--700\mbox{$^{\prime\prime}$})'
+  cols: [5, 6, 7]
+  labels: ['CXRB', 'SP', 'Instr. lines']
+  colors: ['#4daf4a', '#f781bf', '#999999']
+  ylim: ['1e-3', '1.5']
+  delchi-ylim: ['-6', '6']
+
+#residual: true
+out: 'results_plots/fig_src_bkg_0551000201-mos'

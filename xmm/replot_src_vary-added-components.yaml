@@ -1,0 +1,53 @@
+#  5 CXRB
+#  6 SP
+#  7 SNR
+#  8 instr lines, total
+#  9    local XRB
+#  10   absorbed extragal
+#  11   galactic ridge
+#  12   SNR - VNEI
+#  13   SNR - NEI (or other additional component)
+#  14   Al-K fluorescence line
+#  15   Si-K fluorescence line
+--- # Check ISM NEI contribution
+subplots:
+
+  - file: 'results_spec/201610xx_src_ism-nei.dat'
+  name: 'Model with NEI ISM'
+  cols: [5, 6, 7, 8, 12, 13]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines', 'SNR VNEI', 'SNR NEI']
+  # TODO adjust coloring, lines, etc on this plot
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999', '#e41a1c', 'black']
+  linestyles: ['-', '-', '-', '-', ':', '-']
+  ylim: ['1e-3', '3.0']
+  delchi-ylim: ['-6', '6']
+
+out: 'results_plots/fig_src_ism-nei_0087940201-mos'
+--- # Check nonthermal (powerlaw) contribution
+subplots:
+
+  - file: 'results_spec/201610xx_src_powerlaw.dat'
+  name: 'Nonthermal: power law'
+  cols: [5, 6, 7, 8, 12, 13]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines', 'SNR VNEI', 'Powerlaw']
+  # TODO adjust coloring, lines, etc on this plot
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999', '#e41a1c', 'black']
+  linestyles: ['-', '-', '-', '-', ':', '-']
+  ylim: ['1e-3', '3.0']
+  delchi-ylim: ['-6', '6']
+
+out: 'results_plots/fig_src_powerlaw_0087940201-mos'
+--- # Check nonthermal (srcutlog) contribution
+subplots:
+
+  - file: 'results_spec/201610xx_src_srcutlog.dat'
+  name: 'Nonthermal: srcut'
+  cols: [5, 6, 7, 8, 12, 13]
+  labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines', 'SNR VNEI', 'srcutlog']
+  # TODO adjust coloring, lines, etc on this plot
+  colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999', '#e41a1c', 'black']
+  linestyles: ['-', '-', '-', '-', ':', '-']
+  ylim: ['1e-3', '3.0']
+  delchi-ylim: ['-6', '6']
+
+out: 'results_plots/fig_src_srcutlog_0087940201-mos'

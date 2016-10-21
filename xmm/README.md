@@ -76,11 +76,11 @@ Image creation (not too tidy yet):
     quick_image_merge.sh
     make_ms_image.py
 
-Plotting and manipulation spectrum fit results:
+Plotting and manipulation of spectrum fit results:
 
     from g309_fits import *  # Interactive use methods
     xs_wdata_split.pl
-    xs_replotter.pl
+    xs_replotter.py {x}.yaml
     replot_*
     latex_table_oneliner.sh
 

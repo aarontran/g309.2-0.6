@@ -87,14 +87,20 @@ def print_model(m, f_out=None):
 # TODO this will block script execution if files already exist here.
 # work around.... clobber in python or w/e
 def wdata(fname):
-    """Dump plot data for ALL spectra using iplot wdata command.
+    """Dump plot data for ALL spectra using iplot wdata command, with
+    all additive components groups.
     Note that a plot command is invoked in the process.
     Output
         QDP file at fname
     """
+    old_add = xs.Plot.add
+    xs.Plot.add = True  # Dump additive components within each model
     xs.Plot.addCommand("wdata " + fname)
+
     xs.Plot("ldata")
+
     xs.Plot.delCommand(len(xs.Plot.commands))
+    xs.Plot.add = old_add
 
 
 def pdf(fname, cmd="ldata delchi"):
@@ -359,19 +365,6 @@ def src_srcutlog(output, region='src', solar=False, error=False):
     products(output)
     print_model(snr, output + "_snr_" + region + ".txt")
 
-    # Zero out the vnei component to isolate srcutlog contribution
-    norm_vnei = snr.vnei.norm.values[0]
-    snr.vnei.norm = 0
-    wdata(output + "_srcutlog-only.qdp")
-    snr.vnei.norm = norm_vnei  # Reset
-
-    # Zero out the srcutlog component to isolate vnei contribution
-    break_p = snr.srcutlog.__getattribute__('break')  # hacky workaround
-    break_srcutlog = break_p.values[0]
-    break_p._setValues(1e-7)  # log(freq), so break=10 is already negligible
-    wdata(output + "_vnei-only.qdp")
-    break_p._setValues(break_srcutlog)  # Reset
-
 
 
 def single_fit(output, region='src', free_elements=None, error=False):
@@ -490,18 +483,6 @@ def src_powerlaw(output, region='src', solar=False, error=False):
     # Diagnostic plots and numbers
     products(output)
     print_model(snr, output + "_snr_" + region + ".txt")
-
-    # Zero out the vnei component to isolate powerlaw contribution
-    norm_vnei = snr.vnei.norm.values[0]
-    snr.vnei.norm = 0
-    wdata(output + "_powerlaw-only.qdp")
-    snr.vnei.norm = norm_vnei  # Reset
-
-    # Zero out the powerlaw component to isolate vnei contribution
-    norm_powerlaw = snr.powerlaw.norm.values[0]
-    snr.powerlaw.norm = 0
-    wdata(output + "_vnei-only.qdp")
-    snr.powerlaw.norm = norm_powerlaw  # Reset
 
 
 
@@ -661,23 +642,6 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
     products(output)
     print_model(snr, output + "_snr_src.txt")
     print_model(xrb, output + "_xrb.txt")
-
-    # TODO This should not be needed -- basically duplicates setplot addcomp
-    # functionality.  Need to set up xs_replotter to work with distinct
-    # components.
-    if 'snr_model' in kwargs and kwargs['snr_model'] == 'vnei+nei':
-        raise Exception("FIX ME!")
-        # Zero out ejecta vnei component to isolate ISM nei contribution
-        norm_vnei = snr.vnei.norm.values[0]
-        snr.vnei.norm = 0
-        wdata(output + "_nei-only.qdp")
-        snr.vnei.norm = norm_vnei  # Reset
-
-        # Zero out ISM nei component to isolate ejecta vnei contribution
-        norm_nei = snr.nei.norm.values[0]
-        snr.nei.norm = 0
-        wdata(output + "_vnei-only.qdp")
-        snr.nei.norm = norm_nei  # Reset
 
 
 

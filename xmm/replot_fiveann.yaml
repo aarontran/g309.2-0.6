@@ -1,0 +1,80 @@
+
+# Arcsecond symbol \mbox{$^{\prime\prime}$} from aastex6.cls
+
+--- # Five annuli, 0087940201 MOS
+subplots:
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_01.dat'
+  name: '0--100\mbox{$^{\prime\prime}$}'
+  ylim: ['5e-4', '0.2']
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_04.dat'
+  name: '100--200\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_07.dat'
+  name: '200--300\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_10.dat'
+  name: '300--400\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_13.dat'
+  name: '400--500\mbox{$^{\prime\prime}$}'
+
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+ylim: ['1e-3', '1.0']
+delchi-ylim: ['-5', '5']
+out: 'results_plots/fig_fiveann_0087940201-mos'
+
+--- # 0087940201 PN
+subplots:
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_02.dat'
+  name: '0--100\mbox{$^{\prime\prime}$}'
+  ylim: ['5e-4', '0.3']
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_07.dat'
+  name: '100--200\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_08.dat'
+  name: '200--300\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_11.dat'
+  name: '300--400\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_14.dat'
+  name: '400--500\mbox{$^{\prime\prime}$}'
+
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+ylim: ['5e-3', '1.0']
+delchi-ylim: ['-5', '5']
+out: 'results_plots/fig_fiveann_0087940201-pn'
+
+--- # 0551000201 MOS
+subplots:
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_03.dat'
+  name: '0--100\mbox{$^{\prime\prime}$}'
+  ylim: ['5e-4', '0.2']  # Fewer counts here
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_06.dat'
+  name: '100--200\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_09.dat'
+  name: '200--300\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_12.dat'
+  name: '300--400\mbox{$^{\prime\prime}$}'
+
+- file: 'results_spec/20161019_fiveann_NOERR_spec_15.dat'
+  name: '400--500\mbox{$^{\prime\prime}$}'
+
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+ylim: ['1e-3', '1.0']
+delchi-ylim: ['-5', '5']
+out: 'results_plots/fig_fiveann_0551000201-mos'

@@ -11709,6 +11709,7 @@ Varied abundance fits
 
 - Mg, Si, S, Ar, Ca fit: fit runs away.  I manually reset to best Mg, Si, S fit
   and re-ran error by hand, to find a better fit.
+  Saved results to `20161015_src_bkg_mg-ar-ca_MANUAL`.
   Significant amount of Ca required.
 
 - O, Ne, Mg, Si, S, Fe: fit ran away (bad, pgstat higher than Si,S fit) and got
@@ -11725,6 +11726,21 @@ Set up fits:
 - stock Mg,Si,S with long MCMC chain to generate MCMC-sampled errors for
   comparison
 
+Note: vpshock fit without Mg did not converge, in process of forcing to better
+fit by hand.
+
+Friday 2016 October 21 - tidy plotting & results
+================================================
+
+New spectrum plotting configuration
+-----------------------------------
+
+Significant overhaul of plotting routines -- much cleaner now.
+Moved from command line arguments to YAML configuration files,
+allowing CSS-like cascading of styles for subplots.
+
+Update code to dump fits' individual additive components to qdp, for plotting.
+
 Pending fits to redo:
 1. ISM component
 2. power law and/or srcutlog component
@@ -11732,7 +11748,7 @@ Pending fits to redo:
    (because we must consider absorption carefully when discussing object distance)
 4. fit with Tau = 1e11
 
-Clean up code to plot fits w/ distinct components (ISM, powerlaw/srcutlog)
+
 
 
 
@@ -11751,7 +11767,7 @@ Standing questions and TODOs
 
 [ ] TODO: post-hoc spot test of spectrum extraction with new pt source exclusions.
 
-[ ] Plot dumps: use setplot comp to show individual additive model components (WAY easier
+[x] Plot dumps: use setplot add to show individual additive model components (WAY easier
 than multidump / append hack I set up)
 
 [ ] Image: create broadband/line images using MOS exposures only (spatial
