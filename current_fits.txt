@@ -2,21 +2,45 @@ Standing catalog of useful fits
 ===============================
 Only as good as last commit time.
 
+Comment: filenames often imply Si,S free by default unless "solar" explicitly
+noted.
+
 Integrated remnant
 ------------------
-
-20161015_src_bkg_grp01_pgstat_mosmerge.json
+20161015_src_bkg_grp01_pgstat_mosmerge.json     # equivalent to "src_bkg_si-s"
   Variant binning:
     20161015_src_bkg_grp01_pgstat_nomerge.json
     20161015_src_bkg_grp50_chi_mosmerge.json
-    20161016_src_bkg_grp50_chi_nomerge.json  # 20161015 version erroneously used pgstat, removed.
+    20161016_src_bkg_grp50_chi_nomerge.json
   MCMC foray:
     20161019_src_bkg_mg_mcmc.json
-  Variant remnant models
-    20161020_src_bkg_vpshock_mg.json
-
 20161015_src_bkg_mg.json
 20161015_src_bkg_mg-ar-ca.json
+
+Restarted NEW set of fits with broken powerlaw for 0551000201
+20161023_src_bkg_solar
+20161023_src_bkg_si-s
+20161023_src_bkg_mg-si-s
+20161023_src_bkg_mg-si-s-ar-ca
+
+Variant remnant models
+----------------------
+20161022_src_solar_NOERR.json                   # benchmarks to compare
+20161021_src_bkg_solar_NOERR.json
+20161022_src_mg-si-s_NOERR.json
+
+...._solar_vpshock_NOERR.json
+20161020_src_mg-si-s_vpshock_NOERR.json         # Fit src only to save time
+
+20161021_src_solar_powerlaw_NOERR.json
+20161021_src_mg-si-s_powerlaw_NOERR.json
+20161021_src_solar_srcutlog_NOERR.json
+20161021_src_mg-si-s_srcutlog_NOERR.json
+
+
+    Be able to say: compared to baseline, fits are better/worse.
+    For completeness, we should
+
 
 Annulus fits
 ------------

@@ -117,12 +117,7 @@ def par_num(model, par):
         par: `xspec.Parameter`
     Output: parameter number (integer) derived from `model.startParIndex`
     """
-    all_pars = []
-    for cname in model.componentNames:
-        comp = model.__getattribute__(cname)
-        for pname in comp.parameterNames:
-            all_pars.append(comp.__getattribute__(pname))
-    if par not in all_pars:
+    if par not in get_all_pars(model):
         raise ValueError("Model {} does not contain {} {:s}".format(
                 model.name, par.name, par))
 

@@ -11726,8 +11726,10 @@ Set up fits:
 - stock Mg,Si,S with long MCMC chain to generate MCMC-sampled errors for
   comparison
 
-Note: vpshock fit without Mg did not converge, in process of forcing to better
-fit by hand.
+The vpshock (20161020) run without Mg (Si, S only) failed, getting stuck in
+much worse fit than vpshock with Mg,Si,S;
+terminated and restarted w/ tweaked initial conditions below.
+
 
 Friday 2016 October 21 - tidy plotting & results
 ================================================
@@ -11741,16 +11743,100 @@ allowing CSS-like cascading of styles for subplots.
 
 Update code to dump fits' individual additive components to qdp, for plotting.
 
-Pending fits to redo:
-1. ISM component
-2. power law and/or srcutlog component
-3. fine gridding over SNR absorption to check best fit landscape
-   (because we must consider absorption carefully when discussing object distance)
-4. fit with Tau = 1e11
+Continued variant source fitting
+--------------------------------
+
+Due to significant improvement to error-run & plotting code,
+I consolidated several messy copy-paste-tweak fit functions.
+
+Relax upper bounds on Si/S abundances to 100 to, in principle, allow wider
+traversal of parameter space.
+
+Ongoing fits.  NOTE: start defaulting to using Mg, Si, S.
+- five annulus {with,without Mg} (finishing up smoothly)            <- statler
+- vpshock {with Mg} (this time, not fitting background)             <- treble
+- ISM-NEI component                                                 <- treble
+    solar and non-solar abund (2x fits)
+- power law and/or srcutlog component                               <- cooper
+    solar and non-solar vnei abund (4x fits total)
+- src + bkg fit with solar abund, to verify that nonsolar abund is real <- cooper
+
+- important variant: what if we allow a broken powerlaw for 0551000201?
+  There is a lot of residual tension in the integrated spectrum.
+  I'll have to inspect the annulus fits separately
+
+First attempts to do ISM+NEI and powerlaw, srcutlog fits tend to find a towards
+a local pgstat minimum at Tau -> 5e+13.  Many fits are having trouble
+converging.  I revised some code for this.
+But, this is relatively low priority -- defer to a little later.
+
+This near-CIE local minimum yields src+bkg fit parameters:
+
+    nH = 3, kT = 0.5; Tau = 4e13 (norm 3e-2)
+    Mg = 1, Si = 4.2, S = 4.87
+    pgstat = 7433.79 ; chi-squared =  6967.95 / 6379 dof.
+
+versus current best fit:
+
+    nH = 2.3, kT = 1.74; Tau = 2.2e10 (norm 4e-3)
+    Mg = 1.27, Si = 4.62, S = 4.17
+    pgstat = 7099.22 ; chi-squared = 6670.46 / 6379 dof.
+
+Should note and document (and check inferred ejecta masses etc in each case)
+to be sure...
 
 
+Saturday-Sunday 2016 October 22-23 -- tweak soft proton model for 0551000201
+============================================================================
 
+Incorporate a broken power law for 0551000201 to alleviate tension in soft
+proton contamination model at low/high energy extremes.
+0551000201 merged MOS residuals show that:
+1. SP slope is incorrect at high energy (5-10 keV)
+2. SP overpredicts emission at low energy (~0.3-0.5 keV)
 
+From a quick manual fit, introducing a broken power law for 0551000201 spectra
+helps this issue slightly, although it does not alleviate all tension.
+That seems acceptable.  It is already impressive that our single-temperature,
+single-ionization-age plasma model describes the remnant as well as it does!
+
+Began running new fits with broken power law for 0551000201:
+
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_solar", with_bkg=True, free_elements=[], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_si-s", with_bkg=True, free_elements=['Si', 'S'], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_mg-si-s", with_bkg=True, free_elements=['Mg', 'Si', 'S'], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_mg-si-s-ar-ca", with_bkg=True, free_elements=['Mg', 'Si', 'S', 'Ar', 'Ca'], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True)
+
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_mg-si-s_grp01_pgstat_nomerge", with_bkg=True, free_elements=['Mg', 'Si', 'S'], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True, mosmerge=False, suffix='grp01')
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_mg-si-s_grp50_chi_mosmerge", with_bkg=True, free_elements=['Mg', 'Si', 'S'], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True, mosmerge=True, suffix='grp50')
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_mg-si-s_grp50_chi_nomerge", with_bkg=True, free_elements=['Mg', 'Si', 'S'], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True, mosmerge=False, suffix='grp50')
+
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_solar_ism-nei", with_bkg=True, free_elements=[], snr_model='vnei+nei', tau_scan=True, sp_bknpower=True, error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_mg-si-s_ism-nei", with_bkg=True, free_elements=['Mg','Si','S'], snr_model='vnei+nei', tau_scan=True, sp_bknpower=True, error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_solar_vpshock", with_bkg=True, snr_model='vpshock', free_elements=[], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20161023_src_bkg_mg-si-s_vpshock", with_bkg=True, snr_model='vpshock', free_elements=['Mg','Si','S'], tau_scan=True, sp_bknpower=True, error=True, error_rerun=True)
+
+Unfortunately, these fits have a LOT of trouble converging to a good minimum
+(old fits without broken power law for 0551000201 soft protons converged to a
+better pgstat minimum).
+I know that a better fit can be achieved by more hand-massaging -- and at
+some point I wonder if we're better off simply pushing these things to fit by
+hand.
+
+For now, stick to straight power law.
+Broken power law SP did not completely explain residual tension in my manual
+fit.
+
+Monday 2016 October 24 -- cleanup, writing
+==========================================
+
+Reviewed and generated plots:
+
+    replot_fiveann.yaml                         OK
+    replot_src_bkg.yaml                         OK
+    replot_src_vary-abund.yaml                  OK
+    replot_src_vary-added-components.yaml       Deferred, fits not good
+    replot_src_vary-grp-merge.yaml              OK
 
 
 Standing questions and TODOs

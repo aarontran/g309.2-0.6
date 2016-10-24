@@ -19,7 +19,7 @@ from ExtractedSpectrum import ExtractedSpectrum
 
 
 def load_data_and_models(regs, snr_model='vnei', suffix='grp01',
-                         mosmerge=True, marfrmf=True):
+                         mosmerge=True, marfrmf=True, sp_bknpower=True):
     """
     Load G309.2-0.6 data and initialize responses and models.
 
@@ -87,7 +87,7 @@ def load_data_and_models(regs, snr_model='vnei', suffix='grp01',
 
     load_cxrb(1, 'xrb', all_extrs)
 
-    load_soft_proton(2, 'sp', all_extrs)
+    load_soft_proton(2, 'sp', all_extrs, broken=sp_bknpower)
     for extr in all_extrs:
         extr.models['sp'] = xs.AllModels(extr.spec.index, 'sp')
         extr.models['xrb'] = xs.AllModels(extr.spec.index, 'xrb')
@@ -199,8 +199,8 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         # Apply fitting bounds
         src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained already
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
-                     src.vnei.S.index : "1, , , , 10, 10",  # upper bound only
-                     src.vnei.Si.index : "1, , , , 10, 10"} )  # upper bound only
+                     src.vnei.S.index : "1, , , , 100, 100",  # upper bound only
+                     src.vnei.Si.index : "1, , , , 100, 100"} )  # upper bound only
         src.tbnew_gas.nH.frozen = True
         src.vnei.kT.frozen = True
         src.vnei.Tau.frozen = True
@@ -210,8 +210,8 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         # Apply fitting bounds
         src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
-                     src.vnei.S.index : "1, , , , 10, 10",  # upper bound only
-                     src.vnei.Si.index : "1, , , , 10, 10"} )  # upper bound only
+                     src.vnei.S.index : "1, , , , 100, 100",  # upper bound only
+                     src.vnei.Si.index : "1, , , , 100, 100"} )  # upper bound only
         # TODO Appropriate bounds for powerlaw component TBD
         src.tbnew_gas.nH.frozen = True
         src.vnei.kT.frozen = True
@@ -222,8 +222,8 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         # Apply fitting bounds
         src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bound only
-                     src.vnei.S.index : "1, , , , 10, 10",  # upper bound only
-                     src.vnei.Si.index : "1, , , , 10, 10",  # upper bound only
+                     src.vnei.S.index : "1, , , , 100, 100",  # upper bound only
+                     src.vnei.Si.index : "1, , , , 100, 100",  # upper bound only
                      src.srcutlog.alpha.index : "0.53",  # Gaensler+ 1998
                      src.srcutlog.norm.index : 6  # 1 GHz flux density (Jy), interpolated from Gaensler+ data fit
                      } )  # upper bound only
@@ -239,8 +239,8 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         # Apply fitting bounds
         src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained
                      src.vnei.kT.index : "1, , , , 10, 10",  # upper bounds only
-                     src.vnei.S.index : "1, , , , 10, 10",
-                     src.vnei.Si.index : "1, , , , 10, 10",
+                     src.vnei.S.index : "1, , , , 100, 100",
+                     src.vnei.Si.index : "1, , , , 100, 100",
                      src.nei.kT.index : "1, , , , 10, 10"})
         src.tbnew_gas.nH.frozen = True
         src.vnei.kT.frozen = True
@@ -252,8 +252,10 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
     elif case == 'vpshock':
         src.setPars({src.tbnew_gas.nH.index : "1, , 1e-2, 0.1, 10, 10",  # generally well-constrained
                      src.vpshock.kT.index : "1, , , , 10, 10",  # upper bound only
-                     src.vpshock.Tau_l.index : 1e9,     # no bounds, set reasonable initial value
-                     src.vpshock.Tau_u.index : 1e11})  # no bounds, set reasonable initial value
+                     src.vpshock.S.index : "1, , , , 100, 100",
+                     src.vpshock.Si.index : "1, , , , 100, 100",
+                     src.vpshock.Tau_l.index : 1e8,     # no bounds, set reasonable initial value
+                     src.vpshock.Tau_u.index : 1e10})  # no bounds, set reasonable initial value
     elif case == 'vsedov':
         raise Exception("Need to test vsedov further, doesn't work")
         #src = xs.Model("constant * tbnew_gas * vsedov", model_name, model_n)
@@ -271,7 +273,7 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
         # Save model for this spectrum
 
 
-def load_soft_proton(model_n, model_name, extracted_spectra):
+def load_soft_proton(model_n, model_name, extracted_spectra, broken=True):
     """Set soft proton contamination power laws for each spectrum in
     extracted_spectra.
     Set appropriate RMF & ARF files, initialize parameters and parameter
@@ -287,6 +289,7 @@ def load_soft_proton(model_n, model_name, extracted_spectra):
         model_n: XSPEC model number, 1-based
         model_name: XSPEC model name, string (no spaces)
         extracted_spectra: list of ExtractedSpectrum objects
+        broken: use broken power law?
     Output:
         None.  Global XSPEC objects configured for soft proton model.
     """
@@ -297,7 +300,10 @@ def load_soft_proton(model_n, model_name, extracted_spectra):
         extr.spec.multiresponse[model_n - 1].arf = "none"
 
     # Initialize sp model
-    sp = xs.Model("constant * powerlaw", model_name, model_n)
+    if broken:
+        sp = xs.Model("constant * bknpower", model_name, model_n)
+    else:
+        sp = xs.Model("constant * powerlaw", model_name, model_n)
 
     # Set individal spectrum parameters
     for extr in extracted_spectra:
@@ -305,11 +311,39 @@ def load_soft_proton(model_n, model_name, extracted_spectra):
         # Let power law indices, norms vary independently
         # Must set index limits for each model; parameter limits do not
         # propagate through links
-        sp_curr.powerlaw.PhoIndex.link = ""
-        sp_curr.powerlaw.PhoIndex.values = "0.4, , 0, 0.1, 1, 2" # Set hard/soft limits
-        sp_curr.powerlaw.PhoIndex.frozen = False
-        sp_curr.powerlaw.norm.link = ""
-        sp_curr.powerlaw.norm.frozen = False
+        if broken:
+            if extr.obsid == '0551000201':
+                sp_curr.bknpower.PhoIndx1.link = ""
+                sp_curr.bknpower.PhoIndx1.values = "0.3, , 0, 0.1, 1, 2"
+                sp_curr.bknpower.PhoIndx1.frozen = False
+                sp_curr.bknpower.PhoIndx2.link = ""
+                sp_curr.bknpower.PhoIndx2.values = "0.6, , 0, 0.1, 2, 3"
+                sp_curr.bknpower.PhoIndx2.frozen = False
+                sp_curr.bknpower.BreakE.link = ""
+                sp_curr.bknpower.BreakE.values = "2.0, , 0, 0.5, 10, 20"
+                sp_curr.bknpower.BreakE.frozen = False
+                sp_curr.bknpower.norm.link = ""
+                sp_curr.bknpower.norm.frozen = False
+            elif extr.obsid == '0087940201':
+                sp_curr.bknpower.PhoIndx1.link = ""
+                sp_curr.bknpower.PhoIndx1.values = "0.4, , 0, 0.1, 1, 2"
+                sp_curr.bknpower.PhoIndx1.frozen = False
+                sp_curr.bknpower.PhoIndx2.link = xs_utils.link_name(sp_curr,
+                                                    sp_curr.bknpower.PhoIndx1)
+                sp_curr.bknpower.PhoIndx2.frozen = False
+                sp_curr.bknpower.BreakE.link = ""
+                sp_curr.bknpower.BreakE.values = 20
+                sp_curr.bknpower.BreakE.frozen = True
+                sp_curr.bknpower.norm.link = ""
+                sp_curr.bknpower.norm.frozen = False
+            else:
+                raise Exception("sp model not set for {:s}".format(extr.obsid))
+        else:
+            sp_curr.powerlaw.PhoIndex.link = ""
+            sp_curr.powerlaw.PhoIndex.values = "0.4, , 0, 0.1, 1, 2" # Hard/soft limits
+            sp_curr.powerlaw.PhoIndex.frozen = False
+            sp_curr.powerlaw.norm.link = ""
+            sp_curr.powerlaw.norm.frozen = False
         # Apply backscal ratio scalings to make comparing norms easier
         sp_curr.constant.factor = extr.backscal() / ExtractedSpectrum.FIDUCIAL_BACKSCAL
         sp_curr.constant.factor.frozen = True
@@ -327,7 +361,14 @@ def load_soft_proton(model_n, model_name, extracted_spectra):
                     raise Exception("Extra mos2 spectrum!")
                 sp_mos2 = xs.AllModels(y.spec.index, model_name)
         # Tie photon indices
-        sp_mos2.powerlaw.PhoIndex.link = xs_utils.link_name(sp_mos1, sp_mos1.powerlaw.PhoIndex)
+        if broken:
+            sp_mos2.bknpower.PhoIndx1.link = xs_utils.link_name(sp_mos1,
+                                                    sp_mos1.bknpower.PhoIndx1)
+            sp_mos2.bknpower.PhoIndx2.link = xs_utils.link_name(sp_mos1,
+                                                    sp_mos1.bknpower.PhoIndx2)
+        else:
+            sp_mos2.powerlaw.PhoIndex.link = xs_utils.link_name(sp_mos1,
+                                                    sp_mos1.powerlaw.PhoIndex)
 
 
 def load_cxrb(model_n, model_name, extracted_spectra):

@@ -244,269 +244,22 @@ def error_str_all_free(model):
 # Customized fit execution #
 ############################
 
-def src_powerlaw_xrbfree(output, error=False):
-    """Fit integrated source w/ vnei+powerlaw, XRB free"""
 
-    out = g309.load_data_and_models(['src', 'bkg'], snr_model='vnei+powerlaw')
-    set_energy_range(out['src'])
-    set_energy_range(out['bkg'])
-    xs.AllData.ignore('bad')
-
-    # Reset XRB to "typical" values, do NOT vary yet
-    xrb = xs.AllModels(1, 'xrb')
-    xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
-                {xrb.tbnew_gas.nH.index : "1, , 0.01, 0.1, 5, 10"},  # Galactic absorption
-                {xrb.apec_6.kT.index : "0.5, , 0, 0, 2, 4"},  # Absorbed apec (galactic halo)
-                {xrb.apec.norm.index : 1e-3},
-                {xrb.apec_6.norm.index : 1e-3} )
-    xrb.apec.kT.frozen = True
-    xrb.tbnew_gas.nH.frozen = True
-    xrb.apec_6.kT.frozen = True
-    xrb.apec.norm.frozen = True
-    xrb.apec_6.norm.frozen = True
-
-    xs.Fit.renorm()
-
-    # Ordering: (1) free vnei, (2) free power law, (3) free XRB
-    # then let error runs investigate non-monotonicity...
-    snr = xs.AllModels(1,'snr_src')
-
-    snr.tbnew_gas.nH.frozen=False
-    snr.vnei.kT.frozen=False
-    snr.vnei.Tau.frozen=False
-    snr.vnei.Si.frozen=False
-    snr.vnei.S.frozen=False
-    snr.powerlaw.PhoIndex=2
-    snr.powerlaw.PhoIndex.frozen=True
-    snr.powerlaw.norm=0
-    snr.powerlaw.norm.frozen=True
-    xs.Fit.perform()
-    xs.Plot("ld delch")
-
-    snr.powerlaw.norm.frozen=False
-    xs.Fit.perform()
-    snr.powerlaw.PhoIndex.frozen=False
-    xs.Fit.perform()
-    xs.Plot("ld delch")
-
-    xrb.apec.kT.frozen = False
-    xrb.tbnew_gas.nH.frozen = False
-    xrb.apec_6.kT.frozen = False
-    xrb.apec.norm.frozen = False
-    xrb.apec_6.norm.frozen = False
-    xs.Fit.perform()
-    xs.Plot("ld delch")
-
-    if error:
-        xs.Fit.error("snr_src:21,22,2,4,12,13,18,20")
-
-        xs.Fit.error("xrb:{:d},{:d},{:d}".format(
-            xs_utils.par_num(xrb, xrb.apec.kT),
-            xs_utils.par_num(xrb, xrb.tbnew_gas.nH),
-            xs_utils.par_num(xrb, xrb.apec_6.kT)))
-
-    products(output)
-
-
-def src_srcutlog(output, region='src', solar=False, error=False):
-    """
-    Fit a region to vnei+srcutlog, XRB fixed
-    Arguments
-        output: file stem string
-        region: region ID
-        solar: fit to solar abundances, or let Si,S run free
-        error: perform error runs
-    """
-
-    out = g309.load_data_and_models([region], snr_model='vnei+srcutlog')
-    set_energy_range(out[region])
-    xs.AllData.ignore('bad')
-
-    xs.Fit.renorm()
-
-    # Let XSPEC fit vnei and srcutlog simultaneously,
-    # a little better behaved than w/ powerlaw
-    snr = xs.AllModels(1,'snr_'+region)
-    snr.tbnew_gas.nH.frozen = False
-    snr.vnei.kT.frozen = False
-    snr.vnei.Tau.frozen = False
-    if solar:
-        snr.vnei.Si.frozen = True
-        snr.vnei.S.frozen = True
-    else:
-        snr.vnei.Si.frozen = False
-        snr.vnei.S.frozen = False
-
-    # Set 10^10 Hz break, basically zero contribution at X-ray energies
-    #break_p = snr.srcutlog.__getattribute__('break')
-    #break_p._setValues(10)  # HACKY WORKAROUND...
-    #break_p.frozen = True
-
-    xs.Fit.perform()
-    xs.Plot("ld delch")
-
-    # In case srcutlog break ran to zero, make sure we do traverse
-    # reasonably high break values: 15 -- 17 in 10+1 steps.
-    xs.Fit.steppar("snr_{}:22 15 17 10".format(region))
-
-    if error:
-        xs.Xset.openLog(output + "_error.log")
-        print "Error run start:", datetime.now()
-
-        # 22 = srcutlog break
-        # 2 = nH, 4 = kT, 12/13 = Si/S, 18 = Tau, 20 = vnei norm
-        xs.Fit.error("snr_{}:22,2,4,12,13,18,20".format(region))
-        # note: if Si/S frozen, XSPEC will print a benign warning
-
-        xs.Xset.closeLog()
-        print "Error run stop:", datetime.now()
-
-    # Diagnostic plots and numbers
-    products(output)
-    print_model(snr, output + "_snr_" + region + ".txt")
-
-
-
-def single_fit(output, region='src', free_elements=None, error=False):
-    """
-    Fit a region to vnei, XRB fixed
-    Arguments
-        output: file stem string
-        region: region ID
-        free_elements: (default) is [Si,S]
-            if [], use solar abundances
-        error: perform single error run
-    """
-    if free_elements is None:
-        free_elements = ['Si', 'S']
-
-    out = g309.load_data_and_models([region], snr_model='vnei')
-    set_energy_range(out[region])
-    xs.AllData.ignore('bad')
-
-    xs.Fit.renorm()
-
-    snr = xs.AllModels(1,'snr_'+region)
-    snr.tbnew_gas.nH.frozen = False
-    snr.vnei.kT.frozen = False
-    snr.vnei.Tau.frozen = False
-    for elem in free_elements:
-        comp = snr.vnei.__getattribute__(elem)
-        comp.frozen=False
-
-    xs.Fit.perform()
-    xs.Plot("ld delch")
-
-    # TODO - may need to provide rerun functionality
-    if error:
-        xs.Xset.openLog(output + "_error.log")
-
-        err_str = "snr_{:s}:{:d},{:d},{:d},{:d}".format(reg,
-                        xs_utils.par_num(snr, snr.tbnew_gas.nH),
-                        xs_utils.par_num(snr, snr.vnei.kT),
-                        xs_utils.par_num(snr, snr.vnei.Tau),
-                        xs_utils.par_num(snr, snr.vnei.norm)
-                        )
-        for elem in free_elements:
-            comp = snr.vnei.__getattribute__(elem)
-            err_str = err_str + ",{:d}".format(xs_utils.par_num(snr, comp))
-
-        print "Error run start:", datetime.now()
-        xs.Fit.error(err_str)
-        xs.Xset.closeLog()
-        print "Error run stop:", datetime.now()
-
-    products(output)
-    print_model(snr, output + "_snr_" + region + ".txt")
-
-
-def src_powerlaw(output, region='src', solar=False, error=False):
-    """
-    Fit a region to vnei+powerlaw, XRB fixed
-    Arguments
-        output: file stem string
-        region: region ID
-        solar: fit to solar abundances, or let Si,S run free
-        error: perform error runs
-    """
-
-    out = g309.load_data_and_models([region], snr_model='vnei+powerlaw')
-    set_energy_range(out[region])
-    xs.AllData.ignore('bad')
-
-    xs.Fit.renorm()
-
-    # Let SNR model attain nominal best fit without power law first
-    # (fit does not converge well otherwise)
-    snr = xs.AllModels(1,'snr_'+region)
-    snr.tbnew_gas.nH.frozen = False
-    snr.vnei.kT.frozen = False
-    snr.vnei.Tau.frozen = False
-    if solar:
-        snr.vnei.Si.frozen = True
-        snr.vnei.S.frozen = True
-    else:
-        snr.vnei.Si.frozen = False
-        snr.vnei.S.frozen = False
-
-    snr.powerlaw.PhoIndex=2
-    snr.powerlaw.PhoIndex.frozen=True
-    snr.powerlaw.norm=0
-    snr.powerlaw.norm.frozen=True
-
-    xs.Fit.perform()
-    xs.Plot("ld delch")
-
-    # Now introduce power law
-    snr.powerlaw.norm.frozen=False
-    xs.Fit.perform()
-    snr.powerlaw.PhoIndex.frozen=False
-    xs.Fit.perform()
-    xs.Plot("ld delch")
-
-    # Because powerlaw generally runs to zero, make sure we do traverse
-    # moderately strong power law cases
-    xs.Fit.steppar("snr_{}:22 1e-5 1e-3 10".format(region))
-
-    if error:
-        xs.Xset.openLog(output + "_error.log")
-        print "Error run start:", datetime.now()
-
-        # 21 = PhoIndex, 22 = norm
-        # 2 = nH, 4 = kT, 12/13 = Si/S, 18 = Tau, 20 = vnei norm
-        xs.Fit.error("snr_{}:21,22,2,4,12,13,18,20".format(region))
-        # note: if Si/S frozen, XSPEC will print a benign warning
-
-        xs.Xset.closeLog()
-        print "Error run stop:", datetime.now()
-
-    # Diagnostic plots and numbers
-    products(output)
-    print_model(snr, output + "_snr_" + region + ".txt")
-
-
-
-def joint_src_bkg_fit(output, free_elements=None, error=False,
-                      error_rerun=False, backscal_ratio_hack=None,
-                      tau_scan=True, tau_freeze=None, **kwargs):
-    """
-    Fit source + bkg regions, allowing XRB to float
-    backscal_ratio_hack = arbitrary adjustment to 0551000201 MOS1S001
-        source region backscal ratio.
-        This was the smallest geometric w.r.t. 0087940201 MOS1 (ratio 0.88).
-        Because the missing area (missing chip #6) sampled little of the
-        remnant, I thought that this ratio might underestimate the sampled
-        remnant flux, so I arbitrary changed the BACKSCAL ratio to 0.95 in some
-        fits.
-        Retain this parameter as a way to explore fit systematics.
+def single_fit(output, region='src', with_bkg=True, free_elements=None,
+               error=False, error_rerun=False,
+               tau_scan=False, tau_freeze=None, **kwargs):
+    """Fit any region to an arbitrary remnant model, possibly fitting XRB with
+    background region as well.
 
     Arguments
         output: file stem string
+    Keyword arguments
+        region: region spectrum to be fitted
+        with_bkg: fit to X-ray background region (bkg) simultaneously
         snr_model: snr model expression (and parameter setup) to use
         free_elements: (default) is [Si,S]
             if [], use solar abundances
         error: perform single error run
-        backscal_ratio_hack: see above
         tau_scan: steppar over plausible Tau values to ensure convergence to "correct" best fit
         tau_freeze: freeze ionization timescale to provided value
         kwargs - passed to g309_models.load_data_and_models
@@ -515,35 +268,43 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
     if free_elements is None:
         free_elements = ['Si', 'S']
 
-    out = g309.load_data_and_models(["src", "bkg"], **kwargs)
-    set_energy_range(out['src'])
-    set_energy_range(out['bkg'])
+    # Set up spectra and models in XSPEC
+    if with_bkg:
+        out = g309.load_data_and_models([region, 'bkg'], **kwargs)
+        set_energy_range(out['bkg'])
+    else:
+        out = g309.load_data_and_models([region], **kwargs)
+
+    set_energy_range(out[region])
     xs.AllData.ignore("bad")
 
-    if backscal_ratio_hack:
-        xs.AllModels(4,'snr_src').constant.factor = backscal_ratio_hack
-
     xrb = xs.AllModels(1, 'xrb')
-    snr = xs.AllModels(1, 'snr_src')
+    snr = xs.AllModels(1, 'snr_' + region)
 
     # Reset XRB to "typical" values, do NOT vary yet
-    xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
-                {xrb.tbnew_gas.nH.index : "1, , 0.1, 0.5, 5, 10"},  # Extragalactic absorption
-                {xrb.tbnew_gas_5.nH.index : "1, , 0.1, 0.5, 5, 10"},  # Ridge absorption
-                {xrb.apec_6.kT.index : "0.5, , 0, 0, 2, 4"},  # Galactic ridge (+ minimal halo maybe)
-                {xrb.apec.norm.index : 1e-3},
-                {xrb.apec_6.norm.index : 1e-3} )
-    xrb.apec.kT.frozen = True
-    xrb.tbnew_gas.nH.frozen = True
-    xrb.tbnew_gas_5.nH.frozen = True
-    xrb.apec_6.kT.frozen = True
-    xrb.apec.norm.frozen = True
-    xrb.apec_6.norm.frozen = True
+    if with_bkg:
+        xrb.setPars({xrb.apec.kT.index : "0.1, , 0, 0, 0.5, 1"},  # Unabsorped apec (local bubble)
+                    {xrb.tbnew_gas.nH.index : "1, , 0.1, 0.5, 5, 10"},  # Extragalactic absorption
+                    {xrb.tbnew_gas_5.nH.index : "1, , 0.1, 0.5, 5, 10"},  # Ridge absorption
+                    {xrb.apec_6.kT.index : "0.5, , 0, 0, 2, 4"},  # Galactic ridge (+ minimal halo maybe)
+                    {xrb.apec.norm.index : 1e-3},
+                    {xrb.apec_6.norm.index : 1e-3} )
+        xs_utils.freeze_model(xrb)
+        # Try floating norms to help initial fit
+        xrb.apec.norm.frozen = False
+        xrb.apec_6.norm.frozen = False
+
+        def thaw_bkg():
+            for c in [xrb.apec.kT, xrb.tbnew_gas.nH, xrb.tbnew_gas_5.nH,
+                      xrb.apec_6.kT]:
+                c.frozen = False
 
     xs.Fit.renorm()
 
-    # Let SNR model vary
-    if 'snr_model' not in kwargs or kwargs['snr_model'] == 'vnei':
+    # Let SNR model vary (NOTE: this assumes default to be vnei...)
+    if 'snr_model' not in kwargs or kwargs['snr_model'].startswith('vnei'):
+
+        xs_utils.freeze_model(snr)
 
         snr.tbnew_gas.nH.frozen=False
         snr.vnei.kT.frozen=False
@@ -557,91 +318,113 @@ def joint_src_bkg_fit(output, free_elements=None, error=False,
             comp = snr.vnei.__getattribute__(elem)
             comp.frozen = False
 
+        if 'snr_model' in kwargs:  # TODO This is getting really annoying
+            if kwargs['snr_model'] == 'vnei+nei':
+                snr.nei.norm = 0
+            elif kwargs['snr_model'] == 'vnei+powerlaw':
+                snr.powerlaw.PhoIndex = 2
+                snr.powerlaw.norm = 0  # zero
+            elif kwargs['snr_model'] == 'vnei+srcutlog':
+                # srcutlog, w/ one free parameter, behaves better than powerlaw
+                snr.srcutlog.__getattribute__('break').frozen = False
+
+        xs.Fit.perform()
+
+        if with_bkg:
+            thaw_bkg()
+            xs.Fit.perform()
+
+        if tau_scan:
+            xs.Fit.steppar("log {:s}:{:d} 1e9 5e13 15".format(snr.name,
+                                xs_utils.par_num(snr, snr.vnei.Tau)))
+
+        if 'snr_model' in kwargs:  # TODO This is getting really annoying
+            if kwargs['snr_model'] == 'vnei+nei':
+                snr.nei.kT.frozen = False
+                snr.nei.Tau.frozen = False
+                snr.nei.norm.frozen = False
+                xs.Fit.perform()
+            elif kwargs['snr_model'] == 'vnei+powerlaw':
+
+                snr.powerlaw.PhoIndex = 2
+                snr.powerlaw.norm = 0  # zero
+
+                snr.powerlaw.norm.frozen = False
+                xs.Fit.perform()
+
+                snr.powerlaw.PhoIndex.frozen = False
+                xs.Fit.perform()
+
+                # Because powerlaw norm generally runs to zero, traverse moderately
+                # strong power law cases
+                xs.Fit.steppar("log {:s}:{:d} 1e-5 1e-2 30".format(snr.name,
+                                    xs_utils.par_num(snr, snr.powerlaw.norm)))
+
+            elif kwargs['snr_model'] == 'vnei+srcutlog':
+
+                # Check reasonably high break values: 15 -- 17
+                xs.Fit.steppar("{:s}:{:d} 15 17 20".format(snr.name,
+                        xs_utils.par_num(snr, snr.srcutlog.__getattribute__('break'))
+                        ))
+
     elif kwargs['snr_model'] == 'vpshock':
+
+        xs_utils.freeze_model(snr)
 
         snr.tbnew_gas.nH.frozen=False
         snr.vpshock.kT.frozen=False
-        snr.vpshock.Tau_l.frozen=False
         if tau_freeze:
-            snr.vpshock.Tau_u.frozen = tau_freeze
-            snr.vpshock.Tau_u.frozen = True
-        else:
-            snr.vpshock.Tau_u.frozen = False
+            raise Exception("ERROR: vpshock not configured for fixed Tau")
 
         for elem in free_elements:
             comp = snr.vpshock.__getattribute__(elem)
             comp.frozen = False
 
-    elif kwargs['snr_model'] == 'vnei+nei':
+        # vpshock fits are very ill behaved, must coerce into best fit
+        snr.vpshock.Tau_l = 1e8
+        snr.vpshock.Tau_u = 5e10
 
-        snr.tbnew_gas.nH.frozen=False
-        snr.vnei.kT.frozen=False
-        if tau_freeze:
-            snr.vnei.Tau.frozen = tau_freeze
-            snr.vnei.Tau.frozen = True
-        else:
-            snr.vnei.Tau.frozen = False
-
-        snr.nei.kT.frozen=False
-        snr.nei.Tau.frozen=False
         xs.Fit.perform()
 
-        # Reserve element variation to second step fit
-        for elem in free_elements:
-            comp = snr.vnei.__getattribute__(elem)
-            comp.frozen = False
+        if with_bkg:
+            thaw_bkg()
+            xs.Fit.perform()
 
-    xs.Fit.perform()
+        snr.vpshock.Tau_l.frozen = False
+        snr.vpshock.Tau_u.frozen = False
+        xs.Fit.perform()
 
-    # XRB is not as well constrained as SNR, and fits w/ XRB free
-    # (and SNR at default vnei values) tend to run away
-    xrb.apec.kT.frozen = False
-    xrb.tbnew_gas.nH.frozen = False  # tbnew_gas * powerlaw
-    xrb.tbnew_gas_5.nH.frozen = False  # tbnew_gas_5 * apec_6
-    xrb.apec_6.kT.frozen = False
-    xrb.apec.norm.frozen = False
-    xrb.apec_6.norm.frozen = False
-    xs.Fit.perform()
-
-    # SNR Tau is not well constrained in general fits.
-    # Either converges to ~2-3e10, or runs to 5e13
-    # Grid over (roughly): [1e9, 2e9, 5e9, 1e10, 2e10, 5e10, ... 1e13]
-    if tau_scan:
-        if 'snr_model' not in kwargs or kwargs['snr_model'] in ['vnei', 'vnei+nei']:
-            xs.Fit.steppar("log snr_src:{:d} 1e9 1e13 13".format(
-                                xs_utils.par_num(snr, snr.vnei.Tau)))
-        elif kwargs['snr_model'] == 'vpshock':
-            # Since Tau_u is constrained to be greater than Tau_l
-            # this ensures that both Tau_u and Tau_l traverse a range of values
-            xs.Fit.steppar("log snr_src:{:d} 1e9 1e13 13".format(
+        if tau_scan:
+            # Since Tau_u is constrained to be greater than Tau_l (?) this
+            # should ensure that both Tau_u and Tau_l traverse a range of
+            # values.  But I haven't checked it yet...
+            xs.Fit.steppar("log {:s}:{:d} 1e9 5e13 15".format(snr.name,
                                 xs_utils.par_num(snr, snr.vpshock.Tau_u)))
-        else:
-            raise Exception("Invalid SNR MODEL not configured for tau scan")
 
+    else:
+        raise Exception("Invalid SNR model - please add branch")
+
+
+    # Compute standard 90% errors
     if error:
 
         xs.Xset.openLog(output + "_error.log")
-        print "Error run start:", datetime.now()
 
-        # Perform XRB error run first because a new best fit is [typically]
-        # found in this step
-        # Note: error commands cannot be combined; XSPEC only looks at
-        # parameter numbers after the first "<model name>: ...",
-        # so error command reruns must be done manually
-        xs.Fit.error(error_str_all_free(xrb))
+        if with_bkg:
+            xs.Fit.error(error_str_all_free(xrb))
         xs.Fit.error(error_str_all_free(snr))
 
         if error_rerun:
-            print "Second error run:", datetime.now()
-            xs.Fit.error(error_str_all_free(xrb))
+            if with_bkg:
+                xs.Fit.error(error_str_all_free(xrb))
             xs.Fit.error(error_str_all_free(snr))
-
-        print "Error run stop:", datetime.now()
         xs.Xset.closeLog()
 
+    # Dump standard outputs
     products(output)
-    print_model(snr, output + "_snr_src.txt")
-    print_model(xrb, output + "_xrb.txt")
+    print_model(snr, output + "_{:s}.txt".format(snr.name))
+    if with_bkg:
+        print_model(xrb, output + "_xrb.txt")
 
 
 
@@ -808,7 +591,7 @@ if __name__ == '__main__':
 
     # Options so far:
     # five_annulus_fit(output, error=False, error_rerun=False)
-    # joint_src_bkg_fit(output, error=False)
+    # single_fit(output, error=False)
     # src_powerlaw(output, region='src', error=False)
     # src_powerlaw_xrbfree(error=False, error=False)
     # src_srcutlog(...)
@@ -823,22 +606,22 @@ if __name__ == '__main__':
     # Integrated source fits - standard setup
     # ---------------------------------------
     prep_xs(with_xs=True, statMethod='pgstat')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp01_pgstat_mosmerge",
+    stopwatch(single_fit, "results_spec/20161015_src_bkg_grp01_pgstat_mosmerge",
               error=True, error_rerun=True, mosmerge=True, suffix='grp01')
     # Time: 15.2 hrs on statler
 
     prep_xs(with_xs=True, statMethod='chi')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp50_chi_mosmerge",
+    stopwatch(single_fit, "results_spec/20161015_src_bkg_grp50_chi_mosmerge",
               error=True, error_rerun=True, mosmerge=True, suffix='grp50')
     # Time: 6.0 hrs on statler
 
     prep_xs(with_xs=True, statMethod='pgstat')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp01_pgstat_nomerge",
+    stopwatch(single_fit, "results_spec/20161015_src_bkg_grp01_pgstat_nomerge",
               error=True, error_rerun=True, mosmerge=False, suffix='grp01')
     # Time: 18.75 hrs on statler
 
     prep_xs(with_xs=True, statMethod='pgstat')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_grp50_chi_nomerge",
+    stopwatch(single_fit, "results_spec/20161015_src_bkg_grp50_chi_nomerge",
               error=True, error_rerun=True, mosmerge=False, suffix='grp50')
     # Time: (?) hrs on cooper (running now)
 
@@ -851,7 +634,7 @@ if __name__ == '__main__':
     # (October 2016) defaults
 
     # Conservative run: just get clear emission lines
-    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_mg",
+    stopwatch(single_fit, "results_spec/20161015_src_bkg_mg",
               free_elements=['Mg', 'Si', 'S'],
               error=True, error_rerun=True)
     # Time: 10.0 hrs on cooper
@@ -860,113 +643,85 @@ if __name__ == '__main__':
     # Conservative run: just get clear emission lines + possible Ar, Ca bumps
     # around 3-4 keV
     prep_xs(with_xs=True, statMethod='pgstat')
-    stopwatch(joint_src_bkg_fit, "results_spec/20161015_src_bkg_mg-ar-ca",
+    stopwatch(single_fit, "results_spec/20161015_src_bkg_mg-ar-ca",
               free_elements=['Mg', 'Si', 'S', 'Ar', 'Ca'],
               error=True, error_rerun=True)
     # Time: 37.4 hrs (~1.5 days) on cooper
 
     ##### OLD, NOT YET UPDATED RUNS #####
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_o-ne-mg-fe",
+    stopwatch(single_fit, "results_spec/20160726_src_bkg_o-ne-mg-fe",
               free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], error=True,
               error_rerun=True)
     # Time: 4.5 hrs on statler (one error run only)
     # Time: 7.5 hrs on statler (with error rerun)
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_o-ne-mg-ar-ca-fe-ni",
+    stopwatch(single_fit, "results_spec/20160726_src_bkg_o-ne-mg-ar-ca-fe-ni",
             free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe', 'Ni'],
             error=True, error_rerun=True)
     # Time: 9.5 hrs on statler
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160803_src_bkg_o-ne-mg-ar-ca-fe",
+    stopwatch(single_fit, "results_spec/20160803_src_bkg_o-ne-mg-ar-ca-fe",
             free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'],
             error=True, error_rerun=True)
     # Time: ... on statler
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160728_src_bkg_o-mg", free_elements=['O', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160728_src_bkg_o-mg", free_elements=['O', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
     # Time: 2.8 hrs on statler
-    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_ne-mg", free_elements=['Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160726_src_bkg_ne-mg", free_elements=['Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
     # Time: 2.9 hrs on statler
-    stopwatch(joint_src_bkg_fit, "results_spec/20160728_src_bkg_mg-fe", free_elements=['Mg', 'Si', 'S', 'Fe'], error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160728_src_bkg_mg-fe", free_elements=['Mg', 'Si', 'S', 'Fe'], error=True, error_rerun=True)
     # Time: 4.1 hrs on statler
-    stopwatch(joint_src_bkg_fit, "results_spec/20160728_src_bkg_o-ne-mg", free_elements=['O', 'Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160728_src_bkg_o-ne-mg", free_elements=['O', 'Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
     # Time: 4.1 hrs on cooper
 
     # Duplicate Rakowski+ fit
-    stopwatch(joint_src_bkg_fit, "results_spec/20160729_src_bkg_ne-mg-ar-ca-fe", free_elements=['Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'], error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160729_src_bkg_ne-mg-ar-ca-fe", free_elements=['Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'], error=True, error_rerun=True)
     # Time: 2.6 hrs on cooper (only 1 error run; rerun not needed. interrupted)
 
 
-    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_with-ism-nei", snr_model='vnei+nei', error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160726_src_bkg_with-ism-nei", snr_model='vnei+nei', error=True, error_rerun=True)
     # Time: 6.1 hrs on treble
-    stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_o-ne-mg-fe_with-ism-nei", snr_model='vnei+nei', free_elements=['O', 'Ne', 'Mg', 'S', 'Si', 'Fe'], error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160802_src_bkg_o-ne-mg-fe_with-ism-nei", snr_model='vnei+nei', free_elements=['O', 'Ne', 'Mg', 'S', 'Si', 'Fe'], error=True, error_rerun=True)
     # Time: ... on treble
-    stopwatch(joint_src_bkg_fit, "results_spec/20160726_src_bkg_vpshock", snr_model='vpshock', error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160726_src_bkg_vpshock", snr_model='vpshock', error=True, error_rerun=True)
     # Time: 5.9 hrs on treble
 
     # Fits with Tau = 1e11 fixed
-    stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_tau-1e11", tau_freeze=1e11, error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160802_src_bkg_tau-1e11", tau_freeze=1e11, error=True, error_rerun=True)
     # Time: 2.9 hrs on statler
-    stopwatch(joint_src_bkg_fit, "results_spec/20160802_src_bkg_o-ne-mg-fe_tau-1e11", free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], tau_freeze=1e11, error=True, error_rerun=True)
+    stopwatch(single_fit, "results_spec/20160802_src_bkg_o-ne-mg-fe_tau-1e11", free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], tau_freeze=1e11, error=True, error_rerun=True)
     # Time: ... on statler
 
+    stopwatch(single_fit, "results_spec/20161021_src_mg-si-s_vpshock_NOERR",
+              with_bkg=False, snr_model='vpshock', free_elements=['Mg','Si','S'])
+    # 3.5 minutes on treble
 
+    stopwatch(single_fit, "results_spec/20161021_src_solar_powerlaw_NOERR", with_bkg=False, snr_model='vnei+powerlaw', free_elements=[])
+    stopwatch(single_fit, "results_spec/20161021_src_mg-si-s_powerlaw_NOERR", with_bkg=False, snr_model='vnei+powerlaw', free_elements=['Mg','Si','S'])
+    stopwatch(single_fit, "results_spec/20161021_src_solar_srcutlog_NOERR", with_bkg=False, snr_model='vnei+srcutlog', free_elements=[])
+    stopwatch(single_fit, "results_spec/20161021_src_mg-si-s_srcutlog_NOERR", with_bkg=False, snr_model='vnei+srcutlog', free_elements=['Mg','Si','S'])
 
 
     # Annulus fits, all varieties
     # ---------------------------
 
-    # FIVE ANNULUS FITS
+    stopwatch(annulus_fit, "results_spec/20161019_fiveann", error=True,
+              error_rerun=True)
+    # 2 days, 4.6 hrs on statler (3.2 hrs without errors)
+    stopwatch(annulus_fit, "results_spec/20161019_fiveann_mg", error=True,
+              error_rerun=True, free_all_elements=['Mg', 'Si', 'S'])
+    # 2 days, 20.8 hrs on statler (4.3 hrs without errors)
 
-    stopwatch(annulus_fit, "results_spec/20161019_fiveann", error=True, error_rerun=True)
-#    # Rerun error command for center only
-#    ring = xs.AllModels(1,'snr_ann_000_100')
-#    xs.Xset.openLog("results_spec/20160701_fiveann" + "_error_rerun_manual.log")
-#    stopwatch(xs.Fit.error, "snr_ann_000_100:{:d},{:d},{:d},{:d}".format(
-#                                    xs_utils.par_num(ring, ring.vnei.kT),
-#                                    xs_utils.par_num(ring, ring.vnei.Tau),
-#                                    xs_utils.par_num(ring, ring.vnei.Si),
-#                                    xs_utils.par_num(ring, ring.vnei.S)))
-#    xs.Xset.closeLog()
-#    print_model(ring, "results_spec/20160701_fiveann_snr_ann_000_100.txt")
-    # Time: 2 days, 17 hrs on treble
-    #   + extra 5 hours for center error rerun
-    # (would roughly double to 4 days with full error_rerun)
+    # Four annulus fits
 
-    stopwatch(annulus_fit, "results_spec/2016xxxx_fiveann_center-mg-free",
-              error=True, error_rerun=True, free_center_elements=['Mg'])
-    # WARNING - needs to be regenerated.
-
-    stopwatch(annulus_fit, "results_spec/20160701_fiveann_center-mg-fe-free", free_center_elements=["Mg", "Fe"], error=True, error_rerun=True)
-    # Time: 6 days, 10 hrs (!) on treble
-
-    # FOUR ANNULUS FITS
-
-    stopwatch(annulus_fit, "results_spec/20160725_fourann", four_ann=True, error=True, error_rerun=True)
-    # Time: 1 day, 19.5 hrs on treble (with error rerun)
-    # Time: 2 days, 7 hrs on cooper (with error rerun, incl norm errors)
-
-    stopwatch(annulus_fit, "results_spec/20160725_fourann_all-mg-free", four_ann=True, free_all_elements=["Mg", "Si", "S"], error=True, error_rerun=True)
-    # Time: 2 days, 17 hrs on cooper (with error rerun & norm errors)
-    stopwatch(annulus_fit, "results_spec/20160802_fourann_o-ne-mg-fe-free", four_ann=True, free_all_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], error=True, error_rerun=True)
-    # Time: ... on statler
-    stopwatch(annulus_fit, "results_spec/20160803_fourann_o-ne-mg-ar-ca-fe-free", four_ann=True, free_all_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'], error=True, error_rerun=True)
-    # Time: ... on statler
-
-    stopwatch(annulus_fit, "results_spec/20160725_fourann_center-mg-free", four_ann=True, free_center_elements=["Mg"], error=True, error_rerun=True)
-    # Time: 2 days, 14 hrs on treble (37 minutes without error run)
-    # Time: ... on statler (running now)
-    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-ne-free", four_ann=True, free_center_elements=["Mg", "Ne"], error=True, error_rerun=True)
-    # Time: 2 days, 11 hrs on statler
-    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-o-free", four_ann=True, free_center_elements=["Mg", "O"], error=True, error_rerun=True)
-    # Time: 1 day, 17.5 hrs on statler
-    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-o-ne-free", four_ann=True, free_center_elements=["Mg", "O", "Ne"], error=True, error_rerun=True)
-    # Time: 3 days, 2 hrs on cooper
-    stopwatch(annulus_fit, "results_spec/20160708_fourann_center-mg-fe-free", four_ann=True, free_center_elements=["Mg", "Fe"], error=True, error_rerun=True)
-    # Time: 1 day, 23.75 hrs on cooper
-    stopwatch(annulus_fit, "results_spec/20160712_fourann_center-mg-o-fe-free", four_ann=True, free_center_elements=["Mg", "O", "Fe"], error=True, error_rerun=True)
-    # Time: 2 days, 18.5 hrs on cooper
-    # Time without error runs: 34 minutes on treble
+    stopwatch(annulus_fit, "results_spec/20161019_fourann", error=True,
+              error_rerun=True, four_ann=True)
+    # ? days...
+    stopwatch(annulus_fit, "results_spec/20161019_fourann_mg", error=True,
+              error_rerun=True, free_all_elements=['Mg', 'Si', 'S'], four_ann=True)
+    # ~3? hr without error
+    # 1 day, 2.25 hrs on cooper (with error rerun)
 
 
 
@@ -995,12 +750,6 @@ if __name__ == '__main__':
     # -----------------------------------------------------------
     #stopwatch(bkg_only_fit, "results_spec/20160624_bkg_only_rerun",
     #          error=True)
-
-    # Changing BACKSCAL ratio for 0551000201 MOS1 source region
-    # has no practical effect on fits.
-    # ---------------------------------------------------------
-    #stopwatch(joint_src_bkg_fit, "results_spec/20160624_src_bkg_hack_eq_one_rerun",
-    #          backscal_ratio_hack=1, error=True)
 
 
     # Sub region fits with varying nH values

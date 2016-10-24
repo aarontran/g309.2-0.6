@@ -38,6 +38,8 @@ def main():
             # Set some defaults
             if 'legend' not in config:  # TODO this behavior may change
                 config['legend'] = True
+            if 'ms-single-column-plot' not in config:
+                config['ms-single-column-plot'] = False
 
             # Apply global defaults (cascading styles) for some parameters
             # but not all (e.g., 'name' and 'file' don't make sense to cascade)
@@ -74,7 +76,10 @@ def main_plots(config):
     n_panes = len(config['subplots'])
 
     # Plot data and models
-    fig, axes = plt.subplots(n_panes, sharex=True, figsize=(6.5, n_panes*1.75))
+    if config['ms-single-column-plot']:
+        fig, axes = plt.subplots(n_panes, sharex=True, figsize=(3.54, n_panes*1.25))
+    else:
+        fig, axes = plt.subplots(n_panes, sharex=True, figsize=(6.5, n_panes*1.75))
     if n_panes == 1:
         axes = [axes]  # plt.subplots collapses unneeded dimensions
 
@@ -142,13 +147,21 @@ def main_plots(config):
 
         # Annotation text
         if 'name' in pane:
-            ax.text(0.015, 0.93, pane['name'], ha='left', va='top',
-                    transform=ax.transAxes)
+            if config['ms-single-column-plot']:
+                ax.text(0.02, 0.9, pane['name'], ha='left', va='top',
+                        transform=ax.transAxes)
+            else:
+                ax.text(0.015, 0.93, pane['name'], ha='left', va='top',
+                        transform=ax.transAxes)
 
         # Legend on top plot
         if ax is axes[0] and config['legend'] and pane['labels']:
-            ax.legend(loc='best', prop={'size':8},
-                      labelspacing=0.3, framealpha=0.5)
+            if config['ms-single-column-plot']:
+                ax.legend(loc='best', prop={'size':8},
+                          labelspacing=0.15, frameon=False)
+            else:
+                ax.legend(loc='best', prop={'size':8},
+                          labelspacing=0.3, framealpha=0.5)
 
 
         # Check if data are hidden by plotting limits
