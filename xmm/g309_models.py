@@ -19,7 +19,7 @@ from ExtractedSpectrum import ExtractedSpectrum
 
 
 def load_data_and_models(regs, snr_model='vnei', suffix='grp01',
-                         mosmerge=True, marfrmf=True, sp_bknpower=True):
+                         mosmerge=True, marfrmf=True, sp_bknpower=False):
     """
     Load G309.2-0.6 data and initialize responses and models.
 

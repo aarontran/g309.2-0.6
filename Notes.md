@@ -11823,24 +11823,69 @@ I know that a better fit can be achieved by more hand-massaging -- and at
 some point I wonder if we're better off simply pushing these things to fit by
 hand.
 
-For now, stick to straight power law.
-Broken power law SP did not completely explain residual tension in my manual
-fit.
+Monday-Friday 2016 October 24-28 -- cleanup, writing
+====================================================
 
-Monday 2016 October 24 -- cleanup, writing
-==========================================
+Postpone broken power law SP fits
+---------------------------------
 
-Reviewed and generated plots:
+Realized a large error: when setting up fits with broken power law for
+0551000201 SP, I forgot to free NEI plasma norm when performing initial fit.
+So fits did not converge well at all.  Delete all outputs.
 
-    replot_fiveann.yaml                         OK
-    replot_src_bkg.yaml                         OK
-    replot_src_vary-abund.yaml                  OK
-    replot_src_vary-added-components.yaml       Deferred, fits not good
-    replot_src_vary-grp-merge.yaml              OK
+For now, stick to straight power law.  In my manual experiment, broken power
+law SP did not completely explain residual tension anyways.
+
+Text/plot updates
+-----------------
+
+Reviewed and generated new plots and tables (updated all plots, tables in
+`g309_tables.ipynb`; updated ms text.
+
+Created NEW narrow band Mg, Si, S images:
+- Inverted cubehelix color scheme
+- asinh scaling
+- heavy smoothing (12-14 for Mg, 8 for Si, 12-14 for S) to show coarse
+  features of interest.
+Images definitely show Mg spatially separated from bulk Si/S emission.
+Intriguing.
+
+Filling in more gaps
+--------------------
+
+Question: how are we able to find reasonable fits with such divergent values of
+Tau?  Need to inspect fits.
+    TODO: Plot best fit Tau=5e13 on top of Tau=2e10 fit, and compare curves.
+
+Pending:
+- fit at high Tau (running) - how is it possible to reproduce
+  [He alpha/beta] line ratios at 0.5 keV instead of 1.5 keV?
+    -> error in works (20161028_tau_freeze...)
+- fit with more abundances (understand how / why / if O,Ne,Mg,Fe are allowed)
+    -> src bkg solar looks fine.
+    -> Mg, Si, S, Fe partially done -- need to get a better error bar on Fe.
+        (so, ruunning steppar now)
+    -> O, Ne, Mg, Si, S: worked, but XRB nH is weird; I'm uncertain if errors are good.
+        I re-forced fit and am re-running error commands now.
+        May need to repeat, but the key SNR parameters should not change much.
+    -> O,Ne,Mg, Si, S, Ar, Ca, Fe keeps dying.  I think I must do this by hand.
+- fit at low absorption 0.7e22 (high priority!)
+    -> partially done -- found a very reasonable fit, enough to discuss.
+    -> Re-running error command, after allowing nH to shift a bit (towards
+    0.9e22)
+
+TODO (lower priority):
+- fit with vpshock
+- fit with powerlaw, srcutlog
+- fit with ISM NEI or ISM vpshock component
+- fit with sedov model
 
 
 Standing questions and TODOs
 ============================
+
+[ ] More systematics -- what if we fit the two obsids _separately_?
+Eh.  I don't think we'll learn much.  But maybe worth trying.
 
 [ ] Think about iron. Understand why we are not seeing Fe-K (or Fe-L)?
     E.g. Yang+ (2013, ApJ 766) Figure 2 shows Suzaku spectra of 6 bright
@@ -11880,7 +11925,7 @@ resolution)
 
 [ ] Fits: general concern.  Implications of centroid fitting tension, evidenced in residuals.
 
-[ ] Text: clarify filling factor 1.4x factor.
+[x] Text: clarify filling factor 1.4x factor.
 
 List of possible systematics:
 * X-ray background spectrum assumptions and variation.

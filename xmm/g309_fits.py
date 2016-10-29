@@ -247,7 +247,8 @@ def error_str_all_free(model):
 
 def single_fit(output, region='src', with_bkg=True, free_elements=None,
                error=False, error_rerun=False,
-               tau_scan=False, tau_freeze=None, **kwargs):
+               tau_scan=False, tau_freeze=None, nH_freeze=None,
+               snr_model='vnei', **kwargs):
     """Fit any region to an arbitrary remnant model, possibly fitting XRB with
     background region as well.
 
@@ -262,6 +263,7 @@ def single_fit(output, region='src', with_bkg=True, free_elements=None,
         error: perform single error run
         tau_scan: steppar over plausible Tau values to ensure convergence to "correct" best fit
         tau_freeze: freeze ionization timescale to provided value
+        nH_freeze: freeze SNR absorption to provided value
         kwargs - passed to g309_models.load_data_and_models
             (suffix, mosmerge, marfrmf)
     """
@@ -270,7 +272,7 @@ def single_fit(output, region='src', with_bkg=True, free_elements=None,
 
     # Set up spectra and models in XSPEC
     if with_bkg:
-        out = g309.load_data_and_models([region, 'bkg'], **kwargs)
+        out = g309.load_data_and_models([region, 'bkg'], snr_model=snr_model, **kwargs)
         set_energy_range(out['bkg'])
     else:
         out = g309.load_data_and_models([region], **kwargs)
@@ -302,15 +304,21 @@ def single_fit(output, region='src', with_bkg=True, free_elements=None,
     xs.Fit.renorm()
 
     # Let SNR model vary (NOTE: this assumes default to be vnei...)
-    if 'snr_model' not in kwargs or kwargs['snr_model'].startswith('vnei'):
+    if snr_model.startswith('vnei'):
 
         xs_utils.freeze_model(snr)
 
-        snr.tbnew_gas.nH.frozen=False
+        # Configure initial SNR parameters
+        if nH_freeze:
+            snr.tbnew_gas.nH = nH_freeze
+        else:
+            snr.tbnew_gas.nH.frozen=False
+
         snr.vnei.kT.frozen=False
+        snr.vnei.norm.frozen=False
+
         if tau_freeze:
-            snr.vnei.Tau.frozen = tau_freeze
-            snr.vnei.Tau.frozen = True
+            snr.vnei.Tau = tau_freeze
         else:
             snr.vnei.Tau.frozen = False
 
@@ -318,61 +326,75 @@ def single_fit(output, region='src', with_bkg=True, free_elements=None,
             comp = snr.vnei.__getattribute__(elem)
             comp.frozen = False
 
-        if 'snr_model' in kwargs:  # TODO This is getting really annoying
-            if kwargs['snr_model'] == 'vnei+nei':
-                snr.nei.norm = 0
-            elif kwargs['snr_model'] == 'vnei+powerlaw':
-                snr.powerlaw.PhoIndex = 2
-                snr.powerlaw.norm = 0  # zero
-            elif kwargs['snr_model'] == 'vnei+srcutlog':
-                # srcutlog, w/ one free parameter, behaves better than powerlaw
-                snr.srcutlog.__getattribute__('break').frozen = False
+        if snr_model == 'vnei+nei':
+            snr.nei.norm = 0
+        elif snr_model == 'vnei+powerlaw':
+            snr.powerlaw.PhoIndex = 2
+            snr.powerlaw.norm = 0  # zero
+        elif snr_model == 'vnei+srcutlog':
+            # srcutlog, w/ one free parameter, behaves better than powerlaw
+            snr.srcutlog.__getattribute__('break').frozen = False
 
-        xs.Fit.perform()
-
+        # Run initial fit
         if with_bkg:
-            thaw_bkg()
+            # Fit has enormous trouble converging
+            if tau_freeze:
+                thaw_bkg()
+                xs.Fit.perform()
+            else:
+                snr.vnei.Tau = 2e10
+                snr.vnei.Tau.frozen = True
+                xs.Fit.perform()
+
+                thaw_bkg()
+                xs.Fit.perform()
+                snr.vnei.Tau.frozen = False
+                xs.Fit.perform()
+
+        else:
             xs.Fit.perform()
+
+        # Post-processing on initial fit
 
         if tau_scan:
             xs.Fit.steppar("log {:s}:{:d} 1e9 5e13 15".format(snr.name,
                                 xs_utils.par_num(snr, snr.vnei.Tau)))
 
-        if 'snr_model' in kwargs:  # TODO This is getting really annoying
-            if kwargs['snr_model'] == 'vnei+nei':
-                snr.nei.kT.frozen = False
-                snr.nei.Tau.frozen = False
-                snr.nei.norm.frozen = False
-                xs.Fit.perform()
-            elif kwargs['snr_model'] == 'vnei+powerlaw':
+        if snr_model == 'vnei+nei':
+            snr.nei.kT.frozen = False
+            snr.nei.Tau.frozen = False
+            snr.nei.norm.frozen = False
+            xs.Fit.perform()
+        elif snr_model == 'vnei+powerlaw':
 
-                snr.powerlaw.PhoIndex = 2
-                snr.powerlaw.norm = 0  # zero
+            snr.powerlaw.PhoIndex = 2
+            snr.powerlaw.norm = 0  # zero
 
-                snr.powerlaw.norm.frozen = False
-                xs.Fit.perform()
+            snr.powerlaw.norm.frozen = False
+            xs.Fit.perform()
 
-                snr.powerlaw.PhoIndex.frozen = False
-                xs.Fit.perform()
+            snr.powerlaw.PhoIndex.frozen = False
+            xs.Fit.perform()
 
-                # Because powerlaw norm generally runs to zero, traverse moderately
-                # strong power law cases
-                xs.Fit.steppar("log {:s}:{:d} 1e-5 1e-2 30".format(snr.name,
-                                    xs_utils.par_num(snr, snr.powerlaw.norm)))
+            # Because powerlaw norm generally runs to zero, traverse moderately
+            # strong power law cases
+            xs.Fit.steppar("log {:s}:{:d} 1e-5 1e-2 30".format(snr.name,
+                                xs_utils.par_num(snr, snr.powerlaw.norm)))
 
-            elif kwargs['snr_model'] == 'vnei+srcutlog':
+        elif snr_model == 'vnei+srcutlog':
 
-                # Check reasonably high break values: 15 -- 17
-                xs.Fit.steppar("{:s}:{:d} 15 17 20".format(snr.name,
-                        xs_utils.par_num(snr, snr.srcutlog.__getattribute__('break'))
-                        ))
+            # Check reasonably high break values: 15 -- 17
+            xs.Fit.steppar("{:s}:{:d} 15 17 20".format(snr.name,
+                    xs_utils.par_num(snr, snr.srcutlog.__getattribute__('break'))
+                    ))
 
-    elif kwargs['snr_model'] == 'vpshock':
+    elif snr_model == 'vpshock':
 
         xs_utils.freeze_model(snr)
 
         snr.tbnew_gas.nH.frozen=False
         snr.vpshock.kT.frozen=False
+        snr.vpshock.norm.frozen=False
         if tau_freeze:
             raise Exception("ERROR: vpshock not configured for fixed Tau")
 
@@ -383,7 +405,6 @@ def single_fit(output, region='src', with_bkg=True, free_elements=None,
         # vpshock fits are very ill behaved, must coerce into best fit
         snr.vpshock.Tau_l = 1e8
         snr.vpshock.Tau_u = 5e10
-
         xs.Fit.perform()
 
         if with_bkg:
