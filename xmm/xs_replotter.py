@@ -40,6 +40,14 @@ def main():
                 config['legend'] = True
             if 'ms-single-column-plot' not in config:
                 config['ms-single-column-plot'] = False
+            if 'height' not in config:
+                config['height'] = 1.75
+
+            if 'width' not in config:
+                if config['ms-single-column-plot']:
+                    config['width'] = 3.54
+                else:
+                    config['width'] = 7.0
 
             # Apply global defaults (cascading styles) for some parameters
             # but not all (e.g., 'name' and 'file' don't make sense to cascade)
@@ -76,10 +84,8 @@ def main_plots(config):
     n_panes = len(config['subplots'])
 
     # Plot data and models
-    if config['ms-single-column-plot']:
-        fig, axes = plt.subplots(n_panes, sharex=True, figsize=(3.54, n_panes*1.25))
-    else:
-        fig, axes = plt.subplots(n_panes, sharex=True, figsize=(6.5, n_panes*1.75))
+    fig, axes = plt.subplots(n_panes, sharex=True,
+                             figsize=(config['width'], n_panes * config['height']))
     if n_panes == 1:
         axes = [axes]  # plt.subplots collapses unneeded dimensions
 
@@ -148,11 +154,11 @@ def main_plots(config):
         # Annotation text
         if 'name' in pane:
             if config['ms-single-column-plot']:
-                ax.text(0.02, 0.9, pane['name'], ha='left', va='top',
-                        transform=ax.transAxes)
+                ax.text(0.05, 0.93, pane['name'], ha='left', va='top',
+                        transform=ax.transAxes, fontsize=9)
             else:
-                ax.text(0.015, 0.93, pane['name'], ha='left', va='top',
-                        transform=ax.transAxes)
+                ax.text(0.02, 0.93, pane['name'], ha='left', va='top',
+                        transform=ax.transAxes, fontsize=10)
 
         # Legend on top plot
         if ax is axes[0] and config['legend'] and pane['labels']:

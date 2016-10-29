@@ -294,17 +294,37 @@ resolve the X-ray morphology of G309.2-0.6.
 We confirm the previous
 
 
+\begin{table*}
+    \centering
+    \caption{XMM Observations of G309.2-0.6\label{tab:obs}}
+    \input{tab-observations.tex}
+    \tablecomments{Durations in kiloseconds (ks).
+    Good duration $t_{\mt{live}}$ is central CCD live time after flare
+    filtering; MOS value averages MOS1 and MOS2 times ($\sim 0.6 \unit{ks}$
+    difference in both obsids).
+    Rev. is XMM-Newton orbit (revolution) number.}
+\end{table*}
+
 % =============================================================================
 % Observations + Reduction
 % =============================================================================
 \section{Observations and Data Reduction} \label{sec:obs}
 
-XMM-Newton observed G309.2-0.6 for $97.7 \unit{ks}$ in two pointings
-(Table~\ref{tab:obs}), which we hereafter reference by year.
-The 2009 observation targeted the Be star HD 119682, but also captured
-G309.2-0.6 on the MOS1/2 and PN detectors.
+XMM-Newton has observed G309.2-0.6 for $97.7 \unit{ks}$ in two pointings
+(Table~\ref{tab:obs}).
+%The 2009 observation targeted the Be star HD 119682, but also captured
+%G309.2-0.6 on the MOS1/2 and PN detectors.
 After background flare filtering, our good exposure times are $47 \unit{ks}$
 for MOS1/2 and $27 \unit{ks}$ for PN.
+% CCD exclusions
+In obs. ID 0551000201, we further excluded two MOS CCDs and the entire PN
+exposure from our spectral analysis.
+MOS1 CCD6 was disabled by a presumed micrometeorite in 2005, and MOS2 CCD5
+shows anomalously high soft X-ray background noise \citep[cf.][]{kuntz2008}.
+The PN in Large Window mode does not collect corner counts, so we cannot
+estimate the detector background consistently using ESAS tasks.
+Omitting the $9 \unit{ks}$ PN exposure only sacrifices $\abt 10--20\%$ of our
+available photons, as the exposure was heavily flare contaminated.
 
 % More verbose version
 %XMM-Newton has observed G309.2-0.6 for $97.73 \unit{ks}$ in two pointings.
@@ -319,25 +339,6 @@ for MOS1/2 and $27 \unit{ks}$ for PN.
 
 % TODO I have not thought at all about the effects of optical loading on these
 % observations...
-
-\begin{table*}
-    \centering
-    \caption{XMM Observations of G309.2-0.6\label{tab:obs}}
-    \begin{tabular}{@{}lrrrlrlr@{}}
-        \toprule
-        Obs. ID & Dur. & $t_{\mt{\,live},\,\mt{MOS}}$ & $t_{\mt{\,live},\,\mt{PN}}$
-            & Date & Rev. & Filter & PI \\
-        \midrule
-        0087940201 & $40.5$ & $25.3$ & $18.0$ & 2001 August 28 & 315 & Thick & Hughes \\
-        0551000201 & $57.3$ & $21.9$ &  $9.0$ & 2009 March 6--7 & 1692 & Medium & Motch \\
-        \bottomrule
-    \end{tabular}
-    \tablecomments{Durations in kiloseconds (ks).
-    Good duration $t_{\mt{live}}$ is central CCD live time after flare
-    filtering; MOS value averages MOS1 and MOS2 times ($\sim 0.6 \unit{ks}$
-    difference in both obsids).
-    Rev. is XMM-Newton orbit (revolution) number.}
-\end{table*}
 
 % TODO how to refer to each observation in a simple way?
 % for now just using ``Hughes'' and ``Motch''
@@ -370,34 +371,45 @@ The resulting live times (good time intervals less CCD readout time) are
 given in Table~\ref{tab:obs}.
 
 % Point sources
-We remove point sources with the ESAS task \texttt{cheese}
-to a limiting flux of $10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$.
-\textbf{TODO: merge pt source removal lists from both obsids}  %TODO
-Of note, HD 119682 requires an exclusion mask $\sim 1\arcmin$ in radius.
+We remove point sources to a limiting flux of
+$10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$ using the ESAS task \texttt{cheese},
+configured to use the SAS task \texttt{region} in
+\texttt{radiusstyle='contour'} model.
+We apply the point source detection to each exposure separately, then merge the
+resulting lists.
+\textbf{TODO: is this truly the limiting flux, given the high background?
+What is the minimum flux for a point source to be detected 99\% of the time in
+data drawn from our model?
+False positives are OK, but want to check rate of false negatives at given
+flux.}
 \textbf{TODO: create images with and without pt source exclusions...}
 
-% CCD exclusions
-In obs. ID 0551000201, we excluded two MOS CCDs and the entire PN exposure from
-our spectral analysis.
-MOS2 CCD5 showed anomalously high soft X-ray background noise in its corner
-counts \citep[cf.][]{kuntz2008}; MOS1 CCD6 was disabled by a presumed
-micrometeorite in 2005.
-The PN in Large Window mode does not collect corner counts, so we are unable to
-estimate the detector background using ESAS; moreover, the good time is
-$\lesssim 10\%$ of our available exposures due to severe flare contamination.
-
+% Accompanies spectrum extraction AND fitting text
+\begin{figure*}[!ht]
+    \epsscale{0.8}
+    \plotone{fig/fig_snr_regs-fiveann_invert.pdf}
+    \figcaption{Unsmoothed 0.8--3.3 keV image of SNR G309.2-0.6 with
+    $100\arcsec$ wide annuli and background region;
+    the magenta $400\arcsec$ circle demarcates the extraction region for
+    integrated remnant fits.}
+    \label{fig:regions}
+\end{figure*}
 
 \subsection{Spectrum Extraction and Modeling}
 
 % Spectrum and QPB creation
 Spectra are created from ``good'' single and double events (i.e.,
 \texttt{PATTERN} $\leq 12,4$ for MOS, PN respectively; \texttt{FLAG} $= 0$ for
-both MOS and PN), using ESAS tasks \texttt{\{mos,pn\}-spectra}.
+both MOS and PN) using ESAS tasks \texttt{\{mos,pn\}-spectra}.
 We fit all spectra in XSPEC 12.9.0d \citep{arnaud1996}
 using T{\"u}bingen-Boulder ISM elemental abundances \citep{wilms2000}
 and galactic absorption model \texttt{tbnew} v2.3.2
-\footnote{http://pulsar.sternwarte.uni-erlangen.de/wilms/research/tbabs/},
+\footnote{\url{http://pulsar.sternwarte.uni-erlangen.de/wilms/research/tbabs/}},
 which is the latest version of the gas absorption model of \citet{wilms2000}.
+We hereafter refer to baseline ISM abundances as ``solar'', although they
+deviate slightly from solar abundances, to simplify description.
+\textbf{TODO: ``super solar-neighborhood-ISM abundances'' or
+``sub MW-ISM abundances'' are unambiguous but hard to read.  Any better way?}
 
 % QPB
 The detector background is modeled by ESAS tasks \texttt{\{mos,pn\}\_back}
@@ -409,7 +421,17 @@ of interest, using the ratio of quiescent spectra across corner / source
 regions from XMM's filter wheel closed (FWC) observations and assuming that the
 ratio of spectra across a given MOS or PN chip is time invariant
 \citep[Sec. 3.4]{kuntz2008}.
-% TODO this can be shortened or maybe omitted...
+The detector background is directly subtracted from observation spectra.
+\textbf{TODO: could this be shortened or omitted?}  % TODO
+
+% Spectrum grouping, fitting, and modeling
+We merged MOS1 and MOS2 spectra from each observation and binned MOS and PN
+spectra to at least 1 count per bin.
+All spectra were fit with XSPEC's \texttt{pgstat} statistic for
+Poisson-distributed data with a Gaussian background (appropriate for the ESAS
+detector background model); \texttt{pgstat}, like the Cash statistic
+\texttt{cstat}, averts bias associated with $\chi^2$ fitting of binned Poisson
+data \citep{humphrey2009}.
 
 % Instrumental lines
 We model instrumental lines as zero-width, fixed-energy Gaussians and assume
@@ -421,535 +443,418 @@ For PN, we fit seven lines: $1.49$ (Al), $4.54$ (Ti), $5.44$ (Cr), $7.49$ (Ni),
 $8.05$ (Cu), $8.62$ (Zn), and $8.90 \unit{keV}$ (Cu K$\beta$).
 % The PN Ti and Cr lines are not noticeable in observation spectra, but are
 % clearly visible in FWC spectra.
-Our spectrum fits adopt line normalizations from FWC spectrum fits and then
-vary a single constant pre-factor for all instrumental lines in a given
-exposure.
-% TODO a caveat.  \ion{Si}{1} [Si I] K alpha is ~1.74 keV vs. \ion{Si}{13} [Si XIII] at 1.85 keV
-Some spectrum fits could be improved by slightly varying instrumental line
-energies or broadening the line widths.
-However, adding further free parameters will slow error calculation.
-Systematic error from our instrumental line fits does not weight fits
-significantly, based on weighted and scaled $\Delta \chi$ residuals.
+To fit observation spectra, we adopt line normalizations from FWC spectrum fits
+and vary a single constant pre-factor for all instrumental lines in a given
+instrument exposure.
+% Some spectrum fits could be improved by allowing instrumental line widths and
+% centroid energies to vary.
+% But, $\Delta \chi$ residuals at instrumental lines are comparable to
+% residuals throughout our spectrum ethe rest of our spectral fits, so we do not expect that
+% imperfect line model residuals should significantly affect our fit results and
+% interpretation.
+%
+% Wishy washy because we have not quantified or tested this impact...
+% But we have no reason to expect major impact.
+% Freeing line widths and energies, even within a small range, would add 4--12
+% parameters for each exposure.
+% if time allows, try this for one baseline spectrum, and show no substantial
+% effect.
 
-% SWCX
-We neglect solar wind charge exchange (SWCX) emission, which can affect
-XMM-Newton observations \citep{snowden2004, carter2011}.
-Neither observation shows obvious \ion{O}{7} or \ion{O}{8} line emission associated with
-SWCX.
-Hughes' 2001 observation was not flagged by \citet{carter2011} as containing
-time-variable soft X-ray emission indicative of exospheric SWCX.
-% TODO what is the difference between these types of swcx?
-Modeled magnetospheric SWCX emission decreases by a factor of $10$ over the
-duration of Hughes' 2001 observation, based on XMM-Newton Guest Observer
-Facility (GOF) tool that combines a magnetosphere model \citep{spreiter1966} with
-Advanced Composition Explorer (ACE) solar wind data.
-\footnote{\url{https://heasarc.gsfc.nasa.gov/docs/xmm/scripts/xmm_trend.html}}
-We extracted 0087940201 MOS1 spectra at early and late times in the observation
-and, by eye, saw no obvious differences in soft X-ray emission.
-% TODO I will be re-doing this.
-For the 2009 observation, the XMM GOF magnetosphere model predicts weaker SWCX
-emission compared to the 2001 observation, so we simply neglect SWCX in both
-observations.
-Any unmodeled SWCX should be folded into our X-ray background model, albeit
-imperfectly.
-% NOTE: see my notes from 2016 Jan 13 on spectrum cuts to evaluate SWCX
-% 0551000201 was observed March 2009
-%   Carter/Sembay analysis performed August 2009, so 0551000201 was likely
-%   still in its proprietary period
-% 0087940201 is not listed in Carter/Sembay, but meets basic selection criteria
-% (namely, MOS1/MOS2 operating in full frame mode
-
-% Residual soft proton contamination
-Residual soft protons incident on EPIC detectors dominate the X-ray background
+% Residual soft proton contamination, SWCX
+Soft protons incident on EPIC detectors dominate the X-ray background
 and are not removed by flare filtering due to their slow time variation.
 We model residual soft protons by a power law that bypasses CCD response and
 effective area functions, following ESAS procedure.
-
+We neglect background solar wind charge exchange (SWCX) emission
+\citep{snowden2004, carter2011};
+neither observation shows obvious \ion{O}{7} or \ion{O}{8} lines, and any
+residual contamination should be folded into our X-ray background model.
+% Omitted -- this text on SWCX checks is not really needed
+% Hughes' 2001 observation was not flagged by \citet{carter2011} as containing
+% time-variable soft X-ray emission indicative of exospheric SWCX.
+% % TODO what is the difference between these types of swcx?
+% Modeled magnetospheric SWCX emission decreases by a factor of $10$ over the
+% duration of Hughes' 2001 observation, based on XMM-Newton Guest Observer
+% Facility (GOF) tool that combines a magnetosphere model \citep{spreiter1966} with
+% Advanced Composition Explorer (ACE) solar wind data.
+% \footnote{\url{https://heasarc.gsfc.nasa.gov/docs/xmm/scripts/xmm_trend.html}}
+% We extracted 0087940201 MOS1 spectra at early and late times in the observation
+% and, by eye, saw no obvious differences in soft X-ray emission.
+% % TODO I will be re-doing this.
+% For the 2009 observation, the XMM GOF magnetosphere model predicts weaker SWCX
+% emission compared to the 2001 observation, so we simply neglect SWCX in both
+% observations.
+% Any unmodeled SWCX should be folded into our X-ray background model, albeit
+% imperfectly.
+% % NOTE: see my notes from 2016 Jan 13 on spectrum cuts to evaluate SWCX
+% % 0551000201 was observed March 2009
+% %   Carter/Sembay analysis performed August 2009, so 0551000201 was likely
+% %   still in its proprietary period
+% % 0087940201 is not listed in Carter/Sembay, but meets basic selection criteria
+% % (namely, MOS1/MOS2 operating in full frame mode
 
 % =============================================================================
 % Spectrum fits
 % =============================================================================
-\section{Integrated and spatially resolved spectral fits} \label{sec:spec}
+
+\section{Spatially resolved spectral fits} \label{sec:spec}
 
 \subsection{Integrated spectrum} \label{sec:src-bkg}
 
-\begin{figure*}[]
-    \epsscale{0.8}
-    \plotone{fig/fig_snr_regs-fiveann_invert.pdf}
-    \figcaption{Unsmoothed 0.8--3.3 keV image of SNR G309.2-0.6 with
-    $100\arcsec$ wide annuli and background region;
-    the magenta $400\arcsec$ circle demarcates the extraction region for
-    integrated remnant fits.}
-    \label{fig:regions}
-\end{figure*}
-
-% Introduce -- joint source + background fit, source model, regions & spectra
-We jointly fit integrated remnant (0--400\arcsec) and background
+% Describe integrated source fit; jump straight to fit and basic numbers
+We first jointly fit integrated remnant (0--400\arcsec) and background
 (510--700\arcsec) spectra (Figure~\ref{fig:regions}).
-We model the integrated remnant as a single temperature, non-equilibrium
-ionization (NEI) plasma (XSPEC model \texttt{tbabs\_new * vnei}, after
-\citet{hamilton1983}).  % Better reference, phrasing?
-Our X-ray sky background model comprises an unabsorbed local bubble thermal
-plasma \textbf{CITATION}, an absorbed thermal plasma for diffuse galactic ridge
-emission \textbf{CITATION: worrell, ebisawa, revnivtsev}, and an absorbed extragalactic background power law
-(XSPEC model \texttt{apec + tbnew\_gas*(apec + powerlaw)}).
-We allow the background plasma temperatures and absorbing column to vary, but
-fix the extragalactic power law to photon index $1.4$ and normalization
-$10.9 \unit{cm^{-2}\, s^{-1}\, sr^{-1}\, keV^{-1}}$ \citep{hickox2006}.
-% TODO text on extragalactic power law flux fix could be shortened
-The extragalactic power law normalization is decreased by 39\% to account for
-our bright point source flux cut-off of $10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$
-in the 0.4-7.2 keV band, as done by \citet{revnivtsev2009}.
-The flux cut-off for extragalactic sources is
-$1.46 \times 10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$ assuming
-absorbing column $2 \nHUnits$ and power law spectrum with index $1.4$.
-We then integrate the log(N)-log(S) relation of \citet{moretti2003} to obtain
-the excluded flux.
-
-The fitted model components, with representative source and background spectra,
-are shown in Figure~\ref{fig:src-bkg-fits}.
-Our best fit parameters are given in Table~\ref{tab:src-fit}.
+The remnant is well fit by an absorbed single-temperature non-equilibrium
+ionization (NEI) plasma (XSPEC model \texttt{tbabs\_new * vnei}) with
+increased Si and S abundances relative to local galactic ISM
+(Figure~\ref{fig:src-bkg-fits}, Table~\ref{tab:src-fit}), as fits with solar
+(ISM) abundances shows clear residual \ion{Si}{13} and \ion{S}{15} He-$\alpha$
+emission.
+We also consider variation in O, Ne, Mg, Ar, Ca, and Fe abundances.
+The \ion{Mg}{11} He-$\alpha$ line is evident but does not clearly require
+super-solar Mg abundance.
+Small bumps at $3.1 \unit{keV}$ and $3.9 \unit{keV}$ suggest \ion{Ar}{17} and
+\ion{Ca}{19} He-$\alpha$; if attributable to line emission, these features
+would require highly super-solar abundances at our best fit temperature and
+ionization timescale.
 
 \begin{figure*}[!ht]
-    \plotone{fig/fig_src_bkg_0087940201-mos1_top.pdf}
-    \plotone{fig/fig_src_bkg_0087940201-mos1_bottom.pdf}
-    \figcaption{Integrated source and background spectra with fits for
-        0087940201 MOS1 (one of five exposures fitted)}
+    \plotone{fig/fig_src_bkg_allexps-src-only.pdf}
+    %\plotone{fig/fig_src_bkg_0087940201-mos.pdf}
+    %\plotone{fig/fig_src_bkg_0087940201-mos-delchi.pdf}
+    \figcaption{Integrated source spectra from 0087940201 MOS with best-fit
+    model comprising: cosmic X-ray background (CXRB), soft proton background (SP),
+    instrumental lines, and NEI plasma for the remnant.}
     \label{fig:src-bkg-fits}
 \end{figure*}
 
 \begin{table*}[!ht]
     \centering
-    \caption{Integrated source and background fits\label{tab:src-fit}}
-    \scriptsize
-    \input{tab-src-bkg-fits.tex}
+    \caption{Integrated source and background fits, single-temperature NEI
+        model with non-solar abundances \label{tab:src-fit}}
+    \footnotesize
+    \input{tab-src-bkg-varabund-fits.tex}
     \tablecomments{Units:
         equivalent hydrogen column density $N_H$, $10^{22} \unit{cm^{-2}}$;
+        temperature $\kB T$, keV;
         ionization timescale $\tau$, $10^{10} \unit{s\;cm^{-3}}$;
-        emission measure (EM), $10^{14} \unit{cm^{-5}}$.
-        The (scaled) emission measure is the usual XSPEC norm, defined as
-        $(4 \pi D^2)^{-1} \int n_{\mt{H}} n_{\mt{e}} dV$
-        where $D$ is source distance and all quantities are in CGS units.
-        Elemental abundances are relative to ISM values of \citet[Table 2]{wilms2000}.
+        emission measure (EM), $10^{11} \unit{cm^{-5}}$.
+        Elemental abundances are taken relative to ISM values of
+        \citet[Table 2]{wilms2000}.
+        The emission measure is $10^3 \times $ the usual \texttt{XSPEC} norm
+        $10^{14} (4 \pi D^2)^{-1} \int n_{\mt{H}} n_{\mt{e}} dV$; $D$ is source
+        distance, $n_{\mt{H}}$ is hydrogen number density, and $n_{\mt{e}}$ is
+        electron number density.
     }
 \end{table*}
 
-% Parameter discussion (TODO this will need rewriting after I re-run fits with
-% new x-ray background model.)
-Our galactic ridge component has $2$--$10 \unit{keV}$ surface brightness
-$3.6 \times 10^{-12} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$, somewhat lower
-than measured brightnesses $4.8 \times 10^{-11}$ and $7.1 \times 10^{-11}$ in
-other galactic ridge or bulge fields \citep{ebisawa2008, revnivtsev2009}.
-But, these other fields sample brighter areas of X-ray emission (see the
-RXTE/PCA map presented by \citet{revnivtsev2006}); therefore a decrease in
-brightness of order $10$ in our field -- in conjunction with some uncertainty
-in assumed extragalactic background normalization -- seems plausible.
-% The integrated $2$--$10 \unit{keV}$ diffuse flux, based on a Chandra
-% galactic plane observation at $(l,b) = (+28.45\arcdeg, -0.2\arcdeg)$,
-% is $1.0 \times 10^{-10} \unit{erg\;s^{-1}\;cm^{-2}\;deg^{-2}}$
-% \citep{ebisawa2001}.
-%
-% A subsequent Suzaku study of the same field revised this downwards to
-% $4.8 \times 10^{-11} \unit{erg\;s^{-1}\;cm^{-2}\;deg^{-2}}$ (Suzaku; Chandra
-% agrees within 20\%) after excluding (1) extragalactic background,
-% and (2) point sources brighter than
-% $2 \times 10^{-13} \unit{erg\;s^{-1}\;cm^{02}}$
-% \citep{ebisawa2008}.
-%
-% \citet{revnivtsev2009} find total 2-10 keV brightness 8.6e-11 erg/s/cm^2/deg^2
-% in the ``HRES'' field at l = 0.08, b = -1.42.
-% CXB contribution 1.5e-11 erg/s/cm^2/deg^2 (down from 2.2e-11, because of
-% absence of brightest sources which account for ~31\% of extragal CXB.
-% We should make a similar correction in our work based on the pt source
-% brightness we are able to resolve.)
-% Then ridge emission is 7e-11.
+% Explain X-ray background model
+The X-ray sky background model comprises an unabsorbed low-temperature thermal
+plasma for both local bubble and stable SWCX emission
+\citep{mccammon1990, snowden1990, cravens2000, galeazzi2014, smith2014},
+an absorbed thermal plasma for soft diffuse galactic ridge emission
+\citep[e.g.][]{kaneda1997}, and an absorbed extragalactic
+background power law with photon index $1.4$ \citep{hickox2006}.
+The XSPEC model is \texttt{apec + tbnew\_gas*apec + tbnew\_gas*powerlaw}).
+We fix the extragalactic power law normalization to
+$6.6 \unit{photons\; cm^{-2}\, s^{-1}\, sr^{-1}\, keV^{-1}}$, which
+represents $60\%$ of the total extragalactic X-ray background normalization
+$10.9 \unit{photons\; cm^{-2}\, s^{-1}\, sr^{-1}\, keV^{-1}}$
+\citep{hickox2006} due to removal of bright extragalactic sources.
+\footnote{Our point source flux cut-off $10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$
+(0.4-7.2 keV band) translates to removal of extragalactic sources brighter than
+$1.5 \times 10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$ (2-10 keV band, assuming
+absorbing column $2 \nHUnits$ and power law index $\Gamma = 1.4$).
+We integrate the $\log(N)$-$\log(S)$ relation of \citet{moretti2003} to obtain
+the excluded brightness.}
+\textbf{TODO: shorten and clarify text?}  % TODO
 
-% Varying abundances
-We vary other elemental abundances that are less obviously constrained by our
-data, and our results are shown in Table~\ref{tab:src-varyabund} and
-Figure~\ref{fig:src-varyabund}.
-A variety of elemental abundances yield reasonable fits.
-A significantly lower absorption is allowed with O, Ne, and Fe free.
+% Check model - galactic ridge component has reasonable surface brightness.
+The fitted soft galactic ridge component has $2$--$10 \unit{keV}$ surface
+brightness $3.1 \times 10^{-12} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$ (from
+normalization $(1.94 \pm 0.3) \times 10^{-3} \times 10^{14} \unit{cm^{-5}}$ for
+a 400\arcsec radius circular FOV).
+Our inferred ridge surface brightness is somewhat lower than
+other galactic ridge or bulge fields --
+$4.8 \times 10^{-11} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$
+at $(l,b) = (28\arcdeg 46\arcmin, -0\arcdeg 20\arcmin)$ \citep{ebisawa2008}
+and
+$7.1 \times 10^{-11} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$
+at $(l,b) = (0.113\arcdeg, -1.424\arcdeg)$ \citep{revnivtsev2009}.
+These other fields sample brighter areas of X-ray ridge emission (see the
+RXTE/PCA map presented by \citet{revnivtsev2006}), so a $\abt 10\times$ smaller
+brightness seems plausible, given significant uncertainty in our background
+modeling due to assumed extragalactic background normalization and high soft
+proton background.
 
-\begin{table*}[!ht]
-    \centering
-    \caption{Source fit with varying abundances \label{tab:src-varyabund}}
+% vpshock discussion
+We consider an alternative model that accounts for an ionization age gradient
+behind a plane shock \citep{borkowski2001}.
+The \texttt{vpshock} model fits the spectrum just as well
+($\mathrm{pgstat} = ???$) as the single-ionization-age NEI model, and the
+\texttt{vpshock} bounds on ionization age bracket the inferred mean ionization
+from \texttt{NEI} (Table~\ref{tab:src-fit}.
+\textbf{TODO: need to redo vpshock fits}
+At high electron temperatures $\abt 2$--$3 \unit{keV}$, the
+\texttt{vpshock} model should reasonably approximate the more involved
+\texttt{vsedov} model of \citet{borkowski2001}, so we do not consider a
+\texttt{vsedov} fit with non-uniform electron temperature distribution.
+The simpler \texttt{NEI} plasma model suffices for our spectral modeling.
+\textbf{TODO: need to redo NEI fits}
 
-\begin{tabular}{@{}lllllllll@{}}
-\toprule
- & Stock & Mg & ONeMgFe & All... & OMg & NeMg & MgFe & ONeMg \\
-\midrule
-\multicolumn{9}{c}{Remnant plasma} \\
-\midrule
-$\nH$   & ${2.15}^{+0.07}_{-0.08}$ & ${2.03}^{+0.10}_{-0.09}$ & ${0.83}^{+0.16}_{-0.05}$ & ${0.84}^{+0.08}_{-0.07}$
-            & ${2.03}^{+0.06}_{-0.08}$ & ${1.80}^{+0.08}_{-0.07}$ & ${1.84}^{+0.10}_{-0.09}$ & ${2.06}^{+0.09}_{-0.11}$ \\ [0.5em]
-$\kB T$ & ${2.3}^{+0.3}_{-0.1}$    & ${2.9}^{+0.5}_{-0.4}$ & ${2.9}^{+0.4}_{-0.3}$ & ${2.5}^{+0.2}_{-0.3}$
-            & ${2.4}^{+0.5}_{-0.3}$ & ${2.7}^{+0.4}_{-0.3}$ & ${2.3}^{+0.4}_{-0.4}$ & ${2.4}^{+0.3}_{-0.1}$ \\ [0.5em]
-$\tau$  & ${1.83}^{+0.12}_{-0.11}$ & ${1.75}^{+0.11}_{-0.10}$ & ${1.49}^{+0.09}_{-0.09}$ & ${1.60}^{+0.11}_{-0.10}$
-            & ${1.78}^{+0.11}_{-0.11}$ & ${1.65}^{+0.10}_{-0.09}$ & ${1.72}^{+0.16}_{-0.10}$ & ${1.79}^{+0.12}_{-0.10}$ \\ [0.5em]
-EM      & ${4.6}^{+0.5}_{-0.5}$ & ${3.6}^{+0.6}_{-0.5}$ & ${3.8}^{+0.4}_{-0.4}$ & ${4.0}^{+0.4}_{-0.4}$
-        & ${3.6}^{+0.4}_{-0.5}$ & ${3.8}^{+0.5}_{-0.4}$ & ${4.5}^{+1.0}_{-0.6}$ & ${3.5}^{+0.5}_{-0.5}$ \\ [0.5em]
-O  &                          &                          & $< 0.11$                 & $< 0.03$                 & ${7.0}^{+1.3}_{-1.2}$    &                          &                          & ${8.1}^{+3.5}_{-2.8}$ \\ [0.5em]
-Ne &                          &                          & $< 0.05$                 & $< 0.10$                 &                          & ${0.14}^{+0.17}_{-0.14}$ &                          & ${1.2}^{+0.6}_{-0.5}$ \\ [0.5em]
-Mg &                          & ${1.24}^{+0.11}_{-0.10}$ & ${0.30}^{+0.05}_{-0.03}$ & ${0.31}^{+0.04}_{-0.03}$ & ${1.28}^{+0.11}_{-0.10}$ & ${0.92}^{+0.10}_{-0.09}$ & ${0.81}^{+0.11}_{-0.11}$ & ${1.4}^{+0.2}_{-0.3}$ \\ [0.5em]
-Si & ${3.75}^{+0.18}_{-0.16}$ & ${4.2}^{+0.3}_{-0.3}$    & ${2.50}^{+0.14}_{-0.11}$ & ${2.51}^{+0.13}_{-0.07}$ & ${4.5}^{+0.3}_{-0.3}$    & ${3.6}^{+0.3}_{-0.2}$    & ${3.4}^{+0.2}_{-0.3}$    & ${4.7}^{+0.7}_{-0.5}$ \\ [0.5em]
-S  & ${3.42}^{+0.28}_{-0.25}$ & ${3.9}^{+0.4}_{-0.3}$    & ${3.6}^{+0.4}_{-0.2}$    & ${3.5}^{+0.3}_{-0.2}$    & ${4.2}^{+0.4}_{-0.3}$    & ${3.8}^{+0.3}_{-0.4}$    & ${3.5}^{+0.3}_{-0.3}$    & ${4.4}^{+0.6}_{-0.5}$ \\ [0.5em]
-Ar &                          &                          &                          & ${3.9}^{+1.0}_{-0.9}$    &                          &                          &                          &      \\ [0.5em]
-Ca &                          &                          &                          & ${14.2}^{+5.3}_{-4.3}$   &                          &                          &                          &      \\ [0.5em]
-Fe &                          &                          & ${0.06}^{+0.03}_{-0.02}$ & ${0.05}^{+0.02}_{-0.02}$ &                          &                          & ${0.19}^{+0.15}_{-0.13}$ &      \\ [0.5em]
-Ni &                          &                          &                          & ${0.30}^{+0.37}_{-0.30}$ &                          &                          &                          &      \\
-\midrule
-\multicolumn{9}{c}{X-ray Background} \\
-\midrule
-$\kB T_{\mt{local}}$   & ${0.26}^{+0.01}_{-0.01}$ & ${0.26}^{+0.01}_{-0.01}$ & ${0.25}^{+0.01}_{-0.01}$ & ${0.25}^{+0.01}_{-0.01}$ & ${0.25}^{+0.01}_{-0.01}$ & ${0.26}^{+0.01}_{-0.01}$ & ${0.26}^{+0.01}_{-0.01}$ & ${0.25}^{+0.01}_{-0.01}$ \\ [0.5em]
-$\mt{EM}_{\mt{local}}$ & ${0.30}^{+0.02}_{-0.02}$ & ${0.30}$ & ${0.27}$ & ${0.25}$ & ${0.30}^{+0.02}_{-0.02}$ & ${0.30}^{+0.02}_{-0.02}$ & ${0.29}^{+0.02}_{-0.02}$ & ${0.30}^{+0.02}_{-0.02}$ \\ [0.5em]
-$\nH$                  & ${1.32}^{+0.08}_{-0.08}$ & ${1.33}^{+0.08}_{-0.08}$ & ${1.37}^{+0.08}_{-0.08}$ & ${1.33}^{+0.08}_{-0.08}$ & ${1.37}^{+0.07}_{-0.07}$ & ${1.39}^{+0.07}_{-0.07}$ & ${1.34}^{+0.08}_{-0.08}$ & ${1.37}^{+0.07}_{-0.07}$ \\ [0.5em]
-$\kB T_{\mt{halo}}$    & ${0.74}^{+0.03}_{-0.03}$ & ${0.74}^{+0.03}_{-0.03}$ & ${0.64}^{+0.03}_{-0.03}$ & ${0.62}^{+0.03}_{-0.03}$ & ${0.81}^{+0.04}_{-0.04}$ & ${0.79}^{+0.05}_{-0.04}$ & ${0.71}^{+0.03}_{-0.06}$ & ${0.81}^{+0.04}_{-0.04}$ \\ [0.5em]
-$\mt{EM}_{\mt{halo}}$  & ${2.19}^{+0.29}_{-0.26}$ & ${2.25}$ & ${2.65}$ & ${2.62}$ & ${2.17}^{+0.27}_{-0.25}$ & ${2.25}^{+0.28}_{-0.26}$ & ${2.35}^{+0.30}_{-0.27}$ & ${2.17}^{+0.27}_{-0.25}$ \\ [0.5em]
-$\chi^2$ & 4545.2 & 4528.5 & 4421.5 & 4347.5 & 4447.1 & 4492.5 & 4486.8 & 4446.7 \\ [0.5em]
-$\chi^2_{\mt{red}}$ & 1.206 & 1.202 & 1.175 & 1.156 & 1.181 & 1.193 & 1.191 & 1.181 \\
-\bottomrule
-\end{tabular}
+% ISM component TODO to be redone
+We see no particular evidence for a distinct NEI (ISM) plasma of different
+temperature or ionization state.
+\textbf{TODO to be rerun}.
+%If we add an ISM component, represented by a NEI plasma with ISM abundances,
+%the fit improves slightly.
+%But fitted parameter values jump around quite a lot.
+%The ISM NEI components can be wildly different (ionization age
+%$10^{9}$--$10^{10}$, temperature $0.55$ to $8.63 \unit{keV}$,
+%normalization (scaled emission measure) $2 \times 10^{-3}$ to $3 \times
+%10^{-2}$), depending on which elemental abundances are free in the ejecta
+%plasma component.  In short, very ill-constrained.
+%We don't see any spectral features that can unequivocally be attributed to a
+%distinct mass of plasma with different temperature, abundance, and ionization
+%characteristics.
 
-    \tablecomments{Units as in Table~\ref{tab:src-fit}, except EM is in units of $10^{11}$; i.e., $10^3 \times$ the usual XSPEC norm.}
-\end{table*}
-
-
-\begin{figure*}[!ht]
-    \plotone{fig/fig_src_varabund_0087940201-mos1_pt1.pdf}
-    \plotone{fig/fig_src_varabund_0087940201-mos1_pt2.pdf}
-    \plotone{fig/fig_src_varabund_0087940201-mos1_pt3.pdf}
-    \figcaption{Integrated source fits with varying abundances (top plot label
-        should read Si,S \textbf{TODO}), as labeled, for
-        0087940201 MOS1 (one of five exposures fitted)}
-    \label{fig:src-varyabund}
-\end{figure*}
-
-\begin{figure*}[!ht]
-    \plotone{fig/fig_src_varabund_0087940201-pn_pt1.pdf}
-    \plotone{fig/fig_src_varabund_0087940201-pn_pt2.pdf}
-    \plotone{fig/fig_src_varabund_0087940201-pn_pt3.pdf}
-    \figcaption{Same as Figure~\ref{fig:src-varyabund}, but 0087940201 PN exposure.}
-    \label{fig:src-varyabund-pn}
-\end{figure*}
-
-
-
+\textbf{Although fits have not all been redone, it is pretty clear that adding
+additional components will not improve the fit substantially (as the spectrum
+is already very well fit, unusually).}
 
 \subsection{Annuli spectra}
 
 % Procedure, results
 We extract and fit spectra from $100\arcsec$ wide annuli centered on the
 remnant to discern how thermal plasma emission varies with remnant radius
-(Figure~\ref{fig:regions}).
+(Figure~\ref{fig:annuli-spectra}, Table~\ref{tab:annulus-fit}).
 Each annulus is modeled by an absorbed NEI plasma
-(XSPEC model \texttt{tbabs\_new * vnei}) with absorption column tied across
-all annuli.
-The X-ray background is fixed to the integrated remnant fit model
-(Table~\ref{tab:src-fit}).
+(XSPEC model \texttt{tbabs\_new * vnei}) with Mg, Si, S free and absorbing
+column tied across all annuli.
+X-ray background model parameters are fixed to values from the best integrated
+source fit with Mg, Si, S free (Table~\ref{tab:src-fit}).  % TODO may change...
 We neglect redistribution of counts between annuli due to point spread function
 (PSF) wings as the off-axis half-energy-enclosed width $\abt10$--$20\arcsec$ is
 smaller than our annuli widths.
-Annulus spectra from $0$--$500\arcsec$ are shown in
-Figure~\ref{fig:annuli-spectra}, and fit parameters for the interior four
-annuli are in Table~\ref{tab:annulus-fit}.
-The best fit absorption (not tabulated) is $2.11^{+0.04}_{-0.07} \nHUnits$.
 
-% outer annulus handling
-The outer annulus fit ($400$--$500\arcsec$) was very poorly constrained;
-two fits with slightly different X-ray background parameters, which agreed
-within error, yielded disparate fits ($kT = 0.6$ vs. $10 \unit{keV}$,
-Si and S abundances $\abt10$ vs. $\abt2$,
-ionization timescale $\tau = 1 \times 10^{10}$ vs. $5 \times 10^{13} \TauUnits$).
-Some Si and S line emission in the outer annulus is required, without too much
-underlying bremsstrahlung continuum, hence the inferred super-solar abundances.
-Discarding the outer annulus has no impact on fits to interior annuli, so our
-subsequent fits and analysis consider only four annuli.
+% Some basic observations on annulus spectra
+The outer annulus fit ($400$--$500\arcsec$) is poorly constrained and merely
+requires some Si and S line emission; the derived ionization timescale,
+temperature, and norm may be unreliable.
+Soft proton parameters from annuli fits qualitatively show expected
+energy-dependent vignetting, with stronger vignetting at soft energies.
+Soft proton contamination at $\abt 0.3$--$1 \unit{keV}$ clearly decreases with
+distance from the aimpoint.
 
-% center "annulus" handling
-The remnant center ($0$--$100\arcsec$) shows excess soft X-rays
-($<1 \unit{keV}$) compared to our NEI model.
-In Table~\ref{tab:annulus-varycenter}, we attempt to explain the central excess
-by allowing sub- or super-ISM O, Ne, and Fe abundances
-Although additional elements improve the fit, it is not clear that a particular
-combination of abundances can fully explain the model discrepancy.
-Significant O line emission can be produced by SWCX, but the absence of soft
-X-ray excess outside the central region disfavors this explanation (as we would
-expect SWCX to fill the field of view).
-
-\begin{table}
+\begin{table*}
     \centering
     \caption{Annuli fit \label{tab:annulus-fit}}
-    \begin{tabular}{@{}rlllll@{}}
-        \toprule
-        Annulus & $kT$ & $\tau$ & Si & S & EM \\
-         & (keV) & ($\times 10^{10}$) & (-) & (-) & ($\times 10^{14}$)\\
-        \midrule
-        % 20160706_fourann_stock
-        $0$--$100\arcsec$ & ${3.8}^{+0.6}_{-0.4}$ & ${1.57}^{+0.14}_{-0.13}$ & ${1.98}^{+0.14}_{-0.13}$ & ${1.5}^{+0.3}_{-0.3}$ & $1.21 \times 10^{-3}$ \\
-        $100$--$200\arcsec$ & ${2.4}^{+0.2}_{-0.3}$ & ${1.74}^{+0.16}_{-0.14}$ & ${5.7}^{+0.4}_{-0.3}$ & ${5.5}^{+0.7}_{-0.6}$ & $1.00 \times 10^{-3}$ \\
-        $200$--$300\arcsec$ & ${2.1}^{+0.2}_{-0.2}$ & ${2.16}^{+0.30}_{-0.21}$ & ${4.1}^{+0.3}_{-0.2}$ & ${3.8}^{+0.4}_{-0.3}$ & $1.74 \times 10^{-3}$ \\
-        $300$--$400\arcsec$ & ${2.5}^{+0.5}_{-0.4}$ & ${1.74}^{+0.37}_{-0.28}$ & ${3.4}^{+0.4}_{-0.3}$ & ${3.1}^{+0.9}_{-0.6}$ & $0.92 \times 10^{-3}$ \\
-        \bottomrule
-    \end{tabular}
-    \tablecomments{The best fit absorption is $2.11^{+0.04}_{-0.07} \nHUnits$,
-        and $\chi^2_{\mt{red}} = 1.432 = 3581.34/2501$.
+    \input{tab-annulus-fits.tex}
+    \tablecomments{
+        Outermost ($400$--$500\arcsec$) annulus temperature $\kB T$ is
+        capped at $10 \unit{keV}$ and may not represent the formal best fit.
+        Best fit absorption column is $\nH = {2.51}^{0.09}_{-0.10} \nHUnits$;
+        $\mt{pgstat} = 19335.8$; $\chi^2_{\mt{red}} = 1.210 = 24296.5 / 20073$ ($\chi^2$/dof).
         Units as in Table~\ref{tab:src-fit}.}
-\end{table}
+\end{table*}
 
 \begin{figure*}[]
-    \plotone{fig/fig_fiveann_0087940201-mos1.pdf}
-    \figcaption{Annuli spectra with fits from 0087940201 MOS1 (one of five exposures fitted).
-        Only Si and S abundances are free; all others are fixed to ISM
-    Table~\ref{tab:annulus-fit} provides NEI fit parameters for four of five annuli.}
+    \plotone{fig/fig_fiveann_mg-si-s_0087940201-mos.pdf}
+    \figcaption{Annuli spectra from 0087940201 MOS with best fits; Mg, Si, S free.
+    Table~\ref{tab:annulus-fit} provides NEI fit parameters.}
     \label{fig:annuli-spectra}
 \end{figure*}
 
-\begin{figure*}[]
-    \plotone{fig/fig_fiveann_0087940201-mos1-delchi.pdf}
-    \figcaption{Annuli spectra fit scaled residuals ($\Delta\chi$)
-        from 0087940201 MOS1 (one of five exposures fitted), to accompany
-        Figure~\ref{fig:annuli-spectra}.}
-    \label{fig:annuli-delchi}
-\end{figure*}
-
-
-% SANITY check: do soft proton power law parameters show expected behavior?
-% EXPECT: vignetted (lower norm), harder spectrum farther off-axis
-% SP vignetting differs from the standard photon vignetting.
-We confirm that soft proton parameters from annuli fits qualitatively show
-expected energy-dependent vignetting, with stronger vignetting at soft energies
-\ref{fig:sp}.
-% TODO citation
-% TODO build this...
-
-\begin{figure}[!h]
-    \plotone{fig/fig_sp.png}
-    \figcaption{Fitted soft proton power laws from annuli fits (TODO: ``stock''
-        fits, temporary).  Power law for $200$--$300\arcsec$ overlaps
-        $400$--$500\arcsec$ plot.}
-    \label{fig:sp}
-\end{figure}
-
-\begin{table*}[!ht]
-    \centering
-    \caption{Varying center abundances\label{tab:annulus-varycenter}}
-    \scriptsize
-\begin{tabular}{@{}lllllllllllr@{}}
-\toprule
-Fit & $n_\mathrm{H}$ & $kT$ & $\tau$
-        & O & Ne & Mg & Si & S & Fe
-        & $\chi^2_{\mt{red}}$ & $\chi^2 / (\mt{dof})$ \\
-    & $\times 10^{22}$ & keV & $\times 10^{10}$
-        & - & - & - & - & - & -
-        & & \\
-\midrule
-5std    & ${2.10}^{+0.05}_{-0.05}$ & ${3.82}^{+0.64}_{-0.64}$ & ${1.57}^{+0.16}_{-0.15}$
-    &                 &                 &                          & ${1.98}^{+0.13}_{-0.16}$ & ${1.45}^{+0.29}_{-0.29}$ &
-    & 1.385 & 4603.25/3323 \\
-    % File 20160701_fiveann_row.tex
-4std    & ${2.11}^{+0.04}_{-0.07}$ & ${3.79}^{+0.55}_{-0.42}$ & ${1.56}^{+0.14}_{-0.13}$
-    &                 &                 &                          & ${1.98}^{+0.14}_{-0.13}$ & ${1.45}^{+0.30}_{-0.26}$ &
-    & 1.432 & 3581.34/2501 \\
-    % File 20160706_fourann_stock_row.tex
-
-4Mg     & ${2.15}^{+0.04}_{-0.09}$ & ${2.95}^{+0.36}_{-0.41}$ & ${1.50}^{+0.18}_{-0.17}$
-    &                 &                 & ${0.50}^{+0.08}_{-0.08}$ & ${1.63}^{+0.13}_{-0.11}$ & ${1.25}^{+0.33}_{-0.26}$ &
-    & 1.403 & 3508.26/2500 \\
-    % File 20160708_fourann_center-mg-free_ONeMgFe_row.tex
-
-\midrule
-
-4Mg,O   & ${2.10}^{+0.04}_{-0.06}$ & ${2.64}^{+0.55}_{-0.43}$ & ${1.57}^{+0.19}_{-0.18}$
-    & ${9.5}^{+1.6}_{-1.5}$ &                 & ${0.57}^{+0.09}_{-0.08}$ & ${1.86}^{+0.15}_{-0.14}$ & ${1.35}^{+0.34}_{-0.28}$ &
-    & 1.365 & 3411.25/2499 \\
-    % File 20160708_fourann_center-mg-o-free_ONeMgFe_row.tex
-
-4Mg,Ne  & ${2.14}^{+0.09}_{-0.07}$ & ${3.02}^{+0.56}_{-0.45}$ & ${1.50}^{+0.17}_{-0.17}$
-    &                 & ${1.05}^{+0.39}_{-0.26}$ & ${0.51}^{+0.10}_{-0.08}$ & ${1.66}^{+0.17}_{-0.15}$ & ${1.27}^{+0.33}_{-0.26}$ &
-    & 1.404 & 3507.97/2499 \\
-    % File 20160708_fourann_center-mg-ne-free_ONeMgFe_row.tex
-
-4Mg,Fe  & ${2.22}^{+0.06}_{-0.11}$ & ${3.99}^{+1.09}_{-0.47}$ & ${1.63}^{+0.16}_{-0.15}$
-    &                 &                 & ${0.67}^{+0.14}_{-0.11}$ & ${2.01}^{+0.28}_{-0.20}$ & ${1.32}^{+0.29}_{-0.24}$ & ${1.88}^{+0.48}_{-0.42}$
-    & 1.399 & 3497.19/2499 \\
-    % File 20160708_fourann_center-mg-fe-free_ONeMgFe_row.tex
-
-\midrule
-
-4Mg,O,Ne& ${2.28}^{+0.04}_{-0.03}$ & ${3.24}^{+0.56}_{-0.26}$ & ${1.50}^{+0.14}_{-0.13}$
-    & ${36}^{+18}_{-9}$ & ${4.7}^{+2.6}_{-1.0}$ & ${1.41}^{+0.64}_{-0.27}$ & ${3.68}^{+1.09}_{-0.58}$ & ${2.68}^{+0.71}_{-0.61}$ &
-    & 1.348 & 3367.95/2498 \\
-    % File 20160708_fourann_center-mg-o-ne-free_ONeMgFe_row.tex
-
-4Mg,O,Fe  & ${2.21}^{+0.06}_{-0.03}$ & ${4.15}^{+0.75}_{-0.57}$ & ${1.81}^{+0.13}_{-0.14}$
-    & ${32}^{+22}_{-12}$ &                 & ${1.28}^{+0.4}_{-0.2}$ & ${3.88}^{+2.2}_{-0.73}$ & ${2.19}^{+0.38}_{-0.47}$ & ${4.20}^{+2.6}_{-0.58}$
-    & 1.351 & 3374.89/2498 \\
-    % From 20160712_fourann_center-mg-o-fe-free fits, manually
-
-\bottomrule
-\end{tabular}
-\tablecomments{Units as in Table~\ref{tab:src-fit}.}
-\end{table*}
-
 \begin{figure*}[!ht]
-    \epsscale{0.8}
-    \plotone{fig/fig_fourann-varycenter_0087940201-mos1.pdf}
-    \figcaption{Center ($0$--$100\arcsec$) spectrum fits with different
-        elemental abundances freed (O, Ne, Mg, Fe).
-        Spectra from 0087940201 MOS1 only (one of five exposures fitted).
-        Dashed curve indicates ``fiducial'' fit with Mg, Si, S freed.}
-    \label{fig:annuli-varycenter-spectra}
+    \plottwo{fig/fig_fiveann_kT.pdf}{fig/fig_fiveann_Tau.pdf}
+    \plottwo{fig/fig_fiveann_Si.pdf}{fig/fig_fiveann_S.pdf}
+    \figcaption{Electron temperature (left) and ionization timescale (right)
+        as a function of radius from annuli spectra fit
+        (Tables~\ref{tab:annulus-fit}).}
+    \label{fig:annulus-pars}
 \end{figure*}
 
+% Radial variation in kT and Tau
+The plasma temperature and ionization timescale vary by $\abt 20$--$50\%$
+across the remnant's projected radius (Figure~\ref{fig:annulus-pars});
+the center plasma is hotter and shows a lower ionization timescale compared to
+the remnant shell.
+The inferred Si, S abundances increase by a factor of $2$-$3$ towards the
+center; Mg shows much less variation.
+These trends are consistent with the standard Sedov picture of early supernova
+remnant evolution, wherein recently shocked ISM and reverse-shocked central
+ejecta should be the ``youngest'' emitting plasma.
 
 
-\section{Discussion}
+% =============================================================================
+% Discussion
+% =============================================================================
+\section{Discussion} \label{sec:disc}
 
-\subsection{Assumptions and prior work}
+\subsection{Prior work}
 
-% probably can omit or place one sentence elsewhere
-\textbf{standard vnei disclaimer}
-The single temperature and ionization age \texttt{vnei} model ignores spatial
-structure in temperature, ionization, and ejecta abundances.
-Nevertheless, it fits the remnant reasonably well, consistent with the
-subsequent annulus fits yielding ionization timescales and temperatures varying
-by $\abt50\%$ at most (Table~\ref{tab:annulus-fit}).
-
-% vpshock discussion
-A \texttt{vpshock} model, which accounts for varying ionization age integrated
-behind a plane shock \citep{borkowski2001}, yields a nearly identical fit with
-$\chi^2_{\mt{red}} = 1.203$ versus $\chi^2_{\mt{red}} = 1.206$ for the
-\texttt{vnei} model.
-The \texttt{vpshock} ionization age range spans
-$\abt 0$ to $3.89 \times 10^{10}$, whereas the \texttt{vnei} sits nearly in the
-middle at $1.83 \times 10^{10}$.
-In effect, the \texttt{vnei} average over ionization age provides a reasonable
-fit; or, variation in ionization age has little effect on the model spectrum.
-This makes sense for the relatively low ionization timescales seen in G309
-(compared to more evolved supernova remnants).
-Given the high electron temperatures $\abt 2$--$3 \unit{keV}$, the
-\texttt{vpshock} model should reasonably approximate the more involved
-\texttt{vsedov} model of \citet{borkowski2001}, so we do not consider a
-\texttt{vsedov} fit with non-uniform electron temperature distribution.
-
-% ionization age
-Our ionization age $n_e t \sim 1.5$--$2 \times 10^{10} \unit{s\;cm^{-3}}$
-is, qualitatively, anchored by the Si and S He$\alpha$ and Ly$\alpha$ line ratios.
-\textbf{TODO calculate line centroids, widths, and fluxes; look at atomic
-physics (see Hiroya's plots or \citet{hwang2000}) to back out ionization time}
-Fits with $n_e t = 10^{11}$ fixed require lowered
-electron temperature $\sim 1 \unit{keV}$ to reproduce the Si and S emission.
-The ionization state implied by Si and S emission, along with our fitted ISM or
-sub-ISM iron abundance, matches measurements of other young ejecta-dominated
-remnants of Ia SNe \citep[][Table 4]{badenes2007}.
-
-% Abundances
-I note that fit with Ar,Ca,Ni free yields a significantly better fit (per
-f-test), compared to baseline of Si,S,Mg,O,Ne,Fe free only.
-The f-test yields F statistic value 21.3 with probability $10^{-13}$.
-\textbf{TODO: I would dispute that Ca, Ni have any effect, but I think Ar can be constrained.}
-Nothing saves you from garbage in, garbage out, though.
-
-% Interpretation
-As a baseline, we kind of expect that most thermal continuum arises from
-shocked ISM and/or CSM.
-The alternative is a pure metal plasma, which could describe ejecta.
-Rakowski+ get very different emission measure with a pure metal plasma.
-
-% ISM component
-If we add an ISM component, represented by a NEI plasma with ISM abundances,
-the fit improves slightly.
-But fitted parameter values jump around quite a lot.
-The ISM NEI components can be wildly different (ionization age
-$10^{9}$--$10^{10}$, temperature $0.55$ to $8.63 \unit{keV}$,
-normalization (scaled emission measure) $2 \times 10^{-3}$ to $3 \times
-10^{-2}$), depending on which elemental abundances are free in the ejecta
-plasma component.  In short, very ill-constrained.
-We don't see any spectral features that can unequivocally be attributed to a
-distinct mass of plasma with different temperature, abundance, and ionization
-characteristics.
-\textbf{the fix is to build one of those confidence contour maps,
-after vetting errors and incorporating more systematics.
-or use some kinda bayesian analysis}
-
-% Comparison to old fits
+% State discrepancy up front
 Our fitted absorption column and ionization timescales disagree with prior
-X-ray fits.
+X-ray fits, although we find similar temperatures and abundance ratios.
 \citet{rakowski2001} obtain $\nH = (0.7 \pm 0.3) \nHUnits$,
 $\kB T = 2.0^{+1.0}_{-0.6}$, and
 $\tau = 1.5^{+4.7}_{-0.6} \times 10^{11} \unit{s\;cm^{-3}}$
 from an absorbed NEI model for ASCA data with enhanced Ne, Mg, Si, S, Ar, Ca,
-Fe abundances; the best fit converged towards a pure metal plasma
-(H, He $\to 0$), and taking abundances relative to Si they favored
-under-abundant Ne, Mg, Ar relative to S.
-\citet{safi-harb2007} report $N_H = 0.65^{+0.45}_{-0.25} \nHUnits$.
+Fe abundances; the best fit converged towards a pure metal plasma.
+\citet{safi-harb2007} report $\nH = 0.65^{+0.45}_{-0.25} \nHUnits$
 and $\kB T = 2 \pm 0.6 \unit{keV}$ without providing $\tau$, from
 an absorbed NEI model for the 2001 XMM data with
-super-ISM Si, S and sub-ISM O, Ne, Mg, Ca, Fe.
-
-The relative abundances $[Mg/Si] = 0.23^{+0.09}_{0.08}$ and $[S/Si] =
-1.09^{+0.24}_{-0.18}$ from \citet{rakowski2001} are consistent with our fits
-($0.29 \pm 0.03$ and $0.93 \pm 0.12$ respectively).  Similarly our Si, S, Mg
-abundances are consistent with the qualitative statement of supersolar
-abundances by \citet{safi-harb2007}.
+super-solar Si, S and sub-ISM O, Ne, Mg, Ca, Fe.
 
 \citet{rakowski2001} report emission measure
-$(4\pi D^2)^{-1} \int n_e n_H dV = 9.7^{+200}_{-9.7} \times 10^8$, much smaller
+$(4\pi D^2)^{-1} \int n_e n_H dV = 9.7^{+200}_{-9.7} \times 10^8$ much smaller
 than our $\abt 4 \times 10^{11} \unit{cm^{-5}}$; their inferred hydrogen
-density is therefore $10\times$ smaller.
-The low value is partially offset by the extreme ($\abt 30\times$) abundances
-inferred by \citet{rakowski2001}, and the lack of constraint on bremsstrahlung
-continuum as their fit favored a pure metal plasma.
+density is therefore $\abt 10\times$ smaller.
+The low value is partially offset by the extremely high ($\abt 30\times$)
+abundances inferred by \citet{rakowski2001}.
 
-The discrepant absorption and ionization timescale could arise from degeneracy
-with respect to absorption, ionization time, and total metallicity (H
-abundance), particularly as \citet{rakowski2001} had to explicitly model point
-source contamination from HD 119682, which dominates
-below $\abt 1 \unit{keV}$ and above $\abt 3$--$4 \unit{keV}$.
-The XMM data fit by \citet{safi-harb2007} should be free of HD 119682
-contamination, but we cannot speak to the absorption discrepancy without
-knowledge of their background and instrumental line modeling and the fitted
-ionization timescale.
-Although our fits are limited by soft proton contamination at high and
-low energy ranges as well, XMM's spatial and spectral resolution allow us to
-excise point source emission and better constrain the bremsstrahlung continuum.
+% Abundances
+The relative abundances
+  $[\mt{Mg}/\mt{Si}] = 0.23^{+0.09}_{0.08}$ and
+  $[\mt{S}/\mt{Si}] = 1.09^{+0.24}_{-0.18}$ from \citet{rakowski2001}
+are consistent with our fits, which yield $[\mt{Mg}/\mt{Si}] = 0.28^{+0.04}_{-0.05}$
+and $[\mt{S}/\mt{Si}] = 0.92 \pm 0.2$ (this statistical error on
+$[\mt{S}/\mt{Si}]$ should be somewhat lower, closer to $\pm 0.1$, because the
+parameters covary).
+Note that $[\mt{Mg}/\mt{Si}]$ actually means
+\[
+    \frac{[\mt{Mg}/\mt{H}] / [\mt{Mg}/\mt{H}]_{\sun}}
+         {[\mt{Si}/\mt{H}] / [\mt{Si}/\mt{H}]_{\sun}}
+\]
+or $[\mt{Mg}/\mt{Mg}_{\sun}] / [\mt{Si}/\mt{Si}_{\sun}]$,
+which is the usual ratio of interest.
 
-Alternatively, our absorption can be as low as $0.8 \times 10^{22}$ if
-O, Ne, and Fe are highly subsolar (Table~\ref{tab:src-varyabund}).
-\textbf{This is being investigated further.}
-Ratios with respect to Si make sense, but the allowance of a thermal continuum
-disagrees with Rakowski+.
+% Possible causes?
+%Could HD 119682 be contaminating other workers' fits?
+%\citet{rakowski2001} went to some effort to construct a model for the point
+%source contamination, modeling the ASCA X-ray emission as an absorbed power
+%law ($\nH = 0.26^{+0.18}_{-0.14} \nHUnits$, $\Gamma = 1.5 \pm 0.3$).
+%\citet{safi-harb2007} report $\nH = 0.18^{+0.08}_{-0.07} \nHUnits$ and $\Gamma
+%= 1.41^{+0.14}_{-0.22}$ based on finely resolved \textit{Chandra} data, and
+%obtained comparable numbers from the same \textit{XMM} data we consider here.
+%In short, the point source appears adequately accounted for by previous
+%workers, so we disfavor this explanation.
 
-If the absorption is truly that high, it is just marginally consistent with
-the galactic column computed from HI and dust maps.
-For G309.2-0.6, the \textit{Swift} galactic $\nH$ calculator implementation of
-\citet{willingale2013} provides an expected column density $1.81 \nHUnits$.
-%Dust scattering can bias X-ray spectrum fits for a purely absorbing column
-%$\abt25\%$ its true value \citep{corrales2016}, although
-%some scattered light is recaptured in our extended source region spectra.
-%The \textit{spectrum fit value} of $\nH$ may also be estimated from empirical
-%linear regression against optical extinction $\AV$ \citep[e.g.,][]{foight2016}
-%-- which benefits from a strong sampling of sources within the galactic plane,
-%and empirical validation -- but does not offer physical insight into the
-%discrepancy. We find approximate agreement ($2$--$3 \nHUnits$) with the various
-%relations.
-%\textbf{TODO: for now detailed accounting of absorption is beyond the scope of
-%this work}
-
-The absence of H$\alpha$ emission is unilluminating.
-Assuming H$\alpha$ emission to arise by shock propagation through ISM
-containing neutral hydrogen \citep{chevalier1978},  % 1978ApJ...225L..27C
-any of the following factors may contribute: low density of neutral H due to
-progenitor or supernova ionization, low ambient ISM density, or some local
-conditions (extremely high post-shock density?) that rapidly ionize neutral H,
-preventing Balmer line emission.
-Or, the available imagery may just not be deep enough.
-The outcome is that we are unable to constrain shock velocity independently by
-Balmer line width measurement.
+% Explore low abundance fit.
+\textbf{Investigating now with a fit forced to low absorption.}
+If O, Ne, and Fe abundances are allowed to be sub-solar, there exists a
+reasonably good fit with lowered absorption of $\abt 0.7 \nHUnits$
+The extremely sub-solar abundances of O, Ne, and Fe may be explained by a
+metal-rich ejecta plasma, wherein metals make up $\gtrsim 10\%$ of the plasma
+number density.
+The fits in Table~\ref{tab:src-fit} are all, broadly, plausible fits.
 
 
-\subsection{Morphology}
+\subsection{Plasma mass and density}
+
+% Emission measure derived masses
+We estimate X-ray emitting plasma mass and density from the integrated remnant
+fit emission measure (Table~\ref{tab:src-fit}).
+The X-ray emitting plasma density, assuming that the plasma fills a sphere of
+radius $400\arcsec$, is:
+\[
+    n_{\mt{H}} = 0.1 f^{-1/2} d_{5}^{-1/2} \unit{cm^{-3}}
+\]
+with an arbitrary volume filling factor $f \in [0,1]$ and distance relative to
+$5 \unit{kpc}$ as $d_{5}$.
+Assuming the plasma is hydrogen dominated, with $[\mt{He}/\mt{H}] = 0.1$
+\citep{wilms2000}, computing mass $M = 1.4 n_{\mt{H}} m_{H} f V$ yields
+\[
+    M = 13.7 M_{\sun} f^{1/2} d_{5}^{5/2}
+\]
+with corresponding ejecta masses $0.018 M_{\sun}$ of silicon, $0.012 M_{\sun}$
+of sulfur, and $0.002 M_{\sun}$ of magnesium (attributing a solar abundance to
+ISM).
+
+% Mass estimate for a metal-rich plasma
+The inferred mass increases if the plasma is metal-rich.
+The ion density for a given emission measure is lower than that of an
+equivalent hydrogen plasma:
+\[
+    n_{\mt{ion}} = \sqrt{\frac{4 \pi D^2 \eta}{\langle Z \rangle V}}
+\]
+where $\eta$ is the emission measure ($10^{14}\times$ the \texttt{XSPEC} norm),
+$D$ is source distance, $V$ is source volume, and $\langle Z \rangle$ is mean
+atomic number.
+But, the mass approximately scales as $\sqrt{2 \langle Z \rangle}$ (assuming no
+hydrogen), since
+$M_{\mt{tot}} \propto 2 \langle Z \rangle M_{\mt{p}} n_{\mt{ion}}$,
+where $M_{\mt{p}}$ is proton mass (approximation for mean nuclide mass) and the
+factor $2$ assumes negligible H contribution.
+For G309.2-0.6, assuming a spherical volume:
+\[
+    M_{\mt{tot}} \approx 13.7 M_{\sun} f^{1/2} d_5^{5/2} \langle Z \rangle^{1/2}
+\]
+where $d_5$ is distance scaled to $5 \unit{kpc}$.
+
+% Takeaway.
+For $\langle Z \rangle \sim 10$ (as an order of magnitude estimate, for a
+plasma comprising primarily shocked Si and S), we obtain
+$M_{\mt{tot}} \abt 90 M_{\sun} f^{1/2} d_5^{5/2}$.
+Although very uncertain, this estimate is rather high for ejecta alone,
+although possible if the remnant is close ($d_5 < 1$) and/or the ejecta
+distributed in clumps.
+Alternatively, shocked ISM/CSM may have mass comparable to that of the ejecta.
+
+% Discuss density inferences
+Our inferred density - valid for a homogeneous sphere - should be a lower bound
+on the post-forward-shock density.
+Therefore the ambient medium density should be at least
+$0.025 f^{-1/2} d_{5}^{-1/2} \unit{cm^{-3}}$, assuming a strong forward shock
+with compression ratio of four, expected for young ejecta-dominated remnants.
+This bound is not very stringent, but is at least a start.
+%If shocked plasma is concentrated within a shell of width $r/12$
+%% volume fraction (1 - (11/12)^3)
+%\textbf{todo:motivate this 1/12 factor}, then the shocked density would be
+%$n_{\mt{H}} \sim 0.5 f^{-1/2} d_{5}^{-1/2}$
+%and the ambient density bound would be $0.12 f^{-1/2} d_{5}^{-1/2}$,
+%which suggests ``typical'' ambient ISM.
+%This would also disfavor distance much higher than $5 \unit{kpc}$.
+
+\subsection{Iron non-detection}
+
+Fits allowing non-solar iron abundance favor zero iron contribution, although
+by eye a solar Fe abundance fit appears plausible.
+This is surprising, as many young ejecta-dominated remnants (both Ia and CC)
+show profuse Fe L-shell emission or whopping Fe K lines.
+We can set an upper bound on Fe K luminosity and thus constrain the parameter
+space for Ia and CC explosions, building on recent work by
+\citet{yamaguchi2014-iron} and \citet{patnaude2015}.
+
+We take our best fit (Table~\ref{tab:src-fit} and add a Gaussian line of
+normalization $5 \times 10^{-5} \unit{photon\;cm^{-2}\;s^{-1}}$ and
+line width $0.05 \unit{keV}$ at $6.55 \unit{keV}$.
+This crudely represents a minimum detectable Fe K flux
+$\abt 0.01$ to $0.02 \unit{counts\;s^{-1}\;keV^{-1}}$ after folding through
+telescope and detector response.
+The upper bound on Fe K line luminosity is:
+\[
+    L_{\mt{Fe-K}} = 1.2 \times 10^{41} d_5^2 \unit{photons\;s^{-1}}
+\]
+where $d_5$ represents distance scaled to $5 \unit{kpc}$.
+\textbf{TODO: clean up this analysis and formalize the non-detection.
+We can likely do better with a more careful analysis, say by explicitly
+modeling Fe-L and Fe-K emission or calculating errors on a narrow band model of
+a power law and gaussian.  Need a rough estimate of Fe line width for this.}
+
+The luminosity $L_{\mt{Fe-K}} \lesssim 10^{41} \unit{photons\;s^{-1}}$
+disfavors bright Ia explosions in dense ambient media
+$n_0 \sim 1 \unit{cm^{-3}}$; e.g., DDTa in $n_0 \sim 3 \unit{cm^{-3}}$ from
+\citet{badenes2003, badenes2005, badenes2006} \citep{yamaguchi2014-iron}
+and CC explosion in dense CSM wind with high mass loss rates appropriate for
+red supergiants \citep{patnaude2015}.
+If $d_5 \sim 2$--$3$, near the HI-absorption-derived distance bound of
+\citet{gaensler1998-g309}, the line luminosity
+$\lesssim 10^{42} \unit{photons\;s^{-1}}$ is less constraining.
+We will argue against such a large distance in subsequent discussion, on
+the basis of remnant size and relatively low ionization state.
+
+\subsection{Morphology and spatial structure}
 
 % Discuss morphology in broad terms
 The broadband $0.8$--$3.3 \unit{keV}$ remnant mostly fills the radio remnant,
@@ -969,114 +874,41 @@ Mg appears localized to a large northwestern clump and possibly some towards
 the southeast X-ray limb, although the significance of this possible spatial
 enhancement is questionable.
 
-% log scale, 6e-7 to 10e-6 cts/sec/cm^2 whatever
-% contrast = 3.890, bias = 0.605
-% smooth = 12
 \begin{figure*}[!ht]
-    \plottwo{fig/fig_rgb.png}{fig/fig_rgb_mg.png}
-    \plottwo{fig/fig_rgb_si.png}{fig/fig_rgb_s.png}
-    \figcaption{Smoothed RGB image (top left) of G309 sampling Mg, Si, S
-        He$\alpha$ lines.
-        Red, top right: $1.3$--$1.4 \unit{keV}$ (Mg).
-        Green, bottom left: $1.7$--$1.8 \unit{keV}$ (Si).
-        Blue, bottom right: $2.3$--$2.4 \unit{keV}$ (S).
+    \plotone{fig/fig_narrowband.png}
+    \figcaption{Heavily smoothed images of Mg, Si, S He$\alpha$ line emission
+%        Smoothed RGB image (top left) of G309 sampling Mg, Si, S
+%        He$\alpha$ lines.
+%        Red, top right: $1.3$--$1.4 \unit{keV}$ (Mg).
+%        Green, bottom left: $1.7$--$1.8 \unit{keV}$ (Si).
+%        Blue, bottom right: $2.3$--$2.4 \unit{keV}$ (S).
         MOST contours are 0.01, 0.02, 0.05, 0.1, 0.2 Jy in all images.
         The images are not adjusted for background and should be considered
         qualitative only.}
     \label{fig:rgb}
 \end{figure*}
 
-\textbf{TODO: calculate mirror asymmetry and compare to \citet{lopez2011}.}
+If the radio traces the forward shock front, then there are relatively
+large gaps between FS and CD along the sides of the remnant, with the
+notable exception of the northwest limb (which also corresponds with
+the brightest X-ray and faintest radio emission).
+This may offer clues about the dynamical state of the remnant, although
+\textit{Chandra} would be far better for this sort of study.
 
-
-\subsection{Dynamical character}
-
-% Radial variation in kT and Tau
-The plasma temperature and ionization timescale vary by $\abt 20$--$50\%$
-across annuli (Figure~\ref{fig:kt-tau-radius}).
-The center and limb plasma is hotter and more recently shocked than the bright
-$200$--$300\arcsec$ annulus.
-Although these variations may be spurious if systematic errors dominate, the
-observed radial variation is at least consistent with the standard picture of
-supernova remnant evolution, wherein recently shocked ISM and central
-reverse-shocked central ejecta should be the ``youngest'' emitting plasma.
-
-\begin{figure*}[!ht]
-    \plottwo{fig/fig_kt_radius.pdf}{fig/fig_tau_radius.pdf}
-    \figcaption{Electron temperature (left) and ionization timescale (right)
-        as a function of radius from annuli spectra fit
-        (Tables~\ref{tab:annulus-fit}, \ref{tab:annulus-varycenter}).}
-    \label{fig:kt-tau-radius}
-\end{figure*}
-
-% Emission measure derived masses
-We estimate X-ray emitting plasma mass and density from the integrated remnant
-fit emission measure (Table~\ref{tab:src-fit}).
-Assuming that the plasma fills a spherical volume of radius $400\arcsec$,
-\[
-    n_{\mt{H}} = 0.11 f^{-1/2} d_{5}^{-1/2} \unit{cm^{-3}}
-\]
-with volume filling factor $f \in [0,1]$ and distance relative to $5
-\unit{kpc}$ as $d_{5}$.
-We then estimate mass $M = 1.4 n_{\mt{H}} m_{H} f V$:
-\[
-    M = 10.3 M_{\sun} f^{1/2} d_{5}^{5/2}
-\]
-with corresponding ejecta masses $0.016 M_{\sun}$ of silicon, $0.011 M_{\sun}$
-of sulfur, and $0.005 M_{\sun}$ of magnesium.
-% TODO explicate factor 1.4 for H,He...
-% TODO provide stat uncertainty from XSPEC
-As ejecta abundances for Mg, Si, S are not as strongly variable between Ia and
-core-collapse nucleosynthesis yields (versus O or Fe), the relative abundances
-of these elements do not clearly constrain the progenitor type.
-\textbf{TODO: read more about Ia and CC models and their yields.}
-
-% Discuss density inferences
-Our inferred density - valid for a homogeneous sphere - should be a lower bound
-on the post-forward-shock density.
-Therefore the ambient medium density should be at least
-$0.025 f^{-1/2} d_{5}^{-1/2} \unit{cm^{-3}}$, assuming a strong forward shock
-with compression ratio of four, expected for young ejecta-dominated remnants.
-This bound is not very stringent, but is at least a start.
-If shocked plasma is concentrated within a shell of width $r/12$
-% volume fraction (1 - (11/12)^3)
-\textbf{todo:motivate this 1/12 factor}, then the shocked density would be
-$n_{\mt{H}} \sim 0.5 f^{-1/2} d_{5}^{-1/2}$
-and the ambient density bound would be $0.12 f^{-1/2} d_{5}^{-1/2}$,
-which suggests ``typical'' ambient ISM.
-This would also disfavor distance much higher than $5 \unit{kpc}$.
-% TODO ...
-\citet{katsuda2015} use, similar to \citet{kosenko2010}, a deprojection method
-to try to back out a radial profile of the ejecta.
-
-% Discuss HI brightness profiles
-We could use HI brightness profiles along the line-of-sight to set some upper
-bounds on ambient density.
-Consider two cases for degeneracy: assume all emission with $v_{\mt{LSR}} < 0$
-on either (1) nearby-arm of rotation curve, or (2) far-arm of rotation curve.
-\textbf{also revisit willingale assumptions on ISM density.  Estimate for H2
-contribution is much different than \citet{yamaguchi2012}; see Sec. 3.1.
-not sure if the willingale approach is valid in the galactic plane.}
-
-\subsection{A young remnant}
-
-The high electron temperature, low ionization age, enhanced ejecta abundances,
-low emitting plasma mass all point towards a dynamically young remnant.
-G309 is somewhat center-filled in X-rays and clearly shell-like in radio,
-consistent with the definition of a mixed-morphology (MM) remnant
-\citep{rho1998}.
-But, the plasma is relatively hot and recently shocked for a MM remnant, and
-the surface brightness peaks off-center.
-The remnant's age estimates, fitted X-ray plasma parameters and brightness
-distribution are consistent with an ejecta-dominated young remnant, which
-does not require complex cloud or thermal conduction models as proposed for MM
-remnants.
-
-The outer ($300$--$400\arcsec$) annulus temperature of $2 \unit{keV}$
-suggests strong-shock heating (shock velocity $\gtrsim 1000 \unit{km/s}$).
+% Outer annulus study
+The outer ($300$--$400\arcsec$) annulus temperature $\abt 2 \unit{keV}$
+suggests strong shock heating (shock velocity $\gtrsim 1000 \unit{km/s}$).
 It is unclear whether emission arises from ejecta or shocked ISM, but in either
 case requires the shock to be dynamically young.
 
+\citet{katsuda2015} use, similar to \citet{kosenko2010}, a deprojection method
+to try to back out a radial profile of the ejecta.
+Someone else, \citet{hughes2003} I think, also deprojected DEM L71 emission.
+\textbf{TODO...}
+
+\subsection{Age dating}
+
+% Age estimates
 The age inferred from the emitting plasma norm and integrated ionization age
 $1.75 \TauUnits$ is $5000 f^{1/2} d_{5}^{1/2} \unit{yr}$.
 Enhanced central Si and S emission suggests that the reverse shock has
@@ -1114,27 +946,18 @@ Todo: compare to characteristic Sedov-Taylor time of \citet{truelove1999}.
     \label{fig:age}
 \end{figure}
 
+\subsection{Galactic environment}
 
-\textbf{TODO: review ejecta-dominated free expansion and transition into Sedov}
-% Vink: http://arxiv.org/pdf/1112.0576v2.pdf
-% Chevalier 1972?: ...
-% Truelove McKee: http://adsabs.harvard.edu/abs/1999ApJS..120..299T
-% Tang Chevalier: http://arxiv.org/pdf/1607.06391v1.pdf
-
-
-% NOTE: SW lobe and ridge both show weird shifts in PN spectral lines (Si, S)
-% (this dates from Jan/Feb -- to be investigated with now up to date procedures)
-
-\subsection{Friends of young remnants}
-
-Comparative study?  TBD.
-G350.1-0.3 is young, bright (~100,000 counts)
-G337.2-0.7 appears a bit older (ionization age $10^12$), also Si/S rich but
-allows Fe.
-
-\section{Distance Inference}
-
-Yada yada yada.
+The absence of H$\alpha$ emission is unilluminating.
+Assuming H$\alpha$ emission to arise by shock propagation through ISM
+containing neutral hydrogen \citep{chevalier1978},  % 1978ApJ...225L..27C
+any of the following factors may contribute: low density of neutral H due to
+progenitor or supernova ionization, low ambient ISM density, or some local
+conditions (extremely high post-shock density?) that rapidly ionize neutral H,
+preventing Balmer line emission.
+Or, the available imagery may just not be deep enough.
+The outcome is that we are unable to constrain shock velocity independently by
+Balmer line width measurement.
 
 % Galactic environment
 The sight line towards G309.2-0.6 crosses the tangent of the Centaurus Arm
@@ -1164,9 +987,105 @@ motivated.
 % Milne 1979
 % you must understand the argument before rejecting it out of hand.
 
+\subsection{Interpretation}
+
+% Caveats
+\textbf{Caveats:} our NEI model assumes a homogeneous, single-temperature,
+single-ionization age plasma, and does not separate ejecta and shocked ambient
+ISM/CSM emission.
+The best fit parameters probe only the brightest and densest X-ray emitting
+plasma; see \citet{rakowski2006-g337} for more extended discussion.
+
+Nevertheless, we suggest that our observations are consistent with two
+scenarios:
+1. a dynamically young remnant comparable to historical galactic SNRs at
+relatively close distance, probably past the near Carina arm
+2. a young to middle-aged remnant at large distance.
+
+We have several distinct observations to interpret:
+\begin{itemize}
+    \item Low ionization timescale
+        $\tau \sim 2 \times 10^{10} \TauUnits \sim 600 \unit{yr\;cm^{-3}}$
+        consistent with other young ejecta-dominated remnants of Ia SNe
+        \citep[][Table 4]{badenes2007}.
+    \item No obvious evidence for separate ISM and ejecta components of
+        distinct temperature and emission age
+    \item Absence of iron K emission, which
+        suggests
+        1. low intrinsic luminosity (low explosion strength and/or low density
+           medium),
+        2. ejecta stratification, and incomplete propagation of the RS through
+           all ejecta (the RS position is of course impacted by explosion strength
+           and ambient density)
+        3. CC abundances with low Fe, or unusual Ia model with little Fe-group
+           burning
+   \item Certainly super-solar Si and S abundances (hallmark of SNRs, and
+       conveniently placed in X-ray mirror passband).
+       Possibly super-solar Ar, Ca lines.
+    \item Curious radio and X-ray shock front morphology.
+\end{itemize}
+
+% ionization age
+The ionization timescale
+$\tau \sim 2 \times 10^{10} \TauUnits \sim 600 \unit{yr\;cm^{-3}}$
+is consistent with other young ejecta-dominated remnants of Ia SNe
+\citep[][Table 4]{badenes2007}.
+
+% TODO provide stat uncertainty from XSPEC
+As ejecta abundances for Si, S are not as strongly variable between Ia and
+core-collapse nucleosynthesis yields (versus O or Fe), the relative abundances
+of these elements do not clearly constrain the progenitor type.
+\textbf{TODO: read more about Ia and CC models and their yields.}
+We cannot really constrain other elemental emission, and so do not attempt to
+type G309.2-0.6 on the basis of abundance measurements.
+
+% Comparison to old fits
+
+If the absorption is truly that high, it is just marginally consistent with
+the galactic column computed from HI and dust maps.
+For G309.2-0.6, the \textit{Swift} galactic $\nH$ calculator implementation of
+\citet{willingale2013} provides an expected column density $1.81 \nHUnits$.
+%Dust scattering can bias X-ray spectrum fits for a purely absorbing column
+%$\abt25\%$ its true value \citep{corrales2016}, although
+%some scattered light is recaptured in our extended source region spectra.
+%The \textit{spectrum fit value} of $\nH$ may also be estimated from empirical
+%linear regression against optical extinction $\AV$ \citep[e.g.,][]{foight2016}
+%-- which benefits from a strong sampling of sources within the galactic plane,
+%and empirical validation -- but does not offer physical insight into the
+%discrepancy. We find approximate agreement ($2$--$3 \nHUnits$) with the various
+%relations.
+%\textbf{TODO: for now detailed accounting of absorption is beyond the scope of
+%this work}
+
+% Discuss HI brightness profiles
+We could use HI brightness profiles along the line-of-sight to set some upper
+bounds on ambient density.
+Consider two cases for degeneracy: assume all emission with $v_{\mt{LSR}} < 0$
+on either (1) nearby-arm of rotation curve, or (2) far-arm of rotation curve.
+\textbf{also revisit willingale assumptions on ISM density.  Estimate for H2
+contribution is much different than \citet{yamaguchi2012}; see Sec. 3.1.
+not sure if the willingale approach is valid in the galactic plane.}
+
+
+
+
+% NOTE: SW lobe and ridge both show weird shifts in PN spectral lines (Si, S)
+% (this dates from Jan/Feb -- to be investigated with now up to date procedures)
+
+\subsection{Friends of young remnants}
+
+Comparative study?  TBD.
+G350.1-0.3 is young, bright (~100,000 counts)
+G337.2-0.7 appears a bit older (ionization age $10^12$), also Si/S rich but
+allows Fe.
+
+A next step is to study other remnants with little Fe emission.
+Review the Chandra catalog, Green's catalog...
+
+
 \section{Conclusions}
 
-TBD
+Young, ejecta-dominated remnant with little iron.
 
 \section{Misc}
 
@@ -1198,7 +1117,8 @@ University of Sydney.
 
 This research has made extensive use of NASA's Astrophysics Data System.
 % TODO is software acknowledgement sufficient?
-This research used the SNR catalog of \citet{ferrand2012}.
+This research used the SNR catalogs of \citet{ferrand2012} and
+\citet{green2014}.
 This research made use of Astropy, a community-developed core Python package
 for Astronomy \citep{astropy2013}.
 This research also made use of APLpy, an open-source plotting package for
@@ -1262,6 +1182,7 @@ The resulting X-ray background parameters agree within error.
 % TODO reference appendix table
 % TODO give a sentence to this effect in main body.
 
+\clearpage
 \section{Is a nonthermal component compatible with integrated remnant fits?}
 
 % Random question: should nonthermal be hyphenated (non-thermal) or not?
@@ -1296,7 +1217,7 @@ this is not surprising.
 I could re-attempt this with a $350$--$450\arcsec$ annulus instead of
 $400$--$500\arcsec$.  % TODO - investigate this.
 
-\begin{figure*}[]
+\begin{figure*}[!hb]
     \plotone{fig/fig_src_powerlaw_0087940201-mos1.pdf}
     \plotone{fig/fig_src_srcutlog_0087940201-mos1.pdf}
     \figcaption{Integrated source fit with powerlaw and srcutlog components
@@ -1305,12 +1226,14 @@ $400$--$500\arcsec$.  % TODO - investigate this.
 \end{figure*}
 
 
+\clearpage
 \section{Does inaccuracy introduced by $\abt 10\%$ error in BACKSCAL ratio for
 integrated source fits impact fit results?}
 
 I performed joint fits of integrated source and X-ray background while
 varying the BACKSCAL ratio for MOS1S001.
 Results in Table~\ref{tab:backscal-hack}.
+These fits date from June 2016 and are no longer relevant or correct.
 
 \begin{table*}[!h]
     \centering
@@ -1408,62 +1331,131 @@ Results in Table~\ref{tab:backscal-hack}.
 %    \enddata
 %\end{deluxetable}
 
+\clearpage
 \section{Does fitting four versus five annuli make any difference?}
 
 Answer: no, parameters are identical within error (and the change in parameter
 values is much smaller than error).
-This is already shown in Table~\ref{tab:annulus-varycenter}.
-For thoroughness, I give fit parameters from ``stock'' fits (only Si and S
-free for each annulus) in Tables~\ref{tab:fiveann-stock} and
-\ref{tab:fourann-stock}.
+\textbf{TODO: add a table here showing this result alone}.
 
 I also verified by eye that
 (1) all instrumental line normalizations agree to $<1\%$ (often $\lesssim0.1\%$),
 (2) remnant model norms agree to $\lesssim 1$\%,
 (3) soft proton norms and indices agree to $\lesssim 1\%$.
-
+\textbf{TODO: I need to redo this}
 In short, we are good to go.
 
-\begin{table*}
+\begin{figure}[!hb]
+  \includegraphics[width={0.5\linewidth}]{fig/fig_fiveann_si-s_0087940201-mos.pdf}
+  \includegraphics[width={0.5\linewidth}]{fig/fig_fiveann_mg-si-s_0087940201-mos.pdf} \\
+  \figcaption{0087940201 MOS annuli spectra.  Left: Si, S free only.  Right: Mg, Si, S free.}
+\end{figure}
+
+\begin{figure}[!hb]
+  \includegraphics[width={0.5\linewidth}]{fig/fig_fiveann_si-s_0087940201-pn.pdf}
+  \includegraphics[width={0.5\linewidth}]{fig/fig_fiveann_mg-si-s_0087940201-pn.pdf}
+  \figcaption{0087940201 PN annuli spectra.  Left: Si, S free only.  Right: Mg, Si, S free.}
+\end{figure}
+
+\begin{figure}[!hb]
+  \includegraphics[width={0.5\linewidth}]{fig/fig_fiveann_si-s_0551000201-mos.pdf}
+  \includegraphics[width={0.5\linewidth}]{fig/fig_fiveann_mg-si-s_0551000201-mos.pdf}
+  \figcaption{0551000201 MOS annuli spectra.  Left: Si, S free only.  Right: Mg, Si, S free.}
+\end{figure}
+
+\clearpage
+
+\begin{table}
     \centering
-    \caption{Five annulus fit \label{tab:fiveann-stock}}
-    \begin{tabular}{@{}rlllll@{}}
-        \toprule
-        Annulus & $n_\mathrm{H}$ & $kT$ & $\tau$ & Si & S \\
-         & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) \\
-        \midrule
-        % 20160701_fiveann.json
-        $0$--$100\arcsec$   & ${2.10}^{+0.05}_{-0.05}$ & ${3.82}^{+0.51}_{-0.47}$ & ${1.57}^{+0.15}_{-0.13}$ & ${1.98}^{+0.14}_{-0.13}$ & ${1.45}^{+0.30}_{-0.26}$ \\
-        $100$--$200\arcsec$ &                          & ${2.43}^{+0.36}_{-0.34}$ & ${1.72}^{+0.16}_{-0.14}$ & ${5.70}^{+0.39}_{-0.35}$ & ${5.49}^{+0.69}_{-0.59}$ \\
-        $200$--$300\arcsec$ &                          & ${2.09}^{+0.25}_{-0.26}$ & ${2.16}^{+0.23}_{-0.22}$ & ${4.10}^{+0.26}_{-0.22}$ & ${3.78}^{+0.41}_{-0.35}$ \\
-        $300$--$400\arcsec$ &                          & ${2.52}^{+0.61}_{-0.52}$ & ${1.73}^{+0.37}_{-0.28}$ & ${3.38}^{+0.42}_{-0.30}$ & ${3.08}^{+0.87}_{-0.59}$ \\
-        $400$--$500\arcsec$ &                          & ${0.62}^{+0.20}_{-0.09}$ & ${\left(5 \times 10^3\right)}^{?}$                  & ${8.30}^{>1.7?}_{-2.49}$ & $>7.19$ \\
-            % S abundance was ${10.00}^{?}_{-2.81}$
-        \bottomrule
+    \begin{tabular}{@{}rllllll@{}}
+    \toprule
+    \multicolumn{7}{c}{Annulus fit (20161019\_fourann.json)} \\
+    \midrule
+    Annulus & $kT$ & $\tau$ & Mg & Si & S & EM \\
+     & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) & (-) & $(\times 10^{11})$ \\
+    \midrule
+      $0$--$100\arcsec$ & ${2.08}^{+0.79}_{-0.44}$ & ${1.45}^{+0.39}_{-0.28}$ &      & ${6.77}^{+0.90}_{-0.78}$ & ${7.13}^{+2.75}_{-1.71}$ & ${5.70}^{+1.18}_{-1.11}$ \\
+    $100$--$200\arcsec$ & ${1.53}^{+0.23}_{-0.17}$ & ${2.31}^{+0.43}_{-0.34}$ &      & ${5.25}^{+0.29}_{-0.36}$ & ${4.70}^{+0.64}_{-0.54}$ & ${7.73}^{+1.22}_{-1.22}$ \\
+    $200$--$300\arcsec$ & ${1.41}^{+0.20}_{-0.17}$ & ${2.81}^{+0.68}_{-0.45}$ &      & ${3.31}^{+0.24}_{-0.21}$ & ${3.01}^{+0.37}_{-0.30}$ & ${8.63}^{+1.58}_{-1.71}$ \\
+    $300$--$400\arcsec$ & ${1.28}^{+0.34}_{-0.11}$ & ${2.57}^{+1.47}_{-0.76}$ &      & ${2.94}^{+0.33}_{-0.30}$ & ${2.66}^{+0.89}_{-0.58}$ & ${3.87}^{+0.57}_{-0.79}$ \\
+    \bottomrule
     \end{tabular}
-\end{table*}
+    \tablecomments{
+      $\nH = {2.51}^{+0.09}_{-0.10} \nHUnits$;
+      $\mt{pgstat} = 19335.8$; $\chi^2_{\mt{red}} = 1.210 = 24296.5 / 20073$ ($\chi^2$/dof).
+        Units as in Table~\ref{tab:src-fit}.}
+\end{table}
 
-\begin{table*}
+\begin{table}
     \centering
-    \caption{Four annulus fit \label{tab:fourann-stock}}
-    \begin{tabular}{@{}rlllll@{}}
-        \toprule
-        Annulus & $n_\mathrm{H}$ & $kT$ & $\tau$ & Si & S \\
-         & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) \\
-        \midrule
-        % 20160706_fourann_stock
-        $000$--$100\arcsec$ & ${2.11}^{+0.04}_{-0.07}$ & ${3.79}^{+0.55}_{-0.42}$ & ${1.57}^{+0.14}_{-0.13}$ & ${1.98}^{+0.14}_{-0.13}$ & ${1.45}^{+0.30}_{-0.26}$ \\
-        $100$--$200\arcsec$ &                       & ${2.38}^{+0.24}_{-0.29}$ & ${1.74}^{+0.16}_{-0.14}$ & ${5.7}^{+0.4}_{-0.3}$ & ${5.5}^{+0.7}_{-0.6}$ \\
-        $200$--$300\arcsec$ &                       & ${2.08}^{+0.24}_{-0.12}$ & ${2.16}^{+0.30}_{-0.21}$ & ${4.1}^{+0.3}_{-0.2}$ & ${3.8}^{+0.4}_{-0.3}$ \\
-        $300$--$400\arcsec$ &                       & ${2.45}^{+0.53}_{-0.44}$ & ${1.74}^{+0.37}_{-0.28}$ & ${3.4}^{+0.4}_{-0.3}$ & ${3.1}^{+0.9}_{-0.6}$ \\
-        \bottomrule
+    \begin{tabular}{@{}rllllll@{}}
+    \toprule
+    \multicolumn{7}{c}{Annulus fit (20161019\_fourann\_mg.json)} \\
+    \midrule
+    Annulus & $kT$ & $\tau$ & Mg & Si & S & EM \\
+     & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) & (-) & $(\times 10^{11})$ \\
+    \midrule
+      $0$--$100\arcsec$ & ${3.82}^{+2.70}_{-1.31}$ & ${1.37}^{+0.21}_{-0.08}$ & ${1.58}^{+0.54}_{-0.41}$ & ${8.20}^{+1.72}_{-1.25}$ & ${8.30}^{-8.30}_{-1.88}$ & ${3.24}^{+0.98}_{-0.71}$ \\
+    $100$--$200\arcsec$ & ${2.04}^{+0.54}_{-0.31}$ & ${1.97}^{+0.33}_{-0.28}$ & ${1.28}^{+0.25}_{-0.19}$ & ${6.25}^{+0.77}_{-0.61}$ & ${5.62}^{+0.95}_{-0.73}$ & ${4.93}^{+1.14}_{-1.43}$ \\
+    $200$--$300\arcsec$ & ${2.06}^{+0.43}_{-0.35}$ & ${2.15}^{+0.44}_{-0.27}$ & ${1.61}^{+0.26}_{-0.30}$ & ${4.34}^{+0.54}_{-0.41}$ & ${3.93}^{+0.62}_{-0.48}$ & ${4.74}^{+1.18}_{-1.26}$ \\
+    $300$--$400\arcsec$ & ${1.72}^{+0.51}_{-0.33}$ & ${2.10}^{+0.73}_{-0.24}$ & ${1.07}^{+0.24}_{-0.20}$ & ${3.18}^{+0.54}_{-0.40}$ & ${2.89}^{+0.89}_{-0.61}$ & ${2.54}^{+0.70}_{-0.56}$ \\
+    \bottomrule
     \end{tabular}
-\end{table*}
+    \tablecomments{
+      $\nH = {2.26}^{+0.11}_{-0.11} \nHUnits$;
+      $\mt{pgstat} = 19298.1$; $\chi^2_{\mt{red}} = 1.207 = 24226.3 / 20069$ ($\chi^2$/dof).
+        Units as in Table~\ref{tab:src-fit}.}
+\end{table}
+
+\begin{table}
+    \centering
+    \begin{tabular}{@{}rllllll@{}}
+    \toprule
+    \multicolumn{7}{c}{Annulus fit (20161019\_fiveann.json)} \\
+    \midrule
+    Annulus & $kT$ & $\tau$ & Mg & Si & S & EM \\
+     & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) & (-) & $(\times 10^{11})$ \\
+    \midrule
+      $0$--$100\arcsec$ & ${2.06}^{+0.76}_{-0.42}$ & ${1.46}^{+0.38}_{-0.29}$ &      & ${6.76}^{+0.91}_{-0.78}$ & ${7.12}^{+2.80}_{-1.73}$ & ${5.77}^{+1.17}_{-1.10}$ \\
+    $100$--$200\arcsec$ & ${1.52}^{+0.22}_{-0.09}$ & ${2.32}^{+0.41}_{-0.32}$ &      & ${5.24}^{+0.41}_{-0.36}$ & ${4.69}^{+0.65}_{-0.53}$ & ${7.81}^{+1.21}_{-1.19}$ \\
+    $200$--$300\arcsec$ & ${1.40}^{+0.19}_{-0.16}$ & ${2.83}^{+0.44}_{-0.46}$ &      & ${3.31}^{+0.21}_{-0.21}$ & ${3.00}^{+0.36}_{-0.30}$ & ${8.72}^{+1.60}_{-1.34}$ \\
+    $300$--$400\arcsec$ & ${1.27}^{+0.32}_{-0.21}$ & ${2.57}^{+1.50}_{-0.76}$ &      & ${2.93}^{+0.34}_{-0.30}$ & ${2.67}^{+0.90}_{-0.56}$ & ${3.91}^{+0.80}_{-0.74}$ \\
+    $400$--$500\arcsec$ & ${3.07}^{-3.07}_{-1.08}$ & ${0.68}^{+0.82}_{-0.13}$ &      & ${2.77}^{+0.89}_{-1.12}$ & ${9.88}^{-9.88}_{-8.33}$ & ${0.67}^{+0.21}_{-0.24}$ \\
+    \bottomrule
+    \end{tabular}
+    \tablecomments{
+      $\nH = {2.51}^{+0.09}_{-0.10} \nHUnits$;
+      $\mt{pgstat} = 25741.5$; $\chi^2_{\mt{red}} = 1.203 = 31637.1 / 26290$ ($\chi^2$/dof).
+        Units as in Table~\ref{tab:src-fit}.}
+\end{table}
+
+\begin{table}
+    \centering
+    \begin{tabular}{@{}rllllll@{}}
+    \toprule
+    \multicolumn{7}{c}{Annulus fit (20161019\_fiveann\_mg.json)} \\
+    \midrule
+    Annulus & $kT$ & $\tau$ & Mg & Si & S & EM \\
+     & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) & (-) & $(\times 10^{11})$ \\
+    \midrule
+      $0$--$100\arcsec$ & ${3.94}^{+2.40}_{-1.47}$ & ${1.37}^{+0.21}_{-0.08}$ & ${1.61}^{+0.51}_{-0.44}$ & ${8.29}^{+1.58}_{-1.34}$ & ${8.38}^{-8.38}_{-1.94}$ & ${3.16}^{+1.11}_{-0.62}$ \\
+    $100$--$200\arcsec$ & ${2.08}^{+0.48}_{-0.36}$ & ${1.94}^{+0.37}_{-0.24}$ & ${1.30}^{+0.23}_{-0.21}$ & ${6.30}^{+0.70}_{-0.68}$ & ${5.68}^{+0.87}_{-0.80}$ & ${4.82}^{+1.30}_{-0.85}$ \\
+    $200$--$300\arcsec$ & ${2.08}^{+0.38}_{-0.38}$ & ${2.14}^{+0.46}_{-0.26}$ & ${1.62}^{+0.23}_{-0.22}$ & ${4.38}^{+0.47}_{-0.48}$ & ${3.97}^{+0.57}_{-0.53}$ & ${4.65}^{+1.31}_{-0.77}$ \\
+    $300$--$400\arcsec$ & ${1.73}^{+0.48}_{-0.34}$ & ${2.10}^{+0.75}_{-0.46}$ & ${1.08}^{+0.23}_{-0.20}$ & ${3.21}^{+0.49}_{-0.43}$ & ${2.92}^{+0.85}_{-0.64}$ & ${2.50}^{+0.77}_{-0.50}$ \\
+    $400$--$500\arcsec$ & ${10.00}^{-10.00}_{-2.96}$ & ${1.32}^{+0.52}_{-0.53}$ & ${1.84}^{+2.05}_{-0.83}$ & ${2.67}^{+2.39}_{-0.95}$ & ${3.53}^{-3.53}_{-2.13}$ & ${0.34}^{+0.16}_{-0.14}$ \\
+    \bottomrule
+    \end{tabular}
+    \tablecomments{
+      $\nH = {2.25}^{+0.13}_{-0.10} \nHUnits$;
+      $\mt{pgstat} = 25699.6$; $\chi^2_{\mt{red}} = 1.201 = 31558.8 / 26285$ ($\chi^2$/dof).
+        Units as in Table~\ref{tab:src-fit}.}
+\end{table}
 
 
+\clearpage
 \section{Frequently asked questions (or, nitpickables)}
 
-Here are caveats, disclaimers, and possible points of contention that are not
+Caveats, disclaimers, and possible points of contention that are not
 discussed in the main text for brevity, but should be itemized and reviewed.
 
 \begin{itemize}
@@ -1480,6 +1472,7 @@ discussed in the main text for brevity, but should be itemized and reviewed.
         If I recall correctly from previous reading (forgot which source(s)) --
         small-number statistics prevail, so a few point sources removed don't
         matter.  It could be more significant for wide-field studies?
+        \textbf{Irrelevant now that we have corrected extragalactic background normalization for point source removal -- but not dead yet}
     \item \textbf{Why are halo emission and extragalactic background subject to
         the same absorption?}
         Yes, this is unrealistic.  Halo emission should be absorbed by some
@@ -1492,128 +1485,8 @@ discussed in the main text for brevity, but should be itemized and reviewed.
         emission or the soft proton components.
         However we have not explored this in depth, and it is possible that our
         assessment of the background would change.
+        \textbf{Irrelevant now that we have separated absorption}
 \end{itemize}
-
-
-%\begin{table*}
-%    \centering
-%    \caption{G309.2-0.6 -- sub-source region fits, $n_H=2.5$ fixed}
-%    \begin{tabular}{@{}lrrrrrr@{}}
-%        \toprule
-%        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
-%               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
-%        \midrule
-%        north clump & 2.50 & 1.07 & 4.79e+10 & 5.73 & 5.22 & 1.339 (693) \\  % File src_north_clump_nH-2.5_row.tex
-%        E lobe & 2.50 & 1.74 & 2.71e+10 & 5.47 & 3.69 & 1.016 (208) \\  % File src_E_lobe_nH-2.5_row.tex
-%        SW lobe & 2.50 & 1.27 & 1.37e+10 & 3.46 & 5.78 & 1.429 (439) \\  % File src_SW_lobe_nH-2.5_row.tex
-%        SE dark & 2.50 & 0.68 & 8.80e+10 & 2.79 & 2.30 & 0.983 (223) \\  % File src_SE_dark_nH-2.5_row.tex
-%        \midrule
-%        ridge & 2.50 & 0.81 & 8.69e+10 & 2.63 & 2.10 & 1.467 (226) \\  % File src_ridge_nH-2.5_row.tex
-%        SE dark ridge & 2.50 & 0.78 & 2.51e+11 & 1(fr) & 1(fr) & 1.232 (105) \\  % File src_SE_ridge_dark_nH-2.5_row.tex
-%        \bottomrule
-%    \end{tabular}
-%\end{table*}
-%
-%\begin{table*}
-%    \centering
-%    \caption{G309.2-0.6 -- annulus fits, $n_H=2.5$ fixed}
-%    \begin{tabular}{@{}lrrrrrr@{}}
-%        \toprule
-%        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
-%               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
-%        \midrule
-%        $0$--$100\arcsec$ & 2.50 & 2.33 & 1.58e+10 & 1.74 & 1.27 & 2.756 (357) \\  % File ann_000_100_nH-2.5_row.tex
-%        $100$--$200\arcsec$ & 2.50 & 1.22 & 2.72e+10 & 5.29 & 5.04 & 1.210 (560) \\  % File ann_100_200_nH-2.5_row.tex
-%        $200$--$300\arcsec$ & 2.50 & 1.07 & 4.51e+10 & 3.83 & 3.56 & 1.291 (793) \\  % File ann_200_300_nH-2.5_row.tex
-%        $300$--$400\arcsec$ & 2.50 & 0.78 & 9.05e+10 & 4.11 & 3.74 & 1.275 (800) \\  % File ann_300_400_nH-2.5_row.tex
-%        $400$--$500\arcsec$ & 2.50 & 0.99 & 3.99e+10 & 8.57 & 10.19 & 1.188 (823) \\  % File ann_400_500_nH-2.5_row.tex
-%        \bottomrule
-%    \end{tabular}
-%\end{table*}
-
-%\begin{table*}
-%    \centering
-%    \caption{sub-region fits, varying $n_H$}
-%    \begin{tabular}{@{}lrrrrrr@{}}
-%        \toprule
-%        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
-%               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
-%        \midrule
-%        north clump & 1.50 & 8.50 & 1.81e+10 & 8.76 & 8.92 & 1.933 (692) \\  % File 20160420_src_north_clump_nH_1.5_row.tex
-%        north clump & 2.00 & 2.42 & 2.08e+10 & 6.52 & 5.95 & 1.623 (692) \\  % File 20160420_src_north_clump_nH_2.0_row.tex
-%        north clump & 2.50 & 1.33 & 3.23e+10 & 5.15 & 4.59 & 1.361 (692) \\  % File 20160420_src_north_clump_nH_2.5_row.tex
-%        north clump & 3.00 & 0.91 & 5.46e+10 & 4.27 & 3.98 & 1.338 (692) \\  % File 20160420_src_north_clump_nH_3.0_row.tex
-%        \midrule
-%        E lobe & 1.50 & 8.62 & 2.02e+10 & 9.71 & 7.85 & 1.331 (207) \\  % File 20160420_src_E_lobe_nH_1.5_row.tex
-%        E lobe & 2.00 & 5.68 & 1.89e+10 & 5.80 & 4.25 & 1.086 (207) \\  % File 20160420_src_E_lobe_nH_2.0_row.tex
-%        E lobe & 2.50 & 2.75 & 2.03e+10 & 4.53 & 2.97 & 0.979 (207) \\  % File 20160420_src_E_lobe_nH_2.5_row.tex
-%        E lobe & 3.00 & 1.73 & 2.46e+10 & 3.65 & 2.30 & 0.941 (207) \\  % File 20160420_src_E_lobe_nH_3.0_row.tex
-%        \midrule
-%        SW lobe & 1.50 & 9.21 & 1.44e+10 & 3.98 & 4.79 & 1.390 (438) \\  % File 20160420_src_SW_lobe_nH_1.5_row.tex
-%        SW lobe & 2.00 & 3.09 & 1.27e+10 & 3.40 & 4.11 & 1.326 (438) \\  % File 20160420_src_SW_lobe_nH_2.0_row.tex
-%        SW lobe & 2.50 & 1.64 & 1.28e+10 & 3.06 & 4.50 & 1.403 (438) \\  % File 20160420_src_SW_lobe_nH_2.5_row.tex
-%        SW lobe & 3.00 & 1.13 & 1.30e+10 & 2.93 & 5.32 & 1.522 (438) \\  % File 20160420_src_SW_lobe_nH_3.0_row.tex
-%        \midrule
-%        SE dark & 1.50 & 5.47 & 1.69e+10 & 3.26 & 2.39 & 1.079 (222) \\  % File 20160420_src_SE_dark_nH_1.5_row.tex
-%        SE dark & 2.00 & 1.79 & 2.43e+10 & 2.54 & 1.56 & 0.996 (222) \\  % File 20160420_src_SE_dark_nH_2.0_row.tex
-%        SE dark & 2.50 & 1.00 & 4.60e+10 & 2.10 & 1.32 & 0.956 (222) \\  % File 20160420_src_SE_dark_nH_2.5_row.tex
-%        SE dark & 3.00 & 0.70 & 7.14e+10 & 1.83 & 1.35 & 0.985 (222) \\  % File 20160420_src_SE_dark_nH_3.0_row.tex
-%        \midrule
-%        ridge & 1.50 & 3.46 & 2.13e+10 & 4.58 & 3.22 & 2.476 (225) \\  % File 20160420_src_ridge_nH_1.5_row.tex
-%        ridge & 2.00 & 1.64 & 2.88e+10 & 3.03 & 2.13 & 1.764 (225) \\  % File 20160420_src_ridge_nH_2.0_row.tex
-%        ridge & 2.50 & 0.96 & 5.67e+10 & 2.33 & 1.74 & 1.504 (225) \\  % File 20160420_src_ridge_nH_2.5_row.tex
-%        ridge & 3.00 & 0.66 & 1.03e+11 & 1.96 & 1.70 & 1.370 (225) \\  % File 20160420_src_ridge_nH_3.0_row.tex
-%        \midrule
-%        % NOTE: may need to re-do these fits
-%        % (1) without SNR component, (2) with SNR, Si,S fixed
-%        SE dark ridge & 1.50 & 2.26 & 8.48e+11 & 1.36 & 0.45 & 1.252 (102) \\  % File 20160420_src_SE_ridge_dark_nH_1.5_row.tex
-%        SE dark ridge & 2.00 & 10.00 & 7.39e+09 & 3.95 & 10.00 & 1.081 (102) \\  % File 20160420_src_SE_ridge_dark_nH_2.0_row.tex
-%        SE dark ridge & 2.50 & 3.48 & 6.78e+09 & 3.68 & 6.48 & 1.080 (102) \\  % File 20160420_src_SE_ridge_dark_nH_2.5_row.tex
-%        SE dark ridge & 3.00 & 1.39 & 7.11e+09 & 3.85 & 7.64 & 1.073 (102) \\  % File 20160420_src_SE_ridge_dark_nH_3.0_row.tex
-%        %SE dark ridge & 1.50 & 1.73 & 1.21e+11 & 1.00 & 1.00 & 1.344 (105) \\  % File src_SE_ridge_dark_nH-1.5_row.tex
-%        %SE dark ridge & 2.00 & 1.36 & 6.70e+10 & 1.00 & 1.00 & 1.284 (105) \\  % File src_SE_ridge_dark_nH-2.0_row.tex
-%        %SE dark ridge & 2.50 & 0.78 & 2.51e+11 & 1.00 & 1.00 & 1.232 (105) \\  % File src_SE_ridge_dark_nH-2.5_row.tex
-%        %SE dark ridge & 3.00 & 0.79 & 5.14e+10 & 1.00 & 1.00 & 1.196 (105) \\  % File src_SE_ridge_dark_nH-3.0_row.tex
-%        \bottomrule
-%    \end{tabular}
-%\end{table*}
-
-%\begin{table*}
-%    \centering
-%    \caption{Annulus fits with varying $n_H$}
-%    \begin{tabular}{@{}lrrrrrr@{}}
-%        \toprule
-%        Region & $n_\mathrm{H}$             & $kT$  & $\tau$                        & Si  & S   & $\chi^2_{\mathrm{red}} (\mathrm{dof}$) \\
-%               & ($10^{22} \unit{cm^{-2}}$) & (keV) & ($10^{10} \unit{s\;cm^{-3}}$) & (-) & (-) &  \\
-%        \midrule
-%        000--100$\arcsec$ & 1.50 &10.00 & 1.75e+10 & 2.51 & 2.15 & 2.184 (352) \\  % File 20160420_ann_000_100_nH_1.5_row.tex
-%        000--100$\arcsec$ & 2.00 & 4.55 & 1.59e+10 & 2.04 & 1.53 & 2.338 (352) \\  % File 20160420_ann_000_100_nH_2.0_row.tex
-%        000--100$\arcsec$ & 2.50 & 2.43 & 1.58e+10 & 1.77 & 1.25 & 2.884 (352) \\  % File 20160420_ann_000_100_nH_2.5_row.tex
-%        000--100$\arcsec$ & 3.00 & 1.58 & 1.78e+10 & 1.57 & 1.11 & 3.479 (352) \\  % File 20160420_ann_000_100_nH_3.0_row.tex
-%        \midrule
-%        100--200$\arcsec$ & 1.50 & 8.47 & 1.67e+10 & 7.56 & 7.97 & 1.375 (559) \\  % File 20160420_ann_100_200_nH_1.5_row.tex
-%        100--200$\arcsec$ & 2.00 & 2.83 & 1.72e+10 & 5.96 & 5.64 & 1.196 (559) \\  % File 20160420_ann_100_200_nH_2.0_row.tex
-%        100--200$\arcsec$ & 2.50 & 1.58 & 2.14e+10 & 4.93 & 4.63 & 1.210 (559) \\  % File 20160420_ann_100_200_nH_2.5_row.tex
-%        100--200$\arcsec$ & 3.00 & 1.04 & 2.85e+10 & 4.29 & 4.21 & 1.303 (559) \\  % File 20160420_ann_100_200_nH_3.0_row.tex
-%        \midrule
-%        200--300$\arcsec$ & 1.50 & 6.67 & 1.84e+10 & 5.98 & 5.85 & 1.742 (792) \\  % File 20160420_ann_200_300_nH_1.5_row.tex
-%        200--300$\arcsec$ & 2.00 & 2.39 & 2.12e+10 & 4.35 & 3.92 & 1.412 (792) \\  % File 20160420_ann_200_300_nH_2.0_row.tex
-%        200--300$\arcsec$ & 2.50 & 1.37 & 3.09e+10 & 3.41 & 3.03 & 1.284 (792) \\  % File 20160420_ann_200_300_nH_2.5_row.tex
-%        200--300$\arcsec$ & 3.00 & 0.91 & 5.39e+10 & 2.84 & 2.65 & 1.280 (792) \\  % File 20160420_ann_200_300_nH_3.0_row.tex
-%        \midrule
-%        300--400$\arcsec$ & 1.50 & 8.59 & 1.82e+10 & 4.57 & 4.19 & 1.255 (799) \\  % File 20160420_ann_300_400_nH_1.5_row.tex
-%        300--400$\arcsec$ & 2.00 & 2.95 & 1.87e+10 & 3.56 & 2.98 & 1.202 (799) \\  % File 20160420_ann_300_400_nH_2.0_row.tex
-%        300--400$\arcsec$ & 2.50 & 1.61 & 2.31e+10 & 2.92 & 2.49 & 1.201 (799) \\  % File 20160420_ann_300_400_nH_2.5_row.tex
-%        300--400$\arcsec$ & 3.00 & 1.00 & 3.86e+10 & 2.56 & 2.19 & 1.220 (799) \\  % File 20160420_ann_300_400_nH_3.0_row.tex
-%        \midrule
-%        400--500$\arcsec$ & 1.50 & 10.00 & 2.20e+10 & 2.07 & 2.50 & 1.254 (822) \\  % File 20160420_ann_400_500_nH_1.5_row.tex
-%        400--500$\arcsec$ & 2.00 &  4.34 & 4.34e+13 & 0.00 & 0.00 & 1.267 (822) \\  % File 20160420_ann_400_500_nH_2.0_row.tex
-%            % This fit obviously failed
-%        400--500$\arcsec$ & 2.50 & 10.00 & 1.53e+10 & 1.34 & 2.16 & 1.184 (822) \\  % File 20160420_ann_400_500_nH_2.5_row.tex
-%        400--500$\arcsec$ & 3.00 & 10.00 & 1.32e+10 & 1.50 & 2.48 & 1.171 (822) \\  % File 20160420_ann_400_500_nH_3.0_row.tex
-%        \bottomrule
-%    \end{tabular}
-%\end{table*}
 
 
 \end{document}
