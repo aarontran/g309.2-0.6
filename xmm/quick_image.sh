@@ -14,7 +14,7 @@ if [[ "$OBSID" != "$SAS_OBSID" ]]; then
   exit 1
 fi
 
-cd "${XMM_PATH}/${OBSID}/odf/repro"
+cd "${XMM_PATH}/${OBSID}/repro"
 
 exposures="mos1S001 mos2S002 pnS003"
 

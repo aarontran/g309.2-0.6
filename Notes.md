@@ -11857,32 +11857,109 @@ Question: how are we able to find reasonable fits with such divergent values of
 Tau?  Need to inspect fits.
     TODO: Plot best fit Tau=5e13 on top of Tau=2e10 fit, and compare curves.
 
-Pending:
-- fit at high Tau (running) - how is it possible to reproduce
-  [He alpha/beta] line ratios at 0.5 keV instead of 1.5 keV?
-    -> error in works (20161028_tau_freeze...)
-- fit with more abundances (understand how / why / if O,Ne,Mg,Fe are allowed)
-    -> src bkg solar looks fine.
-    -> Mg, Si, S, Fe partially done -- need to get a better error bar on Fe.
-        (so, ruunning steppar now)
-    -> O, Ne, Mg, Si, S: worked, but XRB nH is weird; I'm uncertain if errors are good.
-        I re-forced fit and am re-running error commands now.
-        May need to repeat, but the key SNR parameters should not change much.
-    -> O,Ne,Mg, Si, S, Ar, Ca, Fe keeps dying.  I think I must do this by hand.
-- fit at low absorption 0.7e22 (high priority!)
-    -> partially done -- found a very reasonable fit, enough to discuss.
-    -> Re-running error command, after allowing nH to shift a bit (towards
-    0.9e22)
+New fits with:
+- varied abundances (see `g309_fits.py` and tables)
+  A lot of fits required manual tweaks to get reasonable parameters.
+- NEI tau frozen to 5e13 (allowed to thaw and fit, but did not budge and
+  littered error log with useless messages)
+- absorption nH frozen to 0.7e22, then allowed to wander to better fit at nH=0.867e22.
+
+    nH = 0.867e22 -> pgstat=14134.9 (chi-sq = 13040.5/12760 = 1.022)
+    nH = 0.7e22 -> pgstat=14147.9 (chi-sq = 13055.15/12761 = 1.023)
+
+  Attempt to run error commands from nH = 0.867e22 resulted in nH drifting to
+  ~ 1.8e22 or 1.9e22.  So, I rerun error commands with nH fixed to 0.867e22.
+  Extremely arbitrary, but it provides a reasonable fit.
+
+  Note: would be good to check if such a fit is allowed with only Mg,Si,S free
+  (or no elements free at all).
+    
+
+Monday, Tuesday 2016 October 31 - November 01  - more text expansion
+====================================================================
+
+Updated main source/background fit table.
+
+Plotted fits with nH = 0.7e22 and Tau = 5e13 against baseline fit, to show that
+a range of fits are compatible with data (provided that elemental abundances
+are free).
+
+Added text on free expansion to Sedov-Taylor transition timescale.
+
+After Nov 01: set up and worked on a few more fits but did not go too far.
+
+
+Sunday, Tuesday 2016 November 13,15 - work on image creation
+============================================================
+
+ESAS tasks to create images:
+
+    mos/pn-spectra
+    mos/pn_back
+    proton, sp_partial
+    (optional: swcx)
+    rot-im-det-sky
+    comb, adapt
+    merge_comp_xmm, adapt_merge
+
+Taking copious notes on how ESAS produces image in separate file.
+Reviewed source code for all tasks to determine where and how point source
+masks are applied.
+
+
+Standing questions and TODOs
+============================
+
+Possible actionables
+- fit spatially resolved spectra, hopefully more useful
+  after having vetted fits very carefully
+- check southwest lobe - why is centroid shifted?  Interesting clumps of mg and
+  si/s emission.
+- FS/CD spacing.  dynamics seem quite different across remnant.
+- 1. investigate other young remnants with little Fe emission
+  2. investigate other young remnants with comparable morphology.
+
+Additional fits
+
+[ ] Fix nH = 0.7 with Mg, Si, S free (can we have nH=0.7 and solar O, Ne, Fe?)
+    [ ] Then, thaw nH=0.7 and see if better low absorption fit exists
+        (say, bound nH < 1.5; just need proof of concept)
+[ ] Manual fit and errors for O,Ne,Mg,Si,S,Ar,Ca,Fe all free
+[ ] Fits with Fe frozen to fixed abundance
+
+    First, at current baseline fit:
+    Fe = 10 - clear L-shell emission, weak K line
+    Fe = 50 - massive L-shell emission (>10x actual counts), marginal K line
+              detection (~1-2x actual counts)
+
+    NOTE: it may be good to raise abundance bounds from 100 to 1000
+
+    [ ] Fit with Fe=10 frozen
+    [ ] Fit with Fe=50 frozen
+    [ ] Fit with Fe=50 frozen
+
+With imperfect models and pgstat/cstat -- how can I perform model tests?
+To discriminate clearly, instead of playing by eye.
+
+TODO: equivalent width image.  Procedure of Hwang, Petre, Holt for Cas A.
+    think about what equivalent width measures.  how to tessellate or bin.
+    should we scale out kT dependence, or ionization dependence?
+    (that's basically just getting to abundance - requires assumption on
+    underlying plasma)
+    equivalent width is useful because it's independent of our model
+
+Study iron in more detail: bounds on iron mass as a function of temperature?
 
 TODO (lower priority):
+- fit with O, Ne, Mg, Si, S, Ar, Ca, Fe free (must be done by hand)
 - fit with vpshock
 - fit with powerlaw, srcutlog
 - fit with ISM NEI or ISM vpshock component
 - fit with sedov model
 
-
-Standing questions and TODOs
-============================
+NOTE: adding a broken power law has MORE explanatory power than any of the
+other fit twiddling I've done to date.  This is important.
+Do make a note of this.
 
 [ ] More systematics -- what if we fit the two obsids _separately_?
 Eh.  I don't think we'll learn much.  But maybe worth trying.
@@ -11903,6 +11980,9 @@ than multidump / append hack I set up)
 
 [ ] Image: create broadband/line images using MOS exposures only (spatial
 resolution)
+    Change of mind: not worthwhile.  Counts are so poor that we must smooth
+    considerably, with exception of Si.
+    Possibly worth attempting for broadband image only.
 
 [x] Fits: compare fits (1) chi-squared, grp50, (2) pgstat
 
@@ -11953,10 +12033,12 @@ List of standard text checks:
 Standing TODOs:
 * Look over XMM ESAS scripts and see if I'm missing anything in procedures
   for image scripts.
-* Images -- subtract SP contamination with ESAS proton task?  Sharp vignetting
+* [x] Images -- subtract SP contamination with ESAS proton task?  Sharp vignetting
   could contaminate soft emission near the aimpoint, which might look like SNR
   emission...  (partially helped by choice of energy bands for imaging,
   though, as at least it should not confuse sharp features).
+
+  [2016 November - figured out how all this works]
 
 Standing questions:
 * Why did exposure maps for PN generate so fast, relative to MOS maps???
@@ -11980,6 +12062,8 @@ Reminders (caveats and loose threads):
   be far apart, so it simplifies fit to tie values together.
 * PNS003 filterwheel fit does NOT include OOT correction!
   This is OK, but just needs to be kept in mind.
+
+  (WARNING: matters for image creation)
 
 Resolved nagging questions:
 

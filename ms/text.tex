@@ -12,7 +12,7 @@
 \slugcomment{Draft, \today}
 
 % Packages and commands
-%\usepackage{amsmath}  % Included in aastex
+\usepackage{amsmath}  % Included in aastex - but want to get eqref
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage[normalem]{ulem}  % Just to get strikeout text
@@ -58,11 +58,8 @@ Smithsonian Astrophysical Observatory, 60 Garden Street MS-70, Cambridge, MA 021
 
 
 \begin{abstract}
-We image and fit spectra of G309.2-0.6 from archival XMM-Newton data.
-The remnant is ejecta-dominated and hotter than expected for its HI-inferred
-distance and hence physical size.
-
-Sketch of a writeup, and a lot of scribbled notes.
+We image and fit spectra of ejecta-dominated remnant G309.2-0.6 from archival
+XMM-Newton data.
 \end{abstract}
 
 % (!) no longer used by AAS as of late February, 2016
@@ -114,15 +111,12 @@ composition.  Much depends on:
         transitioning).
 \end{itemize}
 
-One might consider forward folding models and comparing with observed spectra.
+One might consider forward folding models and comparing with observed spectra
+across the soft X-ray band.
 This is basically the approach of \citet{hughes1995}, \citet{badenes2003},
-\citet{rakowski2006-g337}, \citet{patnaude2015}.
+\citet{rakowski2006-g337}.
 Some models show observable differences in line ratios, elemental abundances
 and the like.  Others are less clear.
-
-Question: why do we not model Ia ejecta with a metal plasma?  No expectation of
-H emission unless from shocked ISM.
-Similar q for CC.  Would not expect that much H...
 
 We present a spatially resolved X-ray image and CCD-resolution spectra of
 G309.2-0.6 based on two archived XMM-Newton observations totalling
@@ -395,7 +389,7 @@ flux.}
     \label{fig:regions}
 \end{figure*}
 
-\subsection{Spectrum Extraction and Modeling}
+\subsection{Spectrum Extraction and Modeling} \label{sec:spec-extract-fit}
 
 % Spectrum and QPB creation
 Spectra are created from ``good'' single and double events (i.e.,
@@ -507,7 +501,7 @@ We first jointly fit integrated remnant (0--400\arcsec) and background
 The remnant is well fit by an absorbed single-temperature non-equilibrium
 ionization (NEI) plasma (XSPEC model \texttt{tbabs\_new * vnei}) with
 increased Si and S abundances relative to local galactic ISM
-(Figure~\ref{fig:src-bkg-fits}, Table~\ref{tab:src-fit}), as fits with solar
+(Figure~\ref{fig:src-bkg-fits}, Table~\ref{tab:src-fits}), as fits with solar
 (ISM) abundances shows clear residual \ion{Si}{13} and \ion{S}{15} He-$\alpha$
 emission.
 We also consider variation in O, Ne, Mg, Ar, Ca, and Fe abundances.
@@ -524,14 +518,18 @@ ionization timescale.
     %\plotone{fig/fig_src_bkg_0087940201-mos-delchi.pdf}
     \figcaption{Integrated source spectra from 0087940201 MOS with best-fit
     model comprising: cosmic X-ray background (CXRB), soft proton background (SP),
-    instrumental lines, and NEI plasma for the remnant.}
+    instrumental lines, and NEI plasma for the remnant.
+    All plotted spectra are binned towards minimum significance $5\sigma$ with
+    maximum 50 channels per bin, though fits only bin to $\geq 1 \unit{count}$
+    per bin as discussed in Section~\ref{sec:spec-extract-fit}.
+    }
     \label{fig:src-bkg-fits}
 \end{figure*}
 
 \begin{table*}[!ht]
     \centering
     \caption{Integrated source and background fits, single-temperature NEI
-        model with non-solar abundances \label{tab:src-fit}}
+        model with non-solar abundances \label{tab:src-fits}}
     \footnotesize
     \input{tab-src-bkg-varabund-fits.tex}
     \tablecomments{Units:
@@ -593,19 +591,18 @@ behind a plane shock \citep{borkowski2001}.
 The \texttt{vpshock} model fits the spectrum just as well
 ($\mathrm{pgstat} = ???$) as the single-ionization-age NEI model, and the
 \texttt{vpshock} bounds on ionization age bracket the inferred mean ionization
-from \texttt{NEI} (Table~\ref{tab:src-fit}.
+from \texttt{NEI} (Table~\ref{tab:src-fits}.
 \textbf{TODO: need to redo vpshock fits}
 At high electron temperatures $\abt 2$--$3 \unit{keV}$, the
 \texttt{vpshock} model should reasonably approximate the more involved
 \texttt{vsedov} model of \citet{borkowski2001}, so we do not consider a
 \texttt{vsedov} fit with non-uniform electron temperature distribution.
 The simpler \texttt{NEI} plasma model suffices for our spectral modeling.
-\textbf{TODO: need to redo NEI fits}
 
 % ISM component TODO to be redone
 We see no particular evidence for a distinct NEI (ISM) plasma of different
 temperature or ionization state.
-\textbf{TODO to be rerun}.
+\textbf{TODO fits with ISM component to be rerun}.
 %If we add an ISM component, represented by a NEI plasma with ISM abundances,
 %the fit improves slightly.
 %But fitted parameter values jump around quite a lot.
@@ -619,8 +616,35 @@ temperature or ionization state.
 %characteristics.
 
 \textbf{Although fits have not all been redone, it is pretty clear that adding
-additional components will not improve the fit substantially (as the spectrum
-is already very well fit, unusually).}
+additional components will not improve the fit substantially
+We can argue for one model over another on the basis of f-test / similar...}
+
+We consider two alternative fits in Table~\ref{tab:src-fits}.
+Fit G fixes absorption $\nH = 0.7 \nHUnits$ to see whether a lower absorption
+is consistent with the data, and to compare to fit results presented by
+\citet{rakowski2001} and \citet{safi-harb2007}.
+Fit H fixes $\tau = 5 \times 10^{13} \TauUnits$ to consider a collisional
+ionization equilibrium plasma \citep{smith2014}.
+Figure~\ref{fig:src-bkg-vary-comp} compares these fits directly to a baseline
+fit with only Mg, Si, S free (same fit as in Figure~\ref{fig:src-bkg-fits}).
+
+%TODO clean up text
+Not shown: fit H with a CIE plasma does alter Si and S He $\alpha$ / He $\beta$
+line ratios, introducing some tension.
+
+\begin{figure*}[!ht]
+    \plotone{fig/fig_src_bkg_tau-5e13_nH-0d7_allexp.pdf}
+    \figcaption{Fits with varied absorption and ionization timescale
+        also reasonably describe the data, provided that elemental abundances
+        comprising the $\lesssim 1 \unit{keV}$ continuum are allowed to float.
+        Solid curves plot total spectrum model (remnant with x-ray background,
+        soft proton, and instrumental line contribution as in
+        Figure~\ref{fig:src-bkg-fits}); dashed curves plot remnant
+        absorbed NEI plasma contribution alone.
+        Fit parameters (B, G, H) are given in Table~\ref{tab:src-fits}.
+    }
+    \label{fig:src-bkg-vary-comp}
+\end{figure*}
 
 \subsection{Annuli spectra}
 
@@ -632,7 +656,7 @@ Each annulus is modeled by an absorbed NEI plasma
 (XSPEC model \texttt{tbabs\_new * vnei}) with Mg, Si, S free and absorbing
 column tied across all annuli.
 X-ray background model parameters are fixed to values from the best integrated
-source fit with Mg, Si, S free (Table~\ref{tab:src-fit}).  % TODO may change...
+source fit with Mg, Si, S free (Table~\ref{tab:src-fits}).  % TODO may change...
 We neglect redistribution of counts between annuli due to point spread function
 (PSF) wings as the off-axis half-energy-enclosed width $\abt10$--$20\arcsec$ is
 smaller than our annuli widths.
@@ -655,7 +679,7 @@ distance from the aimpoint.
         capped at $10 \unit{keV}$ and may not represent the formal best fit.
         Best fit absorption column is $\nH = {2.51}^{0.09}_{-0.10} \nHUnits$;
         $\mt{pgstat} = 19335.8$; $\chi^2_{\mt{red}} = 1.210 = 24296.5 / 20073$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fit}.}
+        Units as in Table~\ref{tab:src-fits}.}
 \end{table*}
 
 \begin{figure*}[]
@@ -705,8 +729,7 @@ Fe abundances; the best fit converged towards a pure metal plasma.
 and $\kB T = 2 \pm 0.6 \unit{keV}$ without providing $\tau$, from
 an absorbed NEI model for the 2001 XMM data with
 super-solar Si, S and sub-ISM O, Ne, Mg, Ca, Fe.
-
-\citet{rakowski2001} report emission measure
+\citet{rakowski2001} also report emission measure
 $(4\pi D^2)^{-1} \int n_e n_H dV = 9.7^{+200}_{-9.7} \times 10^8$ much smaller
 than our $\abt 4 \times 10^{11} \unit{cm^{-5}}$; their inferred hydrogen
 density is therefore $\abt 10\times$ smaller.
@@ -721,7 +744,7 @@ are consistent with our fits, which yield $[\mt{Mg}/\mt{Si}] = 0.28^{+0.04}_{-0.
 and $[\mt{S}/\mt{Si}] = 0.92 \pm 0.2$ (this statistical error on
 $[\mt{S}/\mt{Si}]$ should be somewhat lower, closer to $\pm 0.1$, because the
 parameters covary).
-Note that $[\mt{Mg}/\mt{Si}]$ actually means
+Note that $[\mt{Mg}/\mt{Si}]$ is equal to
 \[
     \frac{[\mt{Mg}/\mt{H}] / [\mt{Mg}/\mt{H}]_{\sun}}
          {[\mt{Si}/\mt{H}] / [\mt{Si}/\mt{H}]_{\sun}}
@@ -741,25 +764,26 @@ which is the usual ratio of interest.
 %workers, so we disfavor this explanation.
 
 % Explore low abundance fit.
-\textbf{Investigating now with a fit forced to low absorption.}
 If O, Ne, and Fe abundances are allowed to be sub-solar, there exists a
-reasonably good fit with lowered absorption of $\abt 0.7 \nHUnits$
+reasonable fit with lowered absorption of $\abt 0.7 \nHUnits$
+(Table~\ref{tab:src-fits}, Fit~G).
 The extremely sub-solar abundances of O, Ne, and Fe may be explained by a
 metal-rich ejecta plasma, wherein metals make up $\gtrsim 10\%$ of the plasma
 number density.
-The fits in Table~\ref{tab:src-fit} are all, broadly, plausible fits.
+We similarly find reasonable, if disfavored, fit with increased $\tau = 5
+\times 10^{13} \TauUnits$.
 
 
 \subsection{Plasma mass and density}
 
 % Emission measure derived masses
 We estimate X-ray emitting plasma mass and density from the integrated remnant
-fit emission measure (Table~\ref{tab:src-fit}).
+fit emission measure (Table~\ref{tab:src-fits}).
 The X-ray emitting plasma density, assuming that the plasma fills a sphere of
 radius $400\arcsec$, is:
-\[
+\begin{equation} \label{eq:density}
     n_{\mt{H}} = 0.1 f^{-1/2} d_{5}^{-1/2} \unit{cm^{-3}}
-\]
+\end{equation}
 with an arbitrary volume filling factor $f \in [0,1]$ and distance relative to
 $5 \unit{kpc}$ as $d_{5}$.
 Assuming the plasma is hydrogen dominated, with $[\mt{He}/\mt{H}] = 0.1$
@@ -791,8 +815,6 @@ For G309.2-0.6, assuming a spherical volume:
     M_{\mt{tot}} \approx 13.7 M_{\sun} f^{1/2} d_5^{5/2} \langle Z \rangle^{1/2}
 \]
 where $d_5$ is distance scaled to $5 \unit{kpc}$.
-
-% Takeaway.
 For $\langle Z \rangle \sim 10$ (as an order of magnitude estimate, for a
 plasma comprising primarily shocked Si and S), we obtain
 $M_{\mt{tot}} \abt 90 M_{\sun} f^{1/2} d_5^{5/2}$.
@@ -820,13 +842,12 @@ This bound is not very stringent, but is at least a start.
 
 Fits allowing non-solar iron abundance favor zero iron contribution, although
 by eye a solar Fe abundance fit appears plausible.
-This is surprising, as many young ejecta-dominated remnants (both Ia and CC)
-show profuse Fe L-shell emission or whopping Fe K lines.
+But, even with solar Fe abundance, we see no Fe K line at $\abt 6.5 \unit{keV}$.
 We can set an upper bound on Fe K luminosity and thus constrain the parameter
 space for Ia and CC explosions, building on recent work by
 \citet{yamaguchi2014-iron} and \citet{patnaude2015}.
 
-We take our best fit (Table~\ref{tab:src-fit} and add a Gaussian line of
+We take our best fit (Table~\ref{tab:src-fits} and add a Gaussian line of
 normalization $5 \times 10^{-5} \unit{photon\;cm^{-2}\;s^{-1}}$ and
 line width $0.05 \unit{keV}$ at $6.55 \unit{keV}$.
 This crudely represents a minimum detectable Fe K flux
@@ -862,17 +883,28 @@ excepting the remnant's southeast limb and edges of the radio ears
 (Figures~\ref{fig:snr}).
 X-ray emission is concentrated at and behind the northwest limb, which is
 somewhat dimmer in radio compared to the southeast limb and ears.
+Figure~\ref{fig:rgb} traces the spatial distribution of Mg, Si, and S, the
+three elements with resolved He$\alpha$-like line emission throughout the
+remnant.
 
 % Spatial distribution of line emission
-The line emission broadly follows the broadband emission (particularly the
-dominant Si line), but Mg and S appear to be localized to the north and east
-(Figure~\ref{fig:rgb}).
-Both Si and S are concentrated in the northern clump (\textbf{TODO:
-green-band Si image is overexposed, obscuring detail}), although Si more
-visibly fills the remnant.
-Mg appears localized to a large northwestern clump and possibly some towards
-the southeast X-ray limb, although the significance of this possible spatial
-enhancement is questionable.
+Mg emission concentrates along the northwest limb, and possibly along the
+southeast limb as well.
+Both Si and S concentrate towards the remnant center.
+Towards the southwest and southeast limbs, small clumps of Mg and Si/S appear
+similarly separated.
+
+These images of Mg, Si, S may not necessarily trace ejecta distribution.
+Our annulus fits show that temperature and ionization age vary with radius by a
+factor $\abt 2 \times$, so line emission may vary independently of ejecta
+abundance.
+Nevertheless, variation in plasma conditions is also worth investigating.
+
+some show that radial variation in temperature and ionization state
+
+should be small, and not significantly impact emission.
+\textbf{TODO: We have not shown this for azimuthal variation.}
+\textbf{The simplest solution is to explore with resolved spectroscopy.}
 
 \begin{figure*}[!ht]
     \plotone{fig/fig_narrowband.png}
@@ -909,10 +941,8 @@ Someone else, \citet{hughes2003} I think, also deprojected DEM L71 emission.
 \subsection{Age dating}
 
 % Age estimates
-The age inferred from the emitting plasma norm and integrated ionization age
-$1.75 \TauUnits$ is $5000 f^{1/2} d_{5}^{1/2} \unit{yr}$.
-Enhanced central Si and S emission suggests that the reverse shock has
-traversed most of the remnant.
+From our emission-measure-derived plasma density and integrated ionization age,
+we infer an age of $7000 f^{1/2} d_{5}^{1/2} \unit{yr}$.
 
 The Sedov-derived age \citep{taylor1950, sedov1959} is calculated using the
 numerical constants for a monatomic gas \citet{taylor1950-pt2}.
@@ -923,18 +953,56 @@ we invert for remnant age and assume angular radius $400\arcsec$ to obtain:
     t = (4300 \unit{yr}) d_5^{5/2} E_{51}^{-1/2} n_0^{1/2} .
 \]
 which is somewhat on the high side for an ejecta dominated remnant.
-\textbf{TODO: factor 0.34 is derived from $\beta^5 = 2.052$, but would be preferable to draw value
-from closed form solution.  See my paper notes.}
+\textbf{TODO: factor 0.34 is derived from Taylor's numerically derived
+$\beta^5 = 2.052$, but better to use closed form solution}
 
 The Sedov age and ionization timescale / norm derived age scale differently
 with remnant distance and can help set a lower bound on our distance estimate
 (Figure~\ref{fig:age}).
 However, the Sedov estimate represents an upper bound on age as the remnant
 may still be ejecta-dominated, or transitioning into Sedov expansion.
+Based on
 \citet{rakowski2001} already considered these estimates, and our current age
 estimates are no more stringent than theirs.
 
-Todo: compare to characteristic Sedov-Taylor time of \citet{truelove1999}.
+When is the Sedov age applicable?
+\citet{truelove1999} compute timescales for the transition from free expansion
+to Sedov-Taylor dynamics, assuming ambient medium with a power law radial
+profile.
+For a medium with $\rho_0 \propto r^{-7}$, the transition time
+\[
+    t_{\mt{ST}} = 0.732 E^{-1/2} M_{\mt{ej}}^{5/6} \rho_0^{-1/3} .
+\]
+We take ambient density
+$\rho_0 < 1.4 m_{\mt{H}} \times \frac{n_{\mt{H}}}{4}
+ \approx 0.01 m_{\mt{H}} f^{-1/2} d_{5}^{-1/2} \unit{cm^{-3}}$
+assuming a strong shock with compression ratio $4$, and adopting our rough
+density estimate from equation~\eqref{eq:density}.
+Recalling that the ion density for a shocked metal-rich plasma is lower than
+that of shocked ISM, this represents a conservative bound.
+We then have:
+\[
+    % 0.732 * (10^51 erg)^(-1/2) * (1.99e33 grams)^(5/6) * (0.01 cm^-3 * 1.67e-24 grams)^(-1/3)
+    t_{\mt{ST}} \lesssim (1600 \unit{yr})
+                         E_{\mt{51}}^{-1/2}
+                         \left( \frac{M_{\mt{ej}}}{M_{\sun}} \right)^{5/6}
+                         f^{1/6} d_{5}^{1/6}
+\]
+Alternatively, if we simply scale ambient density to $0.1 \unit{cm^{-3}}$, we have:
+\begin{equation} \label{eq:sttime-generic}
+    % 0.732 * (10^51 erg)^(-1/2) * (1.99e33 grams)^(5/6) * (0.1 cm^-3 * 1.4 * 1.67e-24 grams)^(-1/3)
+    t_{\mt{ST}} = (670 \unit{yr})
+                  E_{\mt{51}}^{-1/2}
+                  \left( \frac{M_{\mt{ej}}}{M_{\sun}} \right)^{5/6}
+                  \left( \frac{n_0}{0.1 \unit{cm^{-3}}} \right)^{-1/3}
+\end{equation}
+Given the uncertainty in density and mass estimates based solely on plasma
+emission measure, Figure~\ref{fig:age} shows a range of plausible $t_{\mt{ST}}$
+timescales for ambient medium densities $0.1$ to $0.1 \unit{cm^{-3}}$.
+
+\textbf{TODO: possible improvement}, either use the fully stitched together results
+of \citet{truelove1999}, or the recent reformulation of \citet{tang2016}.
+
 
 \begin{figure}[!ht]
     \plotone{fig/fig_age_plot.pdf}
@@ -942,7 +1010,11 @@ Todo: compare to characteristic Sedov-Taylor time of \citet{truelove1999}.
         and $n_0 \in [0.1, 1] \unit{cm^{-3}}$.
         Blue: plasma ionization and EM derived age estimate, with filling factor
         $f \in [0.2, 1]$.  Plasma is assumed to be homogenous and spherical
-        volume filling.}
+        volume filling.
+        Gray: transition time $t_{\mt{ST}}$ range for
+        $n_0 \in [0.1, 1] \unit{cm^{-3}}$ from \citet{truelove1999}, assuming
+        power-law ambient medium with $n=-7$.
+    }
     \label{fig:age}
 \end{figure}
 
@@ -1383,7 +1455,7 @@ In short, we are good to go.
     \tablecomments{
       $\nH = {2.51}^{+0.09}_{-0.10} \nHUnits$;
       $\mt{pgstat} = 19335.8$; $\chi^2_{\mt{red}} = 1.210 = 24296.5 / 20073$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fit}.}
+        Units as in Table~\ref{tab:src-fits}.}
 \end{table}
 
 \begin{table}
@@ -1404,7 +1476,7 @@ In short, we are good to go.
     \tablecomments{
       $\nH = {2.26}^{+0.11}_{-0.11} \nHUnits$;
       $\mt{pgstat} = 19298.1$; $\chi^2_{\mt{red}} = 1.207 = 24226.3 / 20069$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fit}.}
+        Units as in Table~\ref{tab:src-fits}.}
 \end{table}
 
 \begin{table}
@@ -1426,7 +1498,7 @@ In short, we are good to go.
     \tablecomments{
       $\nH = {2.51}^{+0.09}_{-0.10} \nHUnits$;
       $\mt{pgstat} = 25741.5$; $\chi^2_{\mt{red}} = 1.203 = 31637.1 / 26290$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fit}.}
+        Units as in Table~\ref{tab:src-fits}.}
 \end{table}
 
 \begin{table}
@@ -1448,7 +1520,7 @@ In short, we are good to go.
     \tablecomments{
       $\nH = {2.25}^{+0.13}_{-0.10} \nHUnits$;
       $\mt{pgstat} = 25699.6$; $\chi^2_{\mt{red}} = 1.201 = 31558.8 / 26285$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fit}.}
+        Units as in Table~\ref{tab:src-fits}.}
 \end{table}
 
 
