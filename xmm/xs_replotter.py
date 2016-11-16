@@ -36,18 +36,26 @@ def main():
         for config in yaml.load_all(fh):
 
             # Set some defaults
+
+            # Show a legend?
             if 'legend' not in config:  # TODO this behavior may change
                 config['legend'] = True
+            # Set plot dimensions, font sizes, etc for single column plot
             if 'ms-single-column-plot' not in config:
                 config['ms-single-column-plot'] = False
+            # Set standardized pane sizes
             if 'height' not in config:
                 config['height'] = 1.75
-
             if 'width' not in config:
+                config['width'] = 7.0
                 if config['ms-single-column-plot']:
                     config['width'] = 3.54
-                else:
-                    config['width'] = 7.0
+            # Do you want to label the summed model (column 4)?
+            if 'label-summed-model' not in config:
+                config['label-summed-model'] = None
+            # Which pane# (0-based numbering) should have the legend?
+            if 'legend-pane' not in config:
+                config['legend-pane'] = 0
 
             # Apply global defaults (cascading styles) for some parameters
             # but not all (e.g., 'name' and 'file' don't make sense to cascade)
@@ -104,6 +112,15 @@ def main_plots(config):
         model_sum   = dat[:,4]
         n_models = dat.shape[1] - 5
 
+        # Load additional files' columns, if desired
+        # Currently, ignore additional files' data points, only consider
+        # summed & constituent models
+        # user needs to count up columns themselves
+        if pane['file-ext']:
+            for f_dat_ext in pane['file-ext']:
+                dat_ext = np.loadtxt(f_dat_ext)
+                dat = np.concatenate((dat, dat_ext[:,4:]), axis=1)
+
         # Set default configuration as needed
         if 'ylim' not in pane:
             pane['ylim'] = (1e-4, 1.0)  # Good for small G309 regions
@@ -123,6 +140,16 @@ def main_plots(config):
         assert len(pane['labels']) == len(pane['cols'])
         assert len(pane['linestyles']) == len(pane['cols'])
 
+        # Plot actual data
+        # TODO ensure elinewidth=0.6 is still readable in two-column format
+        plot_err(x, y, x_err, y_err, ax=ax,
+                 capsize=0, ls='none', elinewidth=0.6,
+                 color='#377eb8', alpha=1, zorder=9)
+
+        # Plot summed model
+        plot_step(x, x_err, model_sum, ax=ax,
+                  color='k', alpha=1, zorder=10, label=config['label-summed-model'])
+
         # Plot selected model components
         for col_idx, col in enumerate(pane['cols']):
             # e.g. cols = [5,6,7] has col_idx values 0,1,2
@@ -131,16 +158,6 @@ def main_plots(config):
                       color=pane['colors'][col_idx],
                       label=pane['labels'][col_idx],
                       linestyle=pane['linestyles'][col_idx])
-
-        # Plot summed model
-        plot_step(x, x_err, model_sum, ax=ax,
-                  color='k', alpha=1, zorder=10)
-
-        # Plot actual data
-        # TODO ensure elinewidth=0.6 is still readable in two-column format
-        plot_err(x, y, x_err, y_err, ax=ax,
-                 capsize=0, ls='none', elinewidth=0.6,
-                 color='#377eb8', alpha=1, zorder=9)
 
         # Axis ticks, limits, labels
         prep_xaxis(ax)
@@ -161,7 +178,7 @@ def main_plots(config):
                         transform=ax.transAxes, fontsize=10)
 
         # Legend on top plot
-        if ax is axes[0] and config['legend'] and pane['labels']:
+        if ax is axes[config['legend-pane']] and config['legend'] and pane['labels']:
             if config['ms-single-column-plot']:
                 ax.legend(loc='best', prop={'size':8},
                           labelspacing=0.15, frameon=False)

@@ -1,0 +1,61 @@
+# column numbering
+# 4: summed model (default)
+# 5: cxrb
+# 6: sp
+# 7: snr
+# 8: instr
+#
+# 9: summed model (nH = 0.7)
+# 10: cxrb
+# 11: sp
+# 12: snr
+# 13: instr lines
+# 14: xrb - local plasma
+# 15: xrb - powerlaw
+# 16: xrb - ridge plasma
+# 17: instr line (Al)
+# 18: instr lines (Si)
+#
+# 19: summed model (Tau = 5e13)
+# 20: cxrb
+# 21: sp
+# 22: snr
+# 23: instr lines
+#
+# IF PN --
+# 17-23 = instr lines
+# 24 = summed model, 25 = cxrb, 26 = sp, 27 = snr, etc...
+
+--- # Compare fits with Tau = 5e13
+subplots:
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_01.dat'
+  file-ext: ['results_spec/20161028_src_bkg_o-ne-mg-si-s-fe_nH-0.7_NOERR_spec_01.dat',
+             'results_spec/20161028_src_bkg_mg-si-s_tau-5e13_MANUAL_spec_01.dat']
+  name: '0087940201 MOS, model comparison'
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_02.dat'
+  file-ext: ['results_spec/20161028_src_bkg_o-ne-mg-si-s-fe_nH-0.7_NOERR_spec_02.dat',
+             'results_spec/20161028_src_bkg_mg-si-s_tau-5e13_MANUAL_spec_02.dat']
+  name: '0087940201 PN'
+  cols: [7, 9, 12, 24, 27]
+  ylim: ['1e-2', '3.0']
+
+- file: 'results_spec/20161015_src_bkg_mg_spec_03.dat'
+  file-ext: ['results_spec/20161028_src_bkg_o-ne-mg-si-s-fe_nH-0.7_NOERR_spec_03.dat',
+             'results_spec/20161028_src_bkg_mg-si-s_tau-5e13_MANUAL_spec_03.dat']
+  name: '0551000201 MOS'
+
+# Default settings for MOS; PN overrides
+cols: [7, 9, 12, 19, 22]
+colors: ['black', '#4daf4a', '#4daf4a', 'red', 'red']
+
+linestyles: ['--', '-', '--', '-', '--']
+label-summed-model: 'Baseline (B)'
+labels: ['',
+         '$n_{\mathrm{H}} = 0.7 \times 10^{22} \;\mathrm{cm^{-2}}$ (G)', '',
+         '$\tau = 5 \times 10^{13} \;\mathrm{s\;cm^{-3}}$ (H)', '']
+#legend-pane: 2
+ylim: ['1e-3', '2.0']
+out: '../ms/fig/fig_src_bkg_tau-5e13_nH-0d7_allexp'
+# LaTeX does not like filenames with extra periods

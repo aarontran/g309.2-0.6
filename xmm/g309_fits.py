@@ -654,12 +654,16 @@ if __name__ == '__main__':
     # Note: snr_model='vnei', mosmerge=True, suffix='grp01' are current
     # (October 2016) defaults
 
+    # Solar abundances just as a reference fit
+    stopwatch(single_fit, "results_spec/20161028_src_bkg_solar", with_bkg=True,
+              free_elements=[], tau_scan=True, sp_bknpower=False,
+              error=True, error_rerun=True)
+
     # Conservative run: just get clear emission lines
     stopwatch(single_fit, "results_spec/20161015_src_bkg_mg",
               free_elements=['Mg', 'Si', 'S'],
               error=True, error_rerun=True)
     # Time: 10.0 hrs on cooper
-    # Time without error: ? hours
 
     # Conservative run: just get clear emission lines + possible Ar, Ca bumps
     # around 3-4 keV
@@ -669,59 +673,32 @@ if __name__ == '__main__':
               error=True, error_rerun=True)
     # Time: 37.4 hrs (~1.5 days) on cooper
 
-    ##### OLD, NOT YET UPDATED RUNS #####
+    # Varied abundances (three knobs: {O & Ne}, {Fe}, {Ar & Ca})
 
-    stopwatch(single_fit, "results_spec/20160726_src_bkg_o-ne-mg-fe",
-              free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], error=True,
-              error_rerun=True)
-    # Time: 4.5 hrs on statler (one error run only)
-    # Time: 7.5 hrs on statler (with error rerun)
+    stopwatch(single_fit, "results_spec/20161028_src_bkg_mg-si-s-fe",
+              with_bkg=True, free_elements=['Mg', 'Si', 'S', 'Fe'],
+              tau_scan=True, sp_bknpower=False, error=True, error_rerun=True)
 
-    stopwatch(single_fit, "results_spec/20160726_src_bkg_o-ne-mg-ar-ca-fe-ni",
-            free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe', 'Ni'],
-            error=True, error_rerun=True)
-    # Time: 9.5 hrs on statler
+    stopwatch(single_fit, "results_spec/20161026_src_bkg_o-ne-mg-si-s-fe",
+              with_bkg=True, free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'],
+              tau_scan=False, sp_bknpower=False, error=True, error_rerun=True)
+        # XRB xgal nH ran to 0.1, had to manually tweak and re-run errors
 
-    stopwatch(single_fit, "results_spec/20160803_src_bkg_o-ne-mg-ar-ca-fe",
-            free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'],
-            error=True, error_rerun=True)
-    # Time: ... on statler
+    stopwatch(single_fit, "results_spec/20161028_src_bkg_o-ne-mg-si-s-ar-ca-fe",
+              with_bkg=True, free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'],
+              tau_scan=False, sp_bknpower=False, error=True, error_rerun=True)
+        # Fails horribly - do not do this.  Must do by hand or modify element freeing routine.
 
-    stopwatch(single_fit, "results_spec/20160728_src_bkg_o-mg", free_elements=['O', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
-    # Time: 2.8 hrs on statler
-    stopwatch(single_fit, "results_spec/20160726_src_bkg_ne-mg", free_elements=['Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
-    # Time: 2.9 hrs on statler
-    stopwatch(single_fit, "results_spec/20160728_src_bkg_mg-fe", free_elements=['Mg', 'Si', 'S', 'Fe'], error=True, error_rerun=True)
-    # Time: 4.1 hrs on statler
-    stopwatch(single_fit, "results_spec/20160728_src_bkg_o-ne-mg", free_elements=['O', 'Ne', 'Mg', 'Si', 'S'], error=True, error_rerun=True)
-    # Time: 4.1 hrs on cooper
+    # Integrated source fits - modify/add components
+    # ----------------------------------------------
 
-    # Duplicate Rakowski+ fit
-    stopwatch(single_fit, "results_spec/20160729_src_bkg_ne-mg-ar-ca-fe", free_elements=['Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Fe'], error=True, error_rerun=True)
-    # Time: 2.6 hrs on cooper (only 1 error run; rerun not needed. interrupted)
+    stopwatch(single_fit, "results_spec/20161028_src_bkg_o-ne-mg-si-s-fe_nH-0.7_NOERR", with_bkg=True, free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], tau_scan=False, nH_freeze=0.7, sp_bknpower=False, error=False, error_rerun=False)
 
-
-    stopwatch(single_fit, "results_spec/20160726_src_bkg_with-ism-nei", snr_model='vnei+nei', error=True, error_rerun=True)
-    # Time: 6.1 hrs on treble
-    stopwatch(single_fit, "results_spec/20160802_src_bkg_o-ne-mg-fe_with-ism-nei", snr_model='vnei+nei', free_elements=['O', 'Ne', 'Mg', 'S', 'Si', 'Fe'], error=True, error_rerun=True)
-    # Time: ... on treble
-    stopwatch(single_fit, "results_spec/20160726_src_bkg_vpshock", snr_model='vpshock', error=True, error_rerun=True)
-    # Time: 5.9 hrs on treble
+    stopwatch(single_fit, "results_spec/20161031_src_bkg_o-ne-mg-si-s-fe_nH-0.867_NOERR", with_bkg=True, free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], tau_scan=False, nH_freeze=0.867, sp_bknpower=False, error=False, error_rerun=False)
 
     # Fits with Tau = 1e11 fixed
-    stopwatch(single_fit, "results_spec/20160802_src_bkg_tau-1e11", tau_freeze=1e11, error=True, error_rerun=True)
-    # Time: 2.9 hrs on statler
-    stopwatch(single_fit, "results_spec/20160802_src_bkg_o-ne-mg-fe_tau-1e11", free_elements=['O', 'Ne', 'Mg', 'Si', 'S', 'Fe'], tau_freeze=1e11, error=True, error_rerun=True)
-    # Time: ... on statler
-
-    stopwatch(single_fit, "results_spec/20161021_src_mg-si-s_vpshock_NOERR",
-              with_bkg=False, snr_model='vpshock', free_elements=['Mg','Si','S'])
-    # 3.5 minutes on treble
-
-    stopwatch(single_fit, "results_spec/20161021_src_solar_powerlaw_NOERR", with_bkg=False, snr_model='vnei+powerlaw', free_elements=[])
-    stopwatch(single_fit, "results_spec/20161021_src_mg-si-s_powerlaw_NOERR", with_bkg=False, snr_model='vnei+powerlaw', free_elements=['Mg','Si','S'])
-    stopwatch(single_fit, "results_spec/20161021_src_solar_srcutlog_NOERR", with_bkg=False, snr_model='vnei+srcutlog', free_elements=[])
-    stopwatch(single_fit, "results_spec/20161021_src_mg-si-s_srcutlog_NOERR", with_bkg=False, snr_model='vnei+srcutlog', free_elements=['Mg','Si','S'])
+    stopwatch(single_fit, "results_spec/20161028_src_bkg_mg-si-s_tau-5e13_NOERR", with_bkg=True, free_elements=['Mg', 'Si', 'S'], tau_scan=False, tau_freeze=5e13, sp_bknpower=False, error=False, error_rerun=False)
+    # Time: ... on ...
 
 
     # Annulus fits, all varieties
@@ -748,22 +725,22 @@ if __name__ == '__main__':
 
     # Nonthermal component source model fits
     # --------------------------------------
-    # (n.b. some are out of date / run with old XRB parameters)
+    # out of date - to be redone
 
-    stopwatch(src_powerlaw, "results_spec/20160630_src_powerlaw_solar",
-              region='src', solar=True, error=True)
-
-    stopwatch(src_powerlaw, "results_spec/20160630_src_powerlaw_nonsolar",
-              region='src', solar=False, error=True)
-
-    stopwatch(src_srcutlog, "results_spec/20160630_src_srcutlog_solar",
-              region='src', solar=True, error=True)
-
-    stopwatch(src_srcutlog, "results_spec/20160630_src_srcutlog_nonsolar",
-              region='src', solar=False, error=True)
-
-    stopwatch(src_srcutlog, "results_spec/20160630_ann-400-500_srcutlog_nonsolar",
-              region='ann_400_500', solar=False, error=True)
+#    stopwatch(src_powerlaw, "results_spec/20160630_src_powerlaw_solar",
+#              region='src', solar=True, error=True)
+#
+#    stopwatch(src_powerlaw, "results_spec/20160630_src_powerlaw_nonsolar",
+#              region='src', solar=False, error=True)
+#
+#    stopwatch(src_srcutlog, "results_spec/20160630_src_srcutlog_solar",
+#              region='src', solar=True, error=True)
+#
+#    stopwatch(src_srcutlog, "results_spec/20160630_src_srcutlog_nonsolar",
+#              region='src', solar=False, error=True)
+#
+#    stopwatch(src_srcutlog, "results_spec/20160630_ann-400-500_srcutlog_nonsolar",
+#              region='ann_400_500', solar=False, error=True)
 
 
     # XRB parameters from joint fit vs. bkg fit alone
