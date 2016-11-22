@@ -23,7 +23,8 @@ from datetime import datetime
 import numpy as np
 import os
 import re
-import warnings
+#import shutil
+#import warnings
 from warnings import warn
 
 import astropy as ap
@@ -39,30 +40,33 @@ def main():
     parser.add_argument('input', metavar='input-radec.fits',
                         help=("ASC-REGION-FITS sources in un-projected RA/dec,"
                               " radii in arcmin."))
-    parser.add_argument('--projection-reference', metavar='reference.fits',
-                        help="Reference ASC-REGION-FITS file")
+    parser.add_argument('--template', metavar='reference.fits',
+                        help=("Reference ASC-REGION-FITS file (with desired"
+                              " projection and header keywords"))
     parser.add_argument('--out', metavar='output-sky.fits',
                         help=("Output filename, converted ASC-REGION-FITS in"
                               " tangent-projected sky coordinates"))
     args = parser.parse_args()
     F_INPUT = args.input
-    F_PROJ_REF = args.projection_reference
+    F_TEMPLATE = args.template
     F_OUTPUT = args.out
 
     # Parse and validate input
 
-    if not re.match(".*bkg_region-sky.*\.fits", F_PROJ_REF):
-        warn(("--proj-ref {:s} doesn't follow ESAS naming").format(F_PROJ_REF))
-
+    if not re.match(".*bkg_region-sky.*\.fits", F_TEMPLATE):
+        warn(("--template {:s} doesn't follow ESAS naming").format(F_TEMPLATE))
     if not re.match(".*bkg_region-sky.*\.fits", F_OUTPUT):
         warn(("--out {:s} doesn't follow ESAS naming").format(F_OUTPUT))
 
-    fits_input = fits.open(F_INPUT)
-    fits_proj_ref = fits.open(F_PROJ_REF)
-    t_in = fits_input[1]  # first BinTable
-    t_proj_ref = fits_proj_ref[1]
+    #shutil.copy(F_TEMPLATE, F_OUT)
 
-    for t in [t_in, t_proj_ref]:
+    fits_input = fits.open(F_INPUT)
+    fits_template = fits.open(F_TEMPLATE)
+
+    t_in = fits_input[1]  # first BinTable
+    t_template = fits_template[1]
+
+    for t in [t_in, t_template]:
         assert t.header['HDUCLASS'] == 'ASC'
         assert t.header['HDUCLAS1'] == 'REGION'
         assert t.header['HDUCLAS2'] == 'STANDARD'
@@ -71,24 +75,23 @@ def main():
     assert all(map(lambda x: x == '!CIRCLE', t_in.data['SHAPE']))
 
     # Set up projection center
-    assert t_proj_ref.header['TCTYP2'] == "RA---TAN"
-    assert t_proj_ref.header['TCUNI2'] == "deg"
-    x0 = t_proj_ref.header['TCRPX2']
-    ra0 = t_proj_ref.header['TCRVL2']
+    assert t_template.header['TCTYP2'] == "RA---TAN"
+    assert t_template.header['TCUNI2'] == "deg"
+    x0 = t_template.header['TCRPX2']
+    ra0 = t_template.header['TCRVL2']
 
-    assert t_proj_ref.header['TCTYP3'] == "DEC--TAN"
-    assert t_proj_ref.header['TCUNI3'] == "deg"
-    y0 = t_proj_ref.header['TCRPX3']
-    dec0 = t_proj_ref.header['TCRVL3']
+    assert t_template.header['TCTYP3'] == "DEC--TAN"
+    assert t_template.header['TCUNI3'] == "deg"
+    y0 = t_template.header['TCRPX3']
+    dec0 = t_template.header['TCRVL3']
 
     # Square coordinates
-    assert t_proj_ref.header['TCDLT2'] == -1 * t_proj_ref.header['TCDLT3']
-    assert t_proj_ref.header['TCDLT3'] > 0
-    scale = t_proj_ref.header['TCDLT3']
-
+    assert t_template.header['TCDLT2'] == -1 * t_template.header['TCDLT3']
+    assert t_template.header['TCDLT3'] > 0
+    scale = t_template.header['TCDLT3']
 
     # Perform the coordinate conversion (vectorized)
-    x, y = radec2tanproj(t_in.data['RA'], t_in.data['DEC'],
+    x, y = radec2tanproj(t_in.data['RA'][:,0], t_in.data['DEC'][:,0],
                          ra0, dec0, x0, y0, 1/scale)
     # 1/scale needed to get pixel/deg., as FITS sky coords records deg./pixel
 
@@ -96,41 +99,57 @@ def main():
 
     # Construct output FITS file in same format as output by SAS task region
     # (except use 'E' instead of '4E' for X, Y, R, ROTANG)
+    x_pad = pad_E_to_4E(x)
+    y_pad = pad_E_to_4E(y)
+    radius_pad = pad_E_to_4E(radius)
+
     bhdu = fits.BinTableHDU.from_columns(
         [fits.Column(name='SHAPE', format=t_in.columns['SHAPE'].format,
                      array=t_in.data['SHAPE']),
-         fits.Column(name='X', format='E', array=x),
-         fits.Column(name='Y', format='E', array=y),
-         fits.Column(name='R', format='E', array=radius),
-         fits.Column(name='ROTANG', format='E', array=t_in.data['ROTANG']),
-         fits.Column(name='COMPONENT', format='I', array=t_in.data['COMPONENT'])
+         fits.Column(name='X', format='4E', array=x_pad),
+         fits.Column(name='Y', format='4E', array=y_pad),
+         fits.Column(name='R', format='4E', array=radius_pad),
+         fits.Column(name='ROTANG', format='4E', array=t_in.data['ROTANG']),
+         fits.Column(name='COMPONENT', format='J', array=t_in.data['COMPONENT'])
          ]
         )
     bhdu.name = 'REGION'
-    bhdu.header['MTYPE1'] = 'pos'
-    bhdu.header['MFORM1'] = 'X,Y'
-    for kw in ['TCTYP2', 'TCUNI2', 'TCRPX2', 'TCRVL2', 'TCDLT2',
-               'TCTYP3', 'TCUNI3', 'TCRPX3', 'TCRVL3', 'TCDLT3']:
-        # Coordinate transformation parameters already validated above
-        bhdu.header[kw] = t_proj_ref.header[kw]
 
     # Loosely following ASC-REGION-FITS spec
+    bhdu.header['HDUVERS'] = '1.2.0'
     bhdu.header['HDUCLASS'] = 'ASC'
     bhdu.header['HDUCLAS1'] = 'REGION'
     bhdu.header['HDUCLAS2'] = 'STANDARD'
-    bhdu.header['HDUVERS'] = '1.2.0'
     bhdu.header['HDUDOC'] = 'ASC-FITS-REGION-1.2: Rots, McDowell'
 
-    phdu = fits.PrimaryHDU()
+    bhdu.header['MTYPE1'] = 'pos'
+    bhdu.header['MFORM1'] = 'X,Y'
+    for kw in ['TCTYP2', 'TCRPX2', 'TCRVL2', 'TCUNI2', 'TCDLT2',
+               'TCTYP3', 'TCRPX3', 'TCRVL3', 'TCUNI3', 'TCDLT3']:
+        # Coordinate transformation parameters already validated above
+        if ("TCRPX" in kw) or ("TCRVL" in kw) or ("TCDLT" in kw):
+            bhdu.header[kw] = "{:.14e}".format(t_template.header[kw]).upper()
+        else:
+            bhdu.header[kw] = t_template.header[kw]
+
+
+    phdu = fits_template[0]  # Work off of template header
+    phdu.header['HISTORY'] = ('Rewritten by {} (atran@cfa)'
+                             ' using RA/dec list {} on date {}').format(
+                            os.path.basename(__file__),
+                            os.path.basename(F_INPUT),
+                            datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%Sz'))
     # RFC3339/ISO8601 date as used by XMM tools; add 'Z' to indicate timezone
-    phdu.header['DATE'] = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%Sz')
-    # Convenient way to get program name
-    phdu.header['CREATOR'] = '{} (atran@cfa)'.format(os.path.basename(__file__))
-    phdu.header['HISTORY'] = 'Created by {} at {}'.format(
-                    phdu.header['CREATOR'], phdu.header['DATE'])
 
     f_out = fits.HDUList([phdu, bhdu])
     f_out.writeto(F_OUTPUT, clobber=True)
+
+
+def pad_E_to_4E(column, **kwargs):
+    """Expand 1-D numpy array (E) to column of zero-padded 4E vectors"""
+    column_padded = np.zeros((len(column), 4), **kwargs)
+    column_padded[:,0] = column
+    return column_padded
 
 
 def radec2tanproj(ra, dec, ra0, dec0, x0, y0, scale):

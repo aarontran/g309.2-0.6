@@ -11944,8 +11944,27 @@ How to handle point sources in image?
    (counts bleeding into excised region + depressed brightness around region)
 
 Note: found and fixed bug in point source FITS files, COMPONENT column.
-Should have no effect.
 
+
+Tuesday 2016 November 22 - image creation runs
+==============================================
+
+Ran new merged point source creation tools, and updated `*bkg_region-sky.fits`
+files.
+
+    $ source sasinit 0087940201
+    $ nohup specbackprot_image >& 20161122_specbackprot_0087940201_erange_800-3300.log &
+
+Problem: output images w/ sky exclusions are NOT masked correctly, whereas
+masks worked w/ default cheese exclusions.
+Fixed: COMPONENT keyword needs to be 1 throughout.  Found bug in shell script.
+Also tweaked date strings, headers to more closely match XMM SAS region output.
+
+Image creation plan:
+* Create FOV images/spectra for 0.8-3.3 keV band, obtain SP scaling norms from
+  `sp_partial` (scaling from bkg annulus to full FOV), manually enter into
+  script.
+* Create FOV images/spectra for 6 energy bands (3 line, 3 continuum)
 
 
 Standing questions and TODOs

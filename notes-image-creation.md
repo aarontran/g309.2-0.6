@@ -227,6 +227,8 @@ DO check instrumental line counts image against actual spectrum flux.
 PNS003 filterwheel fit does NOT include OOT correction!
 This may need to be factored into image creation...
 
+Actually, may not need to do this - I think QPB image does NOT remove
+instrumental lines.  Which should make life much easier.
 
 
 ESAS task `comb`

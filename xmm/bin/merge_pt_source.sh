@@ -48,27 +48,28 @@ foreach obsid ($OBSIDS)
       "${exp}-bkg_region-sky.fits" \
       "${exp}-bkg_region-sky-ori.fits"
 
-    echo "  Validating coordinate transformation"
+   echo "  Validating coordinate transformation"
 
-    # Validation step for coordinate transform.
-    # FORCE user to inspect 1. RMS and min/max error, 2. quiver plot of errors
-    ascregion_sky2radec.py --merge-dist 5 \
-      "${exp}-bkg_region-sky-ori.fits" \
-      --out "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-radec.fits"
-    ascregion_radec2sky.py \
-      "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-radec.fits" \
-      --projection-reference "${exp}-bkg_region-sky-ori.fits" \
-      --out "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-sky2radec2sky.fits"
-    validate_sky2radec2sky.py \
-      "${exp}-bkg_region-sky-ori.fits" \
-      "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-sky2radec2sky.fits"
+   # Validation step for coordinate transform.
+   # FORCE user to inspect RMS and min/max error
+   # Add --plot to show quiver plot of errors in X/Y coords
+   ascregion_sky2radec.py --merge-dist 5 \
+     "${exp}-bkg_region-sky-ori.fits" \
+     --out "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-radec.fits"
+   ascregion_radec2sky.py \
+     "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-radec.fits" \
+     --template "${exp}-bkg_region-sky-ori.fits" \
+     --out "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-sky2radec2sky.fits"
+   validate_sky2radec2sky.py \
+     "${exp}-bkg_region-sky-ori.fits" \
+     "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-sky2radec2sky.fits"
   end
 end
 
-# Validation step for coordinate transform
 
 echo "Merging point sources..."
 
+cd $XMM_PATH
 ascregion_sky2radec.py \
     "0087940201/repro/mos1S001-bkg_region-sky-ori.fits" \
     "0087940201/repro/mos2S002-bkg_region-sky-ori.fits" \
@@ -78,8 +79,6 @@ ascregion_sky2radec.py \
     "0551000201/repro/pnS003-bkg_region-sky-ori.fits" \
     --merge-dist 5 \
     --out "$SAS_REPRO_MERGED/all-bkg_region-radec.fits" \
-  >& "$SAS_REPRO_MERGED/ascregion_sky2radec.log"
-
 
 foreach obsid ($OBSIDS)
 
@@ -101,10 +100,10 @@ foreach obsid ($OBSIDS)
     rm -f detpos.txt
 
     ascregion_radec2sky.py "$SAS_REPRO_MERGED/all-bkg_region-radec.fits" \
-      --projection-reference "${exp}-bkg_region-sky-ori.fits" \
+      --template "${exp}-bkg_region-sky-ori.fits" \
       --out "${exp}-bkg_region-sky.fits"
 
-    # Diagnostic image to verify successful point source exclusion
+    # Diagnostic images to verify successful point source exclusion
     # based on ESAS evselect calls in cheese, mos-spectra
     # (withxranges, withyranges are not officially documented but appear
     #  significant, based on perusing source code)
@@ -120,11 +119,26 @@ foreach obsid ($OBSIDS)
       imagebinning='imageSize' squarepixels=yes ignorelegallimits=yes \
       xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \
       ycolumn='Y' yimagesize=900 yimagemax=48400 yimagemin=3401
-
     # Same call, but use sky version now.
     evselect table="${exp}-clean.fits:EVENTS" withfilteredset=yes \
       expression="${pattfilt}&&(FLAG == 0)&&(PI in [2500:12000])&&region(${exp}-bkg_region-sky.fits)" \
       imageset="${exp}-merged-cheese-im_region-sky.fits" \
+      filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes \
+      imagebinning='imageSize' squarepixels=yes ignorelegallimits=yes \
+      xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \
+      ycolumn='Y' yimagesize=900 yimagemax=48400 yimagemin=3401
+
+    # Same calls as above, but for *-ori files (allow quick comparison)
+    evselect table="${exp}-clean.fits:EVENTS" withfilteredset=yes \
+      expression="${pattfilt}&&(FLAG == 0)&&(PI in [2500:12000])&&region(${exp}-bkg_region-det-ori.fits)" \
+      imageset="${exp}-cheese-im_region-det-ori.fits" \
+      filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes \
+      imagebinning='imageSize' squarepixels=yes ignorelegallimits=yes \
+      xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \
+      ycolumn='Y' yimagesize=900 yimagemax=48400 yimagemin=3401
+    evselect table="${exp}-clean.fits:EVENTS" withfilteredset=yes \
+      expression="${pattfilt}&&(FLAG == 0)&&(PI in [2500:12000])&&region(${exp}-bkg_region-sky-ori.fits)" \
+      imageset="${exp}-cheese-im_region-sky-ori.fits" \
       filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes \
       imagebinning='imageSize' squarepixels=yes ignorelegallimits=yes \
       xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \

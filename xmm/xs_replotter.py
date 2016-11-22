@@ -116,7 +116,7 @@ def main_plots(config):
         # Currently, ignore additional files' data points, only consider
         # summed & constituent models
         # user needs to count up columns themselves
-        if pane['file-ext']:
+        if 'file-ext' in pane:
             for f_dat_ext in pane['file-ext']:
                 dat_ext = np.loadtxt(f_dat_ext)
                 dat = np.concatenate((dat, dat_ext[:,4:]), axis=1)

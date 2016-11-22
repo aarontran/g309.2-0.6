@@ -147,10 +147,15 @@ def main():
                     radius_merged[j_match] = sep_match*60 + r1
                     print "\tMatched sources do not fully overlap; merged radius is {:.2f}\"".format(radius_merged[j_match] * 60)
 
+    # len(ra_merged) just gets #rows, regardless of whether or not its been
+    # padded from E to 4E.
+    shape_merged = np.full(len(ra_merged), '!CIRCLE', dtype='|S16')
+    component_merged = np.full(len(ra_merged), '1', dtype='int')
 
-    shape_merged = np.full_like(ra_merged, '!CIRCLE', dtype='|S16')
-    rotang_merged = np.full_like(ra_merged, '0')
-    component_merged = np.full_like(ra_merged, '1', dtype='int')
+    ra_merged = pad_E_to_4E(ra_merged)
+    dec_merged = pad_E_to_4E(dec_merged)
+    radius_merged = pad_E_to_4E(radius_merged)
+    rotang_merged = np.full_like(ra_merged, '0', dtype='float')
 
     # Construct output FITS file
     # ESAS task conv-region expects: SHAPE, RA, Dec, R, ROTANG, COMPONENT
@@ -158,34 +163,41 @@ def main():
     bhdu = fits.BinTableHDU.from_columns(
         [fits.Column(name='SHAPE', format=table.columns['SHAPE'].format,
                      array=shape_merged),
-         fits.Column(name='RA', format='E', array=ra_merged, unit="deg"),
-         fits.Column(name='Dec', format='E', array=dec_merged, unit="deg"),
-         fits.Column(name='R', format='E', array=radius_merged, unit="arcmin"),
-         fits.Column(name='ROTANG', format='E', array=rotang_merged, unit="deg"),
-         fits.Column(name='COMPONENT', format='I', array=component_merged)
+         fits.Column(name='RA', format='4E', array=ra_merged, unit="deg"),
+         fits.Column(name='Dec', format='4E', array=dec_merged, unit="deg"),
+         fits.Column(name='R', format='4E', array=radius_merged, unit="arcmin"),
+         fits.Column(name='ROTANG', format='4E', array=rotang_merged, unit="deg"),
+         fits.Column(name='COMPONENT', format='J', array=component_merged)
          ]
         )
     bhdu.name = 'REGION'
-    bhdu.header['MTYPE1'] = 'pos'
-    bhdu.header['MFORM1'] = 'RA,DEC'
 
     # Loosely following ASC-REGION-FITS spec
+    bhdu.header['HDUVERS'] = '1.2.0'
     bhdu.header['HDUCLASS'] = 'ASC'
     bhdu.header['HDUCLAS1'] = 'REGION'
     bhdu.header['HDUCLAS2'] = 'STANDARD'
-    bhdu.header['HDUVERS'] = '1.2.0'
     bhdu.header['HDUDOC'] = 'ASC-FITS-REGION-1.2: Rots, McDowell'
+
+    bhdu.header['MTYPE1'] = 'pos'
+    bhdu.header['MFORM1'] = 'RA,DEC'
 
     phdu = fits.PrimaryHDU()
     # RFC3339/ISO8601 date as used by XMM tools; add 'Z' to indicate timezone
-    phdu.header['DATE'] = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%Sz')
-    # Convenient way to get program name
+    phdu.header['DATE'] = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%Sz')
     phdu.header['CREATOR'] = '{} (atran@cfa)'.format(os.path.basename(__file__))
     phdu.header['HISTORY'] = 'Created by {} at {}'.format(
                     phdu.header['CREATOR'], phdu.header['DATE'])
 
     f_out = fits.HDUList([phdu, bhdu])
     f_out.writeto(F_OUT, clobber=True)
+
+
+def pad_E_to_4E(column, **kwargs):
+    """Expand 1-D numpy array (E) to column of zero-padded 4E vectors"""
+    column_padded = np.zeros((len(column), 4), **kwargs)
+    column_padded[:,0] = column
+    return column_padded
 
 
 def arcdegsep(ra1, dec1, ra2, dec2):
