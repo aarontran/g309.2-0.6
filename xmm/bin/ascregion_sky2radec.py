@@ -21,8 +21,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 def main():
-    """Merge and Convert ASC-REGION-FITS coordinate conversion"""
-
+    """File conversion I/O"""
     parser = argparse.ArgumentParser(description=("Merge and convert"
                 " ASC-REGION-FITS files output by SAS 'region' / ESAS 'cheese'"
                 " from tangent-projected sky coordinates (xy) to celestial"
@@ -83,6 +82,9 @@ def main():
     dec_merged = srcs[FILES[0]]['dec']
     radius_merged = srcs[FILES[0]]['radius']
 
+    print "Start with {} sources from {}".format(len(srcs[FILES[0]]['ra']),
+                                                 FILES[0])
+
     for fname in FILES[1:]:
 
         print "Merging {} sources from {}".format(len(srcs[fname]['ra']), fname)
@@ -118,7 +120,7 @@ def main():
                 dec_merged = np.append(dec_merged, dec_add)
                 radius_merged = np.append(radius_merged, radius_add)
 
-                print "    New source: RA, dec ({}, {}), r = {} arcmin".format(
+                print "    New src: RA, dec ({}, {}), r = {} arcmin".format(
                             ra_add, dec_add, radius_add)
 
             else:
@@ -160,8 +162,7 @@ def main():
          fits.Column(name='Dec', format='E', array=dec_merged, unit="deg"),
          fits.Column(name='R', format='E', array=radius_merged, unit="arcmin"),
          fits.Column(name='ROTANG', format='E', array=rotang_merged, unit="deg"),
-         fits.Column(name='COMPONENT', format=table.columns['COMPONENT'].format,
-                     array=table.data['COMPONENT'])
+         fits.Column(name='COMPONENT', format='I', array=component_merged)
          ]
         )
     bhdu.name = 'REGION'
@@ -193,6 +194,10 @@ def arcdegsep(ra1, dec1, ra2, dec2):
     Uses haversine formula in lieu of numerically-vulnerable
     cosine law formula.
     See: https://en.wikipedia.org/wiki/Great-circle_distance
+
+    WARNING:
+    - warns for arguments > 1 deg. apart (will be incorrect for RA spanning a
+      modulus cut, e.g. ra1 = 359.9 and ra2= 0.1)
 
     Input:
         ra1, dec1   first point, RA/dec in decimal degrees

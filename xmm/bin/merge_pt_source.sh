@@ -1,5 +1,16 @@
 #!/bin/tcsh -f
 
+# Merge point source lists from multiple XMM obsids/exposures created using SAS
+# region in contour mode.
+# Merged point source list is stored in celestial RA/dec.
+# Then, create drop-in replacements for ESAS point source masks:
+#     ${exp}-bkg_region-sky.fits 
+#     ${exp}-bkg_region-det.fits 
+# after saving ESAS originals to *-ori.fits.
+#
+# The end goal is to have a consistent set of source masks for all subsequent
+# ESAS analysis.
+
 # Must use tcsh because I source sasinit directly in this script
 
 # Configuration
@@ -16,22 +27,59 @@ cd $XMM_PATH
 mkdir -p $SAS_REPRO_MERGED
 
 foreach obsid ($OBSIDS)
+
+  # Kludge to get SAS_REPRO... (copied from below)
+  set sasinit_exe=`which sasinit`
+  source $sasinit_exe $obsid
+
+  cd $SAS_REPRO
+
   foreach exp ($EXPS)
+
+    echo "Processing $obsid $exp ESAS cheese masks"
+    echo "  Moving original cheese outputs to -ori.fits (unless already done)"
+
+    # --no-clobber ensures that *-ori.fits
+    # always represents original cheese output
     mv --verbose --no-clobber \
-      "${obsid}/repro/${exp}-bkg_region-det.fits" \
-      "${obsid}/repro/${exp}-bkg_region-det-ori.fits"
+      "${exp}-bkg_region-det.fits" \
+      "${exp}-bkg_region-det-ori.fits"
+    mv --verbose --no-clobber \
+      "${exp}-bkg_region-sky.fits" \
+      "${exp}-bkg_region-sky-ori.fits"
+
+    echo "  Validating coordinate transformation"
+
+    # Validation step for coordinate transform.
+    # FORCE user to inspect 1. RMS and min/max error, 2. quiver plot of errors
+    ascregion_sky2radec.py --merge-dist 5 \
+      "${exp}-bkg_region-sky-ori.fits" \
+      --out "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-radec.fits"
+    ascregion_radec2sky.py \
+      "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-radec.fits" \
+      --projection-reference "${exp}-bkg_region-sky-ori.fits" \
+      --out "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-sky2radec2sky.fits"
+    validate_sky2radec2sky.py \
+      "${exp}-bkg_region-sky-ori.fits" \
+      "$SAS_REPRO_MERGED/${obsid}-${exp}-bkg_region-sky2radec2sky.fits"
   end
 end
 
-ascregion_sky2radec.py --out "$SAS_REPRO_MERGED/all-bkg_region-radec.fits" \
+# Validation step for coordinate transform
+
+echo "Merging point sources..."
+
+ascregion_sky2radec.py \
+    "0087940201/repro/mos1S001-bkg_region-sky-ori.fits" \
+    "0087940201/repro/mos2S002-bkg_region-sky-ori.fits" \
+    "0087940201/repro/pnS003-bkg_region-sky-ori.fits" \
+    "0551000201/repro/mos1S001-bkg_region-sky-ori.fits" \
+    "0551000201/repro/mos2S002-bkg_region-sky-ori.fits" \
+    "0551000201/repro/pnS003-bkg_region-sky-ori.fits" \
     --merge-dist 5 \
-    0087940201/repro/mos1S001-bkg_region-sky.fits \
-    0087940201/repro/mos2S002-bkg_region-sky.fits \
-    0087940201/repro/pnS003-bkg_region-sky.fits \
-    0551000201/repro/mos1S001-bkg_region-sky.fits \
-    0551000201/repro/mos2S002-bkg_region-sky.fits \
-    0551000201/repro/pnS003-bkg_region-sky.fits \
+    --out "$SAS_REPRO_MERGED/all-bkg_region-radec.fits" \
   >& "$SAS_REPRO_MERGED/ascregion_sky2radec.log"
+
 
 foreach obsid ($OBSIDS)
 
@@ -43,12 +91,18 @@ foreach obsid ($OBSIDS)
 
   foreach exp ($EXPS)
 
+    echo "Converting merged list into new masks for $obsid $exp"
+
     # touch to prevent weird primary header copy error that makes conv_reg
     # choke if output file doesn't already exist
     touch "${exp}-bkg_region-det.fits"
     conv_reg mode=1 inputfile="$SAS_REPRO_MERGED/all-bkg_region-radec.fits" \
       imagefile="${exp}-obj-im.fits" outputfile="${exp}-bkg_region-det.fits"
     rm -f detpos.txt
+
+    ascregion_radec2sky.py "$SAS_REPRO_MERGED/all-bkg_region-radec.fits" \
+      --projection-reference "${exp}-bkg_region-sky-ori.fits" \
+      --out "${exp}-bkg_region-sky.fits"
 
     # Diagnostic image to verify successful point source exclusion
     # based on ESAS evselect calls in cheese, mos-spectra
@@ -61,7 +115,16 @@ foreach obsid ($OBSIDS)
     endif
     evselect table="${exp}-clean.fits:EVENTS" withfilteredset=yes \
       expression="${pattfilt}&&(FLAG == 0)&&(PI in [2500:12000])&&region(${exp}-bkg_region-det.fits)" \
-      imageset="${exp}-merged-cheese-im.fits" \
+      imageset="${exp}-merged-cheese-im_region-det.fits" \
+      filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes \
+      imagebinning='imageSize' squarepixels=yes ignorelegallimits=yes \
+      xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \
+      ycolumn='Y' yimagesize=900 yimagemax=48400 yimagemin=3401
+
+    # Same call, but use sky version now.
+    evselect table="${exp}-clean.fits:EVENTS" withfilteredset=yes \
+      expression="${pattfilt}&&(FLAG == 0)&&(PI in [2500:12000])&&region(${exp}-bkg_region-sky.fits)" \
+      imageset="${exp}-merged-cheese-im_region-sky.fits" \
       filtertype=expression keepfilteroutput=no updateexposure=yes filterexposure=yes \
       imagebinning='imageSize' squarepixels=yes ignorelegallimits=yes \
       xcolumn='X' ximagesize=900 ximagemax=48400 ximagemin=3401 \

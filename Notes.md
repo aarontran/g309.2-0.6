@@ -11907,6 +11907,47 @@ Reviewed source code for all tasks to determine where and how point source
 masks are applied.
 
 
+Wednesday 2016 November 16 - image creation procedure
+=====================================================
+
+ESAS tasks use both `{exp}-bkg_region-sky.fits` and ...`-det.fits`, so sky
+images and spectra / detector images do not use the same masks.  In almost all
+places, the `-det.fits` file is in use, as desired.  The discrepancy is
+probably OK so long as I eventually apply the final merged mask, which is
+always more conservative than the individual masks.  I'm not 100% sure whether
+there could be any inconsistencies when doing various tasks (OOT event
+subtraction, SP background scaling from limited region to full FOV, etc...)
+
+Three ways to apply merged source mask:
+1. Modify `-sky.fits` file (more consistent downstream products)
+2. Modify `-cheese.fits`
+3. Modify `-mask-im-{elow}-{ehigh}.fits`
+The latter two (cheese, mask) would be applied at image merging.
+
+I think it'd be easiest to overwrite the `-sky.fits` file with the new merged
+point source list.
+That way, all the _unmerged_ output images are masked in the same way.
+
+I create some tasks to make the new point source masks (worked on
+intermittently over several days, committed Tues 2016 Nov 22).  The coordinate
+conversion is not perfect and has errors of ~0.5 pixel, not amazing, but
+tolerable given that 1 pixel = 0.05 arcsec.
+
+How to handle point sources in image?
+1. leave point sources in
+2. remove point sources early (in combined, unsmoothed/binned image)
+3. remove point sources early.  Fill in w/ average brightness of nearby counts
+   (e.g. as done by Randall+ 2015, ApJ 805:112).  Then,
+   a. leave interpolated region for rest of process, OR 
+   b. bin/smooth image, then re-excise the sources.
+   Basically this prevents smoothing artifacts at the source excision edges
+   (counts bleeding into excised region + depressed brightness around region)
+
+Note: found and fixed bug in point source FITS files, COMPONENT column.
+Should have no effect.
+
+
+
 Standing questions and TODOs
 ============================
 
