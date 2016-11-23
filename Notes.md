@@ -11949,22 +11949,34 @@ Note: found and fixed bug in point source FITS files, COMPONENT column.
 Tuesday 2016 November 22 - image creation runs
 ==============================================
 
-Ran new merged point source creation tools, and updated `*bkg_region-sky.fits`
-files.
-
-    $ source sasinit 0087940201
-    $ nohup specbackprot_image >& 20161122_specbackprot_0087940201_erange_800-3300.log &
-
 Problem: output images w/ sky exclusions are NOT masked correctly, whereas
 masks worked w/ default cheese exclusions.
 Fixed: COMPONENT keyword needs to be 1 throughout.  Found bug in shell script.
 Also tweaked date strings, headers to more closely match XMM SAS region output.
 
+After fixing bug, ran new merged point source creation tools and updated
+`*bkg_region-sky.fits` files.
+
 Image creation plan:
 * Create FOV images/spectra for 0.8-3.3 keV band, obtain SP scaling norms from
   `sp_partial` (scaling from bkg annulus to full FOV), manually enter into
   script.
-* Create FOV images/spectra for 6 energy bands (3 line, 3 continuum)
+* Create FOV images/spectra for 7 energy bands (3 line, 4 continuum),
+  and re-run 0.8-3.3 keV band as well (to get proton calls in, after
+  bootstrapping with `sp_partial` norms)
+  
+First run looks good.  I manually ran sp_partial (failed due to bug) to get
+SP norm values for 0087940201.
+
+    $ source sasinit 0087940201
+    $ nohup specbackprot_image >& 20161122_specbackprot_0087940201_erange_800-3300.log &
+
+Now run again for 0551000201.
+
+    $ source sasinit 0551000201
+    $ nohup specbackprot_image >& 20161122_specbackprot_0551000201_erange_800_3300.log &
+    [1] 22578
+
 
 
 Standing questions and TODOs
@@ -12038,7 +12050,7 @@ Eh.  I don't think we'll learn much.  But maybe worth trying.
 [x] Plot dumps: use setplot add to show individual additive model components (WAY easier
 than multidump / append hack I set up)
 
-[ ] Image: create broadband/line images using MOS exposures only (spatial
+[n/a] Image: create broadband/line images using MOS exposures only (spatial
 resolution)
     Change of mind: not worthwhile.  Counts are so poor that we must smooth
     considerably, with exception of Si.
