@@ -5,21 +5,20 @@
 # For reference, the ESAS soft proton energy bands are:
 # 300-750, 750-1250, 1250-2000, 2000-4000, 4000-8000, 8000-12000 (eV)
 
-# Three bands, one broad band, three narrow line bands (Mg, Si, S)
-#BANDS=("0.8-3.3" "0.8-1.4" "1.75-2.3" "2.3-3.3" "1.3-1.4" "1.8-1.9" "2.4-2.5")
-#PI_MINS=( "800"   "800" "1750" "2300" "1300" "1800" "2400")
-#PI_MAXS=("3300" "1400"  "2300" "3300" "1400" "1900" "2500")
+# One broad band, three narrow line bands (Mg, Si, S), four continuum bands
+PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
+PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
 
-# Note: 1.8-1.9 is a fairly narrow cut, misses a lot of Si flux.
+# Bands manually chosen by inspecting integrated source spectra:
+# $ xs_replotter.py replot_src_bkg.yaml
+#
+# Si 1.8-1.9 is a narrow cut that misses a lot of Si flux.
 # Same for S 2.4-2.5, Mg 1.3-1.4.  But, this avoids instrumental lines
-# and should yield relatively high signal/noise vs. a wider band.
-
-# Continuum band cuts: 1.15-1.25, 2.00-2.05, 2.60-2.75
-# OK...
-
-# TEMPORARY
-PI_MINS=( "800")
-PI_MAXS=("3300")
+# and should yield reasonable signal/noise.
+#
+# 0087940201 PN could benefit from broader line cuts.
+# 0551000201 MOS could tweak Si to avoid bright instrumental line.
+# Do make images with MOS only, then add PN.
 
 CALDB="${XMM_PATH}/caldb"
 
@@ -54,7 +53,7 @@ elif [[ "$SAS_OBSID" == "0551000201" ]]; then
   # bkg_pnorms, pindices taken from 20161015_src_bkg_mg.log
   bkg_pnorms=("0.0243880" "0.0243880")
   pindices=("0.488202" "0.488202")
-  pnorms=("0.001" "0.001")
+  pnorms=("0.079018742" "0.077613033")
 
 else
 
@@ -67,25 +66,30 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
 
   elow="${PI_MINS[$i]}"
   ehigh="${PI_MAXS[$i]}"
-  mask=1  # Do use cheese masks merged by my tool
 
   cd $SAS_REPRO
   echo "Extracting $SAS_OBSID images in ${elow}-${ehigh} eV range"
   start_script="Start: $(date)"
   echo $start_script
 
-  for ((i=0;i<${#exps[@]};++i)); do
+  for ((j=0;j<${#exps[@]};++j)); do
 
     # Setup
     # -----
-    exp="${exps[$i]}"     # mos1S001
-    exp_n="${exps_n[$i]}" # 1S001
-    ccd_str="${ccd_strs[$i]}" # "ccd1=1 ccd2=1 ... ccd7=1"
-    proton_ccd_str="${proton_ccd_strs[$i]}"
-    bkg_pnorm="${bkg_pnorms[$i]}"
-    pindex="${pindices[$i]}"
-    pnorm="${pnorms[$i]}"
+    exp="${exps[$j]}"     # mos1S001
+    exp_n="${exps_n[$j]}" # 1S001
+    ccd_str="${ccd_strs[$j]}" # "ccd1=1 ccd2=1 ... ccd7=1"
+    proton_ccd_str="${proton_ccd_strs[$j]}"
+    bkg_pnorm="${bkg_pnorms[$j]}"
+    pindex="${pindices[$j]}"
+    pnorm="${pnorms[$j]}"
     # Do not quote ${ccd_str} in command invocations!
+
+    echo "i = $i, j = $j"
+    echo "Operating on $exp ($exp_n)"
+    echo "CCD selection: $ccd_str"
+    echo "Proton CCD selection: $proton_ccd_str"
+    echo "Proton parameters: bkg_pnorm=$bkg_pnorm, index=$pindex, pnorm=$pnorm"
 
     if [[ $exp =~ "mos" ]]; then
       exe_spec="mos-spectra-mod"
@@ -98,23 +102,22 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
       exit 1
     fi
 
-
     # Extraction
     # ----------
-    echo "  Running ${exe_spec} prefix=${exp_n}..."
-    ${exe_spec} prefix=${exp_n} region="${f_region}" caldb="${CALDB}" \
-        mask=${mask} elow=${elow} ehigh=${ehigh} ${ccd_str} \
+    echo "  Running ${exe_spec} prefix=${exp_n} elow=${elow} ehigh=${ehigh}..."
+    ${exe_spec} prefix=${exp_n} region="" caldb="${CALDB}" \
+        mask=1 elow=${elow} ehigh=${ehigh} ${ccd_str} \
       &> "${exe_spec}_${exp}_FOV_${elow}_${ehigh}.log"
     mv command.csh "${exe_spec}_${exp}_FOV_${elow}_${ehigh}_cmd.csh"
 
-    echo "  Running ${exe_qpb} prefix=${exp_n}..."
+    echo "  Running ${exe_qpb}..."
     ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
         elow=${elow} ehigh=${ehigh} ${ccd_str} \
       &> "${exe_qpb}_${exp}_FOV_${elow}_${ehigh}.log"
     # diag=2 creates more diagnostic output files (.qdp plots)
     # Rotate SP image
-    rot-im-det-sky prefix=${exp_n} elow=${elow} ehigh=${ehigh} mode=1
-
+    rot-im-det-sky prefix=${exp_n} elow=${elow} ehigh=${ehigh} mode=1 \
+      &> "rot-im-det-sky_${exp}_FOV_${elow}_${ehigh}_mode-1.log"
 
     echo "  Rename output files (map ${exp} to ${exp}-FOV)"
     # Note: many outputs below are from "-mod" ESAS scripts only:
@@ -143,6 +146,10 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
     # Bootstrapping issue: sp_partial must be run BEFORE proton
     # Requires -bkg.pi spectrum to have been extracted.
     # kind of a pain, but OK.
+
+    # proton and swcx tasks only operate on files named "elow", "ehigh"
+    # and so can be run after the above renaming.
+
     if [[ $exp =~ "mos1" ]]; then
       detector_n=1
     elif [[ $exp =~ "mos2" ]]; then
@@ -153,24 +160,23 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
 
     echo "  Running sp_partial prefix=${exp_n} with rnorm=${bkg_pnorm}..."
     sp_partial caldb=${CALDB} detector=${detector_n} \
-      fullimage="${exp}-FOV-im-sp.fits" fullspec="${exp}-FOV.pi" \
-      regionimage="${exp}-bkg-im-sp.fits" regionspec="${exp}-bkg.pi" \
-      rnorm=${bkg_pnorm}
+        fullimage="${exp}-FOV-im-sp.fits" fullspec="${exp}-FOV.pi" \
+        regionimage="${exp}-bkg-im-sp.fits" regionspec="${exp}-bkg.pi" \
+        rnorm=${bkg_pnorm} \
+      &> "sp_partial_${exp}_FOV_${elow}_${ehigh}.log"
 
-    # proton and swcx tasks only operate on files named "elow", "ehigh"
-    # and so can be run after the above renaming.
-    # BUT
-
-#    echo "  Running proton prefix=${exp_n}..."
-#    proton prefix=${exp_n} caldb="${CALDB}" specname="${exp}-obj.pi" \
-#      elow=${elow} ehigh=${ehigh} ${proton_ccd_str} \
-#      pindex=${pindex} pnorm=${pnorm} spectrumcontrol=1
-#    # Rotate proton image
-#    rot-im-det-sky prefix=${exp_n} elow=${elow} ehigh=${ehigh} mode=2
+    echo "  Running proton prefix=${exp_n}..."
+    proton prefix=${exp_n} caldb="${CALDB}" specname="${exp}-FOV.pi" \
+        elow=${elow} ehigh=${ehigh} ${proton_ccd_str} \
+        pindex=${pindex} pnorm=${pnorm} spectrumcontrol=1 \
+      &> "proton_${exp}_FOV_${elow}_${ehigh}.log"
+    # Rotate proton image
+    rot-im-det-sky prefix=${exp_n} elow=${elow} ehigh=${ehigh} mode=2 \
+      &> "rot-im-det-sky_${exp}_FOV_${elow}_${ehigh}_mode-2.log"
 
   done
 
-  echo "Finished extracting $SAS_OBSID images"
+  echo "Finished extracting $SAS_OBSID images in ${elow}-${ehigh} eV range"
   echo $start_script
   echo "Finished: $(date)"
 done

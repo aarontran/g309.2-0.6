@@ -11978,9 +11978,84 @@ Now run again for 0551000201.
     [1] 22578
 
 
+Wednesday 2016 November 23 - create images in all desired bands
+===============================================================
+
+OK, using initial `sp_partial` runs, I plugged in returned normalizations and
+setup runs for all desired bands.  Cannot run multiple obsids in parallel
+(pfile usage could result in errors).  Note: found and fixed a bug in array
+indices (required a few re-runs to get right):
+
+    $ nohup specbackprot_image >& 20161124_specbackprot_0087940201_all_bands.log &
+    [1] 31392
+
+Timing: start 9:16a, end 11:46a = 2.5hr/band (broad 0.8-3.3 keV is likely
+longest/ most painful....).
+
+
+Friday 2016 November 25
+=======================
+
+Setup and ran 0551000201:
+
+    $ nohup specbackprot_image >& 20161125_specbackprot_0551000201_all_bands.log &
+    [1] 31691
+
+OK.  No unexpected errors in logs.
+
+With counts images + QPB images (including instr. lines) + SP images for all
+obsid exposures, we should be all set up for image mosaicking.
+
+Issue: HEAD install of XMM SAS does not have compiled `merge_comp_xmm` binary.
+This is fixed in v15.0.1, which does not appear to be installed
+(HEAD network version is v15.0.0).
+Emailed syshelp, patch was applied Monday morning.
+
+
+Monday,Tuesday 2016 November 28-29 - background-subtracted images
+=================================================================
+
+Running ESAS `adapt_merge` task after successful `merge_comp_xmm` runs.
+Output pixel size is 0.0006944444444444 deg. = 2.5 arcsec. as desired.
+
+Adaptive smoothing interpretation
+---------------------------------
+
+The output images are nice, but not easy to interpret.  It's hard to say
+whether spatial features (e.g., "arcs" of limb emission) are real or noise.
+
+Background subtracted + smoothed broadband 800-3300 eV image appears to contain
+bright speckle of some pixels ~2-5x brighter than neighboring pixels.  Speckle
+seems vaguely present in merged counts image, but doesn't pop out as much.
+Some possibilities:
+1. speckle represents real counts, just poisson noise enhanced by background
+   subtraction.  Indeed, relative uncertainty on images is ~ sqrt(cts + bkg) /
+   (cts - bkg), so the error on background-subtracted images is rather high.
+   The solution is to just bin the image.
+2. speckle is an artifact of QPB or SP image creation, introduced via QPB
+   images or SP flare images.  SP image does show noise around aimpoint, but
+   this is not co-aligned with the speckle I'm seeing.
+   I therefore disfavor this explanation.
+
+Answer is revealed by "adaptive-smoothing size" image.  Bright pixels have zero
+smoothing applied, but nearby dimmer pixels are smoothed out (decreasing
+background variability).  The largest count pixels - which may represent just
+the tail of the Poisson distribution - are therefore left standing while other
+noise underneath is tamped down, and so these high count pixels stand out from
+the background.
+
+So, this is an artifact of ESAS adaptive smoothing for low to moderate count
+rate images.
+
 
 Standing questions and TODOs
 ============================
+
+Next: move on to iron line luminosity.  Approach:
+1. load single fit (no errors)
+2. vary abundances and temperature to obtain baseline flux.
+3.
+4.
 
 Possible actionables
 - fit spatially resolved spectra, hopefully more useful

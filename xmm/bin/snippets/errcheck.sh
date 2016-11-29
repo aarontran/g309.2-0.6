@@ -15,10 +15,10 @@ if [ "$FILES" == "" ]
 then
     echo "No log files found, exiting"
     exit 1
-else
-    echo "DEBUG"
-    echo $FILES
+#else
+#    echo "DEBUG"
+#    echo $FILES
 fi
 
-grep -inTH -a --color=always "error" ${FILES} | sed '/evselect:- Executing (routine)/d'
+grep -inTH -a --color=always --max-count=2 "error" ${FILES} | sed '/evselect:- Executing (routine)/d'
 
