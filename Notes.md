@@ -12047,6 +12047,123 @@ the background.
 So, this is an artifact of ESAS adaptive smoothing for low to moderate count
 rate images.
 
+Optimal binning/smoothing and point source strategy
+---------------------------------------------------
+
+To produce usable EW images, need to reduce SNR by reducing spatial resolution.
+1. use much coarser uniform binning to improve signal/noise
+2. use heavily smoothed images
+
+I will bin.  Smoothing is OK, but in low emission regions, heavily smoothed
+counts are still blob/point-like, which I find a bit distracting...
+-> smoothing: increase PSF size, oversampled by same pixels
+-> binning: same PSF, undersampled by pixels
+
+How should we deal with point sources?  How does a given approach change the
+output image?  Extending notes from 2016 Nov 16...
+1. Mask point sources in original image (current behavior).  Both binning and
+   smoothing artificially depress brightness at source edges.
+   For heavy binning and small sources, holes disappear; brightness is
+   artificially decreased in vicinity of hole.
+2. Remove point sources, then fill in w/ average brightness of nearby counts.
+   Works well for small sources (e.g., Chandra image).
+   For HD 119682 mask, this may not be very feasible.
+3. Remove point sources, then bin using an adaptive mesh that works _around_
+   source exclusions.  This is "optimal" and avoids any point source artifacts.
+   1. cartesian gridding
+   2. point source exclusions
+   3. sharp changes in adaptive bin sizes imposed on smooth count rate
+      gradients
+4. Do NOT mask point sources until after background subtraction and binning.
+   This may still cause (1) bright edges or (2) overly large source holes.
+
+Some approaches to optimal binning:
+- Sanders & Fabian 2001: "quadtree" binning, similar to ESAS adaptive smoothing
+- Diehl & Statler 2005: weighted Voronoi tessellation
+- Sanders 2006: "contour" mesh
+
+Verdict: fill in point source to reduce artifacts, especially given that we are
+binning heavily and trying to interpret the diffuse emission.  Even if we fit a
+mesh to our source-excised (swiss cheese) topology, interpolating point sources
+creates a more pleasing and more easily interpreted image.
+
+I think it's OK to have an artifact around the HD 119682.  Interpolating such a
+large area is not trivial as emission varies considerably around the hole edge.
+Accept that the image there will simply not be useful, and plot image with
+exclusion region overlaid (possibly excise affected pixels).
+
+Binning details TBD after interpolating small sources.
+
+Plan:
+- create non-masked background images, and use these in place of usual masked
+  images (discard non-masked counts image & spectra, as they are not useful).
+  Modify extraction scripts to skip unnecessary and time-intensive spectrum
+  extraction steps.
+- merge images as usual
+- write code to fill in merged images
+- perform exposure scaling / background subtraction and bin.
+
+Spectrum extraction tweaks
+--------------------------
+Create spectrum extraction tasks that run faster (skip time-intensive RMF/ARF
+file creation).
+
+
+Exposure map construction & interpretation
+------------------------------------------
+
+Q: do merged exposure maps correctly reflect GTI cuts?  Center pixels ~136ks
+appear rather high.
+A: correct.  At brightest region of merged exposure map (recalling that
+0087940201, 0551000201 aimpoints differ):
+
+    ds9 exp-im-800-3300.fits \
+    ../0087940201/repro/mos1S001-exp-im-800-3300.fits \
+    ../0087940201/repro/mos2S002-exp-im-800-3300.fits \
+    ../0087940201/repro/pnS003-exp-im-800-3300.fits   \
+    ../0551000201/repro/mos1S001-exp-im-800-3300.fits \
+    ../0551000201/repro/mos2S002-exp-im-800-3300.fits
+
+I find exposure times:
+
+    0087940201 MOS1: ~23ks
+    0087940201 MOS2: ~25ks
+    0087940201 PN: ~16.7ks
+    0551000201 MOS1: ~17.6ks
+    0551000201 MOS2: ~19.9ks
+
+Exposure images are scaled to MOS2 medium filter by `merge_comp_xmm`; this
+ALSO handles different effective area of PN.  From
+`merge_comp_xmm_800-3300_component-2.log`:
+
+    Input image: ../0087940201/repro/mos1S001-exp-im-800-3300.fits
+    Detector and Filter:  1   Thic
+    Filter scale factor:    1.0046719
+
+    Input image: ../0087940201/repro/mos2S002-exp-im-800-3300.fits
+    Detector and Filter:  2   Thic
+    Filter scale factor:    0.9953281
+
+    Input image: ../0087940201/repro/pnS003-exp-im-800-3300.fits
+    Detector and Filter:  3   Thic
+    Filter scale factor:    2.8986390
+
+    Input image: ../0551000201/repro/mos1S001-exp-im-800-3300.fits
+    Detector and Filter:  1   Medi
+    Filter scale factor:    1.1287832
+
+    Input image: ../0551000201/repro/mos2S002-exp-im-800-3300.fits
+    Detector and Filter:  2   Medi
+    Filter scale factor:    1.0000000
+
+Then, `23 + 25 + 16.7*2.9 + 17.6 + 19.9 ~= 134 ks`.
+Good.  Do note this when presenting images.
+My naively merged images from earlier are inaccurate in this respect.
+
+I do not further check the scale factor construction / reading / etc.
+Rather troublesome.
+
+
 
 Standing questions and TODOs
 ============================
