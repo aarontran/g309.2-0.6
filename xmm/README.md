@@ -51,6 +51,9 @@ Extract observation and FWC spectra with
         specbackgrp
         ff_fit.py
 
+WARNING: specbackgrp calls modified versions of ESAS tasks mos/pn-spectra,
+so if ESAS is updated, you need to sync these with new releases.
+
 Spectrum fits: you'll have to configure a lot of stuff by hand unfortunately.
 Still working on it.
 In short use `import * from g309_fits` in iPython and work in an interactive
@@ -89,6 +92,13 @@ Intermediate results dumped to:
     results_img
     results_spec
 
+
+Image creation
+--------------
+
+WARNING: task `pn-spectra-mod-skip-rmfarfgen` is intended ONLY for full FOV
+image creation.  It does not clobber existing RMFs, skips ARF creation, does
+not create FWC spectra/RMF/ARF files, etc.
 
 
 

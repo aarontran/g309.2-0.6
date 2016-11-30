@@ -1225,28 +1225,28 @@ $author="S. L. Snowden, based on code from K. D. Kuntz";
       $specfile="mos".$prefix."-".$chip."oc.pi";
       if(-r $specfile) {
         print "spectrum file already exists: $specfile\n";
-        print " BUT, regenerating file anyways! (hacky modification)\n";
         print "   ";
-      }
-      $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
-        "expression='".$tempchip."' filtertype=expression keepfilteroutput=no ".
-        "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI spectralbinsize=5 ".
-        "withspecranges=yes specchannelmin=0 specchannelmax=11999";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
-      print "   \n";
+      } else {
+        $comm="evselect table=mos".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+          "expression='".$tempchip."' filtertype=expression keepfilteroutput=no ".
+          "withspectrumset=yes spectrumset=".$specfile." energycolumn=PI spectralbinsize=5 ".
+          "withspecranges=yes specchannelmin=0 specchannelmax=11999";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+        print "   \n";
 
-      $comm="backscale spectrumset=".$specfile." useodfatt=no ".
-        "badpixlocation=".$detpref." withbadpixcorr=yes ignoreoutoffov=no";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
-      print "   \n";
+        $comm="backscale spectrumset=".$specfile." useodfatt=no ".
+          "badpixlocation=".$detpref." withbadpixcorr=yes ignoreoutoffov=no";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+        print "   \n";
+      }
 
 #  Extract a spectrum of the observation data from the FOV
 

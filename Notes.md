@@ -12105,8 +12105,66 @@ Plan:
 
 Spectrum extraction tweaks
 --------------------------
-Create spectrum extraction tasks that run faster (skip time-intensive RMF/ARF
-file creation).
+
+### Faster spectrum extraction
+
+Create spectrum extraction tasks that skip some time-intensive file creation.
+
+Tasks `mos_back` and `pn_back` require RMF file, no ARF needed.
+Tasks `proton` and `sp_partial` do not require RMF or ARF.
+ESAS subroutines (`packages/esas/src/subsn_mod.f90`) do not require RMF or ARF
+anywhere unexpected.
+
+In new `{mos,pn}-spectra-mod-skip-rmfarfgen` scripts:
+- do not clobber existing PHA spectrum (incl. OOT spectrum for PN)
+- do not clobber existing RMF
+- do not clobber existing observation corner pixel data
+  + no need to clobber unless GTIs changed in cleaned events file
+  + changed in "regular" mos/pn-spectra-mod scripts as well
+- remove ARF creation (& corresponding detector map)
+- remove variant flat RMF, ARF files
+- remove FWC spectrum (evselect, backscale), incl. OOT FWC spectrum for PN
+- remove FWC spectrum RMF, ARF files
+
+I continue to clobber files that are:
+1. not renamed in subsequent steps
+2. dependent on energy band
+3. very quickly generated (i.e., evselect images)
+
+Spectrum + RMF depend on point source masks.  Therefore, image creation task
+requires new PI/RMF files for first energy band call, allowing us to skip
+PI/RMF creation for remaining energy bands.
+
+### Creating background images without masks
+
+We do NOT want sources masked in background (QPB) images, but we need point
+source exclusions for correct BACKSCALE in creating proton images.
+Because QPB images are constructed from many intermediate files,
+we cannot simply jump into `mos/pn-spectra` and change a selection expression.
+
+Therefore, we must run `mos/pn-spectra-...` twice, once with mask=0 and once
+with mask=1.
+
+### New image extraction runs
+
+Regenerate w/ nominal calls to `specbackprot_image`, now using fewer SAS calls
+and creating background images with NO masking.
+
+    # Running on statler:
+    $ nohup specbackprot_image >& 20161129_specbackprot_0087940201_all_bands_rerun.log &
+    [1] 24021
+
+Original run: 0087940201 w/8 bands on treble took ~20 hrs, at ~2.5 hrs/band.
+New run: 0087940201 w/8 bands on statler looks to take ~16 hrs at ~2hrs/band.
+(this despite the doubled call with MASK=0/1)
+    First band (800-3300) = ~1hr 50min
+    Next band (1300-1400) ~
+
+Point source interpolation
+--------------------------
+
+OK - with merged images in hand, how do we fill them up?
+
 
 
 Exposure map construction & interpretation

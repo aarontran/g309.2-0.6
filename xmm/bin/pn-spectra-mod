@@ -884,57 +884,57 @@ $author="S. L. Snowden, based on the mos-spectra code";
       $specfile="pn".$prefix."-".$quadrant."oc.pi";
       if(-r $specfile) {
         print "spectrum file already exists: $specfile\n";
-        print " BUT, regenerating file anyways! (hacky modification)\n";
         print "   ";
-      }
-      $comm="evselect table=pn".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
-        "expression='(PATTERN <= ".$pattern.")".$tempquad.$fulldef.$corndef.
-        "' filtertype=expression ".
-        "keepfilteroutput=no withspectrumset=yes spectrumset=".$specfile.
-        " energycolumn=PI spectralbinsize=5 ".
-        "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
+      } else {
+        $comm="evselect table=pn".$prefix."-corn.fits:EVENTS withfilteredset=yes ".
+          "expression='(PATTERN <= ".$pattern.")".$tempquad.$fulldef.$corndef.
+          "' filtertype=expression ".
+          "keepfilteroutput=no withspectrumset=yes spectrumset=".$specfile.
+          " energycolumn=PI spectralbinsize=5 ".
+          "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
 
-      $comm="backscale spectrumset=".$specfile.
-        " badpixlocation=pn".$prefix."-clean.fits withbadpixcorr=yes ".
-        "ignoreoutoffov=no ";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
+        $comm="backscale spectrumset=".$specfile.
+          " badpixlocation=pn".$prefix."-clean.fits withbadpixcorr=yes ".
+          "ignoreoutoffov=no ";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+      }
 
       $specfileoot="pn".$prefix."-".$quadrant."oc-oot.pi";
       if(-r $specfileoot) {
         print "spectrum file already exists: $specfileoot\n";
-        print " BUT, regenerating file anyways! (hacky modification)\n";
         print "   ";
-      }
-      $comm="evselect table=pn".$prefix."-corn-oot.fits:EVENTS ".
-        "expression='(PATTERN <= ".$pattern.")".$tempquad.$fulldef.$corndef.
-        "' filtertype=expression ".
-        "withfilteredset=yes keepfilteroutput=no withspectrumset=yes ".
-        "spectrumset=".$specfileoot.
-        " energycolumn=PI spectralbinsize=5 ".
-        "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
+      } else {
+        $comm="evselect table=pn".$prefix."-corn-oot.fits:EVENTS ".
+          "expression='(PATTERN <= ".$pattern.")".$tempquad.$fulldef.$corndef.
+          "' filtertype=expression ".
+          "withfilteredset=yes keepfilteroutput=no withspectrumset=yes ".
+          "spectrumset=".$specfileoot.
+          " energycolumn=PI spectralbinsize=5 ".
+          "withspecranges=yes specchannelmin=0 specchannelmax=20479 ";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
 
-      $comm="backscale spectrumset=".$specfileoot.
-        " badpixlocation=pn".$prefix."-clean.fits withbadpixcorr=yes ".
-        " ignoreoutoffov=no";
-      print JUNK_HNDL "$comm\n";
-      print JUNK_HNDL "   \n";
-      print "$comm\n";
-      print "   \n";
-      system "$comm";
+        $comm="backscale spectrumset=".$specfileoot.
+          " badpixlocation=pn".$prefix."-clean.fits withbadpixcorr=yes ".
+          " ignoreoutoffov=no";
+        print JUNK_HNDL "$comm\n";
+        print JUNK_HNDL "   \n";
+        print "$comm\n";
+        print "   \n";
+        system "$comm";
+      }
 
 # Set up for the FWC data with the selection of appropriate files
 # Determine the rate

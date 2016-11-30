@@ -1,11 +1,19 @@
 #!/bin/bash
 
 # Create full FOV images in multiple energy bands.
+# WARNING: this task is strongly coupled to the scripts:
+#   mos-spectra-mod-skip-rmfarfgen
+#   pn-spectra-mod-skip-rmfarfgen
+# and they should be viewed as a single unit of code.
 
 # For reference, the ESAS soft proton energy bands are:
 # 300-750, 750-1250, 1250-2000, 2000-4000, 4000-8000, 8000-12000 (eV)
 
 # One broad band, three narrow line bands (Mg, Si, S), four continuum bands
+# No leading zeros; must write out in integer format in order to correctly
+# construct ESAS filenames
+#   OK: 800, 3300, 12500
+#   NOT OK: 0800, 1e5, 12e4, ...
 PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
 PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
 
@@ -29,12 +37,11 @@ if [[ "$SAS_OBSID" == "0087940201" ]]; then
   ccd_strs=("ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1" \
             "ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1" \
             "quad1=1 quad2=1 quad3=1 quad4=1")
-  # s/quad/ccd/ for proton task
+  # s/quad/ccd/ for ESAS task proton
   proton_ccd_strs=("ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1" \
                    "ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=1 ccd7=1" \
                    "ccd1=1 ccd2=1 ccd3=1 ccd4=1")
-  # Assumes unbroken power law;
-  # bkg_pnorms, pindices taken from 20161015_src_bkg_mg.log
+  # Assumes power law; bkg_pnorms, pindices taken from 20161015_src_bkg_mg.log
   bkg_pnorms=("0.0587213" "0.0587213" "0.0663454")
   pindices=("0.355124" "0.355124" "0.253715")
   # pnorm = sp_partial_factor * bkg_pnorm
@@ -48,11 +55,12 @@ elif [[ "$SAS_OBSID" == "0551000201" ]]; then
   # 0551000201 MOS1 CCD6 = 0 (destroyed), MOS2 CCD5 = 0 (anomalous state)
   ccd_strs=("ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=1 ccd6=0 ccd7=1" \
             "ccd1=1 ccd2=1 ccd3=1 ccd4=1 ccd5=0 ccd6=1 ccd7=1")
+  # No PN exposures, so use same $ccd_strs for ESAS task proton
   proton_ccd_strs=$ccd_strs
-  # Assumes power law
-  # bkg_pnorms, pindices taken from 20161015_src_bkg_mg.log
+  # Assumes power law; bkg_pnorms, pindices taken from 20161015_src_bkg_mg.log
   bkg_pnorms=("0.0243880" "0.0243880")
   pindices=("0.488202" "0.488202")
+  # pnorm = sp_partial_factor * bkg_pnorm
   pnorms=("0.079018742" "0.077613033")
 
 else
@@ -62,15 +70,38 @@ else
 
 fi
 
+# Ensure that we always create full FOV spectrum + RMF on first
+# energy band run.
+for ((j=0;j<${#exps[@]};++j)); do
+  echo "Check that non-clobbered files will be created on first mos/pn-spectra run"
+  exp="${exps[$j]}"
+
+  cd $SAS_REPRO
+
+  if [[ -e "${exp}-obj.pi" ]]; then
+    echo "Spectrum ${exp}-obj.pi exists, please remove and try again"
+    exit 255
+  fi
+  if [[ -e "${exp}.rmf" ]]; then
+    echo "RMF ${exp}.rmf exists, please remove and try again"
+    exit 255
+  fi
+  if [[ "$exp" =~ "pn" && -e "${exp}-obj-oot.pi" ]]; then
+    echo "Spectrum ${exp}-obj-oot.pi exists, please remove and try again"
+    exit 255
+  fi
+done
+
 for ((i=0;i<${#PI_MINS[@]};++i)); do
 
   elow="${PI_MINS[$i]}"
   ehigh="${PI_MAXS[$i]}"
 
-  cd $SAS_REPRO
   echo "Extracting $SAS_OBSID images in ${elow}-${ehigh} eV range"
   start_script="Start: $(date)"
   echo $start_script
+
+  cd $SAS_REPRO
 
   for ((j=0;j<${#exps[@]};++j)); do
 
@@ -85,17 +116,16 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
     pnorm="${pnorms[$j]}"
     # Do not quote ${ccd_str} in command invocations!
 
-    echo "i = $i, j = $j"
-    echo "Operating on $exp ($exp_n)"
-    echo "CCD selection: $ccd_str"
-    echo "Proton CCD selection: $proton_ccd_str"
-    echo "Proton parameters: bkg_pnorm=$bkg_pnorm, index=$pindex, pnorm=$pnorm"
+    echo "  Operating on $exp ($exp_n); indices i = $i, j = $j"
+    echo "    CCD selection: $ccd_str"
+    echo "    Proton CCD selection: $proton_ccd_str"
+    echo "    Proton parameters: bkg_pnorm=$bkg_pnorm, index=$pindex, pnorm=$pnorm"
 
     if [[ $exp =~ "mos" ]]; then
-      exe_spec="mos-spectra-mod"
+      exe_spec="mos-spectra-mod-skip-rmfarfgen"
       exe_qpb="mos_back"
     elif [[ $exp =~ "pn" ]]; then
-      exe_spec="pn-spectra-mod"
+      exe_spec="pn-spectra-mod-skip-rmfarfgen"
       exe_qpb="pn_back"
     else
       echo "ERROR: Got bad exposure string $exp"
@@ -104,6 +134,27 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
 
     # Extraction
     # ----------
+
+    # FIRST RUN, ${exe_spec} MASK=0
+    # (create non-masked background images)
+
+    echo "  Running ${exe_spec} prefix=${exp_n} elow=${elow} ehigh=${ehigh} mask=0..."
+    ${exe_spec} prefix=${exp_n} region="" caldb="${CALDB}" \
+        mask=0 elow=${elow} ehigh=${ehigh} ${ccd_str} \
+      &> "${exe_spec}_${exp}_FOV_${elow}_${ehigh}_mask-0.log"
+    mv command.csh "${exe_spec}_${exp}_FOV_${elow}_${ehigh}_mask-0_cmd.csh"
+
+    echo "  Running ${exe_qpb}... (mask=0)"
+    ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
+        elow=${elow} ehigh=${ehigh} ${ccd_str} \
+      &> "${exe_qpb}_${exp}_FOV_${elow}_${ehigh}_mask-0.log"
+    # diag=2 creates more diagnostic output files (.qdp plots)
+
+    mv "${exp}-back-im-det-${elow}-${ehigh}.fits" "${exp}-back-im-det-${elow}-${ehigh}_mask-0.fits"
+
+    # SECOND RUN, ${exe_spec} MASK=1
+    # (clobber everything and create masked background images)
+
     echo "  Running ${exe_spec} prefix=${exp_n} elow=${elow} ehigh=${ehigh}..."
     ${exe_spec} prefix=${exp_n} region="" caldb="${CALDB}" \
         mask=1 elow=${elow} ehigh=${ehigh} ${ccd_str} \
@@ -115,31 +166,14 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
         elow=${elow} ehigh=${ehigh} ${ccd_str} \
       &> "${exe_qpb}_${exp}_FOV_${elow}_${ehigh}.log"
     # diag=2 creates more diagnostic output files (.qdp plots)
-    # Rotate SP image
+
+    # Use unmasked background image in subsequent processing
+    mv "${exp}-back-im-det-${elow}-${ehigh}.fits" "${exp}-back-im-det-${elow}-${ehigh}_mask-1.fits"
+    cp "${exp}-back-im-det-${elow}-${ehigh}_mask-0.fits" "${exp}-back-im-det-${elow}-${ehigh}.fits"
+
+    # Rotate background image
     rot-im-det-sky prefix=${exp_n} elow=${elow} ehigh=${ehigh} mode=1 \
       &> "rot-im-det-sky_${exp}_FOV_${elow}_${ehigh}_mode-1.log"
-
-    echo "  Rename output files (map ${exp} to ${exp}-FOV)"
-    # Note: many outputs below are from "-mod" ESAS scripts only:
-    # WARNING: these file names should be kept consistent
-    # with "specbackgrp" as much as possible
-    mv "${exp}-obj.pi"      "${exp}-FOV.pi"
-    mv "${exp}-back.pi"     "${exp}-FOV-qpb.pi"
-    mv "${exp}.rmf"         "${exp}-FOV.rmf"
-    mv "${exp}.arf"         "${exp}-FOV.arf"
-    mv "${exp}.flatrmf"     "${exp}-FOV.flatrmf"
-    mv "${exp}.flatarf"     "${exp}-FOV.flatarf"
-    mv "${exp}-obj-ff.pi"   "${exp}-FOV-ff.pi"
-    mv "${exp}-ff.arf"      "${exp}-FOV-ff.arf"
-    mv "${exp}-ff.rmf"      "${exp}-FOV-ff.rmf"
-    mv "${exp}-obj-im-sp-det.fits" "${exp}-FOV-im-sp.fits"
-    if [[ "$exp" =~ "pn" ]]; then
-      mv "${exp}-obj-oot.pi"    "${exp}-FOV-oot.pi"
-      mv "${exp}-obj-os.pi"     "${exp}-FOV-os.pi"
-      mv "${exp}-obj-ff-oot.pi" "${exp}-FOV-ff-oot.pi"
-      # No OOT subtraction is done for PN FWC spectra
-    fi
-
 
     # Soft proton
     # -----------
@@ -158,15 +192,20 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
       detector_n=3
     fi
 
+    # Q: is it necessary to use OOT-subtracted spectrum for PN in sp_partial
+    # and proton calls?
+    # A: no, backscal/exposure are the same between OOT-subtracted and
+    # non-OOT-subtracted spectra.
+
     echo "  Running sp_partial prefix=${exp_n} with rnorm=${bkg_pnorm}..."
     sp_partial caldb=${CALDB} detector=${detector_n} \
-        fullimage="${exp}-FOV-im-sp.fits" fullspec="${exp}-FOV.pi" \
+        fullimage="${exp}-obj-im-sp-det.fits" fullspec="${exp}-obj.pi" \
         regionimage="${exp}-bkg-im-sp.fits" regionspec="${exp}-bkg.pi" \
         rnorm=${bkg_pnorm} \
       &> "sp_partial_${exp}_FOV_${elow}_${ehigh}.log"
 
     echo "  Running proton prefix=${exp_n}..."
-    proton prefix=${exp_n} caldb="${CALDB}" specname="${exp}-FOV.pi" \
+    proton prefix=${exp_n} caldb="${CALDB}" specname="${exp}-obj.pi" \
         elow=${elow} ehigh=${ehigh} ${proton_ccd_str} \
         pindex=${pindex} pnorm=${pnorm} spectrumcontrol=1 \
       &> "proton_${exp}_FOV_${elow}_${ehigh}.log"
@@ -179,5 +218,26 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
   echo "Finished extracting $SAS_OBSID images in ${elow}-${ehigh} eV range"
   echo $start_script
   echo "Finished: $(date)"
+done
+
+# After all files created, move FOV spectrum files that do NOT depend
+# upon energy band
+for ((j=0;j<${#exps[@]};++j)); do
+
+  exp="${exps[$j]}"
+
+  echo "Rename output files (map ${exp} to ${exp}-FOV)"
+  # Keep file names consistent with "specbackgrp" as much as possible
+
+  mv "${exp}-obj.pi"      "${exp}-FOV.pi"
+  mv "${exp}-back.pi"     "${exp}-FOV-qpb.pi"
+  mv "${exp}.rmf"         "${exp}-FOV.rmf"
+#  mv "${exp}.arf"         "${exp}-FOV.arf"  # No ARF files created
+  mv "${exp}-obj-im-sp-det.fits" "${exp}-FOV-im-sp.fits"
+  if [[ "$exp" =~ "pn" ]]; then
+    mv "${exp}-obj-oot.pi"    "${exp}-FOV-oot.pi"
+    mv "${exp}-obj-os.pi"     "${exp}-FOV-os.pi"
+  fi
+
 done
 
