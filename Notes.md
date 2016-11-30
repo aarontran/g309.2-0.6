@@ -12165,6 +12165,10 @@ Point source interpolation
 
 OK - with merged images in hand, how do we fill them up?
 
+REMARK: some negative data points are caused by OOT event subtraction.
+(plot of all pixels w/ counts < 0 shows PN detector)
+
+Got initial tool working.
 
 
 Exposure map construction & interpretation
