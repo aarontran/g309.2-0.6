@@ -12365,6 +12365,35 @@ sqrt(n1) + sqrt(n2) + ..., vs. correct sqrt(n1 + n2 + ...)).
 commit `6e0eb42546e4ea2665f38c66996ca89b7bc2c2a4` with a load of other edits)
 
 
+Tuesday 2016 December 06 - meeting
+==================================
+
+Pat reminded me that I need to do the nucleosynthesis comparison.
+Need to clean up my work, to figure out which fits to trust.
+We can better understand ejecta abundances by using our eq. width images to
+inform spatially resolved fits.
+So run new fits first.
+
+
+Friday 2016 December 16 - new spectra from line flux / eqwidth images
+=====================================================================
+
+Created regions: `bar.reg`, `ridge.reg`, `lobe.reg`, based on new Mg, Si, S
+line flux and equivalent width images.
+Expect:
+- "bar" samples brightest Si eq. width.
+- "ridge" samples bright 1.3-1.4 keV line flux, lower Si/S eq. width.
+- "lobe" samples spatially separate blob of enhanced Si and S eq. width
+
+Another thing to do, is to sample regions where Si/S line flux is high and eq.
+width is low.
+
+    $ nohup specextract.sh >& 20161217_specextr_bar-ridge-lobe_0087940201.log &
+    [1] 23345
+
+    $ nohup specextract.sh >& 20161217_specextr_bar-ridge-lobe_0551000201.log &
+    [1] 31939
+
 
 Standing questions and TODOs
 ============================
@@ -12399,15 +12428,6 @@ Additional fits
 
 With imperfect models and pgstat/cstat -- how can I perform model tests?
 To discriminate clearly, instead of playing by eye.
-
-TODO: equivalent width image.  Procedure of Hwang, Petre, Holt for Cas A.
-    think about what equivalent width measures.  how to tessellate or bin.
-    should we scale out kT dependence, or ionization dependence?
-    (that's basically just getting to abundance - requires assumption on
-    underlying plasma)
-    equivalent width is useful because it's independent of our model
-
-Study iron in more detail: bounds on iron mass as a function of temperature?
 
 TODO (lower priority):
 - fit with O, Ne, Mg, Si, S, Ar, Ca, Fe free (must be done by hand)

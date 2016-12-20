@@ -9,12 +9,15 @@ if [[ "$#" -ne 1 ]]; then
 fi
 
 RSTEM=$1
-OBSID="0087940201"
 EXP="mos2S002"
-# TODO iterate over EXP
 
-regfile="regs/${OBSID}/reg_${EXP}_${RSTEM}.txt"
-out="regcheck_${EXP}_${RSTEM}.fits"
+if [[ ! "$SAS_OBSID" ]]; then
+  echo "Got SAS_OBSID null, please re-run sasinit {obsid}"
+  exit 255
+fi
+
+regfile="$XMM_PATH/regs/${SAS_OBSID}/reg_${EXP}_${RSTEM}.txt"
+out="regcheck_${EXP}_${RSTEM}.fits"  # Dump to cwd
 
 if [[ -e $out ]]; then
   echo "Output file ${out} exists, please remove!"
@@ -30,11 +33,11 @@ regexpr="$(cat ${regfile})"
 
 # Output images are kinda funky -- not sure why
 # So I just make event lists, simpler.
-evselect table="${OBSID}/odf/repro/${EXP}-clean.fits:EVENTS" \
+evselect table="${SAS_REPRO}/${EXP}-clean.fits:EVENTS" \
   filteredset="${out}" filtertype=expression expression="(PATTERN<=12)&&(FLAG == 0)$regexpr" \
   withfilteredset=yes keepfilteroutput=yes updateexposure=yes filterexposure=yes
 
-#evselect table="${OBSID}/odf/repro/${EXP}-clean.fits:EVENTS" \
+#evselect table="${SAS_OBSID}/odf/repro/${EXP}-clean.fits:EVENTS" \
 #  withfilteredset=yes ignorelegallimits=yes \
 #  filtertype=expression expression="(PATTERN<=12)&&(FLAG == 0)$regexpr" \
 #  imageset="${out}" squarepixels=yes updateexposure=yes filterexposure=yes \

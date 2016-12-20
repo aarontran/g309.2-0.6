@@ -20,5 +20,11 @@ then
 #    echo $FILES
 fi
 
-grep -inTH -a --color=always --max-count=2 "error" ${FILES} | sed '/evselect:- Executing (routine)/d'
+grep -inTH -a --color=always "error" ${FILES} | sed '/evselect:- Executing (routine)/d' \
+  | sed '/emldetect:- Executing (routine)/d' \
+  | sed '/Final parameter values and the formal standard/d' \
+  | perl -ne 'print unless /POISSERR\s*-\s*(TRUE|FALSE)\s*Whether Poissonian/;' \
+  | perl -ne 'print unless /STAT_ERR\s*-\s*(TRUE|FALSE)\s*Statistical/;' \
+  | perl -ne 'print unless /SYS_ERR\s*-\s*(TRUE|FALSE)\s*Fractional Systematic/;' \
+  | perl -ne 'print unless /(Rate|Hard):\s*[0-9.Ee-]+\s*/;'
 

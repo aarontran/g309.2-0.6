@@ -13,7 +13,11 @@ elif [[ "$SAS_OBSID" == "0551000201" ]]; then
   exposures="mos1S001 mos2S002"
 fi
 
-f_regions=$(ls -1 ${XMM_PATH}/regs/*.reg)
+#f_regions=$(ls -1 ${XMM_PATH}/regs/*.reg)
+f_regions="/data/gas2/atran/g309/xmm/regs/bar.reg
+/data/gas2/atran/g309/xmm/regs/lobe.reg
+/data/gas2/atran/g309/xmm/regs/ridge.reg
+"
 
 start_script="Started specextract: $(date)"
 echo $start_script
@@ -35,17 +39,18 @@ for f_reg in $f_regions; do
   if [[ $sbg_status != 0 ]]; then
     echo "NON-FATAL ERROR: specbackgrp failed with status $sbg_status"
   fi
-  echo ""
 
   cd $SAS_REPRO
 
   for exp in $exposures; do
-    echo "Fitting FWC spectrum lines for $reg $exp"
+    echo "Running: ff_fit.py ${exp}-${reg}-ff.pi --exp=$exp"
     ff_fit.py "${exp}-${reg}-ff.pi" --exp=$exp
   done
   # Need to fit FWC data for mosmerge-* spectra as well
-  echo "Fitting FWC spectrum lines for $reg mosmerge"
+  echo "Running: ff_fit.py mosmerge-${reg}-ff.pi --exp=mosmerge"
   ff_fit.py "mosmerge-${reg}-ff.pi" --exp="mosmerge"
+
+  echo ""
 done
 
 echo "Done!"
