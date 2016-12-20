@@ -12269,14 +12269,105 @@ My naively merged images from earlier are inaccurate in this respect.
 I do not further check ESAS' scale factor code.
 
 
+Saturday,Sunday 2016 December 03-04 - Fe K luminosity
+=====================================================
+
+For our best fit plasma parameters: what is the 6.4-6.6 keV flux
+(photons/cm^2/sec) of the Fe K line if we systematically vary the temperature
+and abundance?
+
+Possible procedures:
+1. Assume "standard" baseline fit. Vary Fe abund, refit, trace chi-sqr / kT
+
+   This is the same as getting chi-sqr derived limits on best fit.
+   But, we stretch out a few parameters farther to "map" the parameter space
+   for some range of possible fits
+
+   Yield: mass as function of assumed: abund, kT, Tau, nH
+
+   Benefit: uses spectrum to constrain BOTH L- and K- shell emission
+
+   Downside: analysis / results assume that our description of the remnant's
+   averaged physical properties is reasonable.
+   There could be other components, multi-T plasmas, that could allow more or
+   less Fe could be hidden -- especially if the combined models sum to
+   reproduce the observed emission.
+   This is particularly a concern as our limits would be based, in part, on the
+   invisibility of Fe L-shell emission.
+
+2. Fix norm = 1, Fe = 1.  For range of kT and Tau, map out luminosity of Fe-K
+   line at 5 kpc (then scaling is just `d_5^2`).
+
+   Rescale the map of Fe-K luminosity to our fitted [norm x Fe abundance].
+   Block out all space where luminosity exceeds our (weak) upper bound on Fe
+   emission.
+   This yields a map of allowed temperatures / ionization states
+   for our best fit norm/abundance (mass).
+   (i.e., fix Fe-emitting mass, what is the range of kT/ionization allowed)
+
+   Flip this around.  At each value of kT/Tau, given a maximum bound on
+   luminosity, find the allowed values of norm/abundance.
+
+   OK - this is exactly what is desired.
+
+This conservative approach does NOT consider information from:
+- continuum shape in ~5-8 keV range
+   (for some parameter combinations, a NEI model might predict
+    significant continuum emission that we could rule out)
+- absence of Fe L-shell emission
+
+This conservative approach hedges against some possibilities:
+- Fe L/K-shell emission may be produced by distinct plasmas
+   (different T, different ionization, location -- hot ejecta vs. shocked ISM)
+- continuum shape may not be as informative as we'd hope, if our model is
+   wrong
+- no need to consider absorption
+
+Underlying assumption: the bound on line strength depends on our assumed model,
+in principle.
+BUT, in both obsids, our SNR emission model is ~10x to 100x weaker than
+observed soft proton noise.
+So the underlying SNR plasma model is irrelevant!
+We can do better (formal bound) by fitting emission in 6-8 keV range.
+Currently using eyeballed estimate.
+
+
+Sunday 2016 December 04
+=======================
+
+Grid over Fe-K luminosity:
+
+    nohup g309_fe_luminosity.py >& 20161204_run_more_g309_fe_lumin_space.log &
+
+Weird: this command isn't logging correctly.
+It works if I run it directly; it works if run under nohup.
+OK, it seems to be an issue with the logging `>&`, independent of nohup.
+Forcing sys.stdout.flush() didn't seem to do anything.
+Just run it on my computer in a live session (with nohup)
+
+Next things:
+- make properly binned and smoothed images
+- proper fit to Fe K line w/ gaussian, over 5-10 keV
+- spatially resolved spectra... (check SW lobe)
+
+
+Sunday 2016 December 05 - fix image background subtraction
+==========================================================
+
+Create images w/ binning & smoothing applied BEFORE background subtraction and
+exposure correction.  This should yield correct results.
+
+Furthermore -- errors must be calculated AFTER binning in order to properly add
+poisson errors in quadrature (computing errors and summing in bins adds as
+sqrt(n1) + sqrt(n2) + ..., vs. correct sqrt(n1 + n2 + ...)).
+
+(note: commit ordering is messed up - fix is applied in
+commit `6e0eb42546e4ea2665f38c66996ca89b7bc2c2a4` with a load of other edits)
+
+
+
 Standing questions and TODOs
 ============================
-
-Next: move on to iron line luminosity.  Approach:
-1. load single fit (no errors)
-2. vary abundances and temperature to obtain baseline flux.
-3.
-4.
 
 Possible actionables
 - fit spatially resolved spectra, hopefully more useful

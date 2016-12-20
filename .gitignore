@@ -61,6 +61,7 @@ xmm/results_spec/*
 # Data files in general
 *.dat
 *.json
+*.npz
 
 # Chandra files
 chandra/*/00README
