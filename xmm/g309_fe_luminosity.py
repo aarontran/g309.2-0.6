@@ -105,7 +105,7 @@ def grid_fe_k_flux(base_nH=1, base_fe=1, out=None):
     xs.Xset.chatter = 10
 
     if out is None:
-        out = "fe-k-flux_grid_nH{:g}_fe{:g}.npz".format(base_nH * 1e22, base_fe)
+        out = "fe-k_flux_data/grid_nH{:g}_fe{:g}.npz".format(base_nH * 1e22, base_fe)
 
     np.savez(out, Tau=range_Tau, kT=range_kT, erg_fluxes=erg_fluxes,
              phot_fluxes=phot_fluxes)

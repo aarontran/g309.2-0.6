@@ -72,15 +72,11 @@ Alternative, background subtraction and fit (exploratory, not maintained):
 
     bin_unused/spec_subtract
 
-Images - crude, quick and dirty mosaic w/ many merging systematics
-
-    quick_image.sh
-    quick_image_merge.sh
-    load_g309.sh
-    load_narrow_band_g309.sh
-    make_ms_image.py
-
 Images - binned, smoothed, background-subtracted and exposure corrected:
+
+    # Custom run to create full FOV images for $SAS_OBSID.
+    # Run twice.
+    specbackprot_image
 
     # Must run within repro_merged/
     image.sh
@@ -90,6 +86,12 @@ Images - binned, smoothed, background-subtracted and exposure corrected:
     fimgbin, fgauss, ftpixcalc, farith (HEASARC FTOOLS)
     hole_filler.py
     eq_width.py
+
+Image display:
+
+    load_g309.sh
+    load_narrow_band_g309.sh
+    make_ms_image.py
 
 Plotting and manipulation of spectrum fit results:
 

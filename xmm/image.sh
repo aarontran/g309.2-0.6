@@ -2,6 +2,7 @@
 
 # Must be run from ${XMM_PATH}/repro_merged/ or any directory that has an
 # appropriate dir.dat file.
+cd "${XMM_PATH}/repro_merged"
 
 # Configuration
 CALDB="${XMM_PATH}/caldb"

@@ -1,0 +1,6 @@
+README
+
+Fe-K line flux (6-7 keV, XMM MOS) as a function of temperature and ionization
+age in a non-equilibrium ionization (NEI) plasma, w/ various assumptions.
+
+Created by g309_fe_luminosity.py

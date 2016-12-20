@@ -12395,6 +12395,29 @@ width is low.
     [1] 31939
 
 
+Monday 2016 December 19 - cleanup
+=================================
+
+Consolidated various files, deleted intermediate scripts, etc.
+
+Verified spectrum extraction:
+
+    [x] Checked logs for errors (nothing).
+    [x] Checked FWC spectrum fits by eye for any anomalies.
+        [x] 0087940201 mosmerge bar, ridge, lobe
+        [x] 0087940201 pn bar, ridge, lobe
+        [x] 0551000201 mosmerge bar, ridge, lobe
+
+0087940201 PN lobe, 1.49 keV line fit is poor (line center off by ~0.01 to 0.1
+keV).  Error is ~20%.  Fit for 8.05 keV line is not great either.
+
+Not good.  But, observation spectra are far noisier, so I don't think we can
+discern this error in our observation fits.
+And, actual observation line centroid depends on the population of particles
+exciting this fluorescence line.
+What matters is that the line amplitude is about right.
+
+
 Standing questions and TODOs
 ============================
 
