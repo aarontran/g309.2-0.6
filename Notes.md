@@ -12012,8 +12012,8 @@ This is fixed in v15.0.1, which does not appear to be installed
 Emailed syshelp, patch was applied Monday morning.
 
 
-Monday,Tuesday 2016 November 28-29 - background-subtracted images
-=================================================================
+Monday-Wednesday 2016 November 28-30 - background-subtracted images
+===================================================================
 
 Running ESAS `adapt_merge` task after successful `merge_comp_xmm` runs.
 Output pixel size is 0.0006944444444444 deg. = 2.5 arcsec. as desired.
@@ -12157,18 +12157,62 @@ and creating background images with NO masking.
 Original run: 0087940201 w/8 bands on treble took ~20 hrs, at ~2.5 hrs/band.
 New run: 0087940201 w/8 bands on statler looks to take ~16 hrs at ~2hrs/band.
 (this despite the doubled call with MASK=0/1)
-    First band (800-3300) = ~1hr 50min
-    Next band (1300-1400) ~
+
+    # On statler:
+    $ nohup specbackprot_image >& 20161130_specbackprot_0551000201_all_bands_rerun.log &
+    [1] 22673
 
 Point source interpolation
 --------------------------
 
 OK - with merged images in hand, how do we fill them up?
+Got initial point source interpolation tool working.
 
 REMARK: some negative data points are caused by OOT event subtraction.
 (plot of all pixels w/ counts < 0 shows PN detector)
+Point source interpolator does not create negative counts, so negative count
+pixel image shows holes.  As long as annulus of surrounding counts DOES include
+negative counts, the filled-in average count rate will be consistent.
 
-Got initial tool working.
+Alternative: we could create images w/ NO masking, then apply masks @
+merging step only.  But, this requires:
+1. SEPARATELY extracted full FOV spectra for proton image creation
+2. creating new MASKS for merger stage
+(cannot use exclusion lists for ESAS tasks - need actual image)
+Pro: simplifies spectrum/image extraction (only one step needed)
+     simplifies source edge masking (know exactly which pixels masked)
+Con: more work, more scripts affected for relatively little gain
+     trade unneeded mos/pn-spectra intermediate files (useless but
+     auto-generated) for another intermediate mask file (needs new tool)
+More work for somewhat small gain.  So, NO.
+
+Equivalent width images - more troubleshooting
+----------------------------------------------
+
+Fixed bug in image binning.  `bin_image_merge` accepts multiple bands as input,
+but this feature is intended for non-contiguous bands.
+This changes results by a factor 5x.
+Additionally, increase pixel masking threshold from 0.02 to 0.05 to get away
+from chip gaps and the like (average is likely ~80ks, so discarding pixels with
+exposure < ~4ks)
+
+Remark: point source filling introduces artificial features, AFTER exposure
+correction, due to my not accounting for CCD exposure.
+Fix: added exposure scaling to point-source interpolating on a per-pixel
+basis.
+
+Now, how to determine the necessary binning factor?
+If I know a typical count rate for each band image, propagate through the
+errors.
+See what I need to get an EW image w/ reasonable errors.
+
+Unrelated discovery: background subtraction is ALL WRONG.  These ESAS-generated
+images are NOT reliable.
+Net effect:
+    both line / continuum images still contain too much background
+    continuum images will have more residual background than line images
+    these are fairly uniform effects, so features / contrasts in the images
+    should still be somewhat real.
 
 
 Exposure map construction & interpretation
@@ -12222,9 +12266,7 @@ Then, `23 + 25 + 16.7*2.9 + 17.6 + 19.9 ~= 134 ks`.
 Good.  Do note this when presenting images.
 My naively merged images from earlier are inaccurate in this respect.
 
-I do not further check the scale factor construction / reading / etc.
-Rather troublesome.
-
+I do not further check ESAS' scale factor code.
 
 
 Standing questions and TODOs

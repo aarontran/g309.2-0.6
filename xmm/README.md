@@ -72,12 +72,24 @@ Alternative, background subtraction and fit (exploratory, not maintained):
 
     bin_unused/spec_subtract
 
-Image creation (not too tidy yet):
+Images - crude, quick and dirty mosaic w/ many merging systematics
 
-    load_g309.sh
     quick_image.sh
     quick_image_merge.sh
+    load_g309.sh
+    load_narrow_band_g309.sh
     make_ms_image.py
+
+Images - binned, smoothed, background-subtracted and exposure corrected:
+
+    # Must run within repro_merged/
+    image.sh
+
+    # Dependencies:
+    merge_comp_xmm (ESAS)
+    fimgbin, fgauss, ftpixcalc, farith (HEASARC FTOOLS)
+    hole_filler.py
+    eq_width.py
 
 Plotting and manipulation of spectrum fit results:
 

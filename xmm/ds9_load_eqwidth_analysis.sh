@@ -1,0 +1,428 @@
+#!/bin/bash
+
+cont_max="5e-7"
+corr_max="1e-6"
+line_max="1e-6"
+ew_max="500"
+ds9 -view layout vertical \
+  corrected-1150-1250_bin* corrected-1600-1650_bin* corrected-1300-1400_bin* \
+  mg_lineflux_bin* mg_eqwidth_bin* \
+  mg_lineflux_bin* mg_eqwidth_bin* \
+  mg_lineflux-relsig_bin* mg_eqwidth-relsig_bin* \
+  -frame lock wcs -cmap lock yes -cmap Heat -cmap lock no \
+  -crop +13:46:35.842 -62:53:18.641 0.4111085 0.3777754 wcs fk5 degrees \
+  -crop match wcs \
+  -crop lock wcs \
+  -tile yes -tile grid mode manual -tile grid layout 5 9 \
+  -zoom to fit \
+  -scale lock yes -scale asinh -scale limits 0 $cont_max -scale lock no \
+  -frame 11 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 12 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 13 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 14 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 15 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 16 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 17 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 18 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 19 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 20 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 21 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 22 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 23 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 24 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 25 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 26 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 27 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 28 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 29 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 30 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 31 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 32 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 33 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 34 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 35 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 36 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 37 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 38 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 39 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 40 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 41 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 42 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 43 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 44 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 45 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1"
+
+cont_max="3e-7"
+corr_max="3e-6"
+line_max="3e-6"
+ew_max="1000"
+ds9 -view layout vertical \
+  corrected-1600-1650_bin* corrected-1980-2050_bin* corrected-1800-1900_bin* \
+  si_lineflux_bin* si_eqwidth_bin* \
+  si_lineflux_bin* si_eqwidth_bin* \
+  si_lineflux-relsig_bin* si_eqwidth-relsig_bin* \
+  -frame lock wcs -cmap lock yes -cmap Heat -cmap lock no \
+  -crop +13:46:35.842 -62:53:18.641 0.4111085 0.3777754 wcs fk5 degrees \
+  -crop match wcs \
+  -crop lock wcs \
+  -tile yes -tile grid mode manual -tile grid layout 5 9 \
+  -zoom to fit \
+  -scale lock yes -scale asinh -scale limits 0 $cont_max -scale lock no \
+  -frame 11 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 12 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 13 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 14 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 15 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 16 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 17 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 18 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 19 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 20 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 21 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 22 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 23 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 24 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 25 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 26 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 27 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 28 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 29 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 30 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 31 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 32 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 33 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 34 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 35 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 36 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 37 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 38 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 39 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 40 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 41 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 42 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 43 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 44 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 45 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1"
+
+cont_max="2e-7"
+corr_max="1e-6"
+line_max="1e-6"
+ew_max="1000"
+ds9 -view layout vertical \
+  corrected-1980-2050_bin* corrected-2600-2700_bin* corrected-2400-2500_bin* \
+  s_lineflux_bin* s_eqwidth_bin* \
+  s_lineflux_bin* s_eqwidth_bin* \
+  s_lineflux-relsig_bin* s_eqwidth-relsig_bin* \
+  -frame lock wcs -cmap lock yes -cmap Heat -cmap lock no \
+  -crop +13:46:35.842 -62:53:18.641 0.4111085 0.3777754 wcs fk5 degrees \
+  -crop match wcs \
+  -crop lock wcs \
+  -tile yes -tile grid mode manual -tile grid layout 5 9 \
+  -zoom to fit \
+  -scale lock yes -scale asinh -scale limits 0 $cont_max -scale lock no \
+  -frame 11 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 12 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 13 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 14 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 15 \
+    -scale asinh \
+    -scale limits 0 $corr_max \
+  -frame 16 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 17 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 18 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 19 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 20 \
+    -scale linear \
+    -scale limits 0 $line_max \
+  -frame 21 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 22 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 23 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 24 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 25 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+  -frame 26 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 27 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 28 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 29 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 30 \
+    -scale linear \
+    -scale limits 0 $line_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 31 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 32 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 33 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 34 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 35 \
+    -scale linear \
+    -scale limits 0 $ew_max \
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
+  -frame 36 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 37 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 38 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 39 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 40 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 41 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 42 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 43 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 44 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1" \
+  -frame 45 \
+    -scale linear \
+    -scale limits 0 20 \
+    -contour yes -contour smooth 1 -contour levels "1"
+
