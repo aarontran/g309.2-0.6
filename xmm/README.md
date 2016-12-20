@@ -6,8 +6,8 @@ PyXSPEC version 1.1.0 (needs Parameter.index() function in particular)
 Absorption model `tbabs_new` version 2.3.2
 XSPEC version 12.9.0d
 
-Setup and data reduction / fitting
-----------------------------------
+Setup and data reduction
+------------------------
 
 Use Makefile to download and reprocess data for obsids 0087940201, 0551000201;
 download ESAS CALDB with filter-wheel-closed data, diagonal RMFs:
@@ -40,15 +40,19 @@ spectrum extraction:
 
     merge_point_source.sh
 
+
+Spectrum extraction
+-------------------
+
 Inspect data, create appropriate regions in DS9 and save to
 
     regs/*.reg
 
 Extract observation and FWC spectra with
 
-    specextract.tcsh, which is a wrapper script for:
+    specextract.sh, which is a wrapper script for:
         reg2xmmdets.pl
-        specbackgrp
+        specbackgrp  # <- calls mos-spectra-mod, pn-spectra-mod, merge_exps.pl
         ff_fit.py
 
 WARNING: specbackgrp calls modified versions of ESAS tasks mos/pn-spectra,
@@ -60,8 +64,7 @@ In short use `import * from g309_fits` in iPython and work in an interactive
 environment.
 
     g309_models.py
-    g309_fits.py (replaces fitter.tcsh, but still in works), wrapper for
-        xspec_fit_g309.py
+    g309_fits.py
 
     # Dependencies:
     ExtractedSpectrum.py
@@ -72,11 +75,39 @@ Alternative, background subtraction and fit (exploratory, not maintained):
 
     bin_unused/spec_subtract
 
-Images - binned, smoothed, background-subtracted and exposure corrected:
+Fit spectra, dump fitting results and make plots and tables:
+
+    from g309_fits import *  # Interactive use methods
+    xs_wdata_split.pl
+    xs_replotter.py {x}.yaml
+    replot_*
+    latex_table_oneliner.sh
+
+
+Image creation
+--------------
+
+Use ESAS tasks to prepare full FOV images (including soft proton and quiescent
+particle backgrounds, derived from ESAS CALDB) in a standard way.
+Then use homebrewed scripts to perform binning and smoothing, background
+subtraction, and exposure correction.
+
+Create full FOV images and spectra for ESAS use:
 
     # Custom run to create full FOV images for $SAS_OBSID.
-    # Run twice.
-    specbackprot_image
+    # Run 1x for each obsid.
+    specbackprot_image  # <- calls {mos,pn}-spectra-mod-skip-rmfargen
+
+WARNING: task `pn-spectra-mod-skip-rmfarfgen` is intended ONLY for full FOV
+image creation.  It does not clobber existing RMFs, skips ARF creation, does
+not create FWC spectra/RMF/ARF files, etc.
+
+Create a `dir.dat` file in your `repro_merged/` directory; see ESAS cookbook
+for explanation.
+
+    vim repro_merged/dir.dat
+
+Now create a slew of images:
 
     # Must run within repro_merged/
     image.sh
@@ -92,27 +123,6 @@ Image display:
     load_g309.sh
     load_narrow_band_g309.sh
     make_ms_image.py
-
-Plotting and manipulation of spectrum fit results:
-
-    from g309_fits import *  # Interactive use methods
-    xs_wdata_split.pl
-    xs_replotter.py {x}.yaml
-    replot_*
-    latex_table_oneliner.sh
-
-Intermediate results dumped to:
-
-    results_img
-    results_spec
-
-
-Image creation
---------------
-
-WARNING: task `pn-spectra-mod-skip-rmfarfgen` is intended ONLY for full FOV
-image creation.  It does not clobber existing RMFs, skips ARF creation, does
-not create FWC spectra/RMF/ARF files, etc.
 
 
 

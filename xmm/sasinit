@@ -47,6 +47,9 @@ set path = ($XMM_PATH/bin $path)
 set path = ($XMM_PATH/bin/snippets $path)
 set path = ($XMM_PATH/bin/unused $path)
 
+echo "setenv PYTHONPATH ${PYTHONPATH}:${XMM_PATH}/bin:${XMM_PATH}:/bin-image"
+setenv PYTHONPATH "${PYTHONPATH}:${XMM_PATH}/bin:${XMM_PATH}:/bin-image"
+
 set obsid = $1
 if ( $obsid != "") then
     setenv SAS_OBSID $obsid
