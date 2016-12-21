@@ -1,0 +1,60 @@
+--- # BAR sub-region
+subplots:
+
+- file: 'results_spec/20161220_bar_si-s_spec_01.dat'
+  name: 'Bar, 0087940201 MOS'
+  ylim: ['1e-3', '0.5']
+
+- file: 'results_spec/20161220_bar_si-s_spec_02.dat'
+  name: '0087940201 PN'
+  ylim: ['1e-3', '1.1']
+
+- file: 'results_spec/20161220_bar_si-s_spec_03.dat'
+  name: '0551000201 MOS'
+  ylim: ['1e-3', '0.5']
+
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+delchi-ylim: ['-5', '5']
+out: 'results_figs/fig_bar_allexps'
+--- # RIDGE sub-region
+subplots:
+
+- file: 'results_spec/20161220_ridge_si-s_spec_01.dat'
+  name: 'Ridge, 0087940201 MOS'
+  ylim: ['1e-3', '0.5']
+
+- file: 'results_spec/20161220_ridge_si-s_spec_02.dat'
+  name: '0087940201 PN'
+  ylim: ['1e-3', '1.1']
+
+- file: 'results_spec/20161220_ridge_si-s_spec_03.dat'
+  name: '0551000201 MOS'
+  ylim: ['1e-3', '0.5']
+
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+delchi-ylim: ['-5', '5']
+out: 'results_figs/fig_ridge_allexps'
+--- # Sub regions, 0551000201 MOS
+subplots:
+
+- file: 'results_spec/20161220_lobe_si-s_spec_01.dat'
+  name: 'Lobe, 0087940201 MOS'
+  ylim: ['1e-3', '0.5']
+
+- file: 'results_spec/20161220_lobe_si-s_spec_02.dat'
+  name: '0087940201 PN'
+  ylim: ['1e-3', '1.1']
+
+- file: 'results_spec/20161220_lobe_si-s_spec_03.dat'
+  name: '0551000201 MOS'
+  ylim: ['1e-3', '0.5']
+
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+delchi-ylim: ['-5', '5']
+out: 'results_figs/fig_lobe_allexps'

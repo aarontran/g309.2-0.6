@@ -12400,7 +12400,7 @@ Monday 2016 December 19 - cleanup
 
 Consolidated various files, deleted intermediate scripts, etc.
 
-Verified spectrum extraction:
+Verified most recent sub-region spectrum extraction:
 
     [x] Checked logs for errors (nothing).
     [x] Checked FWC spectrum fits by eye for any anomalies.
@@ -12417,15 +12417,97 @@ And, actual observation line centroid depends on the population of particles
 exciting this fluorescence line.
 What matters is that the line amplitude is about right.
 
+Initial sub-region fits
+-----------------------
+
+Lobe: first pass fit with Si, S free settles to
+
+    nH = 2.46, kT = 0.5, Si = 6.2, S = 7.14, Tau = 2.87e+13, norm = 1.9e-02
+    pgstat = 4402.68, dof = 4582 (chisqr = 5881.07)
+
+Bar: first pass fit with Si, S free settles to
+
+    nH = 3.57, kT = 0.51, Si = 8.46, S = 9.7, Tau = 2.72e+13, norm = 4.12e-02
+    pgstat = 5243.7, dof = 5313 (chisqr = 7024.85)
+
+Ridge: first pass fit with solar abundances settles to
+
+    nH = 3.62, kT = 0.68, Tau = 8.29e+10, norm = 7.8e-02
+    pgstat = 4893.26, dof = 4920 (chisqr = 6333.02)
+
+Repeating lobe, bar fits with Tau = 2e10 frozen immediately converges to a
+better fit (decrease of ~100 in pgstat).  I then thaw Tau and let it settle.
+
+    Bar:
+      nH = 2.52, kT = 2.05, Si = 8.6, S = 9.0,
+      Tau = 1.82e+10, norm = 3.98e-03
+
+    Lobe:
+      nH = 1.89, kT = 2.59, Si = 5.3, S = 8.0,
+      Tau = 1.17e+10, norm = 2.44e-03
+
+Repeating ridge fit with Tau = 2e10 shows worse fit; Tau ~ 8e10 is favored.
+Ridge fit residuals reveal excess Si and S, and thawing Si/S improves fit.
+
+    nH = 2.88, kT = 0.79, Si = 2.3, S = 2.0,
+    Tau = 9.3e+10, norm = 3.10e-02
+
+
+Tuesday 2016 December 20 - more fitting
+=======================================
+
+Fit sub-region spectrum parameters and standard XSPEC errors.
+Generate plots of sub-region spectrum fits and residuals.
+Throw in tables.
+
+Note to self: exposure binning images are actually in units of exposure x area
+(in units of 2.5" x 2.5" pixels), confusingly.  But, as a result, all
+exposure-corrected output images have consistent units of counts per second per
+2.5" x 2.5" pixel.
+
+Nagging unease about validity of XSPEC error method for pgstat with low counts.
+Cash (1979) suggests that the construction of the delta-chi statistic is valid
+for most any general/smooth probability distribution.  Revisit later (must
+learn how to couch thoughts quantitatively in order to get anywhere).
+
+Quick feedback:
+- jet / asymmetric explosion interpretations?
+- try fitting other side too
+- estimate distinct ejecta / swept-up ISM masses (can do this better now)
+- soft emission may be more heavily absorbed, and may probe spatial variation
+of absorbing column.
+
+Create new annulus sector regions that better sample remnant.  It's easier to
+compute subtended-sphere volume from annuli sectors, and the shapes align
+better with emission morphology.
+
+    core.reg
+    ridge_se.reg
+    ridge_nw.reg
+    lobe_ne.reg
+    lobe_sw.reg
+
+For presentation and coherence with zeroth- or first-order assumptions on
+remnant shape, symmetry is desirable.
+
+
+Wednesday 2016 December 21 - more fitting
+=========================================
+
+Fixed bug DS9 to XMM region conversion; 180 deg. error in angle was missed in
+previous debugging with ellipses.  Checked new region extractions on all five
+0087940201 and 0551000201 exposures; all regions look good.
+
+Extract spectra for new regions (`core, ridge_se, ridge_nw, lobe_ne, lobe_sw`).
+
+    $ nohup specextract.sh >& 20161221_specextract_core-ridges-lobes_0087940201.log &
+    [1] 23352
+
 
 Standing questions and TODOs
 ============================
 
 Possible actionables
-- fit spatially resolved spectra, hopefully more useful
-  after having vetted fits very carefully
-- check southwest lobe - why is centroid shifted?  Interesting clumps of mg and
-  si/s emission.
 - FS/CD spacing.  dynamics seem quite different across remnant.
 - 1. investigate other young remnants with little Fe emission
   2. investigate other young remnants with comparable morphology.

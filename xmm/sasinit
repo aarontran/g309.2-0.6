@@ -46,6 +46,7 @@ set path = ($XMM_PATH $path)
 set path = ($XMM_PATH/bin $path)
 set path = ($XMM_PATH/bin/snippets $path)
 set path = ($XMM_PATH/bin/unused $path)
+set path = ($XMM_PATH/bin-image $path)
 
 echo "setenv PYTHONPATH ${PYTHONPATH}:${XMM_PATH}/bin:${XMM_PATH}:/bin-image"
 setenv PYTHONPATH "${PYTHONPATH}:${XMM_PATH}/bin:${XMM_PATH}:/bin-image"

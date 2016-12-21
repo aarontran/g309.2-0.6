@@ -176,6 +176,11 @@ def main(fig_num, invert=False):
         fig.tight_layout()
         fig.canvas.draw()
         plt.savefig('fig_snr_xmm_most_regs.pdf', dpi=300)
+    elif fig_num == '4':
+        # Sub-source region selections with new, corrected images..
+        # use to show eqwidth images and continuum too
+        raise Exception("sub source region plot tbd")
+
     else:
         raise Exception("Invalid figure number")
 

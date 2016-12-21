@@ -5,6 +5,9 @@
 #
 # Coordinate conversions computed using SAS task esky2det
 #
+# Reference for XMM selection regions:
+# https://xmm-tools.cosmos.esa.int/external/sas/current/doc/selectlib/node15.html
+#
 # Input: DS9 regions in fk5 coordinates
 # (ra in h/m/s, dec in d/m/s, radius in arcseconds),
 # and XMM event list for a given obsid/exposure
@@ -75,6 +78,34 @@ while(<$reg_fh>) {
 
 	push @xmm_reg, "((DETX,DETY) IN"
 	    . " ellipse($detx,$dety,$r_x_det,$r_y_det,$detangle))";
+
+    } elsif ($_ =~ /^panda\((.+),(.+),(.+),(.+),([0-9]+),(.+)",(.+)",([0-9]+)\)/) {
+	# NOTE: only handles "panda" regions with single sector
+	# (one pair of annuli, angles)
+
+	my ($ra, $dec, $angle_0, $angle_1, $n_angle, $r_in, $r_out, $n_annulus)
+	    = ($1, $2, $3, $4, $5, $6, $7, $8);
+
+	unless ($n_angle == 1 && $n_annulus == 1) {
+	    die "ERROR: invalid panda region: $_";
+	}
+
+	my ($detx, $dety) = radec2detxy($ra, $dec);  # panda center
+
+	# Return numbers in detector pixels to only %.1f precision
+	# given that pixels are so small.
+
+	# NOTE: due to sky <-> DETX/Y angle conversion, orientation also swaps
+
+	my $sector = sprintf("sector(%.1f,%.1f,%.6f,%.6f)", $detx, $dety,
+			sky2detangle($angle_1), sky2detangle($angle_0));
+	# is "annulus" a new selection region?
+	my $annulus = sprintf("annulus(%.1f,%.1f,%.1f,%.1f)", $detx, $dety,
+			$r_in * $arcsec2detxy, $r_out * $arcsec2detxy);
+
+	# Enclosing angular sector (no radius cut)
+	push @xmm_reg, "(((DETX,DETY) IN $sector)&&((DETX,DETY) IN $annulus))";
+
     }
 
 }
@@ -82,21 +113,25 @@ close($reg_fh);
 
 
 # Expression is usually appended to other selectors
-if (scalar(@xmm_reg) == 1) {
+if (scalar(@xmm_reg) == 0) {
+    die "ERROR: no region selections found\n";
+} elsif (scalar(@xmm_reg) == 1) {
     print "&&$xmm_reg[0]\n";
 } else {
     print "&&( " . join(" || ", @xmm_reg) . " )\n";
 }
 
-# Convert DS9 sky angle to XMM detector frame angle
+# Convert DS9 sky angle to XMM detector angle for one of MOS1, MOS2, or PN
+#
+# Note:
+# +ve change in detector angle induces -ve change in sky angle because DETX/Y
+# coordinates are inverted w.r.t sky
 # 
-# DS9 angle is measured CCW; angle 0 has xwidth parallel to X-axis
-# XMM DETX/Y: rotation is CW in sky; angle 0 has xwidth parallel to DETX
-#
-# Because DETX/Y coordinates are inverted w.r.t sky,
-# positive DETX/Y angle change induces CW rotation of region in sky frame
-#
-# Resulting formula: PA_PNT - ds9_angle + instr_rot
+# Conventions:
+# DS9 WCS/fk5 angle is measured CCW from West in sky frame (DS9 +x).
+# XMM DETX/Y angle is measured CCW from +DETX in detector frame.
+# XMM position angle (PA) is measured CCW from North in sky frame (DS9 +y),
+# and the PA vector strikes along MOS1 +DETY, MOS2 -DETX, and PN +DETX axes.
 #
 # References:
 # http://xmm-tools.cosmos.esa.int/external/xmm_user_support/documentation/uhb/epic.html
@@ -115,13 +150,18 @@ sub sky2detangle {
     my $instr= `pget fkeypar value`;
     ($instr) = $instr =~ /'([A-Za-z0-9]+)'/;  # Strip single quotes
 
+    # sky_angle_from_pa_pnt = angle_ds9 - (PA_PNT + 90)
+    # mos1_detang = -1 * sky_angle_from_pa_pnt + 90
+    # mos2_detang = -1 * sky_angle_from_pa_pnt + 180
+    # pn_detang = -1 * sky_angle_from_pa_pnt
+
     my $detangle;
     if ($instr eq "EMOS1") {
-	$detangle = $pos_ang - $angle;
+	$detangle = $pos_ang - $angle + 180;
     } elsif ($instr eq "EMOS2") {
-	$detangle = $pos_ang - $angle + 90;
-    } elsif ($instr eq "EPN") {
 	$detangle = $pos_ang - $angle - 90;
+    } elsif ($instr eq "EPN") {
+	$detangle = $pos_ang - $angle + 90;
     } else {
 	die "Invalid INSTRUME $instr\n";
     }

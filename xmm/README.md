@@ -58,6 +58,10 @@ Extract observation and FWC spectra with
 WARNING: specbackgrp calls modified versions of ESAS tasks mos/pn-spectra,
 so if ESAS is updated, you need to sync these with new releases.
 
+WARNING 2: do not run multiple specextract runs in parallel.
+This goes for ESAS tasks generally.  HEASARC / SAS / ESAS tasks could collide
+when modifying/reading _user_-specific parameter files.
+
 Spectrum fits: you'll have to configure a lot of stuff by hand unfortunately.
 Still working on it.
 In short use `import * from g309_fits` in iPython and work in an interactive
@@ -77,10 +81,11 @@ Alternative, background subtraction and fit (exploratory, not maintained):
 
 Fit spectra, dump fitting results and make plots and tables:
 
-    from g309_fits import *  # Interactive use methods
-    xs_wdata_split.pl
-    xs_replotter.py {x}.yaml
-    replot_*
+    from g309_fits import *
+    # run commands in interactive session
+
+    xs_wdata_split.pl       # split qdp files into dat files, one per spectrum
+    xs_replotter.py {x}.yaml    # create nice python spectrum plots
     latex_table_oneliner.sh
 
 

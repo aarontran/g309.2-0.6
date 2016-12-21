@@ -14,9 +14,11 @@ elif [[ "$SAS_OBSID" == "0551000201" ]]; then
 fi
 
 #f_regions=$(ls -1 ${XMM_PATH}/regs/*.reg)
-f_regions="/data/gas2/atran/g309/xmm/regs/bar.reg
-/data/gas2/atran/g309/xmm/regs/lobe.reg
-/data/gas2/atran/g309/xmm/regs/ridge.reg
+f_regions="/data/gas2/atran/g309/xmm/regs/core.reg
+/data/gas2/atran/g309/xmm/regs/ridge_se.reg
+/data/gas2/atran/g309/xmm/regs/ridge_nw.reg
+/data/gas2/atran/g309/xmm/regs/lobe_ne.reg
+/data/gas2/atran/g309/xmm/regs/lobe_sw.reg
 "
 
 start_script="Started specextract: $(date)"

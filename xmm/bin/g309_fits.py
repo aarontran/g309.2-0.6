@@ -275,7 +275,7 @@ def single_fit(output, region='src', with_bkg=True, free_elements=None,
         out = g309.load_data_and_models([region, 'bkg'], snr_model=snr_model, **kwargs)
         set_energy_range(out['bkg'])
     else:
-        out = g309.load_data_and_models([region], **kwargs)
+        out = g309.load_data_and_models([region], snr_model=snr_model, **kwargs)
 
     set_energy_range(out[region])
     xs.AllData.ignore("bad")
@@ -750,9 +750,26 @@ if __name__ == '__main__':
     #          error=True)
 
 
-    # Sub region fits with varying nH values
-    # --------------------------------------
-    #regs = ["src_north_clump", "src_E_lobe", "src_SW_lobe", "src_SE_dark",
-    #        "src_ridge", "src_SE_ridge_dark", "src_pre_ridge"]
-    #nH_vals = [None, 1.5, 2.0, 2.5, 3.0]
-    # ... TBD ...
+    # Smaller region fits
+    # -------------------
+
+    # Each takes ~20-40 minutes (much faster w/ no background and fewer cts)
+
+    # Standard vnei si/s fit for each case
+    stopwatch(single_fit, "results_spec/20161220_lobe_si-s", region='lobe',
+              tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161220_bar_si-s", region='bar',
+              tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161220_ridge_si-s", region='ridge',
+              tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+
+    # Variant fits for ridge specifically
+    stopwatch(single_fit, "results_spec/20161220_ridge_vpshock_si-s",
+              region='ridge', snr_model='vpshock',
+              tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161220_ridge_solar", region='ridge',
+              tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161220_ridge_vpshock_solar",
+              region='ridge', snr_model='vpshock',
+              tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
+

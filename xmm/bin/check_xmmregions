@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# As currently coded, MUST run from XMMPATH
+# One-off check script
+
+if [[ "$#" -ne 1 ]]; then
+    echo "ERROR: one argument (region label) required"
+    exit 1
+fi
+
+RSTEM=$1
+
+if [[ "$SAS_OBSID" == "0087940201" ]]; then
+  exposures="mos1S001 mos2S002 pnS003"
+elif [[ "$SAS_OBSID" == "0551000201" ]]; then
+  exposures="mos1S001 mos2S002"
+else
+  echo "Got SAS_OBSID null, please re-run sasinit {obsid}"
+  exit 253
+fi
+
+for exp in $exposures; do
+
+  regfile="$XMM_PATH/regs/${SAS_OBSID}/reg_${exp}_${RSTEM}.txt"
+  out="regcheck_${SAS_OBSID}_${exp}_${RSTEM}.fits"  # Dump to cwd
+
+  if [[ ! -e $regfile ]]; then
+    echo "No region file $regfile found, did you run make_xmmregions?"
+    exit 254
+  fi
+  if [[ -e $out ]]; then
+    echo "Output file ${out} exists, please remove!"
+    exit 255
+  fi
+
+  regexpr="$(cat ${regfile})"
+
+  # Output images are kinda funky -- not sure why
+  # So I just make event lists, simpler.
+  evselect table="${SAS_REPRO}/${exp}-clean.fits:EVENTS" \
+    filteredset="${out}" filtertype=expression expression="(PATTERN<=12)&&(FLAG == 0)$regexpr" \
+    withfilteredset=yes keepfilteroutput=yes updateexposure=yes filterexposure=yes
+
+done
