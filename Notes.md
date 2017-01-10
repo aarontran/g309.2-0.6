@@ -12491,8 +12491,8 @@ For presentation and coherence with zeroth- or first-order assumptions on
 remnant shape, symmetry is desirable.
 
 
-Wednesday 2016 December 21 - more fitting
-=========================================
+Wednesday 2016 December 21 - new region spectra
+===============================================
 
 Fixed bug DS9 to XMM region conversion; 180 deg. error in angle was missed in
 previous debugging with ellipses.  Checked new region extractions on all five
@@ -12503,6 +12503,82 @@ Extract spectra for new regions (`core, ridge_se, ridge_nw, lobe_ne, lobe_sw`).
     $ nohup specextract.sh >& 20161221_specextract_core-ridges-lobes_0087940201.log &
     [1] 23352
 
+    $ nohup specextract.sh >& 20161222_specextract_core-ridges-lobes_0551000201.log &
+    [1] 2681
+
+Create 800-3300 keV "corrected" images (i.e., background-subtracted and
+exposure-scaled) with less aggressive binning and smoothing for display.
+
+
+Thursday 2016 December 22 to Monday 2017 January 09 - more fits
+===============================================================
+
+Some work with large gap between 2016/12/22 and 2017/01/09 (little bits
+interspersed but not much - need to pick up again).
+
+"Standard" fits
+---------------
+
+NEI fits with Si, S free.  Broad expectations:
+- lobes should show clearly non-solar abundances.
+  NE lobe shows increased [Si EW / S EW] vs. SW lobe.
+  But, fit suggests different EWs caused by distinct kT or Tau, rather than
+  underlying abundances.
+- ridges should show near-solar abundances (fit may improve with Si, S free),
+  and NW ridge should show cleanest signal of soft, solar-abundance emission.
+- core should show non-solar abundance
+
+    20161222_core
+    20161222_lobe_ne
+    20161222_lobe_sw
+    20161222_ridge_nw
+    20161222_ridge_se
+    20161222_ridge_nw_solar
+    20161222_ridge_se_solar
+
+We also want to have __on record__ that we ran fits with solar abundances
+to support cases where non-solar abundances are needed (and to compare norms).
+Also run:
+
+    20170109_core_solar
+    20170109_lobe_ne_solar
+    20170109_lobe_sw_solar
+
+Something is amiss with error logging - getting duplicate messages logged.
+
+Image creation
+--------------
+
+Some notes on binning, smoothing scribbled on paper... not done.
+
+Created new region `regs-plot/hd119682.reg` for HD 119682 exclusion using
+coordinates from `repro_merged/all-bkg_region-radec.fits`.
+
+Should we show XMM PSF size for reference?
+
+    On-axis PSF, FWHM:
+        MOS1 = 4.3" (orbit) @ 1.5 keV
+        MOS2 = 4.4" (orbit) @ 1.5 keV
+        PN = <12.5" (orbit) @ 1.5 keV
+    On-axis PSF, HEW:
+        MOS1 = 16.8" (orbit) @ 1.5 keV
+        MOS2 = 17.0" (orbit) @ 1.5 keV
+        PN   = 16.6" (orbit) @ 1.5 keV
+    Off-axis PSF at 6 arcminutes:
+        MOS1 r_{W90} = ~50 arcsec. @ 1.5 keV
+        PN r_{W90} = ~55-60 arcsec. @ 1.5 keV
+
+    If `r_{W90}` scales identically with half-energy width,
+    then the off-axis difference is only ~4% (MOS1) to ~10% (PN)
+    based on Figures 9, 10 of XMM-Newton Users Handbook.
+    But not sure if that's reasonable.
+
+First added MOST beam (42" x 48" at declination -62.9 deg.) to image.
+Maybe not necessary - smoothing scale is kind of evident from image, by eye.
+Same deal for XMM image.  Off-axis PSF `r_{W90}` is comparable to MOST beam
+size, it seems clear that we are photon limited in this smoothed image.
+OK, no real need for now.
+
 
 Standing questions and TODOs
 ============================
@@ -12512,7 +12588,17 @@ Possible actionables
 - 1. investigate other young remnants with little Fe emission
   2. investigate other young remnants with comparable morphology.
 
-Additional fits
+[] Generate MORE images - exposure corrected images with point sources.
+   ... I need to just construct the evselect calls myself.
+
+A few things I want to do:
+[] code for sequential session fits (automate more work)
+[] code to log ionization timescale traversals...
+[] vpshock runs...
+
+[] we should consider the possibility of constraining Ar, Ca emission in
+the most ejecta-rich regions.
+But we need plots and fit parameters in place before entertaining this idea.
 
 [ ] Fix nH = 0.7 with Mg, Si, S free (can we have nH=0.7 and solar O, Ne, Fe?)
     [ ] Then, thaw nH=0.7 and see if better low absorption fit exists

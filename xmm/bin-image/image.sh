@@ -7,16 +7,22 @@ cd "${XMM_PATH}/repro_merged"
 # Configuration
 CALDB="${XMM_PATH}/caldb"
 MASK_RADEC="all-bkg_region-radec.fits"
+
 # Must have been created in specbackprot_image already
 # Must be formatted in ESAS manner (no leading zeros, no 'E' notation)
 PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
 PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
-
-#BINNINGS="1 2 4 8 16"
-
-# "Effective" smooth factors ~16, ~32
+# "Effective" smooth factors ~16, ~32 (first 5)
 BINNING_COMBO=("4" "8" "16" "8" "16")
 SMOOTH_COMBO=( "4" "2"  "1" "4"  "2")
+
+# Use less aggressive bin/smooth for 800-3300 keV image ONLY (~4x, ~8x factors)
+#PI_MINS=( "800")
+#PI_MAXS=("3300")
+#BINNING_COMBO=("4" "4" "2"    "8" "8" "4")
+#SMOOTH_COMBO=( "0" "1" "2"    "0" "1" "2")
+# WARNING: manually add exit command before doing eqwidth images, or all calls
+# will fail.
 
 # Merger commands
 
@@ -90,7 +96,11 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
       binned="${prefix}-im-${elow}-${ehigh}_bin${BIN}.fits"
       smoothed="${prefix}-im-${elow}-${ehigh}_bin${BIN}_gauss${SMOOTH}.fits"
       fimgbin "$raw" "$binned" ${BIN} clobber=yes
-      fgauss "$binned" "$smoothed" ${SMOOTH} clobber=yes
+      if [[ "$SMOOTH" != "0" ]]; then
+        fgauss "$binned" "$smoothed" ${SMOOTH} clobber=yes
+      else
+        ln -s "$binned" "$smoothed"
+      fi
     done
 
     # Compute errors from BINNED object image, because errors are

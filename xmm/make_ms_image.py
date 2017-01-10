@@ -12,11 +12,16 @@ Using /usr/local/bin explicitly to resolve dependencies.
 Dependencies: aplpy, pyregion
 """
 
+from __future__ import division
+
+import matplotlib as mpl
+mpl.use('Agg')  # For remote image creation over ssh
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 
 import aplpy
+from astropy import units as u
 from astropy.io import fits
 
 XMMPATH = os.environ['XMM_PATH']
@@ -29,8 +34,14 @@ def main(fig_num, invert=False):
 
         fig = plt.figure(figsize=(6,3.5))  # Play with this sizing?
 
+        # This image should show point sources + identified sources for removal
+
         # Broadband X-ray image with sparse MOST contours to guide the eye
-        f1 = aplpy.FITSFigure(XMMPATH + '/results_img/merged-im-sky-0.8-3.3kev-test.fits',
+        # Base image has 2.5" x 2.5" pixels --> binned to 5" x 5", then
+        # smoothed with 2px Gaussian (radius 10")
+        f1 = aplpy.FITSFigure(XMMPATH
+#                + '/repro_merged/corrected-800-3300_bin4_gauss0.fits',
+                + '/repro_merged/corrected-800-3300_bin2_gauss2.fits',
                               figure=fig, subplot=(1,2,1))
         f1.recenter(ra2deg(13,46,40), -62.87, width=18./60, height=18./60)
 
@@ -38,8 +49,14 @@ def main(fig_num, invert=False):
         # vmin=9e-6,vmax=5e-5 works w/colorbar, but vmin=1e-5,vmax=5e-5 fails
         f1_cmap = 'cubehelix'
         if invert:
+            pass
             f1_cmap += '_r'
-        f1.show_colorscale(vmin=9e-6, vmax=5e-5, stretch='log',cmap=f1_cmap,smooth=5)
+#        f1.show_colorscale(vmin=0, vmax=5e-5, stretch='arcsinh',cmap=f1_cmap)
+        f1.show_colorscale(vmin=0, vmax=2e-5, stretch='linear',cmap=f1_cmap)
+
+        # TODO show image with point sources - possibly w/ adaptive smoothing
+        # then show overlay of identified point sources.
+        f1.show_regions('regs-plot/hd119682.reg')
 
         # TODO get colorbars working for both subplots
         # https://github.com/aplpy/aplpy/issues/119
@@ -55,6 +72,8 @@ def main(fig_num, invert=False):
 
         f1.tick_labels.set_xformat('hh:mm')
         f1.tick_labels.set_yformat('dd:mm')
+        if invert:
+            f1.ticks.set_color('black')
         f1.axis_labels.set_ypad(-5)
         f1.refresh()
 
@@ -65,10 +84,25 @@ def main(fig_num, invert=False):
         f2_cmap = 'afmhot'
         if invert:
             f2_cmap += '_r'
-        f2.show_colorscale(vmin=1e-3, vmax=1e-1, stretch='arcsinh',cmap=f2_cmap)
+        f2.show_colorscale(vmin=1e-3, vmax=2e-1, stretch='arcsinh',cmap=f2_cmap)
+
+        # MOST beam notes:
+        # - must specify parameters or else constructor will unsuccessfully
+        #   search for FITS keywords BMAJ, BMIN, BPA.
+        # - hatching is too sparse at our image size, and so has no effect
+        # Reference: Whiteoak & Green, 1996A&AS..118..329W
+        f2.add_beam(major=42./np.sin(-62.9*np.pi/180) * u.arcsecond,
+                    minor=42 * u.arcsecond,
+                    angle=0,
+                    corner='bottom left', hatch='/', pad=1, color='white')
+        if invert:
+            f2.beam.set_edgecolor('black')
+            f2.beam.set_facecolor('gray')
 
         f2.tick_labels.set_xformat('hh:mm')
         f2.tick_labels.hide_y()
+        if invert:
+            f2.ticks.set_color('black')
         f2.axis_labels.hide_y()
         f2.refresh()
 
@@ -83,7 +117,8 @@ def main(fig_num, invert=False):
         # Broadband X-ray image with region and MOST overlay
         # Larger size to display background region clearly
 
-        f = aplpy.FITSFigure(XMMPATH + '/results_img/merged-im-sky-0.8-3.3kev-test.fits',
+        f = aplpy.FITSFigure(XMMPATH
+                + '/repro_merged/corrected-800-3300_bin2_gauss2.fits',
                              figsize=(7,5))  # only height affects final size
         f.recenter(ra2deg(13,46,30), -62.9, width=28./60, height=28./60)
         f_cmap = 'afmhot'
@@ -179,6 +214,14 @@ def main(fig_num, invert=False):
     elif fig_num == '4':
         # Sub-source region selections with new, corrected images..
         # use to show eqwidth images and continuum too
+
+        # RGB image of Mg line flux, Si/S eq width...
+
+        f1 = aplpy.FITSFigure(XMMPATH
+                + '/repro_merged/.fits',
+                              figsize=(7,5))
+        f1.recenter(ra2deg(13,46,40), -62.87, width=18./60, height=18./60)
+
         raise Exception("sub source region plot tbd")
 
     else:
@@ -191,6 +234,7 @@ def ra2deg(h,m,s):
 
 
 if __name__ == '__main__':
+    main('1', invert=False)
     main('1', invert=True)
-    main('2', invert=True)
-    #main('3')
+    #main('2', invert=True)
+    #main('4')

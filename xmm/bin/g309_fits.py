@@ -773,3 +773,16 @@ if __name__ == '__main__':
               region='ridge', snr_model='vpshock',
               tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
 
+    # Set up new fits for more carefully chosen regions
+    stopwatch(single_fit, "results_spec/20161222_core", region='core', tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161222_lobe_ne", region='lobe_ne', tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161222_lobe_sw", region='lobe_sw', tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161222_ridge_nw", region='ridge_nw', tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161222_ridge_se", region='ridge_se', tau_scan=True, error=True, error_rerun=False, free_elements=['Si', 'S'], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161222_ridge_nw_solar", region='ridge_nw', tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20161222_ridge_se_solar", region='ridge_se', tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
+
+    # Sanity checks, though expect non-solar abundances to be required
+    stopwatch(single_fit, "results_spec/20170109_lobe_ne_solar", region='lobe_ne', tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20170109_core_solar", region='core', tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
+    stopwatch(single_fit, "results_spec/20170109_lobe_sw_solar", region='lobe_sw', tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
