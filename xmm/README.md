@@ -112,7 +112,19 @@ for explanation.
 
     vim repro_merged/dir.dat
 
+For images without holes:
+
+    mkdir repro_merged_no_holes
+    cd repro_merged_no_holes
+    ln -s ../repro_merged/dir.dat
+    ln -s ../repro_merged/all-bkg_region-radec.fits
+
 Now create a slew of images:
+
+    # For each energy band mosaic you wish to create, point ESAS filenames to
+    # either masked or unmasked files
+    source sasinit {obsid}
+    select_images_for_mosaicking.sh ${elow} ${ehigh} ${mask?}
 
     # Must run within repro_merged/
     image.sh

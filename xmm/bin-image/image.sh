@@ -1,30 +1,43 @@
 #!/bin/bash
 
-# Must be run from ${XMM_PATH}/repro_merged/ or any directory that has an
-# appropriate dir.dat file.
-cd "${XMM_PATH}/repro_merged"
+# -----------------------------------------------------------------------------
+# Configuration: only strings "0", "1" allowed
+# -----------------------------------------------------------------------------
+USE_MASKED_IMAGES="0"
+WITH_EQWIDTH="0"
 
-# Configuration
 CALDB="${XMM_PATH}/caldb"
-MASK_RADEC="all-bkg_region-radec.fits"
+MASK_RADEC="${XMM_PATH}/repro_merged/all-bkg_region-radec.fits"
 
-# Must have been created in specbackprot_image already
-# Must be formatted in ESAS manner (no leading zeros, no 'E' notation)
-PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
-PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
-# "Effective" smooth factors ~16, ~32 (first 5)
-BINNING_COMBO=("4" "8" "16" "8" "16")
-SMOOTH_COMBO=( "4" "2"  "1" "4"  "2")
+if [[ $USE_MASKED_IMAGES == "1" ]]; then
+  # ESAS tasks must run in directory with formatted dir.dat file.
+  cd "${XMM_PATH}/repro_merged"
 
-# Use less aggressive bin/smooth for 800-3300 keV image ONLY (~4x, ~8x factors)
-#PI_MINS=( "800")
-#PI_MAXS=("3300")
-#BINNING_COMBO=("4" "4" "2"    "8" "8" "4")
-#SMOOTH_COMBO=( "0" "1" "2"    "0" "1" "2")
-# WARNING: manually add exit command before doing eqwidth images, or all calls
-# will fail.
+  # Must have been created in specbackprot_image already
+  # Must be formatted in ESAS manner (no leading zeros, no 'E' notation)
+  PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
+  PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
+  BINNING_COMBO=("4" "8" "16" "8" "16")
+  SMOOTH_COMBO=( "4" "2"  "1" "4"  "2")
 
-# Merger commands
+  # Use less aggressive bin/smooth for 800-3300 keV image ONLY (~4x, ~8x factors)
+  #PI_MINS=( "800")
+  #PI_MAXS=("3300")
+  #BINNING_COMBO=("4" "4" "2"    "8" "8" "4")
+  #SMOOTH_COMBO=( "0" "1" "2"    "0" "1" "2")
+else
+  # ESAS tasks must run in directory with formatted dir.dat file.
+  cd "${XMM_PATH}/repro_merged_no_holes"
+
+  PI_MINS=( "800" "1000")
+  PI_MAXS=("3300" "2000")
+  BINNING_COMBO=("0"   "2" "0" "2"   "4" "4" "2"   "8" "8" "4")
+  SMOOTH_COMBO=( "0"   "0" "2" "1"   "0" "1" "2"   "0" "1" "2")
+fi
+
+# -----------------------------------------------------------------------------
+# Mosaicking commands
+# -----------------------------------------------------------------------------
 
 for ((i=0;i<${#PI_MINS[@]};++i)); do
 
@@ -43,26 +56,29 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
     # crvaln1,2: center of coordinate projection (use 0087940201 values)
     # pixelsize=0.04166666667 arcmin/px = 2.5 arcsec/px
     # (matches output scaling from ESAS {mos,pn}-spectra sky images)
-    #/soft/XMM/xmmsas_20141104_1833/bin/merge_comp_xmm \
     echo "  merge_comp_xmm component=${j} ..."
-    merge_comp_xmm caldb=${CALDB} dirfile=dir.dat \
-        coord=2 crvaln1=206.704208333333 crvaln2=-62.84125 \
-        pixelsize=0.04166666667 component=${j} \
-        elow=${elow} ehigh=${ehigh} maskcontrol=0 \
-        xdim=1000 ydim=1000 clobber=1 \
-      &> "merge_comp_xmm_${elow}-${ehigh}_component-${j}.log"
+#    merge_comp_xmm caldb=${CALDB} dirfile=dir.dat \
+#        coord=2 crvaln1=206.704208333333 crvaln2=-62.84125 \
+#        pixelsize=0.04166666667 component=${j} \
+#        elow=${elow} ehigh=${ehigh} maskcontrol=0 \
+#        xdim=1000 ydim=1000 clobber=1 \
+#      &> "merge_comp_xmm_${elow}-${ehigh}_component-${j}.log"
   done
 
   # Fill source holes in counts images, immediately after merge_comp_xmm
   # MUST be run immediately after merge_comp_xmm...
-  echo "  hole_filler.py ..."
-  mv "obj-im-${elow}-${ehigh}.fits" "obj-im-${elow}-${ehigh}-nofill.fits"
-  hole_filler.py "obj-im-${elow}-${ehigh}-nofill.fits" \
-      "exp-im-${elow}-${ehigh}.fits" \
-      --out "obj-im-${elow}-${ehigh}-filled.fits" --clobber \
-      --mask "$MASK_RADEC" --annulus-width 4 \
-    &> "hole_filler_${elow}-${ehigh}.log"
-  ln -s "obj-im-${elow}-${ehigh}-filled.fits" "obj-im-${elow}-${ehigh}.fits"
+  if [[ $USE_MASKED_IMAGES == "1" ]]; then
+    echo "  hole_filler.py ..."
+    mv "obj-im-${elow}-${ehigh}.fits" "obj-im-${elow}-${ehigh}-nofill.fits"
+    hole_filler.py "obj-im-${elow}-${ehigh}-nofill.fits" \
+        "exp-im-${elow}-${ehigh}.fits" \
+        --out "obj-im-${elow}-${ehigh}-filled.fits" --clobber \
+        --mask "$MASK_RADEC" --annulus-width 4 \
+      &> "hole_filler_${elow}-${ehigh}.log"
+    ln -s "obj-im-${elow}-${ehigh}-filled.fits" "obj-im-${elow}-${ehigh}.fits"
+  else
+    echo "  skipping hole_filler.py (use_masked_images=0)"
+  fi
 
 #  # Just vary parameters by hand for now since adaptively smoothed image is not
 #  # being used for real analysis
@@ -95,17 +111,24 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
       raw="${prefix}-im-${elow}-${ehigh}.fits"
       binned="${prefix}-im-${elow}-${ehigh}_bin${BIN}.fits"
       smoothed="${prefix}-im-${elow}-${ehigh}_bin${BIN}_gauss${SMOOTH}.fits"
-      fimgbin "$raw" "$binned" ${BIN} clobber=yes
+
+      if [[ "$BIN" != "0" ]]; then
+        fimgbin "$raw" "$binned" ${BIN} clobber=yes
+      else
+        ln -s -f "$raw" "$binned"
+      fi
+
       if [[ "$SMOOTH" != "0" ]]; then
         fgauss "$binned" "$smoothed" ${SMOOTH} clobber=yes
       else
-        ln -s "$binned" "$smoothed"
+        ln -s -f "$binned" "$smoothed"
       fi
+
     done
 
     # Compute errors from BINNED object image, because errors are
     # sqrt(sum_i n_i) rather than sum_i sqrt(n_i)
-    echo "  Creating \"error\" counts image"
+    echo "    Creating \"error\" counts image"
     # Gehrels' (1986) 1-sigma upper limit, eq. (7); same expression used by XSPEC
     ftpixcalc "sig-im-${elow}-${ehigh}_bin${BIN}.fits" "sqrt(a + 0.75) + 1" \
       a="obj-im-${elow}-${ehigh}_bin${BIN}.fits" clobber=yes
@@ -125,18 +148,28 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
     outsig="corrected-sig-${elow}-${ehigh}_bin${BIN}_gauss${SMOOTH}.fits"
 
     # Perform mathematical operations
-    echo "    Exposure-corrected, background-subtracted ${elow}-${ehigh} image"
+    echo "    Creating exposure-corrected, background-subtracted ${elow}-${ehigh} image"
     farith "$obj" "$back" "temp_subtr_back.fits" "SUB" clobber=yes
     farith "temp_subtr_back.fits" "$prot" "temp_subtr_all.fits" "SUB" clobber=yes
     farith "temp_subtr_all.fits" "$exp" "$out" "DIV" null=yes clobber=yes
     rm temp_subtr_back.fits temp_subtr_all.fits
 
-    echo "    Exposure-corrected ${elow}-${ehigh} error image"
+    echo "    Creating exposure-corrected ${elow}-${ehigh} error image"
     farith "$sig" "$exp" "$outsig" "DIV" null=yes clobber=yes
 
   done
 
 done
+
+
+# -----------------------------------------------------------------------------
+# Equivalent width and line flux images
+# -----------------------------------------------------------------------------
+
+if [[ WITH_EQWIDTH != "1" ]]; then
+  echo "Skipping equivalent width and line flux image creation"
+  exit 0
+fi
 
 
 for ((j=0;j<${#BINNING_COMBO[@]};++j)); do

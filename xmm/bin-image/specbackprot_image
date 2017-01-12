@@ -14,8 +14,16 @@
 # construct ESAS filenames
 #   OK: 800, 3300, 12500
 #   NOT OK: 0800, 1e5, 12e4, ...
-PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
-PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
+#PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
+#PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
+#MASK_FINAL_OUTPUT_FLAGS=("1" "1" "1" "1" "1" "1" "1" "1")
+
+# create images with NO masks for point source display
+# 800-3300 to cover broad band, also 1000-2000 for images at top of ARF
+# (reduce possible systematics from ARF energy dependence)
+PI_MINS=( "800" "1000")
+PI_MAXS=("3300" "2000")
+MASK_FINAL_OUTPUT_FLAGS=("0" "0")
 
 # Bands manually chosen by inspecting integrated source spectra:
 # $ xs_replotter.py replot_src_bkg.yaml
@@ -96,8 +104,10 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
 
   elow="${PI_MINS[$i]}"
   ehigh="${PI_MAXS[$i]}"
+  mask_final_output="${MASK_FINAL_OUTPUT_FLAGS[$i]}"
 
   echo "Extracting $SAS_OBSID images in ${elow}-${ehigh} eV range"
+  echo "  mask_final_output=${mask_final_output}"
   start_script="Start: $(date)"
   echo $start_script
 
@@ -132,11 +142,36 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
       exit 1
     fi
 
+    # list of files that must be swapped in/out if you want to change
+    # masking for image mosaics
+    # ~~~~~~~~~~~~~~~~~~~~
+    # WARNING: FILE LIST EDITS MUST BE PROPAGATED TO
+    #   prepare_images_for_mosaicking.sh
+    # 1. I don't think "im-det" files are needed, but symlink to be sure
+    # 2. ${exp}-back-im-det/sky-* files omitted because I want to use unmasked
+    #    images (mask-0) in all cases; this is assured by specbackprot_image.
+    # ~~~~~~~~~~~~~~~~~~~~
+    BASENAMES="${exp}-obj-im-det-${elow}-${ehigh}
+               ${exp}-obj-im-${elow}-${ehigh}
+               ${exp}-exp-im-${elow}-${ehigh}
+               ${exp}-mask-im-${elow}-${ehigh}
+              "
+    if [[ $exp =~ "pn" ]]; then
+      BASENAMES="${BASENAMES}
+                 ${exp}-obj-im-det-${elow}-${ehigh}-oot
+                 ${exp}-obj-im-${elow}-${ehigh}-oot
+                 ${exp}-exp-im-det-${elow}-${ehigh}
+                 ${exp}-mask-im-det-${elow}-${ehigh}
+                "
+    fi
+
     # Extraction
     # ----------
 
     # FIRST RUN, ${exe_spec} MASK=0
-    # (create non-masked background images)
+    # (create non-masked background images.  This requires many non-masked
+    # intermediate files, so must run ${exe_spec} twice; we cannot just extract
+    # relevant evselect calls)
 
     echo "  Running ${exe_spec} prefix=${exp_n} elow=${elow} ehigh=${ehigh} mask=0..."
     ${exe_spec} prefix=${exp_n} region="" caldb="${CALDB}" \
@@ -144,36 +179,61 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
       &> "${exe_spec}_${exp}_FOV_${elow}_${ehigh}_mask-0.log"
     mv command.csh "${exe_spec}_${exp}_FOV_${elow}_${ehigh}_mask-0_cmd.csh"
 
-    echo "  Running ${exe_qpb}... (mask=0)"
+    echo "  Running ${exe_qpb} mask=0..."
     ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
         elow=${elow} ehigh=${ehigh} ${ccd_str} \
       &> "${exe_qpb}_${exp}_FOV_${elow}_${ehigh}_mask-0.log"
     # diag=2 creates more diagnostic output files (.qdp plots)
 
-    mv "${exp}-back-im-det-${elow}-${ehigh}.fits" "${exp}-back-im-det-${elow}-${ehigh}_mask-0.fits"
-
-    # SECOND RUN, ${exe_spec} MASK=1
-    # (clobber everything and create masked background images)
-
-    echo "  Running ${exe_spec} prefix=${exp_n} elow=${elow} ehigh=${ehigh}..."
-    ${exe_spec} prefix=${exp_n} region="" caldb="${CALDB}" \
-        mask=1 elow=${elow} ehigh=${ehigh} ${ccd_str} \
-      &> "${exe_spec}_${exp}_FOV_${elow}_${ehigh}.log"
-    mv command.csh "${exe_spec}_${exp}_FOV_${elow}_${ehigh}_cmd.csh"
-
-    echo "  Running ${exe_qpb}..."
-    ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
-        elow=${elow} ehigh=${ehigh} ${ccd_str} \
-      &> "${exe_qpb}_${exp}_FOV_${elow}_${ehigh}.log"
-    # diag=2 creates more diagnostic output files (.qdp plots)
-
-    # Use unmasked background image in subsequent processing
-    mv "${exp}-back-im-det-${elow}-${ehigh}.fits" "${exp}-back-im-det-${elow}-${ehigh}_mask-1.fits"
-    cp "${exp}-back-im-det-${elow}-${ehigh}_mask-0.fits" "${exp}-back-im-det-${elow}-${ehigh}.fits"
-
     # Rotate background image
     rot-im-det-sky prefix=${exp_n} elow=${elow} ehigh=${ehigh} mode=1 \
-      &> "rot-im-det-sky_${exp}_FOV_${elow}_${ehigh}_mode-1.log"
+      &> "rot-im-det-sky_${exp}_FOV_${elow}_${ehigh}_mode-1_mask-0.log"
+
+    # Migrate outputs to "mask-0"
+    for base in $BASENAMES; do
+      mv "${base}.fits" "${base}_mask-0.fits"  
+    done
+    mv "${exp}-back-im-det-${elow}-${ehigh}.fits" "${exp}-back-im-det-${elow}-${ehigh}_mask-0.fits"
+    mv "${exp}-back-im-sky-${elow}-${ehigh}.fits" "${exp}-back-im-sky-${elow}-${ehigh}_mask-0.fits"
+
+
+    # SECOND RUN, ${exe_spec} MASK=1
+    # (clobber everything and create masked images, spectra)
+    if [[ $mask_final_output == "1" ]]; then
+      echo "  Running ${exe_spec} prefix=${exp_n} elow=${elow} ehigh=${ehigh} mask=1..."
+      ${exe_spec} prefix=${exp_n} region="" caldb="${CALDB}" \
+          mask=1 elow=${elow} ehigh=${ehigh} ${ccd_str} \
+        &> "${exe_spec}_${exp}_FOV_${elow}_${ehigh}_mask-1.log"
+      mv command.csh "${exe_spec}_${exp}_FOV_${elow}_${ehigh}_mask-1_cmd.csh"
+
+      echo "  Running ${exe_qpb} mask=1..."
+      ${exe_qpb} prefix=${exp_n} caldb="${CALDB}" diag=2 clobber=1 \
+          elow=${elow} ehigh=${ehigh} ${ccd_str} \
+        &> "${exe_qpb}_${exp}_FOV_${elow}_${ehigh}_mask-1.log"
+      # diag=2 creates more diagnostic output files (.qdp plots)
+
+      # Rotate background image
+      rot-im-det-sky prefix=${exp_n} elow=${elow} ehigh=${ehigh} mode=1 \
+        &> "rot-im-det-sky_${exp}_FOV_${elow}_${ehigh}_mode-1_mask-1.log"
+
+      # Migrate outputs to "mask-1"
+      for base in $BASENAMES; do
+        mv "${base}.fits" "${base}_mask-1.fits"  
+      done
+      mv "${exp}-back-im-det-${elow}-${ehigh}.fits" "${exp}-back-im-det-${elow}-${ehigh}_mask-1.fits"
+      mv "${exp}-back-im-sky-${elow}-${ehigh}.fits" "${exp}-back-im-sky-${elow}-${ehigh}_mask-1.fits"
+
+    else
+      echo "  Skipping mask=1 runs of ${exe_spec}, ${exe_qpb}"
+    fi
+
+    echo "Use unmasked QPB image even if mask=1"
+    echo "(consistent with ESAS 'proton' image and allows source hole filling)"
+    ln -s -v "${exp}-back-im-det-${elow}-${ehigh}_mask-0.fits" "${exp}-back-im-det-${elow}-${ehigh}.fits" 
+    ln -s -v "${exp}-back-im-sky-${elow}-${ehigh}_mask-0.fits" "${exp}-back-im-sky-${elow}-${ehigh}.fits"
+
+    # Point ESAS files to masked or unmasked products
+    select_images_for_mosaicking.sh ${elow} ${ehigh} ${mask_final_output}
 
     # Soft proton
     # -----------
@@ -202,9 +262,13 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
         fullimage="${exp}-obj-im-sp-det.fits" fullspec="${exp}-obj.pi" \
         regionimage="${exp}-bkg-im-sp.fits" regionspec="${exp}-bkg.pi" \
         rnorm=${bkg_pnorm} \
-      &> "sp_partial_${exp}_FOV_${elow}_${ehigh}.log"
+      &> "sp_partial_${exp}_FOV_${elow}_${ehigh}_mask-${mask_final_output}.log"
 
     echo "  Running proton prefix=${exp_n}..."
+    # proton uses mask-dependent files to get exposure time and FITS header,
+    # but SP image is unaffected by presence or absence of mask on inputs;
+    # output only depends on scalar parameters
+    # (elow, ehigh, ccds, pindex, pnorm, ...)
     proton prefix=${exp_n} caldb="${CALDB}" specname="${exp}-obj.pi" \
         elow=${elow} ehigh=${ehigh} ${proton_ccd_str} \
         pindex=${pindex} pnorm=${pnorm} spectrumcontrol=1 \
@@ -221,7 +285,14 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
 done
 
 # After all files created, move FOV spectrum files that do NOT depend
-# upon energy band
+# upon energy band.  This allows seamless re-run of specbackprot_image.
+#
+# ESAS by default won't clobber existing ${exp}-obj.pi,  ${exp}.rmf,
+# which introduces big risk of using wrong file from previous subregion
+# extraction.  So, specbackprot_image checks to ensure these files don't exist
+# at the top.  The renamed FOV files aren't used in subsequent processing, but
+# are kept for convenience (e.g., you could move the FOV files back before
+# re-running specbackprot_image).
 for ((j=0;j<${#exps[@]};++j)); do
 
   exp="${exps[$j]}"

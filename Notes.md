@@ -12544,7 +12544,7 @@ Also run:
     20170109_lobe_ne_solar
     20170109_lobe_sw_solar
 
-Something is amiss with error logging - getting duplicate messages logged.
+Something is amiss with XSPEC error logging - getting duplicate messages.
 
 Image creation
 --------------
@@ -12580,6 +12580,27 @@ size, it seems clear that we are photon limited in this smoothed image.
 OK, no real need for now.
 
 
+Wednesday-Thursday 2017 January 11 - mosaic images with point sources
+=====================================================================
+
+Modify tasks to create image mosaics with point sources present
+(i.e., no masking applied).
+As usual, wrap around ESAS scripts to not break internal dependencies.
+
+    $ nohup specbackprot_image >& 20170112_specbackprot_image_0087940201_nomaskbands.log &
+    [1] 31473
+
+    $ nohup specbackprot_image > & 20170112_specbackprot_image_0551000201_nomaskbands.log &
+    [1] 31508
+
+Code is unwieldy.  The usual mechanic is:
+* perform multiple runs of ESAS tasks, and move output to "variant" filenames
+* symlink "variant" filenames to ESAS-conventional names
+Created new task `select_images_for_mosaicking.sh` to help this.
+
+Next thing: create point source mask regions, then create nice figure.
+
+
 Standing questions and TODOs
 ============================
 
@@ -12588,8 +12609,6 @@ Possible actionables
 - 1. investigate other young remnants with little Fe emission
   2. investigate other young remnants with comparable morphology.
 
-[] Generate MORE images - exposure corrected images with point sources.
-   ... I need to just construct the evselect calls myself.
 
 A few things I want to do:
 [] code for sequential session fits (automate more work)
@@ -12599,6 +12618,8 @@ A few things I want to do:
 [] we should consider the possibility of constraining Ar, Ca emission in
 the most ejecta-rich regions.
 But we need plots and fit parameters in place before entertaining this idea.
+[] CCO search?
+[] Nucleosynthesis comparison (important) - after constraint search
 
 [ ] Fix nH = 0.7 with Mg, Si, S free (can we have nH=0.7 and solar O, Ne, Fe?)
     [ ] Then, thaw nH=0.7 and see if better low absorption fit exists
