@@ -9,13 +9,12 @@ https://github.com/aarontran/snr-filaments/blob/master/data-tycho/imgs/tycho_apl
 for comparison
 
 Using /usr/local/bin explicitly to resolve dependencies.
-Dependencies: aplpy, pyregion
 """
 
 from __future__ import division
 
 import matplotlib as mpl
-mpl.use('Agg')  # For remote image creation over ssh
+#mpl.use('Agg')  # For remote image creation over ssh
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -31,17 +30,11 @@ def main(fig_num, invert=False):
     if fig_num == '1':
 
         # Subplots: http://aplpy.readthedocs.io/en/stable/howto_subplot.html
-
-        fig = plt.figure(figsize=(6,3.5))  # Play with this sizing?
-
-        # This image should show point sources + identified sources for removal
+        fig = plt.figure(figsize=(7,5))  # height > optimal aspect ratio has no effect
 
         # Broadband X-ray image with sparse MOST contours to guide the eye
-        # Base image has 2.5" x 2.5" pixels --> binned to 5" x 5", then
-        # smoothed with 2px Gaussian (radius 10")
-        f1 = aplpy.FITSFigure(XMMPATH
-#                + '/repro_merged/corrected-800-3300_bin4_gauss0.fits',
-                + '/repro_merged/corrected-800-3300_bin2_gauss2.fits',
+        # Base image has 2.5" pixels and is smoothed with 2px Gaussian (5")
+        f1 = aplpy.FITSFigure(XMMPATH + '/repro_merged_no_holes/corrected-800-3300_bin0_gauss2.fits',
                               figure=fig, subplot=(1,2,1))
         f1.recenter(ra2deg(13,46,40), -62.87, width=18./60, height=18./60)
 
@@ -49,14 +42,11 @@ def main(fig_num, invert=False):
         # vmin=9e-6,vmax=5e-5 works w/colorbar, but vmin=1e-5,vmax=5e-5 fails
         f1_cmap = 'cubehelix'
         if invert:
-            pass
             f1_cmap += '_r'
-#        f1.show_colorscale(vmin=0, vmax=5e-5, stretch='arcsinh',cmap=f1_cmap)
-        f1.show_colorscale(vmin=0, vmax=2e-5, stretch='linear',cmap=f1_cmap)
-
-        # TODO show image with point sources - possibly w/ adaptive smoothing
-        # then show overlay of identified point sources.
-        f1.show_regions('regs-plot/hd119682.reg')
+        # Idea: log scale here to show faint emission; linear show in full fov
+        # image to show sources
+        #f1.show_colorscale(vmin=0.2e-5, vmax=2e-5, stretch='linear',cmap=f1_cmap)
+        f1.show_colorscale(vmin=2e-6, vmax=4e-5, stretch='log',cmap=f1_cmap)
 
         # TODO get colorbars working for both subplots
         # https://github.com/aplpy/aplpy/issues/119
@@ -65,16 +55,12 @@ def main(fig_num, invert=False):
         #f1.colorbar.set_location('bottom')  # Warning: bottom colorbar not fully implemented =(
 
         most = fits.open(XMMPATH + '/../most/G309.2-0.6.fits')
-        #lev = np.linspace(0.02, 0.2, 10)  # Lin MOST contours
-        #lev = np.logspace(np.log10(0.01), np.log10(0.2), 10)  # Log MOST contours
-        lev = [0.01, 0.01*np.sqrt(10), 0.1, 0.1*np.sqrt(10)]  # Sparse MOST contours
+        #lev = np.linspace(0.02, 0.2, 10)
+        #lev = np.logspace(np.log10(0.01), np.log10(0.2), 10)
+        lev = np.logspace(-2, -0.5, 4)  # Sparse log contours, 0.01 to 0.1*sqrt(10)
         f1.show_contour(data=most, levels=lev, colors='cyan', alpha=0.7)
 
-        f1.tick_labels.set_xformat('hh:mm')
-        f1.tick_labels.set_yformat('dd:mm')
-        if invert:
-            f1.ticks.set_color('black')
-        f1.axis_labels.set_ypad(-5)
+        format_ticks_and_labels(f1, invert=invert)
         f1.refresh()
 
         # MOST image alone to show structure (varying dark/bright regions)
@@ -84,7 +70,7 @@ def main(fig_num, invert=False):
         f2_cmap = 'afmhot'
         if invert:
             f2_cmap += '_r'
-        f2.show_colorscale(vmin=1e-3, vmax=2e-1, stretch='arcsinh',cmap=f2_cmap)
+        f2.show_colorscale(vmin=1e-4, vmax=2e-1, stretch='arcsinh',cmap=f2_cmap)
 
         # MOST beam notes:
         # - must specify parameters or else constructor will unsuccessfully
@@ -99,12 +85,17 @@ def main(fig_num, invert=False):
             f2.beam.set_edgecolor('black')
             f2.beam.set_facecolor('gray')
 
-        f2.tick_labels.set_xformat('hh:mm')
+        format_ticks_and_labels(f2, invert=invert)
         f2.tick_labels.hide_y()
-        if invert:
-            f2.ticks.set_color('black')
         f2.axis_labels.hide_y()
-        f2.refresh()
+
+        #EXPERIMENTAL - push information to figure captions
+        #f.tick_labels.hide_x()
+        #f1.axis_labels.hide_x()
+        #f.tick_labels.hide_y()
+        #f1.axis_labels.hide_y()
+        #g.tick_labels.hide_x()
+        #f2.axis_labels.hide_x()
 
         fig.tight_layout()
         fig.canvas.draw()
@@ -114,39 +105,73 @@ def main(fig_num, invert=False):
             plt.savefig('fig_snr_xmm_most.pdf', dpi=300)
 
     elif fig_num == '2':
-        # Broadband X-ray image with region and MOST overlay
-        # Larger size to display background region clearly
 
-        f = aplpy.FITSFigure(XMMPATH
-                + '/repro_merged/corrected-800-3300_bin2_gauss2.fits',
-                             figsize=(7,5))  # only height affects final size
-        f.recenter(ra2deg(13,46,30), -62.9, width=28./60, height=28./60)
-        f_cmap = 'afmhot'
+        # Subplots: http://aplpy.readthedocs.io/en/stable/howto_subplot.html
+        fig = plt.figure(figsize=(7,10))  # height > optimal aspect ratio has no effect
+
+        cmap = 'afmhot'
         if invert:
-            f_cmap += '_r'
-        f.show_colorscale(vmin=1e-5, stretch='log',cmap=f_cmap)
-        f.show_regions('regs/ann_000_100.reg')
-        f.show_regions('regs-plot/circ_200.reg')
-        f.show_regions('regs-plot/circ_300.reg')
+            cmap = 'cubehelix_r'
+            #cmap += '_r'
+
+        # Broadband X-ray image with point source extractions
+        # and interpolation
+        f = aplpy.FITSFigure(XMMPATH
+                + '/repro_merged_no_holes/corrected-800-3300_bin0_gauss2.fits',
+                figure=fig, subplot=(1,2,1))
+        g = aplpy.FITSFigure(XMMPATH
+                + '/repro_merged/corrected-800-3300_bin0_gauss2.fits',
+                figure=fig, subplot=(1,2,2))
+
+        for aplfig in [f, g]:
+            aplfig.recenter(ra2deg(13,46,40), -62 - 52./60, width=30./60, height=36./60)
+            #aplfig.show_colorscale(vmin=1e-6, vmax=4e-5, stretch='log',cmap=cmap)
+            aplfig.show_colorscale(vmin=0.2e-5, vmax=3e-5, stretch='linear',cmap=cmap)
+            format_ticks_and_labels(aplfig, invert=invert)
+            aplfig.ticks.set_color('black')  # Because of FOV image
+
+            if not invert:
+                axleft_ticks = aplfig._ax1.yaxis.get_ticklines()
+                axright_ticks = aplfig._ax2.yaxis.get_ticklines()
+                axleft_minorticks = aplfig._ax1.yaxis.get_minorticklines()
+                axright_minorticks = aplfig._ax2.yaxis.get_minorticklines()
+
+                axleft_ticks[4].set_color('white')
+                axleft_ticks[6].set_color('white')
+                axright_ticks[5].set_color('white')
+                for idx in [18,20,22,24,26,28,30,32,34,36]:
+                    axleft_minorticks[idx].set_color('white')
+                for idx in [17,19,21,23]:
+                    axright_minorticks[idx].set_color('white')
+
+        g.tick_labels.hide_y()
+        g.axis_labels.hide_y()
+
+        #EXPERIMENTAL - push information to figure captions
+        #f.tick_labels.hide_x()
+        #f.axis_labels.hide_x()
+        #f.tick_labels.hide_y()
+        #f.axis_labels.hide_y()
+        #g.tick_labels.hide_x()
+        #g.axis_labels.hide_x()
+
+
+        f.show_regions('regs-plot/all_point_sources.reg')
+        #f.show_regions('regs/ann_000_100.reg')
+        #f.show_regions('regs-plot/circ_200.reg')
+        #f.show_regions('regs-plot/circ_300.reg')
         f.show_regions('regs/src.reg')  # Equivalent to circ_400, but changed color/width
-        f.show_regions('regs-plot/circ_500.reg')
+        #f.show_regions('regs-plot/circ_500.reg')
         f.show_regions('regs/bkg.reg')  # Yes, do show background
 
-        most = fits.open(XMMPATH + '/../most/G309.2-0.6.fits')
-        #lev = np.linspace(0.02, 0.2, 10)  # Lin MOST contours
-        lev = np.logspace(np.log10(0.01), np.log10(0.2), 10)  # Log MOST contours
-        #lev = [0.01, 0.01*np.sqrt(10), 0.1, 0.1*np.sqrt(10)]  # Sparse MOST contours
-        f.show_contour(data=most, levels=lev, colors='lime', alpha=0.5)
-
-        f.tick_labels.set_yformat('dd:mm')
-        f.tick_labels.set_xformat('hh:mm')
-        f.axis_labels.set_ypad(-5)
-        f.refresh()
-        f.image.figure.tight_layout()  # Use the matplotlib figure instance
+        #f.image.figure.tight_layout()  # Use the matplotlib figure instance
+        fig.tight_layout()
+        fig.canvas.draw()
         if invert:
-            f.save('fig_snr_regs-fiveann_invert.pdf', dpi=300)  # Drops into CWD
+            plt.savefig('fig_snr_fullfov_invert.pdf', dpi=300)  # Drops into CWD
         else:
-            f.save('fig_snr_regs-fiveann.pdf', dpi=300)  # Drops into CWD
+            plt.savefig('fig_snr_fullfov.pdf', dpi=300)  # Drops into CWD
+
     elif fig_num == '3':
         # Experimental -- abortive attempt to combine figures 1 and 2
 
@@ -222,10 +247,20 @@ def main(fig_num, invert=False):
                               figsize=(7,5))
         f1.recenter(ra2deg(13,46,40), -62.87, width=18./60, height=18./60)
 
+        f1.show_regions('regs-plot/hd119682.reg')
+
         raise Exception("sub source region plot tbd")
 
     else:
         raise Exception("Invalid figure number")
+
+def format_ticks_and_labels(aplfig, invert=False):
+    """Common tick setup code"""
+    aplfig.tick_labels.set_yformat('dd:mm')
+    aplfig.tick_labels.set_xformat('hh:mm')
+    aplfig.axis_labels.set_ypad(-5)
+    if invert:
+        aplfig.ticks.set_color('black')
 
 
 def ra2deg(h,m,s):
@@ -236,5 +271,6 @@ def ra2deg(h,m,s):
 if __name__ == '__main__':
     main('1', invert=False)
     main('1', invert=True)
-    #main('2', invert=True)
+    main('2', invert=False)
+    main('2', invert=True)
     #main('4')

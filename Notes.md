@@ -12598,7 +12598,13 @@ Code is unwieldy.  The usual mechanic is:
 * symlink "variant" filenames to ESAS-conventional names
 Created new task `select_images_for_mosaicking.sh` to help this.
 
-Next thing: create point source mask regions, then create nice figure.
+
+Friday 2017 January 13 - full FOV image with point sources
+==========================================================
+
+Create point source mask regions with `ascregion2ds9.py`.
+Then, twiddle and create new figures with exposure & background corrected
+images.
 
 
 Standing questions and TODOs
@@ -12610,16 +12616,17 @@ Possible actionables
   2. investigate other young remnants with comparable morphology.
 
 
-A few things I want to do:
+A few things I want to do (of middling/low priority...):
 [] code for sequential session fits (automate more work)
 [] code to log ionization timescale traversals...
 [] vpshock runs...
+    this really needs to be automated out
 
 [] we should consider the possibility of constraining Ar, Ca emission in
 the most ejecta-rich regions.
 But we need plots and fit parameters in place before entertaining this idea.
 [] CCO search?
-[] Nucleosynthesis comparison (important) - after constraint search
+[] Nucleosynthesis comparison (important) - after constraint search...
 
 [ ] Fix nH = 0.7 with Mg, Si, S free (can we have nH=0.7 and solar O, Ne, Fe?)
     [ ] Then, thaw nH=0.7 and see if better low absorption fit exists

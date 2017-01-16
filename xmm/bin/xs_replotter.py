@@ -35,7 +35,7 @@ def main():
     with open(config_file, 'r') as fh:
         for config in yaml.load_all(fh):
 
-            # Set some defaults
+            # Set "standard" plotting options
 
             # Show a legend?
             if 'legend' not in config:  # TODO this behavior may change
@@ -46,6 +46,12 @@ def main():
             # Set standardized pane sizes
             if 'height' not in config:
                 config['height'] = 1.75
+                if config['ms-single-column-plot']:
+                    config['height'] = 1.5
+            if 'delchi-height' not in config:
+                config['delchi-height'] = 1.5
+                if config['ms-single-column-plot']:
+                    config['delchi-height'] = 1.25
             if 'width' not in config:
                 config['width'] = 7.0
                 if config['ms-single-column-plot']:
@@ -57,14 +63,37 @@ def main():
             if 'legend-pane' not in config:
                 config['legend-pane'] = 0
 
+            # Set default configuration as needed
+            if 'xlim' not in config:
+                config['xlim'] = (0.3, 11.0)  # Span full fit range
+            if 'ylim' not in config:
+                config['ylim'] = (1e-4, 1.0)  # Good for small G309 regions
+            if 'delchi-ylim' not in config:
+                config['delchi-ylim'] = (-4, 4)
+
+            if 'cols' not in config:
+                config['cols'] = range(5, n_models + 5)
+            if 'colors' not in config:
+                config['colors'] = [None] * len(config['cols'])
+            if 'labels' not in config:
+                config['labels'] = [None] * len(config['cols'])
+            if 'linestyles' not in config:
+                config['linestyles'] = ['-'] * len(config['cols'])
+
             # Apply global defaults (cascading styles) for some parameters
             # but not all (e.g., 'name' and 'file' don't make sense to cascade)
             # TODO a more consistent behavior would be useful
             for par in ['cols', 'colors', 'labels', 'linestyles',
-                        'ylim', 'delchi-ylim']:
+                        'xlim', 'ylim', 'delchi-ylim']:
                 for pane in config['subplots']:
                     if par in config and par not in pane:
                         pane[par] = config[par]
+
+            # Convert strings such as "1e-3" to float
+            for pane in config['subplots']:
+                pane['xlim'] = map(float, pane['xlim'])
+                pane['ylim'] = map(float, pane['ylim'])
+                pane['delchi-ylim'] = map(float, pane['delchi-ylim'])
 
             main_plots(config)
             if opt_out:
@@ -93,7 +122,7 @@ def main_plots(config):
 
     # Plot data and models
     fig, axes = plt.subplots(n_panes, sharex=True,
-                             figsize=(config['width'], n_panes * config['height']))
+                             figsize=(config['width'], n_panes * config['delchi-height']))
     if n_panes == 1:
         axes = [axes]  # plt.subplots collapses unneeded dimensions
 
@@ -105,6 +134,13 @@ def main_plots(config):
 
         # Load XSPEC dumped data
         dat = np.loadtxt(pane['file'])
+        # First filter by x-axis range
+        x       = dat[:,0]
+        x_err   = dat[:,1]
+        x_idx = np.logical_and((x - x_err) > pane['xlim'][0],
+                               (x + x_err) < pane['xlim'][1])
+        dat = dat[x_idx]
+        # Now, get filtered data
         x       = dat[:,0]
         x_err   = dat[:,1]
         y       = dat[:,2]
@@ -120,21 +156,6 @@ def main_plots(config):
             for f_dat_ext in pane['file-ext']:
                 dat_ext = np.loadtxt(f_dat_ext)
                 dat = np.concatenate((dat, dat_ext[:,4:]), axis=1)
-
-        # Set default configuration as needed
-        if 'ylim' not in pane:
-            pane['ylim'] = (1e-4, 1.0)  # Good for small G309 regions
-
-        if 'cols' not in pane:
-            pane['cols'] = range(5, n_models + 5)
-        if 'colors' not in pane:
-            pane['colors'] = [None] * len(pane['cols'])
-        if 'labels' not in pane:
-            pane['labels'] = [None] * len(pane['cols'])
-        if 'linestyles' not in pane:
-            pane['linestyles'] = ['-'] * len(pane['cols'])
-
-        pane['ylim'] = map(float, pane['ylim'])
 
         assert len(pane['colors']) == len(pane['cols'])
         assert len(pane['labels']) == len(pane['cols'])
@@ -160,7 +181,7 @@ def main_plots(config):
                       linestyle=pane['linestyles'][col_idx])
 
         # Axis ticks, limits, labels
-        prep_xaxis(ax)
+        prep_xaxis(ax, *pane['xlim'])
         ax.set_yscale("log")
         ax.set_ylim(*pane['ylim'])
 
@@ -171,7 +192,7 @@ def main_plots(config):
         # Annotation text
         if 'name' in pane:
             if config['ms-single-column-plot']:
-                ax.text(0.05, 0.93, pane['name'], ha='left', va='top',
+                ax.text(0.04, 0.93, pane['name'], ha='left', va='top',
                         transform=ax.transAxes, fontsize=9)
             else:
                 ax.text(0.02, 0.93, pane['name'], ha='left', va='top',
@@ -208,7 +229,8 @@ def residual_plots(config):
     n_panes = len(config['subplots'])
 
     # Almost copy-pasted code, but not cleanly refactorable
-    fig, axes = plt.subplots(n_panes, sharex=True, figsize=(6.5, n_panes*1.5))
+    fig, axes = plt.subplots(n_panes, sharex=True,
+                             figsize=(config['width'], n_panes * config['height']))
     if n_panes == 1:
         axes = [axes]  # plt.subplots collapses unneeded dimensions
 
@@ -217,13 +239,15 @@ def residual_plots(config):
         # Load configuration for individual panel
         pane = config['subplots'][n]
 
-        # Set default configuration as needed
-        if 'delchi-ylim' not in pane:
-            pane['delchi-ylim'] = (-4, 4)
-        pane['delchi-ylim'] = map(float, pane['delchi-ylim'])
-
         # Load XSPEC dumped data
         dat = np.loadtxt(pane['file'])
+        # First filter by x-axis range
+        x       = dat[:,0]
+        x_err   = dat[:,1]
+        x_idx = np.logical_and((x - x_err) > pane['xlim'][0],
+                               (x + x_err) < pane['xlim'][1])
+        dat = dat[x_idx]
+        # Now, get filtered data
         x       = dat[:,0]
         x_err   = dat[:,1]
         y       = dat[:,2]
@@ -235,13 +259,13 @@ def residual_plots(config):
         ax.errorbar(x, (y - model_sum)/y_err,
                     xerr=x_err, yerr=(y_err / y_err),
                     capsize=0, ls='none', elinewidth=0.6,
-                    color='#377eb8', alpha=1, zorder=9)
+                    color='#377eb8', alpha=0.75, zorder=9)
         # TODO ensure elinewidth=0.5 is still readable in manuscript fmt
 
         ax.axhline(y=0, color='k')
 
         # Axis ticks, limits, labels
-        prep_xaxis(ax)
+        prep_xaxis(ax, *pane['xlim'])
         ax.set_ylim(*pane['delchi-ylim'])
 
         if ax is axes[-1]:
@@ -250,8 +274,12 @@ def residual_plots(config):
 
         # Annotation text
         if 'name' in pane:
-            ax.text(0.015, 0.92, pane['name'], ha='left', va='top',
-                    transform=ax.transAxes)
+            if config['ms-single-column-plot']:
+                ax.text(0.04, 0.93, pane['name'], ha='left', va='top',
+                        transform=ax.transAxes, fontsize=9)
+            else:
+                ax.text(0.02, 0.93, pane['name'], ha='left', va='top',
+                        transform=ax.transAxes, fontsize=10)
 
         # Check if data are hidden by plotting limits
         print "{} delchi range: [{:.2g}, {:.2g}]".format(
@@ -264,11 +292,20 @@ def residual_plots(config):
     return fig
 
 
-def prep_xaxis(ax):
+def prep_xaxis(ax, xmin, xmax):
     """Set up x-axis range and ticks"""
+
+    # Enforce arbitrary range for plot limits to simplify tick plotting
+    assert xmin >= 0.1
+    assert xmax <= 20
+
     ax.set_xscale("log")
-    ax.set_xlim(0.3, 11.0)  # WARNING: hard-coded X-axis limits and ticks
-    ax.set_xticks([0.5, 1, 2, 5, 10])
+    ax.set_xlim(xmin, xmax)  # WARNING: hard-coded X-axis limits and ticks
+
+    xtickpos = np.array([0.1, 0.2, 0.5, 1, 2, 5, 10, 20])
+    xtickpos = xtickpos[ np.logical_and(xtickpos >= xmin, xtickpos <= xmax) ]
+
+    ax.set_xticks(xtickpos)
     ax.xaxis.set_major_formatter(mpl.ticker.StrMethodFormatter('{x:g}'))
     #ax.set_xticks([0.1, 1, 10])
     #ax.set_xticklabels(['0.1', '1', '10'])

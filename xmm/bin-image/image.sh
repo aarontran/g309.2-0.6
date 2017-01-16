@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 # Configuration: only strings "0", "1" allowed
 # -----------------------------------------------------------------------------
-USE_MASKED_IMAGES="0"
+USE_MASKED_IMAGES="1"
 WITH_EQWIDTH="0"
 
 CALDB="${XMM_PATH}/caldb"
@@ -15,16 +15,16 @@ if [[ $USE_MASKED_IMAGES == "1" ]]; then
 
   # Must have been created in specbackprot_image already
   # Must be formatted in ESAS manner (no leading zeros, no 'E' notation)
-  PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
-  PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
-  BINNING_COMBO=("4" "8" "16" "8" "16")
-  SMOOTH_COMBO=( "4" "2"  "1" "4"  "2")
+#  PI_MINS=( "800" "1300" "1800" "2400" "1150" "1600" "1980" "2600")
+#  PI_MAXS=("3300" "1400" "1900" "2500" "1250" "1650" "2050" "2700")
+#  BINNING_COMBO=("4" "8" "16" "8" "16")
+#  SMOOTH_COMBO=( "4" "2"  "1" "4"  "2")
 
   # Use less aggressive bin/smooth for 800-3300 keV image ONLY (~4x, ~8x factors)
-  #PI_MINS=( "800")
-  #PI_MAXS=("3300")
-  #BINNING_COMBO=("4" "4" "2"    "8" "8" "4")
-  #SMOOTH_COMBO=( "0" "1" "2"    "0" "1" "2")
+  PI_MINS=( "800")
+  PI_MAXS=("3300")
+  BINNING_COMBO=("0"   "2" "0" "2"   "4" "4" "2"    "8" "8" "4")
+  SMOOTH_COMBO=( "0"   "0" "2" "1"   "0" "1" "2"    "0" "1" "2")
 else
   # ESAS tasks must run in directory with formatted dir.dat file.
   cd "${XMM_PATH}/repro_merged_no_holes"
@@ -51,19 +51,19 @@ for ((i=0;i<${#PI_MINS[@]};++i)); do
   # i = 3: QPB counts,
   # i = 4: SP counts,
   # i = 5: SWCX counts (skipping)
-  for ((j=1;j<=4;++j)); do
-    # coord = 2: equatorial coordinates
-    # crvaln1,2: center of coordinate projection (use 0087940201 values)
-    # pixelsize=0.04166666667 arcmin/px = 2.5 arcsec/px
-    # (matches output scaling from ESAS {mos,pn}-spectra sky images)
-    echo "  merge_comp_xmm component=${j} ..."
+#  for ((j=1;j<=4;++j)); do
+#    # coord = 2: equatorial coordinates
+#    # crvaln1,2: center of coordinate projection (use 0087940201 values)
+#    # pixelsize=0.04166666667 arcmin/px = 2.5 arcsec/px
+#    # (matches output scaling from ESAS {mos,pn}-spectra sky images)
+#    echo "  merge_comp_xmm component=${j} ..."
 #    merge_comp_xmm caldb=${CALDB} dirfile=dir.dat \
 #        coord=2 crvaln1=206.704208333333 crvaln2=-62.84125 \
 #        pixelsize=0.04166666667 component=${j} \
 #        elow=${elow} ehigh=${ehigh} maskcontrol=0 \
 #        xdim=1000 ydim=1000 clobber=1 \
 #      &> "merge_comp_xmm_${elow}-${ehigh}_component-${j}.log"
-  done
+#  done
 
   # Fill source holes in counts images, immediately after merge_comp_xmm
   # MUST be run immediately after merge_comp_xmm...

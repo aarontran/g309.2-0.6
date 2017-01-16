@@ -1,0 +1,94 @@
+--- # Sub regions, 0087940201 MOS
+subplots:
+
+- file: 'results_spec/20161222_ridge_nw_spec_01.dat'
+  name: 'Ridge NW'
+  ylim: ['2e-3', '0.5']
+
+- file: 'results_spec/20161222_ridge_se_spec_01.dat'
+  name: 'Ridge SE'
+  ylim: ['2e-3', '0.5']
+
+- file: 'results_spec/20161222_lobe_ne_spec_01.dat'
+  name: 'Lobe NE'
+  ylim: ['2e-3', '0.5']
+
+- file: 'results_spec/20161222_lobe_sw_spec_01.dat'
+  name: 'Lobe SW'
+  ylim: ['2e-3', '0.5']
+
+- file: 'results_spec/20161222_core_spec_01.dat'
+  name: 'Core'
+  ylim: ['2e-3', '0.5']
+
+legend: False
+ms-single-column-plot: True
+xlim: [0.5, 5.0]
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+delchi-ylim: ['-5', '5']
+out: 'results_figs/fig_subregions_0087940201-mos'
+--- # Sub regions, 0087940201 PN
+subplots:
+
+- file: 'results_spec/20161222_ridge_nw_spec_02.dat'
+  name: 'Ridge NW'
+  ylim: ['2e-3', '1.1']
+
+- file: 'results_spec/20161222_ridge_se_spec_02.dat'
+  name: 'Ridge SE'
+  ylim: ['2e-3', '1.1']
+
+- file: 'results_spec/20161222_lobe_ne_spec_02.dat'
+  name: 'Lobe NE'
+  ylim: ['2e-3', '1.1']
+
+- file: 'results_spec/20161222_lobe_sw_spec_02.dat'
+  name: 'Lobe SW'
+  ylim: ['2e-3', '1.1']
+
+- file: 'results_spec/20161222_core_spec_02.dat'
+  name: 'Core'
+  ylim: ['2e-3', '1.1']
+
+legend: False
+ms-single-column-plot: True
+xlim: [0.5, 5.0]
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+delchi-ylim: ['-5', '5']
+out: 'results_figs/fig_subregions_0087940201-pn'
+--- # Sub regions, 0551000201 MOS
+subplots:
+
+- file: 'results_spec/20161222_ridge_nw_spec_03.dat'
+  name: 'Ridge NW'
+  ylim: ['2e-3', '0.5']
+
+- file: 'results_spec/20161222_ridge_se_spec_03.dat'
+  name: 'Ridge SE'
+  ylim: ['2e-3', '0.5']
+
+# Undersampled due to missing chip
+- file: 'results_spec/20161222_lobe_ne_spec_03.dat'
+  name: 'Lobe NE'
+  ylim: ['5e-4', '0.1']
+
+- file: 'results_spec/20161222_lobe_sw_spec_03.dat'
+  name: 'Lobe SW'
+  ylim: ['2e-3', '0.5']
+
+- file: 'results_spec/20161222_core_spec_03.dat'
+  name: 'Core'
+  ylim: ['2e-3', '0.5']
+
+legend: False
+ms-single-column-plot: True
+xlim: [0.5, 5.0]
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+delchi-ylim: ['-5', '5']
+out: 'results_figs/fig_subregions_0551000201-mos'
