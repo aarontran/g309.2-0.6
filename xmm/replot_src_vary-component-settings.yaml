@@ -39,7 +39,7 @@ subplots:
              'results_spec/20161028_src_bkg_mg-si-s_tau-5e13_MANUAL_spec_02.dat']
   name: '0087940201 PN'
   cols: [7, 9, 12, 24, 27]
-  ylim: ['1e-2', '3.0']
+  ylim: ['3e-2', '3.0']
 
 - file: 'results_spec/20161015_src_bkg_mg_spec_03.dat'
   file-ext: ['results_spec/20161028_src_bkg_o-ne-mg-si-s-fe_nH-0.7_NOERR_spec_03.dat',
@@ -56,6 +56,10 @@ labels: ['',
          '$n_{\mathrm{H}} = 0.7 \times 10^{22} \;\mathrm{cm^{-2}}$ (G)', '',
          '$\tau = 5 \times 10^{13} \;\mathrm{s\;cm^{-3}}$ (H)', '']
 #legend-pane: 2
-ylim: ['1e-3', '2.0']
+ylim: ['1e-2', '2.0']
 out: '../ms/fig/fig_src_bkg_tau-5e13_nH-0d7_allexp'
 # LaTeX does not like filenames with extra periods
+
+# Focus only on region of interest (thermal SNR emission...)
+xlim: [0.5, 7.0]
+xtick-label-pos: [0.5, 1, 2, 5, 7]

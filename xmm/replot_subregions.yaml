@@ -23,12 +23,15 @@ subplots:
 
 legend: False
 ms-single-column-plot: True
-xlim: [0.5, 5.0]
+width: 4
+xlim: [0.5, 8.0]
+xtick-label-pos: [0.5, 1, 2, 5, 8]
 cols: [5, 6, 7, 8]
 labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
 colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+linestyles: ['-', '-.', '-', ':']
 delchi-ylim: ['-5', '5']
-out: 'results_figs/fig_subregions_0087940201-mos'
+out: '../ms/fig/fig_subregions_0087940201-mos'
 --- # Sub regions, 0087940201 PN
 subplots:
 
@@ -54,12 +57,15 @@ subplots:
 
 legend: False
 ms-single-column-plot: True
-xlim: [0.5, 5.0]
+width: 4
+xlim: [0.5, 8.0]
+xtick-label-pos: [0.5, 1, 2, 5, 8]
 cols: [5, 6, 7, 8]
 labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
 colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+linestyles: ['-', '-.', '-', ':']
 delchi-ylim: ['-5', '5']
-out: 'results_figs/fig_subregions_0087940201-pn'
+out: '../ms/fig/fig_subregions_0087940201-pn'
 --- # Sub regions, 0551000201 MOS
 subplots:
 
@@ -86,9 +92,12 @@ subplots:
 
 legend: False
 ms-single-column-plot: True
-xlim: [0.5, 5.0]
+width: 4
+xlim: [0.5, 8.0]
+xtick-label-pos: [0.5, 1, 2, 5, 8]
 cols: [5, 6, 7, 8]
 labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
 colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+linestyles: ['-', '-.', '-', ':']
 delchi-ylim: ['-5', '5']
-out: 'results_figs/fig_subregions_0551000201-mos'
+out: '../ms/fig/fig_subregions_0551000201-mos'

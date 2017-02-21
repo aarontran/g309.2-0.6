@@ -83,7 +83,8 @@ ds9 -view layout vertical \
     -scale limits 0 $ew_max \
   -frame 30 \
     -scale limits 0 $ew_max \
-    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes \
-  -regions load all "../regs/bar.reg" \
-  -regions load all "../regs/ridge.reg" \
-  -regions load all "../regs/lobe.reg"
+    -contour load "../../most/G309.2-0.6_log_sparse.con" wcs fk5 green 1 yes
+
+#  -regions load all "../regs/bar.reg" \
+#  -regions load all "../regs/ridge.reg" \
+#  -regions load all "../regs/lobe.reg"

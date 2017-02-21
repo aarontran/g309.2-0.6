@@ -3,7 +3,7 @@ subplots:
 
 - file: 'results_spec/20161015_src_bkg_mg_spec_01.dat'
   name: 'Source (0--400\mbox{$^{\prime\prime}$}), 0087940201 MOS'
-  ylim: ['1e-3', '3.0']
+  ylim: ['3e-3', '2.0']
 
 - file: 'results_spec/20161015_src_bkg_mg_spec_02.dat'
   name: '0087940201 PN'
@@ -11,11 +11,12 @@ subplots:
 
 - file: 'results_spec/20161015_src_bkg_mg_spec_03.dat'
   name: '0551000201 MOS'
-  ylim: ['1e-3', '3.0']
+  ylim: ['3e-3', '2.0']
 
 cols: [5, 6, 7, 8]
 labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
 colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
 linestyles: ['-', '-.', '-', ':']
 delchi-ylim: ['-5', '5']
+legend-pane: 2
 out: '../ms/fig/fig_src_bkg_allexps-src-only'

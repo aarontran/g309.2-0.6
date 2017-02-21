@@ -12607,6 +12607,30 @@ Then, twiddle and create new figures with exposure & background corrected
 images.
 
 
+Monday-Thursday 2017 January 16-19 - write and cleanup
+======================================================
+
+Updated to AASTeX 6.1.  Tables are more spacious, which I dislike, but it's
+no longer necessary to add extra space for sub- and super-scripts.
+So that is handy.
+Compared to my booktabs setup, the deluxetable layout has slightly improved
+spacing in the context of the new spacious layout.
+
+Setup equivalent width images and more tweaks, improvements to spectrum plots.
+
+Comment: figure colors show differently when embedded in PDF.
+
+Next plan: redo more fits...
+From toying around: yes, can get good fit for Ar in core region.
+Can also get good fit to Ar in other regions (lobe NE) -- there is curious
+tension because MOS data appear to support line wrt. model whereas PN
+disfavors line.
+Also, background subtraction should be considered. (ed. what did I mean when I wrote this?!)
+
+OK good amount of work to clean up since January 13 (mostly writing, reading,
+digging a little further).
+
+
 Standing questions and TODOs
 ============================
 

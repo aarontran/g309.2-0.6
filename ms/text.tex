@@ -1,4 +1,5 @@
-\documentclass[preprint2,tighten,trackchanges]{aastex6}
+\documentclass[twocolumn,tighten,trackchanges]{aastex61}
+%\documentclass[twocolumn,tighten,linenumbers,trackchanges]{aastex61}
 %\documentclass[iop, tighten, apj, numberedappendix]{emulateapj} % Still more compact than aastex
 
 % Customize figures/sizing for 2 column vs. manuscript printout
@@ -7,15 +8,15 @@
 %%\toggletrue{manuscript}  % Set TRUE if using manuscript / 1-col layout
 %%%\togglefalse{manuscript}  % Set FALSE if using 2-col layout
 
-\shorttitle{G309 (\today)}  % <~ 44 char
+\shorttitle{G309.2$-$0.6 (\today)}  % <~ 44 char
 \shortauthors{Alpha, Beta (\today)}  % Max three
-\slugcomment{Draft, \today}
+%\slugcomment{Draft, \today}
 
 % Packages and commands
 \usepackage{amsmath}  % Included in aastex - but want to get eqref
 \usepackage{booktabs}
 \usepackage{hyperref}
-\usepackage[normalem]{ulem}  % Just to get strikeout text
+%\usepackage[normalem]{ulem}  % Just to get strikeout text
 
 % My "standard" TeX aliases
 \newcommand*{\mt}{\mathrm}
@@ -38,9 +39,26 @@
 \defcitealias{rakowski2001}{RHS01}
 \defcitealias{gaensler1998-g309}{GGM98}
 
+\newcommand*{\Gsnr}{G309.2$-$0.6}
+
+% How to format G309.2-0.6?  Three options:
+% 1. G309.2-0.6 (regular hyphen/dash)
+% 2. G309.2--0.6 (en dash)
+% 3. G309.2$-$0.6 (minus in isolation)
+% 4. $G309.2-0.6$ (minus as binary operator)
+% After inspecting these, I believe the right way is to use the minus sign in
+% isolation (which makes sense).  This appears to match the typesetting for
+% Gaenser+ 1998 (MNRAS), Rakowski+ 2001 (ApJ), and Safi-Harb+ 2006 (ApJ).
+% This makes sense semantically as well.
+
+% DELUXETABLE ADJUSTMENTS
+% -----------------------
+%\setlength\doublerulesep{0.5pt}  % Default: 1.5pt in aastex61.cls
+%\setlength{\tabcolsep}{0pt}
+
 \begin{document}
 
-\title{Spatially Resolved Ejecta in G309.2-0.6}
+\title{Spatially Resolved Ejecta in \Gsnr{}}
 
 % Not quite in line with recommended aastex style
 \author{
@@ -58,13 +76,13 @@ Smithsonian Astrophysical Observatory, 60 Garden Street MS-70, Cambridge, MA 021
 
 
 \begin{abstract}
-We image and fit spectra of ejecta-dominated remnant G309.2-0.6 from archival
+We image and fit spectra of ejecta-dominated remnant \Gsnr{} from archival
 XMM-Newton data.
 \end{abstract}
 
 % (!) no longer used by AAS as of late February, 2016
 \keywords{ISM: supernova remnants ---
-    ISM: individual objects (SNR G309.2-0.6) ---
+    ISM: individual objects (SNR \Gsnr{}) ---
     X-rays: ISM
 }
 
@@ -82,12 +100,12 @@ In some cases, yes:
     \item Ni/Fe and Mn/Fe ratios in 3C397 \citep{yamaguchi2015}
     \item Fe K line centroid energies \citep{yamaguchi2014-iron, patnaude2015}
 \end{itemize}
-Most individual remnant studies attempt to guess out the progenitor SN type
+individual remnant studies attempt to guess out the progenitor SN type
 from ejecta abundances and other pieces of information.
-Alternatively, \citet{chevalier2005} attempts to type SNe from SNR CSM
-emission.
+%Alternatively, \citet{chevalier2005} attempts to type SNe from SNR CSM
+%emission.
 Optical studies of CSM knots are possible (see references in
-\citet{katsuda2015}).
+\citet{katsuda2015} -- and MANY earlier papers stretching back to 1970s).
 
 Badenes+ 2007: Table 4, ionization timescales of Si/S vs. Fe in young Ia remnants.
 Appendix is also sort of helpful.
@@ -118,47 +136,56 @@ This is basically the approach of \citet{hughes1995}, \citet{badenes2003},
 Some models show observable differences in line ratios, elemental abundances
 and the like.  Others are less clear.
 
-We present a spatially resolved X-ray image and CCD-resolution spectra of
-G309.2-0.6 based on two archived XMM-Newton observations totalling
-$98 \unit{ks}$, with about half usable after flare removal.
+We present new spatially resolved X-ray images and CCD-resolution spectra of
+\Gsnr{} based on archived XMM-Newton observations totalling $98 \unit{ks}$, with
+about half usable after flare removal.
 
 We fit the CCD spectra of morphologically distinct regions of the remnant to
 trace variation in ejecta abundances, plasma temperature, and ionization
 states.
+\textbf{And, what else? TODO: fill in once paper is fleshed out.}
 
+%TODO crude text
 Individual object study to build information for more ambitious global studies
 of remnant properties and interaction with the ISM -- not undertaken here.
 Just one piece of a puzzle.
 
-\subsection{Previous observations of G309.2-0.6}
+\subsection{Previous observations of \Gsnr{}}
 
 \begin{figure*}[]
     \plotone{fig/fig_snr_xmm_most_invert.pdf}
-    %\caption{Broadband 0.8--3.3 keV image of SNR G309.2-0.6.}
-    % figcaption is an aastex alias -- cannot use with emulateapj
-    \figcaption{Left: XMM broadband 0.8--3.3 keV image of SNR G309.2-0.6,
-        smoothed and log scaled with $1.4 \unit{GHz}$ radio contours
-        (0.01, 0.03, 0.1, 0.3 Jy).
-        Right: $1.4 \unit{GHz}$ image, arcsinh scaled, from the Molonglo
-        Observatory Synthesis Telescope (MOST) Supernova Remnant Catalogue
-        \citep{whiteoak1996}.  Resolution: $\abt 43\arcsec$, sensitivity $2
-        \unit{mJy/beam}$.}
+    \figcaption{
+        Left: $1.4 \unit{GHz}$ arcsinh scaled image of SNR \Gsnr{} from the
+        Molonglo Observatory Synthesis Telescope (MOST) Supernova Remnant
+        Catalogue \citep{whiteoak1996}.
+        Lower-left ellipse shows $43\arcsec$ beam;
+        sensitivity is $2 \unit{mJy/beam}$.
+        Right: $0.8$--$3.3 \unit{keV}$ XMM-Newton mosaic image of SNR \Gsnr{}
+        with logarithmic color scaling and MOST $1.4 \unit{GHz}$ contours
+        (0.01, 0.03, 0.1, 0.3 Jy/beam) overlaid.
+%        Image is exposure- and background-corrected, binned to 2.5\arcsec
+%        pixels, and smoothed by a 2 pixel Gaussian; individual exposures were
+%        scaled to MOS2 medium filter response.
+        % TODO: colorbars...
+    }
     \label{fig:snr}
 \end{figure*}
 
 % Radio remnant observations and morphology
-\objectname{SNR G309.2-0.6} (J2000 RA 13h46m30s, dec. $-62\arcdeg 54\arcmin 00\arcsec$) was
+\objectname{SNR \Gsnr{}} was
+%(J2000 RA 13h46m30s, dec. $-62\arcdeg 54\arcmin 00\arcsec$)  % No need to give
+% coordinates -- evident from figures, old publications, and online catalogs.
 discovered in Molonglo $408 \unit{MHz}$ and Parkes $5000 \unit{MHz}$ surveys
 \citep{day1969, clark1973, green1974, clark1975} and has since been observed
 multiple times by southern radio telescopes \citep{caswell1981, kesteven1987,
 whiteoak1996}.
 % Day, Thomas, Goss (1969 Au. J. Phys. Astrophys. Suppl.)
-% flagged G309.2-0.6 as a complex source, but did not identify it as a remnant
+% flagged \Gsnr{} as a complex source, but did not identify it as a remnant
 % or explore further.  Molongo/Parkes surveys may have occurred at the same
 % time.  And, yes, it is confused (at the edge) with RCW 80.
-\citet{gaensler1998-g309} (hereafter, \citetalias{gaensler1998-g309}) performed the most
-comprehensive radio study to date with Australia Telescope Compact Array (ATCA)
-$1.344 \unit{GHz}$ continuum and $1.420 \unit{GHz}$ HI observations at angular
+\citet{gaensler1998-g309} (hereafter, \citetalias{gaensler1998-g309}) performed a
+comprehensive radio study with Australia Telescope Compact Array (ATCA)
+$1.344 \unit{GHz}$ continuum and $1.420 \unit{GHz}$ \ion{H}{1} observations at angular
 resolution $24\arcsec$.
 The radio remnant is a circular shell with two bright lobes to the NE and SW,
 hereafter referred to as ``ears'' (Fig \ref{fig:snr}).
@@ -172,7 +199,7 @@ hereafter referred to as ``ears'' (Fig \ref{fig:snr}).
 %confusion of source flux with RCW80; a shallower index $0.36 \pm 0.11$ is
 %obtained if single dish measurements (with authors' attempted corrections for
 %source confusion) are included.
-HI absorption favors remnant distance between $5$--$14 \unit{kpc}$ based on
+\ion{H}{1} absorption favors remnant distance between $5$--$14 \unit{kpc}$ based on
 absorption to the galactic rotation curve's tangent point,
 $v_{\mt{LSR}} \sim -50 \unit{km/s}$, and the absence of absorption above
 $v_{\mt{LSR}} \sim +40 \unit{km/s}$ \citepalias{gaensler1998-g309}.
@@ -194,18 +221,17 @@ A faint X-ray arc on the remnant's northeast limb coincides with the radio
 shell's limb and is most apparent in our $0.8$--$1.4 \unit{keV}$ band image.
 
 % Other wavelengths
-The field of G309.2-0.6 has been surveyed in many wavelengths.
-No obvious H$\alpha$, [S II], or [O III] filaments appear in 3x 400 s exposures
-taken with the 0.6 m Curtis-Schmidt telescope at Cerro Tololo Inter-American
-Observatory in 2001 January (PI: P. F. Winkler; observers: Gokas, Smith,
-Winkler).
+The field of \Gsnr{} has been surveyed in many wavelengths.
+No obvious H$\alpha$, [\ion{S}{2}], or [\ion{O}{3}] emission is seen in three
+400 second exposures taken with the $0.6 \unit{m}$ Curtis-Schmidt telescope at
+Cerro Tololo Inter-American Observatory in 2001 January
+(PI: P. F. Winkler; observers: Gokas, Smith, Winkler).\footnote{\url{http://sites.middlebury.edu/snratlas/g309-2-0-6/}}
 % I think it's this proposal (but not sure)
 % NOAO proposal 2001A-0331
 % http://adsabs.harvard.edu/abs/2001noao.prop..331W
 % http://www.noao.edu/dir/q_rep/Q2_Apr_30/FY2001%20Q2%20Jan-Mar%20NOAO%20Quarterly%20Report.pdf
 % Some H-alpha emission associated with foreground cluster;
 % field is dominated by RCW 80 to northeast.
-\footnote{\url{http://sites.middlebury.edu/snratlas/g309-2-0-6/}}
 No $1720.5 \unit{MHz}$ OH maser emission is observed above $40 \unit{mJy}$
 \citep{green1997}.
 % Mopra CO survey - no public data yet, in works...
@@ -213,7 +239,7 @@ No obvious infrared emission appears in Spitzer
 $3.6$--$8 \unit{{\mu}m}$ IRAC GLIMPSE or $24 \unit{{\mu}m}$ MIPSGAL mosaics
 \citep{churchwell2009, carey2009}.
 Dust emission at $100 \unit{{\mu}m}$ (IRAS/ISSA, COBE/DIRBE) shows a
-gradient across the remnant, although association with G309 is unknown.
+gradient across the remnant, although association with G309 is unknown.  %TODO clarify this
 % Interpretation:
 % J,H,Ks bands = 1.2, 1.6, 2.2 micron (2MASS) -- cool stars
 % 3.6--8 micron (Spitzer) -- cool stars
@@ -226,16 +252,11 @@ HESS \citep{bochow2011}.
 The absence of H$\alpha$ and infrared emission is consistent with previous
 data reviewed by \citetalias{gaensler1998-g309}.
 
-
-\subsection{Environment}
-
 % HD 119682 - previous interest and subsequent disassociation
-A bright ROSAT source (1WGA J1346.5--6255) within G309.2-0.6 is the foreground
-Be star HD 119682.
-The source's position within a bilobed radio remnant led
-\citetalias{gaensler1998-g309} and \citetalias{rakowski2001} to suggest that
-G309.2-0.6 might be a jet- or outflow-driven remnant, similar to the SS 443 /
-W50 system.
+The bright X-ray source (1WGA J1346.5$-$6255) within \Gsnr{} is identified with
+HD 119682, a member of the X-ray emitting class of $\gamma$ Cas stars.  % TODO WORDING HERE
+\citetalias{gaensler1998-g309} and \citetalias{rakowski2001} suggested that
+\Gsnr{} could be a jet- or outflow-driven remnant like the SS 443 / W50 system.
 % bilobed beats bilobate on Google by 278 to 66 (cf. Google ngrams)
 But, HD 119682 is likely a member of the open cluster NGC 5281 at a distance
 $\abt 1.4 \unit{kpc}$, based on X-ray and optical astrometry, cluster proper
@@ -246,27 +267,18 @@ torrejon2013}.
 % \citep{rakowski2006-star, safi-harb2007, torrejon2013}.
 
 % Gum 48d / RCW 80
-The H II region Gum 48d (RCW 80), north of G309.2-0.6, is well traced in HI,
-polycyclic aromatic hydrocarbon (PAH), and warm dust emission
+North of \Gsnr{}, the \ion{H}{2} region Gum 48d (RCW 80) is well traced in
+\ion{H}{1}, polycyclic aromatic hydrocarbon (PAH), and warm dust emission
 \citep{karr2009}.
+% TODO TODO
+\textbf{TODO this H II region is not shown in our image - may not need to
+discuss}
 The distance to Gum 48d is $\abt 3.5\unit{kpc}$ based on ionized gas emission
 velocities measured from the central star system HR 5171 \citep{karr2009}.
 Given this distance, and the absence of evidence for interaction with G309,
-we assume that Gum 48d also lies in the foreground of G309.2-0.6.
-We also ignore the north-south wisp of radio emission that visually joins the
-radio remnant and H II region in Figure~\ref{fig:snr}.
-
-% Centaurus CO cloud -- push this to discussion...
-\citet{saito2001} imaged
-an extensive molecular CO complex in ${}^{12}$CO, ${}^{13}$CO, and C${}^{18}$O
-J=(1-0) transitions at $v_\mt{LSR} = -64$ to $-36 \unit{km/s}$.
-\textbf{TODO} this would need some CO to ISM density conversion estimate so
-that we could estimate a density gradient across the remnant, if it were
-associated with this cloud (which we think it is not).
-For this see Bolatto, Wolfire and Leroy (2013).
-It is clear that remnants expanding into a density gradient need not look that
-asymmetric \citep{hnatyk1999, williams2013}, so \textbf{this is speculative and may be
-outright wrong}.
+we assume that Gum 48d also lies in the foreground of \Gsnr{}.
+We also ignore the radio wisp above the remnant in Figure~\ref{fig:snr},
+which \citet{whiteoak1996} claim to be thermal
 
 % Here's a lovely optical photograph, clearly showing the bright H II region and
 % the bluer star cluster NGC 5281 to the south:
@@ -283,53 +295,65 @@ outright wrong}.
 
 % Summary / wrap-up
 Here, we extend the radio and X-ray studies of \citetalias{gaensler1998-g309} and
-\citetalias{rakowski2001} with archived XMM-Newton observations that spatially
-resolve the X-ray morphology of G309.2-0.6.
-We confirm the previous
+\citetalias{rakowski2001} with archived XMM-Newton observations that resolve
+the soft X-ray morphology of \Gsnr{}.
+%We confirm the previous
 
 
-\begin{table*}
-    \centering
-    \caption{XMM Observations of G309.2-0.6\label{tab:obs}}
-    \input{tab-observations.tex}
-    \tablecomments{Durations in kiloseconds (ks).
-    Good duration $t_{\mt{live}}$ is central CCD live time after flare
-    filtering; MOS value averages MOS1 and MOS2 times ($\sim 0.6 \unit{ks}$
-    difference in both obsids).
-    Rev. is XMM-Newton orbit (revolution) number.}
-\end{table*}
+%\begin{table*}
+%    \centering
+%    \caption{XMM Observations of \Gsnr{}\label{tab:obs2}}
+%    \input{tab-observations.tex}
+%    \tablecomments{Durations in kiloseconds (ks).
+%    Good duration $t_{\mt{live}}$ is central CCD live time after flare
+%    filtering; MOS value averages MOS1 and MOS2 times ($\sim 0.6 \unit{ks}$
+%    difference in both obsids).
+%    Rev. is XMM-Newton orbit (revolution) number.}
+%\end{table*}
+
+%\begin{deluxetable*}{@{}lrrrlrlr@{}}
+%    \tablecaption{XMM Observations of \Gsnr{}\label{tab:obs}}
+%    \tablehead{
+%        \colhead{Obs.~ID} & \colhead{Dur.} &
+%        \colhead{$t_{\mt{\,live},\,\mt{MOS}}$} &
+%        \colhead{$t_{\mt{\,live},\,\mt{PN}}$} &
+%        \colhead{Date} & \colhead{Rev.} & \colhead{Filter} & \colhead{PI}
+%    }
+%    \startdata
+%        0087940201 & $40.5$ & $25.3$ & $18.1$ & 2001 August 28 & 315 & Thick & Hughes \\
+%        0551000201 & $57.3$ & $22.1$ &  $9.0$ & 2009 March 6--7 & 1692 & Medium & Motch \\
+%    \enddata
+%    \tablecomments{Durations in kiloseconds (ks).
+%    Good duration $t_{\mt{live}}$ is central CCD live time after flare
+%    filtering; MOS value averages MOS1 and MOS2 times ($\abt0.6 \unit{ks}$
+%    difference in both obsids).
+%    Rev.~is XMM-Newton orbit (revolution) number.}
+%    % TODO: only when I have nothing better to do, play with new deluxe tables
+%    % functionality for column alignment.
+%\end{deluxetable*}
 
 % =============================================================================
 % Observations + Reduction
 % =============================================================================
 \section{Observations and Data Reduction} \label{sec:obs}
 
-XMM-Newton has observed G309.2-0.6 for $97.7 \unit{ks}$ in two pointings
-(Table~\ref{tab:obs}).
-%The 2009 observation targeted the Be star HD 119682, but also captured
-%G309.2-0.6 on the MOS1/2 and PN detectors.
-After background flare filtering, our good exposure times are $47 \unit{ks}$
-for MOS1/2 and $27 \unit{ks}$ for PN.
-% CCD exclusions
-In obs. ID 0551000201, we further excluded two MOS CCDs and the entire PN
-exposure from our spectral analysis.
-MOS1 CCD6 was disabled by a presumed micrometeorite in 2005, and MOS2 CCD5
-shows anomalously high soft X-ray background noise \citep[cf.][]{kuntz2008}.
-The PN in Large Window mode does not collect corner counts, so we cannot
-estimate the detector background consistently using ESAS tasks.
-Omitting the $9 \unit{ks}$ PN exposure only sacrifices $\abt 10--20\%$ of our
-available photons, as the exposure was heavily flare contaminated.
-
-% More verbose version
-%XMM-Newton has observed G309.2-0.6 for $97.73 \unit{ks}$ in two pointings.
-%Obsid 0087940201 (PI J. P. Hughes) was $40.46 \unit{ks}$ on 2001 August 28
-%with MOS1/2 in Full Frame mode, PN in Extended Full Frame mode, and XMM's
-%``thick'' optical filter.
-%Obsid 0551000201 (PI C. Motch) was $57.27 \unit{ks}$ on 2009 March 6--7
-%with MOS1/2 in Full Frame mode, PN in Large Window mode, and XMM's ``medium''
-%optical filter.
-%The Motch pointing targeted the foreground Be star HD 119682, but also
-%captured G309.2-0.6 on the MOS1/2 and PN detectors.
+% Accompanies spectrum extraction AND fitting text
+\begin{figure*}[!ht]
+    \epsscale{1.15}
+    \plotone{fig/fig_snr_fullfov_invert.pdf}
+    \figcaption{
+        Left: $0.8$--$3.3 \unit{keV}$ image of SNR \Gsnr{} with detected point
+        sources (green) and $400\arcsec$ radius source (magenta) and
+        $510\arcsec$--$700\arcsec$ radius background (cyan) extraction regions.
+        Right: same image, with point sources replaced by interpolated counts
+        as described in text.
+        Image is exposure- and background-corrected, binned to 2.5\arcsec
+        pixels, and smoothed by a 2 pixel Gaussian; individual exposures were
+        scaled to a MOS2 medium filter response.  Same procedure was applied
+        for Figure~\ref{fig:snr}.
+    }
+    \label{fig:fov}
+\end{figure*}
 
 % TODO I have not thought at all about the effects of optical loading on these
 % observations...
@@ -347,122 +371,181 @@ available photons, as the exposure was heavily flare contaminated.
 %   0551000201 mos1S001 livetime 21.621 ks, ontime 21.989 ks
 %   0551000201 mos2S002 livetime 22.167 ks, ontime 22.545 ks
 %   0551000201 pnS003   livetime  8.981 ks, ontime  9.720 ks
+%
+% Newer numbers (2017 Jan) from mos1S001-clean.fits... not sure why changed.
+%   0087940201 mos1S001 livetime 25.191 ks, ontime 25.470 ks
+%   0087940201 mos2S002 livetime 25.500 ks, ontime 25.771 ks
+%   0087940201 pnS003   livetime 18.115 ks, ontime 20.099 ks
+%   0551000201 mos1S001 livetime 21.792 ks, ontime 22.169 ks
+%   0551000201 mos2S002 livetime 22.411 ks, ontime 22.784 ks
+%   0551000201 pnS003   livetime  8.981 ks, ontime  9.720 ks
+
 
 % Event lists, soft proton light curve filtering
+% --------------------
+% Terse, table-oriented version.
+XMM-Newton has observed \Gsnr{} for $97.7 \unit{ks}$ in two pointings.
+%(Table~\ref{tab:obs}).
+% --------------------
+% More verbose version
+XMM-Newton has observed \Gsnr{} for $97.73 \unit{ks}$ in two pointings.
+Obsid 0087940201 (PI J. P. Hughes) was $40.46 \unit{ks}$ on 2001 August 28
+with MOS1/2 in Full Frame mode, PN in Extended Full Frame mode, and XMM's
+``thick'' optical filter.
+Obsid 0551000201 (PI C. Motch) was $57.27 \unit{ks}$ on 2009 March 6--7
+with MOS1/2 in Full Frame mode, PN in Large Window mode, and XMM's ``medium''
+optical filter.
+%The Motch pointing targeted the foreground Be star HD 119682, but also
+%captured \Gsnr{} on the MOS1/2 and PN detectors.
+% --------------------
 We reduce the data with XMM's Science Analysis System (SAS) v15.0.0 and
 Extended SAS (ESAS) v5.9 \citep{snowden2008, kuntz2008}.
 \footnote{\url{http://heasarc.gsfc.nasa.gov/docs/xmm/esas/cookbook/xmm-esas.html}}
 Strong soft proton flares are filtered by ESAS tasks \texttt{mos-filter} and
 \texttt{pn-filter}, which fit a Gaussian to a histogram of time-binned count
-rates for each exposure and discard time intervals where the count rate is
-$1.5\sigma$ above the fitted Gaussian mean.  % TODO - sentence needs retooling
+rates for each exposure and discard time intervals with count rate $>1.5\sigma$
+above the fitted Gaussian mean.  % TODO - sentence needs retooling
 We further inspect the $2.5$--$12 \unit{keV}$ field-of-view light curves and
 manually cut some brief good-time intervals surrounded by higher count rate
 flares.
+After filtering, Obs.~ID 0087940201 has $25 \unit{ks}$ and $18 \unit{ks}$ of
+usable MOS1/2 and PN exposure respectively.
+Obs.~ID 0551000201 has $18 \unit{ks}$ and $9 \unit{ks}$ for MOS1/2 and PN
+respectively.
+%After flare filtering, our good exposure times are $47 \unit{ks}$
+%for MOS1/2 and $27 \unit{ks}$ for PN.
 About half to two-thirds of each observation is lost to flares, with more
 severe loss for PN exposures.
-The resulting live times (good time intervals less CCD readout time) are
-given in Table~\ref{tab:obs}.
+%Table~\ref{tab:obs} gives the resulting usable times.
+
+% CCD exclusions
+In obs.~ID 0551000201, we excluded two MOS CCDs and the entire PN exposure from
+our analysis.
+MOS1 CCD6 was disabled by a presumed micrometeorite in 2005, and MOS2 CCD5
+shows anomalously high soft X-ray background noise \citep[cf.][]{kuntz2008}.
+PN in Large Window mode does not collect corner counts, so we cannot
+estimate the detector background consistently using ESAS tasks.
+Omitting the $9 \unit{ks}$ obs.~ID 0551000201 PN exposure only sacrifices
+$\abt 10$--$20\%$ of our available photons.
 
 % Point sources
-We remove point sources to a limiting flux of
-$10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$ using the ESAS task \texttt{cheese},
-configured to use the SAS task \texttt{region} in
-\texttt{radiusstyle='contour'} model.
-We apply the point source detection to each exposure separately, then merge the
-resulting lists.
-\textbf{TODO: is this truly the limiting flux, given the high background?
-What is the minimum flux for a point source to be detected 99\% of the time in
-data drawn from our model?
-False positives are OK, but want to check rate of false negatives at given
-flux.}
-\textbf{TODO: create images with and without pt source exclusions...}
-
-% Accompanies spectrum extraction AND fitting text
-\begin{figure*}[!ht]
-    \epsscale{0.8}
-    \plotone{fig/fig_snr_regs-fiveann_invert.pdf}
-    \figcaption{Unsmoothed 0.8--3.3 keV image of SNR G309.2-0.6 with
-    $100\arcsec$ wide annuli and background region;
-    the magenta $400\arcsec$ circle demarcates the extraction region for
-    integrated remnant fits.}
-    \label{fig:regions}
-\end{figure*}
+Point sources with flux $> 10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$ were
+identified and removed with the ESAS task \texttt{cheese}.
+The point source detection was run separately on each observation (set of three
+exposures), and the two lists were merged to produce our final mask
+(Figure~\ref{fig:fov}).
+To assist image analysis, we interpolated point source holes in images by
+drawing new pixel values from a Poisson distribution with count rate from a
+10\arcsec annulus surrounding the source hole.
+For spectrum extraction, no such interpolation is applied.
+% To re-state question: what is the minimum flux for a point source to be
+% detected 99\% of the time in mock data drawn from our model?
+% It depends on detector position (effective area) and many other factors.
+% Let's do a quick sanity check:
+%
+% Effective area of PN + MOS1 + MOS2: ~1800 cm^2 over 2-5 keV,
+% ~2500 cm^2 over 1-2 keV.
+% Suppose a soft source with flux 1e-14 erg/cm^2/s is dominated by ~1 keV
+% emission.
+% Flux 1e-14 erg/cm^2/s = 6.2e-6 keV/cm^2/s = 6.2e-6 photons/cm^2/s (for 1 keV
+% photons only).
+% With effective area 2500 cm^2, this nets 0.0156 photons/s
+% Finally, with usable exposure 20 ks for combined MOS/PN,
+% this yields 312 counts, which should be plenty for a clean detection.
+% If I have erred by a factor 10x, 30 counts may still yield a marginal
+% detection.  So on-axis point sources of flux 1e-14 can very reasonably be
+% detected in our data.  This gets iffy off axis but that's OK.
 
 \subsection{Spectrum Extraction and Modeling} \label{sec:spec-extract-fit}
 
-% Spectrum and QPB creation
-Spectra are created from ``good'' single and double events (i.e.,
+% Bumping way up to force placement...
+\begin{figure*}[!th]
+    %\epsscale{1.15}
+    \plotone{fig/fig_lineflux_eqwidth.pdf}
+    \figcaption{
+        Top: line flux images of Mg, Si, and S K$\alpha$ line and continuum.
+        All image colormaps are arcsinh scaled with identical scale limits.
+        Bottom: equivalent width (EW) of Mg, Si, and S K$\alpha$ lines.
+        NaN values (white) away from image centers are caused by noise from
+        image subtraction.
+        Note that Mg EW range is much smaller than Si and S EW.
+        Image spatial scale and centering identical to Figure~\ref{fig:snr}.
+%        The lack of spatial correlation between Mg and Si/S EW, the relative
+%        uniformity of Mg EW emission, and the limb-brightening of Mg line flux
+%        (and associated continuum, per Mg EW image) suggests that Mg K$\alpha$
+%        and the soft 1.3--1.4 keV band traces from the shock-heated ambient
+%        medium, whereas Si and S K$\alpha$ trace remnant ejecta.
+    }
+    \label{fig:eqwidth}
+\end{figure*}
+
+% Spectrum extraction + grouping, and QPB creation
+Observation spectra are created from ``good'' single and double events (i.e.,
 \texttt{PATTERN} $\leq 12,4$ for MOS, PN respectively; \texttt{FLAG} $= 0$ for
 both MOS and PN) using ESAS tasks \texttt{\{mos,pn\}-spectra}.
-We fit all spectra in XSPEC 12.9.0d \citep{arnaud1996}
-using T{\"u}bingen-Boulder ISM elemental abundances \citep{wilms2000}
-and galactic absorption model \texttt{tbnew} v2.3.2
-\footnote{\url{http://pulsar.sternwarte.uni-erlangen.de/wilms/research/tbabs/}},
-which is the latest version of the gas absorption model of \citet{wilms2000}.
-We hereafter refer to baseline ISM abundances as ``solar'', although they
-deviate slightly from solar abundances, to simplify description.
-\textbf{TODO: ``super solar-neighborhood-ISM abundances'' or
-``sub MW-ISM abundances'' are unambiguous but hard to read.  Any better way?}
-
-% QPB
-The detector background is modeled by ESAS tasks \texttt{\{mos,pn\}\_back}
-by (1) computing a quiescent spectrum from unexposed CCD corner counts,
-(2) augmenting the quiescent spectrum with corner counts from public
-observations with similar count rates and spectral hardness, and (3) scaling
-the augmented quiescent spectrum shape to that expected for the source region
-of interest, using the ratio of quiescent spectra across corner / source
-regions from XMM's filter wheel closed (FWC) observations and assuming that the
-ratio of spectra across a given MOS or PN chip is time invariant
-\citep[Sec. 3.4]{kuntz2008}.
+We merged MOS1 and MOS2 spectra from each observation and binned merged-MOS and
+PN spectra to $\geq 1$ count per energy channel bin.
+A detector background spectrum is created with ESAS tasks
+\texttt{\{mos,pn\}\_back}, based upon XMM-Newton's filter wheel closed (FWC)
+observations and unexposed CCD corner counts from a database of public
+observations \citep[Sec.~3.4]{kuntz2008}.
+%by (1) computing a quiescent spectrum from unexposed CCD corner counts,
+%(2) augmenting the quiescent spectrum with corner counts from public
+%observations with similar count rates and spectral hardness, and (3) scaling
+%the augmented quiescent spectrum shape to that expected for the source region
+%of interest, using the ratio of quiescent spectra across corner / source
+%regions from XMM's filter wheel closed (FWC) observations and assuming that the
+%ratio of spectra across a given MOS or PN chip is time invariant
+%\citep[Sec. 3.4]{kuntz2008}.
 The detector background is directly subtracted from observation spectra.
-\textbf{TODO: could this be shortened or omitted?}  % TODO
 
-% Spectrum grouping, fitting, and modeling
-We merged MOS1 and MOS2 spectra from each observation and binned MOS and PN
-spectra to at least 1 count per bin.
+% Spectrum models and fitting
+We fit spectra in XSPEC 12.9.0 \citep{arnaud1996} using ISM element abundances
+and gas absorption model \texttt{tbnew} v2.3.2
+\footnote{\url{http://pulsar.sternwarte.uni-erlangen.de/wilms/research/tbabs/}},
+from \citet{wilms2000}.
 All spectra were fit with XSPEC's \texttt{pgstat} statistic for
 Poisson-distributed data with a Gaussian background (appropriate for the ESAS
 detector background model); \texttt{pgstat}, like the Cash statistic
 \texttt{cstat}, averts bias associated with $\chi^2$ fitting of binned Poisson
 data \citep{humphrey2009}.
+Unless otherwise noted, models were fitted to the full soft X-ray spectrum --
+$0.3$--$11 \unit{keV}$ for MOS and $0.4$--$11 \unit{keV}$ for PN -- to
+constrain both cosmic and instrumental backgrounds.
 
 % Instrumental lines
-We model instrumental lines as zero-width, fixed-energy Gaussians and assume
-that relative line strengths (i.e., line ratios) in a given CCD region are the
-same between FWC and observation data.
-The FWC spectra are well fit by Gaussian lines on a broken power-law continuum.
-For MOS exposures, we fit $1.49$ (Al) and $1.75 \unit{keV}$ (Si) lines.
-For PN, we fit seven lines: $1.49$ (Al), $4.54$ (Ti), $5.44$ (Cr), $7.49$ (Ni),
-$8.05$ (Cu), $8.62$ (Zn), and $8.90 \unit{keV}$ (Cu K$\beta$).
+We model instrumental fluorescence lines as zero-width fixed-energy Gaussians
+and assume that relative line strengths (i.e., line ratios) in a given CCD
+region are the same between FWC and observation data.
+We fit FWC spectra using Gaussian lines on a broken power-law continuum.
+For MOS, we model two lines: $1.49$ (Al) and $1.75 \unit{keV}$ (Si).
+For PN, we model seven lines: $1.49$ (Al), $4.54$ (Ti), $5.44$ (Cr),
+$7.49$ (Ni), $8.05$ (Cu), $8.62$ (Zn), and $8.90 \unit{keV}$ (Cu K$\beta$).
 % The PN Ti and Cr lines are not noticeable in observation spectra, but are
 % clearly visible in FWC spectra.
-To fit observation spectra, we adopt line normalizations from FWC spectrum fits
-and vary a single constant pre-factor for all instrumental lines in a given
-instrument exposure.
+Then, to fit observation spectra, we fix all instrumental line ratios and vary
+an overall normalization.
 % Some spectrum fits could be improved by allowing instrumental line widths and
 % centroid energies to vary.
 % But, $\Delta \chi$ residuals at instrumental lines are comparable to
-% residuals throughout our spectrum ethe rest of our spectral fits, so we do not expect that
-% imperfect line model residuals should significantly affect our fit results and
+% residuals throughout our spectrum, so we do not expect that imperfect line
+% model residuals should significantly affect our fit results and
 % interpretation.
 %
 % Wishy washy because we have not quantified or tested this impact...
 % But we have no reason to expect major impact.
 % Freeing line widths and energies, even within a small range, would add 4--12
 % parameters for each exposure.
-% if time allows, try this for one baseline spectrum, and show no substantial
-% effect.
 
 % Residual soft proton contamination, SWCX
-Soft protons incident on EPIC detectors dominate the X-ray background
-and are not removed by flare filtering due to their slow time variation.
+Soft protons on EPIC detectors dominate the X-ray background and are not
+removed by flare filtering due to slow time variation.
 We model residual soft protons by a power law that bypasses CCD response and
-effective area functions, following ESAS procedure.
+effective area functions following ESAS prescription.
 We neglect background solar wind charge exchange (SWCX) emission
 \citep{snowden2004, carter2011};
 neither observation shows obvious \ion{O}{7} or \ion{O}{8} lines, and any
-residual contamination should be folded into our X-ray background model.
+residual contamination should be folded into our cosmic X-ray background model.
 % Omitted -- this text on SWCX checks is not really needed
 % Hughes' 2001 observation was not flagged by \citet{carter2011} as containing
 % time-variable soft X-ray emission indicative of exospheric SWCX.
@@ -487,30 +570,59 @@ residual contamination should be folded into our X-ray background model.
 % % 0087940201 is not listed in Carter/Sembay, but meets basic selection criteria
 % % (namely, MOS1/MOS2 operating in full frame mode
 
+
+% =============================================================================
+% Equivalent width images
+% =============================================================================
+
+\section{Line flux and equivalent width}
+
+We created line flux and equivalent width (EW) images to characterize bright
+Mg, Si, and S K$\alpha$ line emission in the manner of \citet{vink1999} and
+\citet{hwang2000}.
+For each line-energy band (1.3--1.4 keV, 1.8--1.9 keV, 2.4--2.5 keV), we
+selected nearby side-bands from inspection of the integrated spectrum
+(Section~\ref{sec:integrated-fit}) to represent continuum emission
+(Mg: 1.15--1.25 keV and 1.60--1.65 keV; Si, 1.60--1.65 keV and 1.98--2.05 keV;
+S: 1.98--2.05 keV to 2.60--2.70 keV).
+We logarithmically averaged the side-band images to estimate each line's
+underlying continuum flux, then subtracted continuum to obtain line flux images
+and took the ratio of line and continuum to obtain equivalent width images
+(Figure~\ref{fig:eqwidth}).
+
+The lack of spatial correlation between Mg and Si/S EW, the relative
+uniformity of Mg EW emission, and the limb-brightening of Mg line flux
+(and associated continuum, per Mg EW image) suggests that Mg K$\alpha$
+and the soft 1.3--1.4 keV band traces emission from the shock-heated ambient
+medium, whereas Si and S K$\alpha$ trace remnant ejecta.
+
+We select five regions named ``Core'', ``Lobe SW'', ``Lobe NE'', ``Ridge SE'',
+and ``Ridge NW'' for spatially-resolved spectrum fits (Figure~\ref{fig:rgb}).
+The emission in Figures~\ref{fig:eqwidth} and \ref{fig:rgb} are heavily binned
+and smoothed (excepting the top row of Fig.~\ref{fig:eqwidth}, all images have
+$40\arcsec$ pixels smoothed with a 2 pixel Gaussian).
+Equivalent width images at $20\arcsec$ resolution better separate the emission
+components shown in Figure~\ref{fig:rgb}, and our region boundaries account for
+the sharper separation, but the images are extremely noisy and thus less
+suitable for display.
+
+\begin{figure}[]
+    \epsscale{0.9}
+    \plotone{fig/fig_rgb_soft_eqwidth.pdf}
+    \figcaption{RGB image distinguishing ejecta and ambient medium emission.
+        Red: 1.3--1.4 keV line flux, green: Si K$\alpha$ EW, blue: S K$\alpha$
+        EW (Figure~\ref{fig:eqwidth}).
+        Image spatial scale and centering identical to Figure~\ref{fig:snr}.
+    }
+    \label{fig:rgb}
+\end{figure}
+
+
 % =============================================================================
 % Spectrum fits
 % =============================================================================
 
-\section{Spatially resolved spectral fits} \label{sec:spec}
-
-\subsection{Integrated spectrum} \label{sec:src-bkg}
-
-% Describe integrated source fit; jump straight to fit and basic numbers
-We first jointly fit integrated remnant (0--400\arcsec) and background
-(510--700\arcsec) spectra (Figure~\ref{fig:regions}).
-The remnant is well fit by an absorbed single-temperature non-equilibrium
-ionization (NEI) plasma (XSPEC model \texttt{tbabs\_new * vnei}) with
-increased Si and S abundances relative to local galactic ISM
-(Figure~\ref{fig:src-bkg-fits}, Table~\ref{tab:src-fits}), as fits with solar
-(ISM) abundances shows clear residual \ion{Si}{13} and \ion{S}{15} He-$\alpha$
-emission.
-We also consider variation in O, Ne, Mg, Ar, Ca, and Fe abundances.
-The \ion{Mg}{11} He-$\alpha$ line is evident but does not clearly require
-super-solar Mg abundance.
-Small bumps at $3.1 \unit{keV}$ and $3.9 \unit{keV}$ suggest \ion{Ar}{17} and
-\ion{Ca}{19} He-$\alpha$; if attributable to line emission, these features
-would require highly super-solar abundances at our best fit temperature and
-ionization timescale.
+\section{Integrated remnant spectrum} \label{sec:integrated-fit}
 
 \begin{figure*}[!ht]
     \plotone{fig/fig_src_bkg_allexps-src-only.pdf}
@@ -520,33 +632,73 @@ ionization timescale.
     model comprising: cosmic X-ray background (CXRB), soft proton background (SP),
     instrumental lines, and NEI plasma for the remnant.
     All plotted spectra are binned towards minimum significance $5\sigma$ with
-    maximum 50 channels per bin, though fits only bin to $\geq 1 \unit{count}$
-    per bin as discussed in Section~\ref{sec:spec-extract-fit}.
+    maximum 50 channels per bin, but spectra in model fits are only minimally
+    binned to $\geq 1 \unit{count}$ (Section~\ref{sec:spec-extract-fit}).
+    Note factor of $\abt 2$ difference in soft proton noise between 0087940201
+    and 0551000201 MOS exposures.
     }
     \label{fig:src-bkg-fits}
 \end{figure*}
 
-\begin{table*}[!ht]
-    \centering
-    \caption{Integrated source and background fits, single-temperature NEI
-        model with non-solar abundances \label{tab:src-fits}}
-    \footnotesize
-    \input{tab-src-bkg-varabund-fits.tex}
-    \tablecomments{Units:
-        equivalent hydrogen column density $N_H$, $10^{22} \unit{cm^{-2}}$;
-        temperature $\kB T$, keV;
-        ionization timescale $\tau$, $10^{10} \unit{s\;cm^{-3}}$;
-        emission measure (EM), $10^{11} \unit{cm^{-5}}$.
-        Elemental abundances are taken relative to ISM values of
-        \citet[Table 2]{wilms2000}.
-        The emission measure is $10^3 \times $ the usual \texttt{XSPEC} norm
-        $10^{14} (4 \pi D^2)^{-1} \int n_{\mt{H}} n_{\mt{e}} dV$; $D$ is source
-        distance, $n_{\mt{H}}$ is hydrogen number density, and $n_{\mt{e}}$ is
-        electron number density.
-    }
-\end{table*}
+% Describe integrated source fit; jump straight to fit and basic numbers
+We jointly fit integrated remnant and background spectra
+(Figure~\ref{fig:src-bkg-fits}) to obtain a coarse characterization and to
+compare against prior ASCA and XMM-Newton spectral analyses; the extraction
+regions are 0--400\arcsec and 510--700\arcsec respectively, plotted in
+Figure~\ref{fig:fov}.
 
-% Explain X-ray background model
+The remnant is well fitted by an absorbed single-temperature non-equilibrium
+ionization (NEI) plasma (XSPEC model \texttt{tbabs\_new * vnei}) with
+increased Si and S abundances relative to galactic ISM
+(Table~\ref{tab:spectrum-fits}).
+%We also consider variation in O, Ne, Mg, Ar, Ca, and Fe abundances.
+Increased Mg abundance (constrained by \ion{Mg}{11} He-$\alpha$) formally
+improves the fit, but is not clearly required.
+%Small bumps at $3.1 \unit{keV}$ and $3.9 \unit{keV}$ suggest \ion{Ar}{17} and
+%\ion{Ca}{19} He-$\alpha$; if attributable to line emission, these features
+%would require highly super-solar abundances at our best fit temperature and
+%ionization timescale.
+NEI plasma models accounting for plane shock or Sedov geometries
+\citep{borkowski2001} do not yield further insight in our integrated remnant
+fit.
+An XSPEC \texttt{vpshock} model does not fit significantly better than
+the single-ionization-age NEI model ($\mathrm{pgstat}_{\mathrm{vpshock}} = ??$),
+and \texttt{vpshock} bounds on ionization age simply bracket the
+\texttt{vnei}-inferred mean ionization (Table~\ref{tab:spectrum-fits}).
+\textbf{TODO: need to redo vpshock fits}  % TODO
+At high electron temperatures $\abt 2$--$3 \unit{keV}$, the
+\texttt{vpshock} model should reasonably approximate the more involved
+\texttt{vsedov} model of \citet{borkowski2001}, so we do not consider a
+\texttt{vsedov} fit with non-uniform electron temperature distribution.
+The simpler \texttt{NEI} plasma model suffices for our spectral modeling.
+
+The integrated remnant fit statistic is deceptively good due to the large
+number of background counts, both from the sky background spectrum and from the
+extended energy range fitted to sample cosmic and instrumental background.
+Spatially resolved fits (Section~\ref{sec:subregion-fit}) show more typical fit
+tension and better reveal distinct plasma components.
+
+%\begin{table*}[!ht]
+%    \centering
+%    \caption{Integrated source and background fits, single-temperature NEI
+%        model with non-solar abundances \label{tab:src-fits}}
+%    \footnotesize
+%    \input{tab-src-bkg-varabund-fits.tex}
+%    \tablecomments{Units:
+%        equivalent hydrogen column density $N_H$, $10^{22} \unit{cm^{-2}}$;
+%        temperature $\kB T$, keV;
+%        ionization timescale $\tau$, $10^{10} \unit{s\;cm^{-3}}$;
+%        emission measure (EM), $10^{11} \unit{cm^{-5}}$.
+%        Elemental abundances are taken relative to ISM values of
+%        \citet[Table 2]{wilms2000}.
+%        The emission measure is $10^3 \times $ the usual \texttt{XSPEC} norm
+%        $10^{14} (4 \pi D^2)^{-1} \int n_{\mt{H}} n_{\mt{e}} dV$; $D$ is source
+%        distance, $n_{\mt{H}}$ is hydrogen number density, and $n_{\mt{e}}$ is
+%        electron number density.
+%    }
+%\end{table*}
+
+% Explain X-ray background model (TODO: use "sky" vs. "cosmic" consistently)
 The X-ray sky background model comprises an unabsorbed low-temperature thermal
 plasma for both local bubble and stable SWCX emission
 \citep{mccammon1990, snowden1990, cravens2000, galeazzi2014, smith2014},
@@ -559,177 +711,157 @@ $6.6 \unit{photons\; cm^{-2}\, s^{-1}\, sr^{-1}\, keV^{-1}}$, which
 represents $60\%$ of the total extragalactic X-ray background normalization
 $10.9 \unit{photons\; cm^{-2}\, s^{-1}\, sr^{-1}\, keV^{-1}}$
 \citep{hickox2006} due to removal of bright extragalactic sources.
-\footnote{Our point source flux cut-off $10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$
-(0.4-7.2 keV band) translates to removal of extragalactic sources brighter than
-$1.5 \times 10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$ (2-10 keV band, assuming
+\footnote{Our point source flux threshold $10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$
+(0.4--7.2 keV band) translates to removal of extragalactic sources brighter than
+$1.5 \times 10^{-14} \unit{erg\;cm^{-2}\;s^{-1}}$ (2--10 keV band, assuming
 absorbing column $2 \nHUnits$ and power law index $\Gamma = 1.4$).
 We integrate the $\log(N)$-$\log(S)$ relation of \citet{moretti2003} to obtain
 the excluded brightness.}
-\textbf{TODO: shorten and clarify text?}  % TODO
 
+Our best fit X-ray sky background has parameters
+$\kB T_{\mt{local}} = {0.26}^{+0.02}_{-0.01}$,
+%$\mt{EM}_{\mt{local}} = {0.24}^{+0.02}_{-0.01}$,
+$N_{\mathrm{H,xgal}} = {1.24}^{+0.73}_{-0.58}$,
+$N_{\mathrm{H,ridge}} = {1.38}^{+0.20}_{-0.09}$, and
+$\kB T_{\mt{ridge}} = {0.75}^{+0.04}_{-0.04}$.
+%$\mt{EM}_{\mt{ridge}} = {1.92}^{+0.31}_{-0.30}$,
+where subscript ``lb'' denotes unabsorbed local bubble emission,
+``xgal'' denotes galactic absorption of the extragalactic background,
+and ``ridge'' denotes absorbed galactic ridge emission.
+% MAJOR TODO: need to clean up this text...
 % Check model - galactic ridge component has reasonable surface brightness.
 The fitted soft galactic ridge component has $2$--$10 \unit{keV}$ surface
-brightness $3.1 \times 10^{-12} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$ (from
-normalization $(1.94 \pm 0.3) \times 10^{-3} \times 10^{14} \unit{cm^{-5}}$ for
-a 400\arcsec radius circular FOV).
-Our inferred ridge surface brightness is somewhat lower than
-other galactic ridge or bulge fields --
-$4.8 \times 10^{-11} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$
-at $(l,b) = (28\arcdeg 46\arcmin, -0\arcdeg 20\arcmin)$ \citep{ebisawa2008}
-and
-$7.1 \times 10^{-11} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$
-at $(l,b) = (0.113\arcdeg, -1.424\arcdeg)$ \citep{revnivtsev2009}.
+brightness $3.1 \times 10^{-12} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$,
+somewhat lower than other galactic ridge or bulge fields
+\citep{ebisawa2008, revnivtsev2009}.
+%$4.8 \times 10^{-11} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$
+%at $(l,b) = (28\arcdeg 46\arcmin, -0\arcdeg 20\arcmin)$ \citep{ebisawa2008}
+%and
+%$7.1 \times 10^{-11} \unit{erg\;cm^{-2}\;s^{-1}\;deg.^{-2}}$
+%at $(l,b) = (0.113\arcdeg, -1.424\arcdeg)$ \citep{revnivtsev2009}.
 These other fields sample brighter areas of X-ray ridge emission (see the
-RXTE/PCA map presented by \citet{revnivtsev2006}), so a $\abt 10\times$ smaller
-brightness seems plausible, given significant uncertainty in our background
-modeling due to assumed extragalactic background normalization and high soft
-proton background.
+RXTE/PCA map of \citet{revnivtsev2006}), so a $\abt 10\times$ smaller
+brightness seems acceptable given uncertainty in our background modeling from
+assumed extragalactic background normalization and high soft proton background.
 
-% vpshock discussion
-We consider an alternative model that accounts for an ionization age gradient
-behind a plane shock \citep{borkowski2001}.
-The \texttt{vpshock} model fits the spectrum just as well
-($\mathrm{pgstat} = ???$) as the single-ionization-age NEI model, and the
-\texttt{vpshock} bounds on ionization age bracket the inferred mean ionization
-from \texttt{NEI} (Table~\ref{tab:src-fits}.
-\textbf{TODO: need to redo vpshock fits}
-At high electron temperatures $\abt 2$--$3 \unit{keV}$, the
-\texttt{vpshock} model should reasonably approximate the more involved
-\texttt{vsedov} model of \citet{borkowski2001}, so we do not consider a
-\texttt{vsedov} fit with non-uniform electron temperature distribution.
-The simpler \texttt{NEI} plasma model suffices for our spectral modeling.
+%\subsection{Annuli spectra}
+%
+%% Procedure, results
+%We extract and fit spectra from $100\arcsec$ wide annuli centered on the
+%remnant to discern how thermal plasma emission varies with remnant radius
+%(Figure~\ref{fig:annuli-spectra}, Table~\ref{tab:annulus-fit}).
+%Each annulus is modeled by an absorbed NEI plasma
+%(XSPEC model \texttt{tbabs\_new * vnei}) with Mg, Si, S free and absorbing
+%column tied across all annuli.
+%X-ray background model parameters are fixed to values from the best integrated
+%source fit with Mg, Si, S free (Table~\ref{tab:src-fits}).  % TODO may change...
+%We neglect redistribution of counts between annuli due to point spread function
+%(PSF) wings as the off-axis half-energy-enclosed width $\abt10$--$20\arcsec$ is
+%smaller than our annuli widths.
+%
+%% Some basic observations on annulus spectra
+%The outer annulus fit ($400$--$500\arcsec$) is poorly constrained and merely
+%requires some Si and S line emission; the derived ionization timescale,
+%temperature, and norm may be unreliable.
+%Soft proton parameters from annuli fits qualitatively show expected
+%energy-dependent vignetting, with stronger vignetting at soft energies.
+%Soft proton contamination at $\abt 0.3$--$1 \unit{keV}$ clearly decreases with
+%distance from the aimpoint.
+%
+%\begin{table*}
+%    \centering
+%    \caption{Annuli fit \label{tab:annulus-fit}}
+%    \input{tab-annulus-fits.tex}
+%    \tablecomments{
+%        Outermost ($400$--$500\arcsec$) annulus temperature $\kB T$ is
+%        capped at $10 \unit{keV}$ and may not represent the formal best fit.
+%        Best fit absorption column is $\nH = {2.51}^{0.09}_{-0.10} \nHUnits$;
+%        $\mt{pgstat} = 19335.8$; $\chi^2_{\mt{red}} = 1.210 = 24296.5 / 20073$ ($\chi^2$/dof).
+%        Units as in Table~\ref{tab:src-fits}.}
+%\end{table*}
+%
+%\begin{figure*}[]
+%    \plotone{fig/fig_fiveann_mg-si-s_0087940201-mos.pdf}
+%    \figcaption{Annuli spectra from 0087940201 MOS with best fits; Mg, Si, S free.
+%    Table~\ref{tab:annulus-fit} provides NEI fit parameters.}
+%    \label{fig:annuli-spectra}
+%\end{figure*}
+%
+%\begin{figure*}[!ht]
+%    \plottwo{fig/fig_fiveann_kT.pdf}{fig/fig_fiveann_Tau.pdf}
+%    \plottwo{fig/fig_fiveann_Si.pdf}{fig/fig_fiveann_S.pdf}
+%    \figcaption{Electron temperature (left) and ionization timescale (right)
+%        as a function of radius from annuli spectra fit
+%        (Tables~\ref{tab:annulus-fit}).}
+%    \label{fig:annulus-pars}
+%\end{figure*}
+%
+%% Radial variation in kT and Tau
+%The plasma temperature and ionization timescale vary by $\abt 20$--$50\%$
+%across the remnant's projected radius (Figure~\ref{fig:annulus-pars});
+%the center plasma is hotter and shows a lower ionization timescale compared to
+%the remnant shell.
+%The inferred Si, S abundances increase by a factor of $2$-$3$ towards the
+%center; Mg shows much less variation.
+%These trends are consistent with the standard Sedov picture of early supernova
+%remnant evolution, wherein recently shocked ISM and reverse-shocked central
+%ejecta should be the ``youngest'' emitting plasma.
 
-% ISM component TODO to be redone
-We see no particular evidence for a distinct NEI (ISM) plasma of different
-temperature or ionization state.
-\textbf{TODO fits with ISM component to be rerun}.
-%If we add an ISM component, represented by a NEI plasma with ISM abundances,
-%the fit improves slightly.
-%But fitted parameter values jump around quite a lot.
-%The ISM NEI components can be wildly different (ionization age
-%$10^{9}$--$10^{10}$, temperature $0.55$ to $8.63 \unit{keV}$,
-%normalization (scaled emission measure) $2 \times 10^{-3}$ to $3 \times
-%10^{-2}$), depending on which elemental abundances are free in the ejecta
-%plasma component.  In short, very ill-constrained.
-%We don't see any spectral features that can unequivocally be attributed to a
-%distinct mass of plasma with different temperature, abundance, and ionization
-%characteristics.
 
-\textbf{Although fits have not all been redone, it is pretty clear that adding
-additional components will not improve the fit substantially
-We can argue for one model over another on the basis of f-test / similar...}
+% =============================================================================
+% Spatially-resolved spectra
+% =============================================================================
 
-We consider two alternative fits in Table~\ref{tab:src-fits}.
-Fit G fixes absorption $\nH = 0.7 \nHUnits$ to see whether a lower absorption
-is consistent with the data, and to compare to fit results presented by
-\citet{rakowski2001} and \citet{safi-harb2007}.
-Fit H fixes $\tau = 5 \times 10^{13} \TauUnits$ to consider a collisional
-ionization equilibrium plasma \citep{smith2014}.
-Figure~\ref{fig:src-bkg-vary-comp} compares these fits directly to a baseline
-fit with only Mg, Si, S free (same fit as in Figure~\ref{fig:src-bkg-fits}).
-
-%TODO clean up text
-Not shown: fit H with a CIE plasma does alter Si and S He $\alpha$ / He $\beta$
-line ratios, introducing some tension.
-
-\begin{figure*}[!ht]
-    \plotone{fig/fig_src_bkg_tau-5e13_nH-0d7_allexp.pdf}
-    \figcaption{Fits with varied absorption and ionization timescale
-        also reasonably describe the data, provided that elemental abundances
-        comprising the $\lesssim 1 \unit{keV}$ continuum are allowed to float.
-        Solid curves plot total spectrum model (remnant with x-ray background,
-        soft proton, and instrumental line contribution as in
-        Figure~\ref{fig:src-bkg-fits}); dashed curves plot remnant
-        absorbed NEI plasma contribution alone.
-        Fit parameters (B, G, H) are given in Table~\ref{tab:src-fits}.
-    }
-    \label{fig:src-bkg-vary-comp}
-\end{figure*}
-
-\subsection{Annuli spectra}
-
-% Procedure, results
-We extract and fit spectra from $100\arcsec$ wide annuli centered on the
-remnant to discern how thermal plasma emission varies with remnant radius
-(Figure~\ref{fig:annuli-spectra}, Table~\ref{tab:annulus-fit}).
-Each annulus is modeled by an absorbed NEI plasma
-(XSPEC model \texttt{tbabs\_new * vnei}) with Mg, Si, S free and absorbing
-column tied across all annuli.
-X-ray background model parameters are fixed to values from the best integrated
-source fit with Mg, Si, S free (Table~\ref{tab:src-fits}).  % TODO may change...
-We neglect redistribution of counts between annuli due to point spread function
-(PSF) wings as the off-axis half-energy-enclosed width $\abt10$--$20\arcsec$ is
-smaller than our annuli widths.
-
-% Some basic observations on annulus spectra
-The outer annulus fit ($400$--$500\arcsec$) is poorly constrained and merely
-requires some Si and S line emission; the derived ionization timescale,
-temperature, and norm may be unreliable.
-Soft proton parameters from annuli fits qualitatively show expected
-energy-dependent vignetting, with stronger vignetting at soft energies.
-Soft proton contamination at $\abt 0.3$--$1 \unit{keV}$ clearly decreases with
-distance from the aimpoint.
-
-\begin{table*}
+\begin{table*}[!th]
     \centering
-    \caption{Annuli fit \label{tab:annulus-fit}}
-    \input{tab-annulus-fits.tex}
-    \tablecomments{
-        Outermost ($400$--$500\arcsec$) annulus temperature $\kB T$ is
-        capped at $10 \unit{keV}$ and may not represent the formal best fit.
-        Best fit absorption column is $\nH = {2.51}^{0.09}_{-0.10} \nHUnits$;
-        $\mt{pgstat} = 19335.8$; $\chi^2_{\mt{red}} = 1.210 = 24296.5 / 20073$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fits}.}
+    \caption{Integrated remnant and sub-region fits
+        \label{tab:spectrum-fits}}
+    \footnotesize
+    \input{tab-subregion-fits.tex}
+    \tablecomments{Units:
+        equivalent hydrogen column density $N_H$, $10^{22} \unit{cm^{-2}}$;
+        temperature $\kB T$, keV;
+        ionization timescale $\tau$, $10^{10} \unit{s\;cm^{-3}}$;
+        emission measure (EM), $10^{11} \unit{cm^{-5}}$.
+        Elemental abundances are relative to ISM values of
+        \citet[Table 2]{wilms2000}.
+        The emission measure is $10^3 \times $ the \texttt{XSPEC} norm
+        $10^{14} (4 \pi D^2)^{-1} \int n_{\mt{H}} n_{\mt{e}} dV$; $D$ is source
+        distance, $n_{\mt{H}}$ is hydrogen number density, and $n_{\mt{e}}$ is
+        electron number density.
+    }
+    \tablecomments{SNR (integrated 0--400\arcsec remnant) was fit
+        simultaneously with sky background, whereas all sub-region fits
+        used fixed cosmic X-ray background model.
+    }
 \end{table*}
 
-\begin{figure*}[]
-    \plotone{fig/fig_fiveann_mg-si-s_0087940201-mos.pdf}
-    \figcaption{Annuli spectra from 0087940201 MOS with best fits; Mg, Si, S free.
-    Table~\ref{tab:annulus-fit} provides NEI fit parameters.}
-    \label{fig:annuli-spectra}
-\end{figure*}
+\begin{figure}[]
+    \epsscale{1.15}
+    \plotone{fig/fig_subregions_0087940201-mos.pdf}
+    \figcaption{Subregion spectra}
+    \label{fig:subregion-fits}
+\end{figure}
 
-\begin{figure*}[!ht]
-    \plottwo{fig/fig_fiveann_kT.pdf}{fig/fig_fiveann_Tau.pdf}
-    \plottwo{fig/fig_fiveann_Si.pdf}{fig/fig_fiveann_S.pdf}
-    \figcaption{Electron temperature (left) and ionization timescale (right)
-        as a function of radius from annuli spectra fit
-        (Tables~\ref{tab:annulus-fit}).}
-    \label{fig:annulus-pars}
-\end{figure*}
+\section{Spatially-resolved spectra} \label{sec:subregion-fit}
 
-% Radial variation in kT and Tau
-The plasma temperature and ionization timescale vary by $\abt 20$--$50\%$
-across the remnant's projected radius (Figure~\ref{fig:annulus-pars});
-the center plasma is hotter and shows a lower ionization timescale compared to
-the remnant shell.
-The inferred Si, S abundances increase by a factor of $2$-$3$ towards the
-center; Mg shows much less variation.
-These trends are consistent with the standard Sedov picture of early supernova
-remnant evolution, wherein recently shocked ISM and reverse-shocked central
-ejecta should be the ``youngest'' emitting plasma.
+%Motivated by the spatially distinct central Si/S ejecta emission, we fit
+%spectra from small regions within the remnant to better characterize .
+%resolved spectroscopy.
+%encourages resolved
+%spectroscopy.
 
-
-\subsection{Equivalent-width guided local spectra}
-
-
-Equivalent width images better demarcate regions of ejecta emission enhanced
-relative to the continuum, by definition.
-
-\begin{figure*}[]
-    \plotone{fig/fig_bar-ridge-lobe_0087940201-mos.pdf}
-    \figcaption{Sub-region fits}
-    \label{fig:bar-lobe-ridge-fits}
-\end{figure*}
-
-\begin{table}[!ht]
-    \centering
-    \caption{Fits sampling interior ejecta and putative shocked ambient material
-        \label{tab:bar-lobe-ridge-fits}}
-    \footnotesize
-    \input{tab-bar-lobe-ridge-fits.tex}
-    \tablecomments{Units as in Table~\ref{tab:src-fits}.}
-\end{table}
+Sub-region spectrum fits confirm that the spatially distinct emission seen in
+Figures~\ref{fig:eqwidth} and \ref{fig:rgb} originate from separated ejecta and
+shocked ambient medium.
+We fit regional spectra to the same absorbed NEI model
+(\texttt{tbabs\_new * vnei}) used for the integrated remnant spectrum fit.
+The remnant core and Si/S rich lobes require enhanced Si/S abundances, as
+expected.
+Ridges require mildly enhanced Si/S abundance, but to a lesser extent than the
+ejecta-rich central bar of the remnant.
+The emission measure of the NW ridge is $\abt 5\times$ that in the SE,
+suggesting asymmetric ambient medium interaction.
 
 
 % =============================================================================
@@ -737,7 +869,7 @@ relative to the continuum, by definition.
 % =============================================================================
 \section{Discussion} \label{sec:disc}
 
-\subsection{Prior work}
+\subsection{Prior descriptions of SNR \Gsnr{}}
 
 % State discrepancy up front
 Our fitted absorption column and ionization timescales disagree with prior
@@ -786,21 +918,40 @@ which is the usual ratio of interest.
 %workers, so we disfavor this explanation.
 
 % Explore low abundance fit.
-If O, Ne, and Fe abundances are allowed to be sub-solar, there exists a
-reasonable fit with lowered absorption of $\abt 0.7 \nHUnits$
-(Table~\ref{tab:src-fits}, Fit~G).
+If O, Ne, and Fe abundances are allowed to be sub-solar, we can obtain
+reasonable fit with lowered absorption of $\abt 0.7 \nHUnits$.
 The extremely sub-solar abundances of O, Ne, and Fe may be explained by a
 metal-rich ejecta plasma, wherein metals make up $\gtrsim 10\%$ of the plasma
 number density.
-We similarly find reasonable, if disfavored, fit with increased $\tau = 5
-\times 10^{13} \TauUnits$.
+%We consider two alternative fits in Table~\ref{tab:src-fits}.
+%Fit G fixes absorption $\nH = 0.7 \nHUnits$ to see whether a lower absorption
+%is consistent with the data, and to compare to fit results presented by
+%\citet{rakowski2001} and \citet{safi-harb2007}.
+%Fit H fixes $\tau = 5 \times 10^{13} \TauUnits$ to consider a collisional
+%ionization equilibrium plasma \citep{smith2014}.
+%Figure~\ref{fig:src-bkg-vary-comp} compares these fits directly to a baseline
+%fit with only Mg, Si, S free (same fit as in Figure~\ref{fig:src-bkg-fits}).
+Great deal of uncertainty below Mg He-alpha line.
+Possible SWCX contamination, degeneracy between Fe-L forest, ejecta or ISM/CSM
+O/Ne lines, and interstellar absorption conspire to make this part of the
+spectrum more difficult to interpret.
+
+I ascribe the discrepancy to possibly overfitting various elements and the
+inability to distinguish discrete plasma components in ASCA data, and so argue
+that our more parsimonious analysis makes sense.
+In Section~\ref{sec:cloud-absorption} I argue that the increased absorption favored by our
+model is consistent with the coarse absorption gradient observed in our five
+subregion fits, magnetic field orientation at $d \sim 7 \unit{kpc}$, and the
+age estimates from plasma ionization and Sedov-Taylor expansion.
+% TODO compare to RCW 80 - any x-ray emission there?...
+% TODO clean up this text. Discussion is starting to get interesting!
 
 
 \subsection{Plasma mass and density}
 
 % Emission measure derived masses
 We estimate X-ray emitting plasma mass and density from the integrated remnant
-fit emission measure (Table~\ref{tab:src-fits}).
+fit emission measure (Table~\ref{tab:spectrum-fits}).
 The X-ray emitting plasma density, assuming that the plasma fills a sphere of
 radius $400\arcsec$, is:
 \begin{equation} \label{eq:density}
@@ -832,7 +983,7 @@ hydrogen), since
 $M_{\mt{tot}} \propto 2 \langle Z \rangle M_{\mt{p}} n_{\mt{ion}}$,
 where $M_{\mt{p}}$ is proton mass (approximation for mean nuclide mass) and the
 factor $2$ assumes negligible H contribution.
-For G309.2-0.6, assuming a spherical volume:
+For \Gsnr{}, assuming a spherical volume:
 \[
     M_{\mt{tot}} \approx 13.7 M_{\sun} f^{1/2} d_5^{5/2} \langle Z \rangle^{1/2}
 \]
@@ -862,14 +1013,15 @@ This bound is not very stringent, but is at least a start.
 
 \subsection{Iron non-detection}
 
-Fits allowing non-solar iron abundance favor zero iron contribution, although
-by eye a solar Fe abundance fit appears plausible.
+Fits with free iron abundance tend towards sub-solar Fe, although the fits
+improve only marginally by eye; decreasing Fe abundance does not anchor our
+models to salient spectral features.
 But, even with solar Fe abundance, we see no Fe K line at $\abt 6.5 \unit{keV}$.
 We can set an upper bound on Fe K luminosity and thus constrain the parameter
 space for Ia and CC explosions, building on recent work by
 \citet{yamaguchi2014-iron} and \citet{patnaude2015}.
 
-We take our best fit (Table~\ref{tab:src-fits} and add a Gaussian line of
+We take our best fit (Table~\ref{tab:spectrum-fits} and add a Gaussian line of
 normalization $5 \times 10^{-5} \unit{photon\;cm^{-2}\;s^{-1}}$ and
 line width $0.05 \unit{keV}$ at $6.55 \unit{keV}$.
 This crudely represents a minimum detectable Fe K flux
@@ -891,74 +1043,123 @@ $n_0 \sim 1 \unit{cm^{-3}}$; e.g., DDTa in $n_0 \sim 3 \unit{cm^{-3}}$ from
 \citet{badenes2003, badenes2005, badenes2006} \citep{yamaguchi2014-iron}
 and CC explosion in dense CSM wind with high mass loss rates appropriate for
 red supergiants \citep{patnaude2015}.
-If $d_5 \sim 2$--$3$, near the HI-absorption-derived distance bound of
+If $d_5 \sim 2$--$3$, near the \ion{H}{1} absorption-derived distance bound of
 \citet{gaensler1998-g309}, the line luminosity
 $\lesssim 10^{42} \unit{photons\;s^{-1}}$ is less constraining.
 We will argue against such a large distance in subsequent discussion, on
 the basis of remnant size and relatively low ionization state.
 
-\subsection{Morphology and spatial structure}
+\begin{figure}[]
+    \plotone{../results-interm/20170123_fe-k_derived_core_upper_bound_on_fe_abund.png}
+    \figcaption{
+        Our upper bound on Fe K luminosity, regardless of model,
+        allows us to constrain the abundance of non-detected Fe as a function
+        of underlying plasma ionization and temperature.
+        We folded ATOMDB \textbf{TODO: version} NEI models through XMM MOS
+        response and computed 6-7 keV Fe flux as a function of ionization age
+        and plasma temperature.
+    }
+    \label{fig:fe-bound}
+\end{figure}
 
-% Discuss morphology in broad terms
-The broadband $0.8$--$3.3 \unit{keV}$ remnant mostly fills the radio remnant,
-excepting the remnant's southeast limb and edges of the radio ears
-(Figures~\ref{fig:snr}).
-X-ray emission is concentrated at and behind the northwest limb, which is
-somewhat dimmer in radio compared to the southeast limb and ears.
-Figure~\ref{fig:rgb} traces the spatial distribution of Mg, Si, and S, the
-three elements with resolved He$\alpha$-like line emission throughout the
-remnant.
 
-% Spatial distribution of line emission
-Mg emission concentrates along the northwest limb, and possibly along the
-southeast limb as well.
-Both Si and S concentrate towards the remnant center.
-Towards the southwest and southeast limbs, small clumps of Mg and Si/S appear
-similarly separated.
+\subsection{Distance from absorption towards SNR \Gsnr{}} \label{sec:cloud-absorption}
 
-These images of Mg, Si, S may not necessarily trace ejecta distribution.
-Our annulus fits show that temperature and ionization age vary with radius by a
-factor $\abt 2 \times$, so line emission may vary independently of ejecta
-abundance.
-Nevertheless, variation in plasma conditions is also worth investigating.
+SNR \Gsnr{} lies at the edge of an extensive molecular complex seen in
+${}^{12}$CO, ${}^{13}$CO, and C${}^{18}$O J=(1-0) transitions at $v_\mt{LSR} =
+-64$ to $-36 \unit{km/s}$ \citep{saito2001}.
+Figure 1 of \citet{karr2009} shows the cloud edge striking southeast to
+northwest across SNR \Gsnr{}, bisecting its bright radio lobes.
+Based on rotation curve of \citet{fich1989}, \citet{saito2001} suggest that the
+cloud lies at $4$--$7 \unit{kpc}$ within the Centaurus Arm.
 
-some show that radial variation in temperature and ionization state
+Our soft X-ray absorption change from NE to SW lobes can be attributed to
+foreground absorption at the edge of the Centaurus cloud, and our absorption
+column measurements of $2$ to $4 \nHUnits$ are fully accounted for by galactic
+\ion{H}{1} (dominated by the near Carina arm and Centaurus arm)
+and this single, dominant foreground Centaurus cloud.
+We infer a cloud H$_{2}$ column density gradient
+$4 \times 10^{21} \unit{cm^{-2}}$ to $2.5 \times 10^{22} \unit{cm^{-2}}$
+based on CO-to-H$_{2}$ conversion factor
+$X_{\mathrm{CO}} = 2 \times 10^{20} \unit{cm^{-2} (K km s^{-1})^{-1}}$
+\citep{bolatto2013};
+our estimated bounds have uncertainty $\abt 80\%$ assuming 30\% uncertainty in
+$X_{\mathrm{CO}}$ and 50\% error in our eyeballed estimate of ${}^{12}$CO
+brightness from Fig.~1a of \citet{saito2001}.
+% {}^{13}CO: 3.5 to 7 K km/s at SW to 28 K km/s at the NE lobe's outer edge
+% {}^{12}CO: just eyeballing, ~20 K km/s at SW to 125 K km/s at NE lobe outer edge
+% So, a rise of order 5 to 10x.
+We thus attribute the absorption change from NE to SW lobes
+$\Delta \nH = 2 \nHUnits$
+to foreground absorption in the Centaurus Arm's molecular cloud.
+In conjunction with total galactic \ion{H}{1} column $\abt 1.6 \nHUnits$
+from the Leiden-Argentine-Bonn Survey and Parkes Galactic All Sky Survey
+\citep{kalberla2005, mcclure-griffiths2009},
+we predict absorption ranging from $2.4 \nHUnits$ to $6.6 \nHUnits$ across SNR
+\Gsnr{}.
+These numbers are upper bounds, as we have assumed that all \ion{H}{1} and
+${}^{12}$CO emission lies in the foreground.
+\textbf{TODO: get Mopra data to make quantitative comparison.  And,
+I am using $N_{\mt{tot}} = \nH + 2 N_{\mt{H_{2}}}$.}
+% TODO
 
-should be small, and not significantly impact emission.
-\textbf{TODO: We have not shown this for azimuthal variation.}
-\textbf{The simplest solution is to explore with resolved spectroscopy.}
+The fitted absorptions, the lack of evidence for molecular cloud interaction,
+and the estimated distance $5--14 \unit{kpc}$ from \ion{H}{1} absorption
+suggest that SNR \Gsnr{} lies beyond this cloud.
+We thus favor a distance $\gtrsim 5 \unit{kpc}$, and gain confidence that our
+soft X-ray spectrum reflects foreground absorption rather than suppressed O,
+Ne, and Fe emission.
 
-\begin{figure*}[!ht]
-    \plotone{fig/fig_narrowband.png}
-    \figcaption{Heavily smoothed images of Mg, Si, S He$\alpha$ line emission
-%        Smoothed RGB image (top left) of G309 sampling Mg, Si, S
-%        He$\alpha$ lines.
-%        Red, top right: $1.3$--$1.4 \unit{keV}$ (Mg).
-%        Green, bottom left: $1.7$--$1.8 \unit{keV}$ (Si).
-%        Blue, bottom right: $2.3$--$2.4 \unit{keV}$ (S).
-        MOST contours are 0.01, 0.02, 0.05, 0.1, 0.2 Jy in all images.
-        The images are not adjusted for background and should be considered
-        qualitative only.}
-    \label{fig:rgb}
-\end{figure*}
+Can the cloud's position be refined?
+\citet{rice2016} have created a thorough catalog of molecular clouds with
+distance determinations based on the galactic CO survey of \citet{dame2001}.
+Using a contemporary rotation curve, dendrogram-based structure decomposition,
+and (1) galactic latitude + (2) size-linewidth relation approach to resolve the
+kinematic distance ambiguity,
+the largest cloud within $1\deg$ of $l = 309.2\deg$
+($l=309.4\deg, b=-0.1\deg$, spatial size $0.36\deg$,
+$v_{\mt{LSR}} = -42.7 \unit{km/s}$)
+is placed on the ``far'' line-of-sight velocity at $d = 7 \unit{kpc}$ with
+corresponding cloud radius $0.09 \unit{kpc}$ \cite[][Table 3]{rice2016}.
+% Fig. 17 of Rice+ 2016 show Larson linewidth relation
+% Moderate scatter, but it's better than nothing.
+This distance determination would place SNR \Gsnr{} around or beyond the
+outward-facing edge of the Centaurus arm.
+Since \ion{H}{1} spectra towards SNR \Gsnr{} do not show absorption at positive
+$v_{\mt{LSR}}$, the upper bound (with substantial uncertainty) on distance
+should be $\abt 10 \unit{kpc}$.
+An independent contemporary analysis (following the same train of thought:
+clustering classification + some resolution of the kinematic distance) also
+places the massive Centaurus arm cloud(s) at $\abt 7 \unit{kpc}$
+\citet{miville-deschenes2017}.
+Unsolicited aside: both papers are very impressive (to this outsider) in scope
+and utility.
 
-If the radio traces the forward shock front, then there are relatively
-large gaps between FS and CD along the sides of the remnant, with the
-notable exception of the northwest limb (which also corresponds with
-the brightest X-ray and faintest radio emission).
-This may offer clues about the dynamical state of the remnant, although
-\textit{Chandra} would be far better for this sort of study.
+% LAB HI survey at https://www.astro.uni-bonn.de/hisurvey/profile/index.php
+% NW lobe: RA 13 47 12, declination -62 48 00
+% SE lobe: RA 13 46 00, declination -62 58 00
+% Corresponds to 5 to 10% brighter HI peaks for v_LSR < +50 km/s.
+% Slight effect, but not nearly as dramatic as the cloud gradient.
+% The integrated HI absorption is 1.6e22 to 1.7e22.
 
-% Outer annulus study
-The outer ($300$--$400\arcsec$) annulus temperature $\abt 2 \unit{keV}$
-suggests strong shock heating (shock velocity $\gtrsim 1000 \unit{km/s}$).
-It is unclear whether emission arises from ejecta or shocked ISM, but in either
-case requires the shock to be dynamically young.
+% I would like to get Mopra CO data on this!
 
-\citet{katsuda2015} use, similar to \citet{kosenko2010}, a deprojection method
-to try to back out a radial profile of the ejecta.
-Someone else, \citet{hughes2003} I think, also deprojected DEM L71 emission.
-\textbf{TODO...}
+
+% sigma-D estimate of distance
+Lastly, from the somewhat questionable $\Sigma$-$D$ relation (calibrated for
+shell-type radio remnants), \citet{pavlovic2014} provide a distance estimate of
+$5.9 \unit{kpc}$.
+This is fraught with peril, but is at least not wildly inconsistent with the
+distance estimate we now favor based on foreground absorption.
+%See also \citet{huang1985} which presents a $\Sigma$-$D$ relation for
+%shell-like remnants also interacting with clouds -- which helps constrain the
+%expected brightness.
+%
+% Shklovskii 1960
+% Clark & Caswell 1976
+% Milne 1979
+% you must understand the argument before rejecting it out of hand.
+
 
 \subsection{Age dating}
 
@@ -1042,144 +1243,236 @@ of \citet{truelove1999}, or the recent reformulation of \citet{tang2016}.
 
 \subsection{Galactic environment}
 
-The absence of H$\alpha$ emission is unilluminating.
-Assuming H$\alpha$ emission to arise by shock propagation through ISM
-containing neutral hydrogen \citep{chevalier1978},  % 1978ApJ...225L..27C
-any of the following factors may contribute: low density of neutral H due to
-progenitor or supernova ionization, low ambient ISM density, or some local
-conditions (extremely high post-shock density?) that rapidly ionize neutral H,
-preventing Balmer line emission.
-Or, the available imagery may just not be deep enough.
-The outcome is that we are unable to constrain shock velocity independently by
-Balmer line width measurement.
+% The absence of H$\alpha$ emission is unilluminating.
+% Assuming H$\alpha$ emission to arise by shock propagation through ISM
+% containing neutral hydrogen \citep{chevalier1978},  % 1978ApJ...225L..27C
+% any of the following factors may contribute: low density of neutral H due to
+% progenitor or supernova ionization, low ambient ISM density, or some local
+% conditions (extremely high post-shock density?) that rapidly ionize neutral H,
+% preventing Balmer line emission.
+% Or, the available imagery may just not be deep enough.
+% The outcome is that we are unable to constrain shock velocity independently by
+% Balmer line width measurement.
 
 % Galactic environment
-The sight line towards G309.2-0.6 crosses the tangent of the Centaurus Arm
-(variously Scu-Cen, Crux-Cen, Scu-Crux) and the near and far Carina arm at
-$\abt 1.5 \unit{kpc}$ and $\abt 14 \unit{kpc}$.  Molecular and HI emission is
-dominated by the Centaurus Arm at line-of-sight velocities $-70$ to
-$-20 \unit{km/s}$ \citep[e.g.,][Figure 4]{dame2011}, and a good number of
-molecular clouds can be identified \citep{rice2016}.  The field is populated
-with unrelated but independently interesting features.
+% The sight line towards \Gsnr{} crosses the tangent of the Centaurus Arm
+% (variously Scu-Cen, Crux-Cen, Scu-Crux) and the near and far Carina arm at
+% $\abt 1.5 \unit{kpc}$ and $\abt 14 \unit{kpc}$.  Molecular and \ion{H}{1} emission is
+% dominated by the Centaurus Arm at line-of-sight velocities $-70$ to
+% $-20 \unit{km/s}$ \citep[e.g.,][Figure 4]{dame2011}, and a good number of
+% molecular clouds can be identified \citep{rice2016}.  The field is populated
+% with unrelated but independently interesting features.
 
-% sigma-D estimate of distance
-From the somewhat questionable $\Sigma$-$D$ relation, \citet{pavlovic2014}
-provide a distance estimate of $5.9 \unit{kpc}$.
-This is fraught with peril.
-At least the relation of \citet{pavlovic2014} is calibrated for shell-type
-radio remnants.
-%See also \citet{huang1985} which presents a $\Sigma$-$D$ relation for
-%shell-like remnants also interacting with clouds -- which helps constrain the
-%expected brightness.
-I wonder if there's some way to adjust the results based on local density
-estimates, or just blindly regress against multiplicative combinations of other
-salient physical variables.
-Nevertheless, present the result, since it is at least partially physically
-motivated.
-% Shklovskii 1960
-% Clark & Caswell 1976
-% Milne 1979
-% you must understand the argument before rejecting it out of hand.
+\subsection{Morphology and spatial structure}
+
+Several facets of this remnant draw interest:
+\begin{itemize}
+    \item Concentration of ejecta interaction in NW ridge; asymmetry with
+        respect to SE ridge (we infer much less swept-up mass)
+    \item Central bar of shocked ejecta with possible temperature and
+        ionization age gradient in NE-SW direction (this is uncertain until I
+        specifically explore the parameters / spectral lines that control the
+        respective lobe fits, to anchor claims in spectral features)
+    \item Outward-jutting, bipolar radio lobes that attain $\abt10\times$
+        higher maximum brightness than the circular NW/SE limbs.
+        The bipolar lobes represent a $\abt 100\arcsec$ (20--25\%) protrusion
+        from the circular shell traced by the NW/SE limbs.
+    \item X-ray emission extends into the SW lobe past the circle traced by
+        the NW/SE limbs (more easily observed due to decreased absorption
+        compared to the NE lobe)
+\end{itemize}
+
+\citet{west2016} and \citet{west2017} conducted a thorough modeling of SNRs in
+a galactic magnetic field model to observationally determine which of
+quasi-parallel or quasi-perpendicular electron acceleration mechanisms better
+explains the morphology of bilateral radio shell galactic SNRs.
+Much work has been obviously done on this.
+In SN 1006, the poster child of particle acceleration, quasi-parallel
+acceleration is favored by polarization \citep{reynoso2013} and kinetic MHD
+simulation of very high Mach number shock instabilities \citep{caprioli2014-I}.
+\textbf{TODO: refine text and references}
+But most galactic SNRs are older, and \citet{fulbright1990} argued that
+the quasi-parallel remnant morphologies at varying aspect ratio are simply not
+observed, compared to the quasi-perpendicular case.
+The more sophisticated models of \citet{west2017} favor quasi-perpendicular
+acceleration in most remnants on the basis of morphology and literature
+distance estimates.
+
+For SNR \Gsnr{}, the models of \citet{west2016} have magnetic field vectors and
+polarization striking NE-SW, which would suggest quasi-perpendicular
+acceleration in the fainter, circular NW-SE radio limbs.
+Motivated by this model, I speculate the following (this discussion is not
+test- or data-driven science, but merely a pattern-matching connect-the-dots
+exercise):
+
+\begin{itemize}
+    \item The faint NW/SE ``ridge'' radio limbs are part of the nominal remnant
+        shell, expanding with shock normal perpendicular to the ambient
+        magnetic field
+    \item The apparent asymmetry in swept-up material could be explained by
+        (1) ISM density gradient perpendicular to field lines,
+        (2) ISM thermal pressure or magnetic field gradient perpendicular to
+        field lines
+        (3) Kepler-like bowshock structure? (should we see evidence for
+        subsolar abundances in H/He-rich wind?)
+        (\textbf{TODO:} I suspect that only density has a chance of being
+        dynamically important for a Sedov age remnant, vs. magnetic field, but
+        need to check the numbers for different ISM phases
+        and different assumed magnetic tensions from swept up B fields... or just find
+        relevant references).
+        NOTE: such a gradient would produce asymmetry in the NW/SE limbs as
+        well; the limbs differ in brightness by a factor 2-3x.
+        SE limb is 0.04-0.05 Jy/beam vs. NW limb is 0.015 Jy/beam.
+        Is the brightness difference in the right ``direction''?
+    \item An independent mechanism is then responsible for creating the bright
+        NE/SW lobes (10x brighter than quasi-perpendicular NW/SE ridges,
+        at NE lobe peak 0.2 Jy/beam, SW lobe peak 0.1 Jy/beam).
+    \item Field alignment parallel to jet or cavity features could ease
+        energetic requirements on their creation, IF vectors are mostly in the
+        plane of the sky (not sure how to verify this yet short of recomputing
+        the \citet{jansson2012} galactic field model)
+\end{itemize}
+
+Now how do you create such a thing?
+\begin{enumerate}
+    \item Jets in the manner of W50/SS433.  \citetalias{gaensler1998-g309} discuss
+        this in some detail.  Emitting system is not visible.
+    \item Bipolar progenitor wind cavities or pre-existing ISM cavities.
+    If cavities, how do you make them emit brightly enough?
+    \citet{tsebrenko2013} posit CSM clumps in the ears... can you get them out there?
+    blondin, lundqvist, chevalier: http://iopscience.iop.org/article/10.1086/178060/pdf
+        seem to focus on really young (order 10-100yr) remnants.
+    In each model, are progenitor winds and mass loss rates reasonable and
+    consistent with energetics?
+    \item asymmetric expansion against an extremely strong magnetic field.
+    Work on this case by \citet{insertis1991} and \citet{rozyczka1995}
+    assumes extremely strong (mG to G) magnetic fields of relevance near the
+    galactic center, but not elsewhere.  So this seems less likely.
+\end{enumerate}
+
+Some references on jets (in process of reading up):
+H\'{e}nault-Brunet et al. (2012, MNRAS) http://adsabs.harvard.edu/abs/2012MNRAS.420L..13H \\
+Seward et al. (2012, ApJ) http://iopscience.iop.org/article/10.1088/0004-637X/759/2/123/pdf \\
+de Luca et al. (2006, Science) http://science.sciencemag.org/content/313/5788/814 \\
+Heinz et al. (2013, ApJ) http://iopscience.iop.org/article/10.1088/0004-637X/779/2/171/pdf \\
+Image of radio blow-out from Circinus X-1 is intriguing.
+
+Approach for estimating lobe/jet energetics:
+Heinz (2014, SSRv) https://doi.org/10.1007/s11214-013-0016-4 \\
+Tudose et al. (2006, MNRAS) https://doi.org/10.1111/j.1365-2966.2006.10873.x \\
+Dubner et al. (1998, ApJ) http://iopscience.iop.org.ezp-prod1.hul.harvard.edu/article/10.1086/300537/pdf
+
+A quick and dirty estimate of a single lobe's luminosity at 5 kpc is
+$10^{35} \unit{erg\;s^{-1}}$, which is somewhat comparable to the total jet
+power of SS 433 ($10^{39} \unit{erg\;s^{-1}}$) so we're in the right ball park,
+where by ball park I mean within a factor of $10^{3}$ or so.
+
+There are at least a few comparably shaped remnants.
+G299.2$-$2.9 similarly shows bipolar ear structure, central ejecta bar, and
+asymmetry perpendicular to the ear direction \citep{post2014}.
+
+A few sanity checks on this idea:
+1. fainter radio limbs' energy budgets should be consistent with Sedov derived
+velocity and loss- or escape-limited maximum electron energy
+2. optical extinction towards distant stars, or diffuse atomic/molecular gas,
+might reveal some kind of emission
+
+Also remember that the absence of H$\alpha$ emission tells us that there cannot
+be too many neutrals ahead of the shock.
+Either the NW limb is probagating into ionized wind (due to progenitor or
+supernova ionization), the ambient ISM density is low on both sides of the
+remnant (just lower on SE), or some local conditions (high post-shock density)
+rapidly ionize neutral H and preclude detectable Balmer emission.
+Or, the available imagery is just not deep enough.
+% Note: this duplicates below text on H-alpha...
+
+Polarization is not currently available (RM variation along lines of sight
+uncertain)
+
+%\citet{katsuda2015} use, similar to \citet{kosenko2010}, a deprojection method
+%to try to back out a radial profile of the ejecta.
+%Someone else, \citet{hughes2003} I think, also deprojected DEM L71 emission.
+%\textbf{TODO...}
 
 \subsection{Interpretation}
 
-% Caveats
-\textbf{Caveats:} our NEI model assumes a homogeneous, single-temperature,
-single-ionization age plasma, and does not separate ejecta and shocked ambient
-ISM/CSM emission.
-The best fit parameters probe only the brightest and densest X-ray emitting
-plasma; see \citet{rakowski2006-g337} for more extended discussion.
+%% Caveats
+%\textbf{Caveats:} our NEI model assumes a homogeneous, single-temperature,
+%single-ionization age plasma, and does not separate ejecta and shocked ambient
+%ISM/CSM emission.
+%The best fit parameters probe only the brightest and densest X-ray emitting
+%plasma; see \citet{rakowski2006-g337} for more extended discussion.
 
-Nevertheless, we suggest that our observations are consistent with two
-scenarios:
-1. a dynamically young remnant comparable to historical galactic SNRs at
-relatively close distance, probably past the near Carina arm
-2. a young to middle-aged remnant at large distance.
-
-We have several distinct observations to interpret:
-\begin{itemize}
-    \item Low ionization timescale
-        $\tau \sim 2 \times 10^{10} \TauUnits \sim 600 \unit{yr\;cm^{-3}}$
-        consistent with other young ejecta-dominated remnants of Ia SNe
-        \citep[][Table 4]{badenes2007}.
-    \item No obvious evidence for separate ISM and ejecta components of
-        distinct temperature and emission age
-    \item Absence of iron K emission, which
-        suggests
-        1. low intrinsic luminosity (low explosion strength and/or low density
-           medium),
-        2. ejecta stratification, and incomplete propagation of the RS through
-           all ejecta (the RS position is of course impacted by explosion strength
-           and ambient density)
-        3. CC abundances with low Fe, or unusual Ia model with little Fe-group
-           burning
-   \item Certainly super-solar Si and S abundances (hallmark of SNRs, and
-       conveniently placed in X-ray mirror passband).
-       Possibly super-solar Ar, Ca lines.
-    \item Curious radio and X-ray shock front morphology.
-\end{itemize}
+%We have several distinct observations to interpret:
+%\begin{itemize}
+%    \item Low ionization timescale
+%        $\tau \sim 2 \times 10^{10} \TauUnits \sim 600 \unit{yr\;cm^{-3}}$
+%        consistent with other young ejecta-dominated remnants of Ia SNe
+%        \citep[][Table 4]{badenes2007}.
+%    \item No obvious evidence for separate ISM and ejecta components of
+%        distinct temperature and emission age
+%    \item Absence of iron K emission, which
+%        suggests
+%        1. low intrinsic luminosity (low explosion strength and/or low density
+%           medium),
+%        2. ejecta stratification, and incomplete propagation of the RS through
+%           all ejecta (the RS position is of course impacted by explosion strength
+%           and ambient density)
+%        3. CC abundances with low Fe, or unusual Ia model with little Fe-group
+%           burning
+%   \item Certainly super-solar Si and S abundances (hallmark of SNRs, and
+%       conveniently placed in X-ray mirror passband).
+%       Possibly super-solar Ar, Ca lines.
+%    \item Curious radio and X-ray shock front morphology.
+%\end{itemize}
 
 % ionization age
-The ionization timescale
+The ejecta ionization timescale
 $\tau \sim 2 \times 10^{10} \TauUnits \sim 600 \unit{yr\;cm^{-3}}$
 is consistent with other young ejecta-dominated remnants of Ia SNe
 \citep[][Table 4]{badenes2007}.
+But, strangely, our Sedov derived age is an order of magnitude larger than
+comparable remnants!
 
 % TODO provide stat uncertainty from XSPEC
 As ejecta abundances for Si, S are not as strongly variable between Ia and
 core-collapse nucleosynthesis yields (versus O or Fe), the relative abundances
 of these elements do not clearly constrain the progenitor type.
 \textbf{TODO: read more about Ia and CC models and their yields.}
-We cannot really constrain other elemental emission, and so do not attempt to
-type G309.2-0.6 on the basis of abundance measurements.
 
-% Comparison to old fits
+Might be able to get Ar+Ca in center region but that's really it.
+I don't believe fits with any other elements.
 
-If the absorption is truly that high, it is just marginally consistent with
-the galactic column computed from HI and dust maps.
-For G309.2-0.6, the \textit{Swift} galactic $\nH$ calculator implementation of
-\citet{willingale2013} provides an expected column density $1.81 \nHUnits$.
-%Dust scattering can bias X-ray spectrum fits for a purely absorbing column
-%$\abt25\%$ its true value \citep{corrales2016}, although
-%some scattered light is recaptured in our extended source region spectra.
-%The \textit{spectrum fit value} of $\nH$ may also be estimated from empirical
-%linear regression against optical extinction $\AV$ \citep[e.g.,][]{foight2016}
-%-- which benefits from a strong sampling of sources within the galactic plane,
-%and empirical validation -- but does not offer physical insight into the
-%discrepancy. We find approximate agreement ($2$--$3 \nHUnits$) with the various
-%relations.
-%\textbf{TODO: for now detailed accounting of absorption is beyond the scope of
-%this work}
-
-% Discuss HI brightness profiles
-We could use HI brightness profiles along the line-of-sight to set some upper
-bounds on ambient density.
-Consider two cases for degeneracy: assume all emission with $v_{\mt{LSR}} < 0$
-on either (1) nearby-arm of rotation curve, or (2) far-arm of rotation curve.
-\textbf{also revisit willingale assumptions on ISM density.  Estimate for H2
-contribution is much different than \citet{yamaguchi2012}; see Sec. 3.1.
-not sure if the willingale approach is valid in the galactic plane.}
-
-
-
+Since a distance 7 kpc favors older age $\abt 10^{4} \unit{yr}$, Fe
+stratification in ejecta seems somewhat less likely.
+The Fe/Si ratio could be $\lesssim 0.5$ if all ejecta is shocked and has
+comparable plasma state.
+Only other way to suppress Fe emission (i.e. hide Fe mass) is to say (1) Fe is
+not yet shocked, (2) Fe temperature is low relative to Si/S and not heavily
+ionized (say, $\lesssim 0.1 \unit{keV}$, though $kT \sim 1 \unit{keV}$ only
+lets you hide Fe/S $\sim$ 1 -- and then we must deal with loads of Fe L-shell
+emission).
 
 % NOTE: SW lobe and ridge both show weird shifts in PN spectral lines (Si, S)
 % (this dates from Jan/Feb -- to be investigated with now up to date procedures)
 
-\subsection{Friends of young remnants}
-
-Comparative study?  TBD.
-G350.1-0.3 is young, bright (~100,000 counts)
-G337.2-0.7 appears a bit older (ionization age $10^12$), also Si/S rich but
-allows Fe.
-
-A next step is to study other remnants with little Fe emission.
-Review the Chandra catalog, Green's catalog...
-
+% \subsection{Friends of young remnants}
+%
+% Comparative study?  TBD.
+% G350.1-0.3 is young, bright (~100,000 counts)
+% G337.2-0.7 appears a bit older (ionization age $10^12$), also Si/S rich but
+% allows Fe.
+%
+% A next step is to study other remnants with little Fe emission.
+% Review the Chandra catalog, Green's catalog...
 
 \section{Conclusions}
 
-Young, ejecta-dominated remnant with little iron.
+This is a young to middle-aged ejecta-rich remnant with little iron likely
+lying at $d \geq 7 \unit{kpc}$ beyond the thickest Centaurus arm molecular
+clouds.
+It shows interesting asymmetry in swept-up ejecta and bipolar lobe structure
+that we cannot yet explain fully.
 
 \section{Misc}
 
@@ -1220,7 +1513,6 @@ Python hosted at \url{http://aplpy.github.com}.
 This research was expedited in part by Jonathan Sick's \texttt{ads2bibdesk}.
 
 \facility{XMM(EPIC), Molonglo Observatory}
-% Chandra(ACIS) -- pending
 \software{APLpy, Astropy, XSPEC}
 
 %\listofchanges
@@ -1275,6 +1567,16 @@ bias but sacrifices background counts embedded in the source spectrum.
 The resulting X-ray background parameters agree within error.
 % TODO reference appendix table
 % TODO give a sentence to this effect in main body.
+
+\section{Can resolved subregions be fit with solar abundances?}
+
+\begin{table*}[!ht]
+    \centering
+    \caption{Subregion fits, solar abundances}
+    \footnotesize
+    \input{tab-subregion-fits-solar.tex}
+    \tablecomments{Units as in Table~\ref{tab:spectrum-fits}.}
+\end{table*}
 
 \clearpage
 \section{Is a nonthermal component compatible with integrated remnant fits?}
@@ -1477,7 +1779,7 @@ In short, we are good to go.
     \tablecomments{
       $\nH = {2.51}^{+0.09}_{-0.10} \nHUnits$;
       $\mt{pgstat} = 19335.8$; $\chi^2_{\mt{red}} = 1.210 = 24296.5 / 20073$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fits}.}
+        Units as in Table~\ref{tab:spectrum-fits}.}
 \end{table}
 
 \begin{table}
@@ -1498,7 +1800,7 @@ In short, we are good to go.
     \tablecomments{
       $\nH = {2.26}^{+0.11}_{-0.11} \nHUnits$;
       $\mt{pgstat} = 19298.1$; $\chi^2_{\mt{red}} = 1.207 = 24226.3 / 20069$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fits}.}
+        Units as in Table~\ref{tab:spectrum-fits}.}
 \end{table}
 
 \begin{table}
@@ -1520,7 +1822,7 @@ In short, we are good to go.
     \tablecomments{
       $\nH = {2.51}^{+0.09}_{-0.10} \nHUnits$;
       $\mt{pgstat} = 25741.5$; $\chi^2_{\mt{red}} = 1.203 = 31637.1 / 26290$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fits}.}
+        Units as in Table~\ref{tab:spectrum-fits}.}
 \end{table}
 
 \begin{table}
@@ -1542,7 +1844,7 @@ In short, we are good to go.
     \tablecomments{
       $\nH = {2.25}^{+0.13}_{-0.10} \nHUnits$;
       $\mt{pgstat} = 25699.6$; $\chi^2_{\mt{red}} = 1.201 = 31558.8 / 26285$ ($\chi^2$/dof).
-        Units as in Table~\ref{tab:src-fits}.}
+        Units as in Table~\ref{tab:spectrum-fits}.}
 \end{table}
 
 

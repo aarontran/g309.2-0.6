@@ -13,8 +13,8 @@ pdflatex "${fname}.tex"
 # Only "deploy" on HEAD computer
 if [[ $HOSTNAME == 'treble' ]]; then
   echo
-  echo "cp ${fname}.pdf /data/wdocs/atran/g309/."
-  cp "${fname}.pdf" /data/wdocs/atran/g309/.
+  echo "cp ${fname}.pdf ${fname}.tex /data/wdocs/atran/g309/."
+  cp "${fname}.pdf" "${fname}.tex" /data/wdocs/atran/g309/.
 fi
 
 

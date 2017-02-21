@@ -70,9 +70,13 @@ def main():
                 config['ylim'] = (1e-4, 1.0)  # Good for small G309 regions
             if 'delchi-ylim' not in config:
                 config['delchi-ylim'] = (-4, 4)
+            if 'xtick-label-pos' not in config:
+                config['xtick-label-pos'] = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20]
 
+            # If columns not explicitly set,
+            # these parameters can only be specified after loading data
             if 'cols' not in config:
-                config['cols'] = range(5, n_models + 5)
+                config['cols'] = []
             if 'colors' not in config:
                 config['colors'] = [None] * len(config['cols'])
             if 'labels' not in config:
@@ -84,7 +88,7 @@ def main():
             # but not all (e.g., 'name' and 'file' don't make sense to cascade)
             # TODO a more consistent behavior would be useful
             for par in ['cols', 'colors', 'labels', 'linestyles',
-                        'xlim', 'ylim', 'delchi-ylim']:
+                        'xlim', 'ylim', 'delchi-ylim', 'xtick-label-pos']:
                 for pane in config['subplots']:
                     if par in config and par not in pane:
                         pane[par] = config[par]
@@ -134,7 +138,7 @@ def main_plots(config):
 
         # Load XSPEC dumped data
         dat = np.loadtxt(pane['file'])
-        # First filter by x-axis range
+        # First filter by x-axis range (slight hope to reduce PDF sizes...)
         x       = dat[:,0]
         x_err   = dat[:,1]
         x_idx = np.logical_and((x - x_err) > pane['xlim'][0],
@@ -155,7 +159,20 @@ def main_plots(config):
         if 'file-ext' in pane:
             for f_dat_ext in pane['file-ext']:
                 dat_ext = np.loadtxt(f_dat_ext)
+                dat_ext = dat_ext[x_idx]
                 dat = np.concatenate((dat, dat_ext[:,4:]), axis=1)
+
+        # Ugly hack: these parameters, even if globally inherited,
+        # require us to have loaded the data before we can know
+        # how to set up these lists.
+        if len(pane['cols']) == 0:
+            pane['cols'] = range(5, n_models + 5)
+        if 'colors' not in pane or len(pane['colors']) == 0:
+            pane['colors'] = [None] * len(pane['cols'])
+        if 'labels' not in pane or len(pane['labels']) == 0:
+            pane['labels'] = [None] * len(pane['cols'])
+        if 'linestyles' not in pane or len(pane['linestyles']) == 0:
+            pane['linestyles'] = ['-'] * len(pane['cols'])
 
         assert len(pane['colors']) == len(pane['cols'])
         assert len(pane['labels']) == len(pane['cols'])
@@ -181,7 +198,7 @@ def main_plots(config):
                       linestyle=pane['linestyles'][col_idx])
 
         # Axis ticks, limits, labels
-        prep_xaxis(ax, *pane['xlim'])
+        prep_xaxis(ax, pane['xlim'][0], pane['xlim'][1], pane['xtick-label-pos'])
         ax.set_yscale("log")
         ax.set_ylim(*pane['ylim'])
 
@@ -205,7 +222,7 @@ def main_plots(config):
                           labelspacing=0.15, frameon=False)
             else:
                 ax.legend(loc='best', prop={'size':8},
-                          labelspacing=0.3, framealpha=0.5)
+                          labelspacing=0.3, frameon=False)#framealpha=0.5)
 
 
         # Check if data are hidden by plotting limits
@@ -265,7 +282,7 @@ def residual_plots(config):
         ax.axhline(y=0, color='k')
 
         # Axis ticks, limits, labels
-        prep_xaxis(ax, *pane['xlim'])
+        prep_xaxis(ax, pane['xlim'][0], pane['xlim'][1], pane['xtick-label-pos'])
         ax.set_ylim(*pane['delchi-ylim'])
 
         if ax is axes[-1]:
@@ -292,7 +309,7 @@ def residual_plots(config):
     return fig
 
 
-def prep_xaxis(ax, xmin, xmax):
+def prep_xaxis(ax, xmin, xmax, xtick_label_pos):
     """Set up x-axis range and ticks"""
 
     # Enforce arbitrary range for plot limits to simplify tick plotting
@@ -302,7 +319,7 @@ def prep_xaxis(ax, xmin, xmax):
     ax.set_xscale("log")
     ax.set_xlim(xmin, xmax)  # WARNING: hard-coded X-axis limits and ticks
 
-    xtickpos = np.array([0.1, 0.2, 0.5, 1, 2, 5, 10, 20])
+    xtickpos = np.array(xtick_label_pos)
     xtickpos = xtickpos[ np.logical_and(xtickpos >= xmin, xtickpos <= xmax) ]
 
     ax.set_xticks(xtickpos)
