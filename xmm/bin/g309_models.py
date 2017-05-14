@@ -256,6 +256,13 @@ def load_remnant_model(model_n, model_name, extracted_spectra, case='vnei'):
                      src.vpshock.Si.index : "1, , , , 100, 100",
                      src.vpshock.Tau_l.index : 1e8,     # no bounds, set reasonable initial value
                      src.vpshock.Tau_u.index : 1e10})  # no bounds, set reasonable initial value
+    elif case == 'gauss':
+        # Assume frozen zero-width line by default
+        src.setPars({src.gaussian.Sigma.index : "0"})
+        src.gaussian.LineE.frozen = False
+        src.gaussian.Sigma.frozen = True
+        src.gaussian.norm.frozen = False
+
     elif case == 'vsedov':
         raise Exception("Need to test vsedov further, doesn't work")
         #src = xs.Model("constant * tbnew_gas * vsedov", model_name, model_n)

@@ -280,6 +280,10 @@ def single_fit(output, region='src', with_bkg=True, free_elements=None,
     set_energy_range(out[region])
     xs.AllData.ignore("bad")
 
+    if snr_model == 'gauss':
+        for extr in out[region]:
+            extr.spec.ignore("**-5.0, 8.0-**")
+
     xrb = xs.AllModels(1, 'xrb')
     snr = xs.AllModels(1, 'snr_' + region)
 
@@ -421,6 +425,52 @@ def single_fit(output, region='src', with_bkg=True, free_elements=None,
             # values.  But I haven't checked it yet...
             xs.Fit.steppar("log {:s}:{:d} 1e9 5e13 15".format(snr.name,
                                 xs_utils.par_num(snr, snr.vpshock.Tau_u)))
+
+    elif snr_model == 'gauss':
+
+        # Not supported!  Not at all constrained . . .
+        assert not with_bkg
+
+        xs_utils.freeze_model(snr)
+
+        # Coupling between code is too tight, abstractions keep leaking.
+        # Because models must be addressed by NUMBER in XSPEC
+        # commands to tweak model parameters necessarily break
+        # abstraction interface between "load models" and "fit models"
+        # Possible solutions: (1) give up and let interfaces merge
+        # (monolithic "g309_models_fits"), or . . . (2) stop whining
+        if 'mosmerge' not in kwargs or kwargs['mosmerge']:
+            instr_1 = xs.AllModels(1, 'instr_1')
+            #instr_2 = xs.AllModels(2, 'instr_2')  # Let PN instr lines fit
+            instr_3 = xs.AllModels(3, 'instr_3')
+            for instr in [instr_1, instr_3]:
+                # Must update parameter lower limits
+                instr.constant.factor.values = "0, , 0, 0, , "
+                instr.constant.factor.frozen = True
+        else:  # No MOS merging
+            instr_1 = xs.AllModels(1, 'instr_1')
+            instr_2 = xs.AllModels(2, 'instr_2')
+            #instr_3 = xs.AllModels(3, 'instr_3')  # Let PN instr lines fit
+            instr_4 = xs.AllModels(4, 'instr_4')
+            instr_5 = xs.AllModels(5, 'instr_5')
+            for instr in [instr_1, instr_2, instr_4, instr_5]:
+                # Must update parameter lower limits
+                instr.constant.factor.values = "0, , 0, 0, , "
+                instr.constant.factor.frozen = True
+
+        snr.tbnew_gas.nH = 0
+        snr.tbnew_gas.nH.frozen = True
+
+        # LineE: lower/upper bounds set from Yamaguchi+ 2014
+        # Sigma: prevent line from over-widening to fit as "constant" addition
+        # norm: no bounds
+        snr.setPars({snr.gaussian.LineE.index : "6.55, , 6.2, 6.3, 6.8, 6.9",
+                     snr.gaussian.Sigma.index : "0.1, , 0, 0, 0.2, 0.5"} )
+        snr.gaussian.LineE.frozen=False
+        snr.gaussian.Sigma.frozen=False
+        snr.gaussian.norm.frozen=False
+
+        xs.Fit.perform()
 
     else:
         raise Exception("Invalid SNR model - please add branch")
@@ -786,3 +836,8 @@ if __name__ == '__main__':
     stopwatch(single_fit, "results_spec/20170109_lobe_ne_solar", region='lobe_ne', tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
     stopwatch(single_fit, "results_spec/20170109_core_solar", region='core', tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
     stopwatch(single_fit, "results_spec/20170109_lobe_sw_solar", region='lobe_sw', tau_scan=True, error=True, error_rerun=False, free_elements=[], mosmerge=True, suffix='grp01', with_bkg=False)
+
+    # Special Fe-K line fit
+    stopwatch(single_fit, "results_spec/20170328_src_gauss-fe-k", region='src',
+            snr_model='gauss', tau_scan=False, error=True, error_rerun=False,
+            mosmerge=True, suffix='grp01', with_bkg=False)

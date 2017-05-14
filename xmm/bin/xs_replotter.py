@@ -13,6 +13,7 @@ so, some customization may be needed for your various use cases.
 
 import argparse
 import matplotlib as mpl
+mpl.use('Agg')  # For remote plot creation
 import matplotlib.pyplot as plt
 import numpy as np
 from os.path import basename
@@ -38,16 +39,16 @@ def main():
             # Set "standard" plotting options
 
             # Show a legend?
-            if 'legend' not in config:  # TODO this behavior may change
+            if 'legend' not in config:
                 config['legend'] = True
             # Set plot dimensions, font sizes, etc for single column plot
             if 'ms-single-column-plot' not in config:
                 config['ms-single-column-plot'] = False
             # Set standardized pane sizes
             if 'height' not in config:
-                config['height'] = 1.75
+                config['height'] = 1.5
                 if config['ms-single-column-plot']:
-                    config['height'] = 1.5
+                    config['height'] = 1.25
             if 'delchi-height' not in config:
                 config['delchi-height'] = 1.5
                 if config['ms-single-column-plot']:
@@ -70,8 +71,6 @@ def main():
                 config['ylim'] = (1e-4, 1.0)  # Good for small G309 regions
             if 'delchi-ylim' not in config:
                 config['delchi-ylim'] = (-4, 4)
-            if 'xtick-label-pos' not in config:
-                config['xtick-label-pos'] = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20]
 
             # If columns not explicitly set,
             # these parameters can only be specified after loading data
@@ -88,7 +87,7 @@ def main():
             # but not all (e.g., 'name' and 'file' don't make sense to cascade)
             # TODO a more consistent behavior would be useful
             for par in ['cols', 'colors', 'labels', 'linestyles',
-                        'xlim', 'ylim', 'delchi-ylim', 'xtick-label-pos']:
+                        'xlim', 'ylim', 'delchi-ylim']:
                 for pane in config['subplots']:
                     if par in config and par not in pane:
                         pane[par] = config[par]
@@ -126,7 +125,7 @@ def main_plots(config):
 
     # Plot data and models
     fig, axes = plt.subplots(n_panes, sharex=True,
-                             figsize=(config['width'], n_panes * config['delchi-height']))
+                             figsize=(config['width'], n_panes * config['height']))
     if n_panes == 1:
         axes = [axes]  # plt.subplots collapses unneeded dimensions
 
@@ -198,9 +197,16 @@ def main_plots(config):
                       linestyle=pane['linestyles'][col_idx])
 
         # Axis ticks, limits, labels
-        prep_xaxis(ax, pane['xlim'][0], pane['xlim'][1], pane['xtick-label-pos'])
+        prep_xaxis(ax, pane['xlim'], bottom=(ax is axes[-1]))
+
         ax.set_yscale("log")
         ax.set_ylim(*pane['ylim'])
+        # Would have to re-enable minor tick labels for plots ranging over
+        # < 1 decade in count rate
+        ax.tick_params(axis='y', which='minor', labelleft='off')
+
+        # Prefer inward-facing ticks over new mpl2 default
+        ax.tick_params(axis='both', which='both', direction='in')
 
         if ax is axes[-1]:
             ax.set_xlabel("Energy (keV)")
@@ -247,7 +253,7 @@ def residual_plots(config):
 
     # Almost copy-pasted code, but not cleanly refactorable
     fig, axes = plt.subplots(n_panes, sharex=True,
-                             figsize=(config['width'], n_panes * config['height']))
+                             figsize=(config['width'], n_panes * config['delchi-height']))
     if n_panes == 1:
         axes = [axes]  # plt.subplots collapses unneeded dimensions
 
@@ -282,7 +288,7 @@ def residual_plots(config):
         ax.axhline(y=0, color='k')
 
         # Axis ticks, limits, labels
-        prep_xaxis(ax, pane['xlim'][0], pane['xlim'][1], pane['xtick-label-pos'])
+        prep_xaxis(ax, pane['xlim'], bottom=(ax is axes[-1]))
         ax.set_ylim(*pane['delchi-ylim'])
 
         if ax is axes[-1]:
@@ -309,24 +315,47 @@ def residual_plots(config):
     return fig
 
 
-def prep_xaxis(ax, xmin, xmax, xtick_label_pos):
+def prep_xaxis(ax, xlims, bottom=False):
     """Set up x-axis range and ticks"""
-
-    # Enforce arbitrary range for plot limits to simplify tick plotting
-    assert xmin >= 0.1
-    assert xmax <= 20
+    # Enforce arbitrary range to simplify tick plotting
+    assert xlims[0] >= 0.1
+    assert xlims[1] <= 20
+    ax.set_xlim(*xlims)
 
     ax.set_xscale("log")
-    ax.set_xlim(xmin, xmax)  # WARNING: hard-coded X-axis limits and ticks
 
-    xtickpos = np.array(xtick_label_pos)
-    xtickpos = xtickpos[ np.logical_and(xtickpos >= xmin, xtickpos <= xmax) ]
+    # Logarithmic tick labeling is kind of hacky.
 
-    ax.set_xticks(xtickpos)
-    ax.xaxis.set_major_formatter(mpl.ticker.StrMethodFormatter('{x:g}'))
-    #ax.set_xticks([0.1, 1, 10])
-    #ax.set_xticklabels(['0.1', '1', '10'])
-    #ax.xaxis.set_minor_locator(plt.FixedLocator([0.2, 0.5, 2, 5]))
+    ax.xaxis.set_major_locator(mpl.ticker.LogLocator(base=10, subs=(1,2,5)))
+    # Must re-specify minor ticks to prevent duplicate tick labels
+    #   https://github.com/matplotlib/matplotlib/issues/8386
+    #   https://github.com/matplotlib/matplotlib/issues/8401
+    ax.xaxis.set_minor_locator(mpl.ticker.LogLocator(base=10, subs=(3,4,6,7,8,9)))
+
+    # Use LogFormatter instead of LogFormatterSciNotation to get rid of
+    # scientific notation (mpl ver >= 2.0.2).
+    #   https://github.com/matplotlib/matplotlib/pull/8594
+    # Use custom _num_to_string (invoked in __call__) to print 0.5 as "0.5"
+    # instead of "5e-01".
+    # Inspired by http://stackoverflow.com/a/43926354; compare to
+    # https://github.com/matplotlib/matplotlib/blob/master/lib/matplotlib/ticker.py?line=129#L816
+    class BetterLogFormatter(mpl.ticker.LogFormatter):
+        """Get ticks the way I want over the range [0.1, 20].
+        Not a universal fix, but it works...
+        """
+        def _num_to_string(self, x, vmin, vmax):
+            return self.pprint_val(x, vmax - vmin)
+
+    ax.xaxis.set_major_formatter(BetterLogFormatter(10.0,
+                                    labelOnlyBase=False,
+                                    minor_thresholds=(np.inf,np.inf)))
+    ax.xaxis.set_minor_formatter(BetterLogFormatter(10.0,
+                                    labelOnlyBase=False))
+
+    # IF no tick settings applied, subplots with sharex already turn off non-bottom ticks
+    # But weird stuff happens with log minor ticks... so manually disable.
+    if not bottom:
+        ax.tick_params(axis='x', labelbottom='off', which='both')
 
 
 def plot_err(x, y, xerr, yerr, ax=None, **kwargs):

@@ -12631,6 +12631,84 @@ OK good amount of work to clean up since January 13 (mostly writing, reading,
 digging a little further).
 
 
+Saturday-Thursday March 25-30- software updates, Fe-K line fit, CO surveys
+==========================================================================
+
+Long break for MP work and other stuff.  Picking up details again.
+
+Software updates
+----------------
+
+HEAD network upgraded some software:
+
+1. matplotlib 2.x changed many default plot behaviors for the better!
+2. XSPEC 12.9.1 (no 12.9.1.a patch) and ATOMDB 3.0.7 (not newest, but OK)
+
+XSPEC 12.9.0r -- may explain the weird MCMC behavior I saw previously, was a
+parameter tightly confined?
+> When using the GW method for MCMC the initial walkers can be incorrect if the
+> hard limits for a parameter are very restrictive. Our thanks to Mariano
+> Mendez for reporting this. Report added on Aug 19, 2016.
+
+Some plot parameters will need updates.  Fix later, when finalizing figures and
+numbers for the last time.
+
+
+Clean-up actions
+----------------
+
+Split XSPEC MCMC plots off into separate notebook (currently not in use).
+
+Updated swept-up + ejecta mass estimates for d = 7 kpc baseline.
+
+Added code to formally fit Fe K line in integrated remnant.
+Fit results are in `20170328_src_gauss-fe-k`.  Added fit results to text.
+
+Pat notes that swept-up mass estimate is rather low; estimate is lowered if
+we take filling factor ~0.1.
+Would be good to reconcile with typical models for swept-up mass.
+See also Pat's paper on G299...
+
+2017 March 30 - perplexed by attempts to verify that CfA/Columbia and ThrUMMS
+survey brightnesses are comparable (expect within 10-20%).
+
+
+Early April 2017
+================
+
+Sorted out CO survey details.  Corresponded with Tom Dame, Erik Muller, who
+graciously confirmed that the discrepancy was due to a missing main beam
+correction.
+
+Need to figure out the molecular cloud classification thing...
+
+
+Monday 2017 May 01
+==================
+
+Generated plots to show Fe-K line (flux bound) fit.
+
+Required edits to `xs_replotter.py` to correctly format tick labels on log axes
+(must modify formatting for both minor and major ticks, not just major ticks);
+additionally, must work for existing plots, not only the Fe-K plots.
+In progress...
+
+
+Saturday-Sunday 2017 May 13-14
+==============================
+
+Finished edits to logarithmic scale tick labels for my needs.
+Labeling does not work universally as I'd like, but it works for the range of
+energies (0.1 - 20 keV) and count rates needed here.
+
+Apply log-tick + Fe-K plot commit first.  Need to clean up and separately
+commit:
+1. text work (update distance estimates, new plots)
+2. CO distance stuff (linewidth -> column density estimates and molecular cloud
+   classification)
+3. ear inflation energetics and blastwave propagation
+
+
 Standing questions and TODOs
 ============================
 

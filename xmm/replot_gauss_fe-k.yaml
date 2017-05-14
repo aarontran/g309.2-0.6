@@ -1,0 +1,26 @@
+--- # Sub regions, 0087940201 MOS
+subplots:
+
+- file: 'results_spec/20170328_src_gauss-fe-k_spec_01.dat'
+  name: '0087940201 MOS'
+  ylim: ['3e-3', '0.1']
+
+- file: 'results_spec/20170328_src_gauss-fe-k_spec_02.dat'
+  name: '0087940201 PN'
+  ylim: ['7e-3', '0.5']
+
+- file: 'results_spec/20170328_src_gauss-fe-k_spec_03.dat'
+  name: '0551000201 MOS'
+  ylim: ['3e-3', '0.1']
+
+legend: False
+ms-single-column-plot: True
+width: 3
+xlim: [5.0, 8.0]
+#xtick-label-pos: [5, 7, 8]
+cols: [5, 6, 7, 8]
+labels: ['CXRB', 'SP', 'Remnant', 'Instr. lines']
+colors: ['#4daf4a', '#f781bf', '#e41a1c', '#999999']
+linestyles: ['-', '-.', '-', ':']
+delchi-ylim: ['-5', '5']
+out: '../ms/fig/fig_gauss_fe-k'
