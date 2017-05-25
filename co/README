@@ -1,0 +1,40 @@
+README
+
+Cloud catalogs from Rice+ (2016) and Miville-Deschenes+ (2017)
+
+    data/apjaa4dfdt1_mrt_miville-deschenes.txt
+    data/apj523087t3_mrt_rice.txt
+
+Dame+ CfA/Columbia CO survey:
+
+    data/DHT36_Quad4_bw_mom.fits
+    data/DHT36_Quad4_interp.fits
+    data/Wco_DHT2001.fits
+
+        wget https://www.cfa.harvard.edu/rtdc/CO/NumberedRegions/DHT36/DHT36_Quad4_bw_mom.fits
+
+ThrUMMS DR3 for 12CO in l=306 to 312, and DR4 for 13CO in l=306 to 312, from
+http://www.astro.ufl.edu/~peterb/research/thrumms/rbank/
+
+    data/dr3.s306.12co.fits
+    data/dr4.s306.13co.fits
+
+ThrUMMS@NAOJ DR4 for 12 CO l=309-310.5, and full survey moment-0 map, from
+http://alma-intweb.mtk.nao.ac.jp/~thrumms/#publications
+
+    data/Th_IV_309.75_12CO.fits
+    data/Th_IV_mom0_12CO.fits
+
+        wget http://alma-intweb.mtk.nao.ac.jp/~thrumms/DATA/12CO/Th_IV_309.75_12CO.fits
+        wget http://alma-intweb.mtk.nao.ac.jp/~thrumms/DATA/12CO/Th_IV_mom0_12CO.fits
+        wget http://alma-intweb.mtk.nao.ac.jp/~thrumms/DATA/13CO/Th_IV_309.75_13CO.fits
+        wget http://alma-intweb.mtk.nao.ac.jp/~thrumms/DATA/13CO/Th_IV_mom0_13CO.fits
+
+Plot Mopra beam efficiency measurements over time (data from Ladd+ paper):
+
+    mopra_eta_xb.py
+
+Sliced data (integrated over various velocity ranges) are stored in
+
+    data_intgr/
+

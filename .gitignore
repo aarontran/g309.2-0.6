@@ -15,6 +15,8 @@ ctio/**
 !ctio/README
 molonglo_gps/**
 !molonglo_gps/README
+co/data/*mrt*.txt
+
 # Keep only READMEs for XSPEC local models
 absmodel/**
 !absmodel/README

@@ -1,0 +1,11 @@
+# Region file format: DS9 version 4.1
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+galactic
+circle(+308:10:48,-00:22:12,396.0") # text={KDA=N, D=4.23 kpc, -46.6+/-1.8 km/s} color=magenta
+circle(+308:22:12,-00:33:36,432.0") # text={KDA=U, D=5.18 kpc, -64.6+/-1.5 km/s} color=magenta
+circle(+308:26:24,+00:03:00,468.0") # text={KDA=N, D=5.18 kpc, -58.4+/-1.8 km/s} color=magenta
+circle(+309:07:12,-00:18:36,504.0") # text={KDA=F, D=9.64 kpc, -12.7+/-3.2 km/s} color=magenta
+circle(+309:12:00,-00:57:36,1188.0") # text={KDA=N, D=2.02 kpc, -25.6+/-1.6 km/s} color=magenta
+circle(+309:21:36,-00:06:00,1296.0") # text={KDA=F, D=7.30 kpc, -42.7+/-4.2 km/s} color=magenta
+circle(+309:48:00,+00:17:24,576.0") # text={KDA=F, D=9.46 kpc, -17.6+/-3.0 km/s} color=magenta
+circle(+309:58:12,+00:18:36,360.0") # text={KDA=U, D=5.36 kpc, -54.8+/-2.6 km/s} color=magenta

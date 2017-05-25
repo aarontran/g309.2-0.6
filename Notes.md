@@ -12709,6 +12709,52 @@ commit:
 3. ear inflation energetics and blastwave propagation
 
 
+Tuesday 2017 May 16
+===================
+
+Back to CO cloud catalogs.  Replaced circles w/ ellipses for Miville-Deschenes
+catalog, which seems to overlap CO emission better.
+
+
+Tuesday 2017 May 23
+===================
+
+Useful: http://adsabs.harvard.edu/abs/2014ApJS..212....2G
+
+General conclusion:
+* Cloud catalog shapes are challenging to directly compare with actual CO data.
+  + Clouds are filamentary and irregular shaped; ellipsoids get this somewhat
+  + Dame+ survey is coarse in resolution
+  + For both surveys, it might be more helpful to get some objects that
+    represent the cloud clusters.
+    E.g., for Miville-Deschenes+ (2017), the decomposed cube (bottom of Fig. 2)
+    in conjunction with cloud "domains" would be a handy representation.
+    For Rice+ (2016), the raw dendrogram-pixel structures would be useful.
+    Rice+ (2016) do provide a richer table (minor/major axes, position angle)
+    at https://dataverse.harvard.edu/dataverse/dendrogal_catalog
+    (http://dx.doi.org/10.7910/DVN/EWY90X).
+* At least three studies (Garcia+ 2014, the two catalog papers) agree
+  that the main CO structure foregrounding G309 is associated with the near
+  side of the Centaurus arm
+* Which distances are most accurate?  Miville-Deschenes+ (2017) distance
+  assignment has an artificial scarcity of clouds near the tangent circle in
+  Figs. 26-32.  Possibly an artifact of the rotation curve assumed?.. (Brand &
+  Blitz 1993).
+  Rice+ (2016) uses a more complex method (more tunables to fit maser
+  parallaxes & proper motions in Reid+ (2014)); in general Reid+ (2014) has
+  more data points towards the inner galaxy as well.  So I am inclined to trust
+  these distance determinations more.
+
+Not worth fussing over the cloud catalogs, call it done.
+
+
+Wednesday-Thursday 2017 May 24-25
+=================================
+
+Work on plotting CO / SNR overlays to show (asserted) foreground material.
+Code in place to generate snapshots over small vLSR ranges.
+
+
 Standing questions and TODOs
 ============================
 
@@ -12717,6 +12763,9 @@ Possible actionables
 - 1. investigate other young remnants with little Fe emission
   2. investigate other young remnants with comparable morphology.
 
+TODO items:
+* Combine two ThrUMMS tiles into a larger image
+* Rescale files from "K m/s" to "K km/s" somehow
 
 A few things I want to do (of middling/low priority...):
 [] code for sequential session fits (automate more work)

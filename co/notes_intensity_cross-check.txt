@@ -1,0 +1,146 @@
+Notes on Mopra CO survey data calibration and usage
+===================================================
+
+Do ThrUMMS data products yield brightness measurements that are (1) mutually
+consistent across data releases, and (2) consistent with the Dame+ CfA/Columbia
+survey?
+
+
+Compare brightness measurements, averaging over multiple pixels
+===============================================================
+
+Region centered on SNR with four pixels of Dame survey:
+
+    Survey  Source  Processing  vLSR range  Mean moment0    Range moment0
+    (12CO)  (site)              (km/s)      (K km/s)        (K km/s)
+    =====================================================================
+    DHT36   CfA     self        -64 to -36  62.6            [38, 97]
+    ThrUMMS NAOJ    self        -64 to -36  32.8            [14, 68]
+    ThrUMMS UFL     self        -64 to -36  -               -
+    DHT36   CfA     self        all         84.8            [60, 128]
+    ThrUMMS NAOJ    self        all         55.4            [35, 94]
+    ThrUMMS UFL     self        all         -               -
+    DHT36   CfA     external    all         83.5            [77, 93]
+    ThrUMMS NAOJ    external    all         21.2            [0.7, 64.5]
+
+Weird, try again in a different part of survey:
+
+    Survey  Source  Processing  vLSR range  Mean moment0    Range moment0
+    (12CO)  (site)              (km/s)      (K km/s)        (K km/s)
+    =====================================================================
+    DHT36   CfA     self        -64 to -36  70.4            [63.8, 77.3]
+    ThrUMMS NAOJ    self        -64 to -36  44.1            [27.1, 60.0]
+    ThrUMMS UFL     self        -64 to -36  74.7            [43.3, 106.6]
+    DHT36   CfA     self        all         83.2            [79.8, 90.9]
+    ThrUMMS NAOJ    self        all         66.6            [48.7, 87.4]
+    ThrUMMS UFL     self        all         72.8            [28.3, 116.3]
+    DHT36   CfA     external    all         86.0            [61.3, 120.3]
+    ThrUMMS NAOJ    external    all         28.5            [9.2, 48.8]
+
+This is really perplexing.  The raw DR3 data from the UFL website is definitely
+closer to DHT survey (within ~80-100%, consistent with Barnes+ 2015).  But the
+NAOJ DR4 data are way off.
+
+Try again with a much larger area (7x7 DHT survey pixels):
+
+    Survey  Source  Processing  vLSR range  Mean moment0    Mean moment0
+    (12CO)  (site)              (km/s)      (K km/s)          / \eta_c
+    ====================================================================
+    DHT36   CfA     self        -64 to -36  57.9
+    ThrUMMS NAOJ    self        -64 to -36  34.0            61.8
+    ThrUMMS UFL     self        -64 to -36  57.1
+    DHT36   CfA     self        all         76.1
+    ThrUMMS NAOJ    self        all         57.9
+    ThrUMMS UFL     self        all         63.6
+    DHT36   CfA     external    all         
+    ThrUMMS NAOJ    external    all         
+
+OK, it looks like the NAOJ data are not beam-response corrected.
+
+Here is a cleaned version with only the most useful/salient information.
+I take `\eta_c = 0.55` following Barnes+ 2015 and Ladd+ 2005.
+
+Region #1 (15'x15' ~ 2x2 CfA/Columbia pixels)
+
+    Survey  Source  vLSR range      Mean moment0    Mean moment0
+    (12CO)  (site)  (km/s)          (K km/s)          / \eta_c
+    ============================================================
+    DHT36   CfA     -64 to -36      62.6
+    ThrUMMS NAOJ    -64 to -36      32.8            59.6
+    ThrUMMS UFL     -64 to -36      -
+
+Region #2 (15'x15' ~ 2x2 CfA/Columbia pixels)
+
+    Survey  Source  vLSR range      Mean moment0    Mean moment0
+    (12CO)  (site)  (km/s)          (K km/s)          / \eta_c
+    ============================================================
+    DHT36   CfA     -64 to -36      70.4
+    ThrUMMS NAOJ    -64 to -36      44.1            80.2
+    ThrUMMS UFL     -64 to -36      74.7
+
+Region #3 (52'x52' ~ 7x7 CfA/Columbia pixels)
+
+    Survey  Source  vLSR range      Mean moment0    Mean moment0
+    (12CO)  (site)  (km/s)          (K km/s)          / \eta_c
+    ============================================================
+    DHT36   CfA     -64 to -36      57.9
+    ThrUMMS NAOJ    -64 to -36      34.0            61.8
+    ThrUMMS UFL     -64 to -36      57.1
+
+
+
+Mopra beam efficiency factor, and flux calibration
+==================================================
+
+These notes summarize ~early April 2017 exploration; written up and closed out
+Weds 2017 April 19.
+
+Erik Muller stated:
+
+> The data on the ThrUMMS site is in antenna temperature units (i.e. not
+> corrected for main-beam efficiency). 
+>
+> As you surmise, the need to be corrected for main-beam efficiency, and you're
+> able to use whatever efficiency you consider appropriate. After some
+> investigation, we used values of 
+> 
+> co12 ; 0.42
+> co13: 0.43
+> c18o: 0.43
+> cn: 0.42
+> 
+> And these were based on the run-time checks for efficiency. 0.55 is plausible
+> too, but of course, whatever you choose should be carefully justified.
+
+
+* Key reference: Ladd et al. 2005 measure the beam shape and efficiency between
+  ~2003-2005, from various planet observations (2005PASA...22...62L).
+
+* Mopra South Galactic Plane CO Survey, Burton et al. (2013PASA...30...44B)
+  Use `\eta_xb = 0.55` at 115 GHz for extended emission, instead of 0.42.
+
+* Mopra South Galactic Plane CO Survey, Braiding et al. (2015PASA...32...20B)
+  Use `\eta_xb = 0.55`.  Cite Wong+ 2011 on beam efficiency rms deviation.
+  MSGPCOS finds good agreement with DHT survey intensities (within ~10% when
+  averaged over 1 square degree).  Paper acknowledges that MAGMA finds smaller
+  beam efficiencies, and does NOT use smaller efficiency (`\eta_xb < 0.55`)
+  because it would increase discrepancy wrt CfA/Columbia fluxes.
+
+* Magellanic Mopra Assessment (MAGMA), Wong et al. (2011ApJS..197...16W)
+  Mopra observations from 2005 May to 2010 October.
+  Table 1 estimates \eta_xb for sources > ~2 arcminutes (main beam plus first
+  error beam, following Ladd+ 2005).
+  They report large fluctuation (range 0.38 to 0.54) over ~5 years.
+  The mean efficiency is 0.44 with standard deviation 0.05.
+  In computing this mean I ignored time-dependence, did not weight or consider
+  the time intervals specified, etc.
+
+  Table 1: 
+
+> Note that some of the apparent changes in `\eta_xb` likely reflect changes in
+> the system temperature scale due to instrument modifications rather than
+> changes in the aperture efficiency.
+
+  OK - good to know, but maybe not important.
+  We must account for both when rescaling the ThrUMMS DR4 data.
+
